@@ -23,7 +23,14 @@ weighted-sum, epsilon-constraint, and AUGMECON.
 
 ## Installation
 
-The current development version can be installed from GitHub:
+You can install the stable version of `multiscape` from CRAN:
+
+``` r
+
+install.packages("multiscape")
+```
+
+And, the current development version can be installed from GitHub:
 
 ``` r
 

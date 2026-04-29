@@ -1,3 +1,7 @@
+# multiscape 1.0.7
+
+- Updated native routine registration to resolve additional CRAN LTO/gcc-ASAN checks.
+- Revised examples and package metadata for CRAN compliance.
 
 # multiscape 1.0.6
 

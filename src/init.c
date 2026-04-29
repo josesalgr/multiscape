@@ -60,7 +60,7 @@ extern SEXP _multiscape_rcpp_add_objective_max_profit(SEXP, SEXP, SEXP, SEXP, SE
 extern SEXP _multiscape_rcpp_prepare_objective_max_net_profit(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _multiscape_rcpp_add_objective_max_net_profit(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
-extern SEXP _multiscape_rcpp_prepare_objective_min_intervention_impact(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _multiscape_rcpp_prepare_objective_min_intervention_impact(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _multiscape_rcpp_add_objective_min_intervention_impact(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 

@@ -42,7 +42,7 @@
 
     <a class="navbar-brand me-2" href="index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,8 +81,11 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>The current development version can be installed from GitHub:</p>
+<p>You can install the stable version of <code>multiscape</code> from CRAN:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"multiscape"</span><span class="op">)</span></span></code></pre></div>
+<p>And, the current development version can be installed from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -130,7 +133,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <div class="section level3">
 <h3 id="load-the-package-and-example-data">Load the package and example data<a class="anchor" aria-label="anchor" href="#load-the-package-and-example-data"></a>
 </h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
@@ -146,7 +149,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="visualise-the-ecosystem-service-layers">Visualise the ecosystem-service layers<a class="anchor" aria-label="anchor" href="#visualise-the-ecosystem-service-layers"></a>
 </h3>
 <p>These four raster layers represent the baseline ecosystem-service conditions used by the optimisation model. They define the spatial distribution of the features that are later affected by conservation and restoration actions.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">sim_features</span>,</span>
 <span>  main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -162,7 +165,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="build-the-base-problem">Build the base problem<a class="anchor" aria-label="anchor" href="#build-the-base-problem"></a>
 </h3>
 <p>We first create the base <code>Problem</code> object from the planning units and the feature layers.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
 <span>  pu <span class="op">=</span> <span class="va">sim_pu_sf</span>,</span>
 <span>  features <span class="op">=</span> <span class="va">sim_features</span>,</span>
@@ -205,7 +208,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="define-the-action-set">Define the action set<a class="anchor" aria-label="anchor" href="#define-the-action-set"></a>
 </h3>
 <p>We now specify the catalogue of actions that the model is allowed to assign.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">actions_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span>,</span>
 <span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span>
@@ -216,7 +219,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="derive-action-eligibility">Derive action eligibility<a class="anchor" aria-label="anchor" href="#derive-action-eligibility"></a>
 </h3>
 <p>Not every action is allowed in every planning unit. In this example, the variable <code>locked_in</code> is used to derive a simple action-eligibility rule for the illustrative dataset: one subset of planning units is only eligible for <strong>conservation</strong>, whereas the complementary subset is only eligible for <strong>restoration</strong>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">feasible_forest</span> <span class="op">&lt;-</span> <span class="va">sim_pu_sf</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">id</span>, <span class="va">locked_in</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -237,7 +240,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="specify-action-effects">Specify action effects<a class="anchor" aria-label="anchor" href="#specify-action-effects"></a>
 </h3>
 <p>We next specify how actions affect the features.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">effects_mult</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
 <span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span></span>
@@ -253,7 +256,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="define-action-specific-costs">Define action-specific costs<a class="anchor" aria-label="anchor" href="#define-action-specific-costs"></a>
 </h3>
 <p>Costs are attached to planning unit-action combinations so that the model can compare interventions not only by their ecological consequences, but also by their local implementation burden.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">action_cost_df</span> <span class="op">&lt;-</span> <span class="va">sim_pu_sf</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span></span>
@@ -268,7 +271,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <h3 id="add-constraints-and-objectives">Add constraints and objectives<a class="anchor" aria-label="anchor" href="#add-constraints-and-objectives"></a>
 </h3>
 <p>Once actions, eligibility, effects, and costs have been defined, we can complete the optimisation model.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target_area</span> <span class="op">&lt;-</span> <span class="va">n_pu</span> <span class="op">*</span> <span class="va">area_pu</span> <span class="op">*</span> <span class="fl">0.20</span></span>
 <span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">|&gt;</span></span>
@@ -292,7 +295,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <div class="section level3">
 <h3 id="configure-the-epsilon-constraint-method-and-solver">Configure the epsilon-constraint method and solver<a class="anchor" aria-label="anchor" href="#configure-the-epsilon-constraint-method-and-solver"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></span><span class="op">(</span></span>
 <span>    primary <span class="op">=</span> <span class="st">"Total impact"</span>,</span>
@@ -340,13 +343,13 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <div class="section level3">
 <h3 id="solve-and-inspect-the-results">Solve and inspect the results<a class="anchor" aria-label="anchor" href="#solve-and-inspect-the-results"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">p</span>, process <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/plot_tradeoff.html">plot_tradeoff</a></span><span class="op">(</span><span class="va">res</span>, label_runs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-10-1.png" width="100%"></p>
 <p>The resulting <code>SolutionSet</code> can be used to compare efficient alternatives both numerically and spatially. The trade-off plot helps assess how the solutions balance the competing objectives, whereas the spatial action maps show where conservation and restoration are allocated in each efficient solution. This is particularly valuable because different Pareto-efficient solutions may achieve similar totals while distributing actions very differently across the landscape.</p>
 <p>If desired, the spatial outputs can also be rendered with a consistent manual palette to improve visual comparison across solutions. For example:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
 <span>  fill_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -377,6 +380,7 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=multiscape" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/josesalgr/multiscape/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/josesalgr/multiscape/issues" class="external-link">Report a bug</a></li>
 </ul>
@@ -416,8 +420,11 @@ Conceptual overview of the multiscape workflow, from problem definition and acti
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
+<li><a href="https://CRAN.R-project.org/package=multiscape" class="external-link"><img src="https://www.r-pkg.org/badges/version/multiscape" alt="CRAN status"></a></li>
+<li><a href="https://cran.r-project.org/package=multiscape" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/multiscape" alt="CRAN downloads"></a></li>
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html" class="external-link"><img src="https://img.shields.io/badge/Lifecycle-stable-brightgreen.svg" alt="lifecycle"></a></li>
 <li><a href="https://github.com/josesalgr/multiscape/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/josesalgr/multiscape/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://app.codecov.io/gh/josesalgr/multiscape" class="external-link"><img src="https://codecov.io/gh/josesalgr/multiscape/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>
 

@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![CRAN status](https://www.r-pkg.org/badges/version/multiscape)](https://CRAN.R-project.org/package=multiscape)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/multiscape)](https://cran.r-project.org/package=multiscape)
 [![lifecycle](https://img.shields.io/badge/Lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 [![R-CMD-check](https://github.com/josesalgr/multiscape/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/josesalgr/multiscape/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
@@ -34,7 +36,13 @@ weighted-sum, epsilon-constraint, and AUGMECON.
 
 ## Installation
 
-The current development version can be installed from GitHub:
+You can install the stable version of `multiscape` from CRAN:
+
+```r
+install.packages("multiscape")
+```
+
+And, the current development version can be installed from GitHub:
 
 ``` r
 if (!requireNamespace("remotes", quietly = TRUE)) {

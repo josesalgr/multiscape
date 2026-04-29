@@ -2,15 +2,17 @@
 
 0 errors | 0 warnings | 3 notes
 
-## Submission
+## Resubmission
 
-This is a resubmission of `multiscape`.
+This is a resubmission to address the additional LTO/gcc-ASAN issue reported by CRAN.
 
-In this version we addressed the issues raised in the previous CRAN review:
-- added references for the methodological background in the `Description` field;
-- revised examples to avoid unnecessary `\dontrun{}` usage;
-- simplified and corrected examples so they run more robustly during checks;
-- clarified the availability of optional solver backends in the `Description`.
+The native routine registration in src/init.c was updated for
+_multiscape_rcpp_prepare_objective_min_intervention_impact. The registered
+number of arguments and the external declaration now match the Rcpp-generated
+wrapper in src/RcppExports.cpp.
+
+The package was previously accepted on CRAN as version 1.0.6. This update
+addresses the additional issues reported for that CRAN version.
 
 ## CRAN check notes
 

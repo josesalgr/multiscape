@@ -1,6 +1,14 @@
 # Changelog
 
+## multiscape 1.0.7
+
+- Updated native routine registration to resolve additional CRAN
+  LTO/gcc-ASAN checks.
+- Revised examples and package metadata for CRAN compliance.
+
 ## multiscape 1.0.6
+
+CRAN release: 2026-04-28
 
 - Fix CRAN submission issues
 - Revise examples and DESCRIPTION for CRAN resubmission

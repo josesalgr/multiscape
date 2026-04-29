@@ -289,7 +289,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> │└─solutions: 1
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 0.02
+#> │├─runtime: 0
 #> │├─gap: 0
 #> │├─design cols: none
 #> │└─value cols: value_cost, value_benefit
