@@ -1,6 +1,6 @@
 Package: multiscape
 Type: Package
-Version: 1.0.7
+Version: 1.1.0
 Title: Multi-Objective Spatial Planning
 Description: Provides a modular framework for exact multi-objective spatial
     planning using mixed-integer programming. The package supports the
@@ -105,10 +105,12 @@ Collate:
     'get_solution.R'
     'globals.R'
     'load_sim.R'
+    'mo_control.R'
     'package.R'
     'plot.R'
     'print.R'
     'problem-class.R'
+    'run_design.R'
     'set_method_augmecon.R'
     'set_method_epsilon_constraint.R'
     'set_method_weighted_sum.R'

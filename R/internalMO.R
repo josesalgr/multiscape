@@ -857,15 +857,15 @@
 
   data <- x$data %||% list()
   method <- x$data$method %||% list()
+  # method <- .pamo_normalize_legacy_method_runs(method)
+
   aliases <- as.character(method$aliases %||% character(0))
-  w <- as.numeric(method$weights %||% numeric(0))
   normalize_weights <- isTRUE(method$normalize_weights)
   objective_scaling <- isTRUE(method$objective_scaling)
 
   dots <- list(...)
   verbose <- .pamo_cli_enabled(x, dots)
 
-  # pass-through solver controls
   gap_limit  <- dots$gap_limit %||% NULL
   time_limit <- dots$time_limit %||% NULL
 
@@ -876,23 +876,10 @@
     stop("Weighted method: missing aliases.", call. = FALSE)
   }
 
-  if (length(w) == 0L) {
-    stop("Weighted method: missing weights. Provide them in set_method_weighted().", call. = FALSE)
-  }
-
-  if (length(w) != length(aliases)) {
-    stop(
-      "Weighted method: length(weights) must match length(aliases).\n",
-      "length(weights) = ", length(w), ", length(aliases) = ", length(aliases), ".",
-      call. = FALSE
-    )
-  }
-
-  # ---- design: one row per run, only design parameters
-  design_df <- data.frame(run_id = 1L, stringsAsFactors = FALSE)
-  for (i in seq_along(aliases)) {
-    design_df[[paste0("weight_", aliases[i])]] <- as.numeric(w[i])
-  }
+  design_df <- .pamo_compile_weighted_runs(
+    x = x,
+    method = method
+  )
 
   n_runs <- nrow(design_df)
 
@@ -948,7 +935,6 @@
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
 
-    # evaluate all registered aliases on the obtained solution
     alias_values <- stats::setNames(
       vapply(
         aliases,
@@ -960,7 +946,6 @@
 
     value_mat[r, ] <- unname(as.numeric(alias_values))
 
-    # store metadata inside each individual Solution
     if (!is.null(solutions[[r]]) && inherits(solutions[[r]], "Solution")) {
       solutions[[r]]$solution$alias_values <- alias_values
       solutions[[r]]$meta$run_id <- design_df$run_id[r]
@@ -969,7 +954,6 @@
     }
   }
 
-  # ---- runs: one row per run, only outputs / summaries
   runs <- data.frame(
     run_id = design_df$run_id,
     status = status,
@@ -1029,7 +1013,7 @@
   primary     <- as.character(method$primary %||% NA_character_)[1]
   aliases     <- as.character(method$aliases %||% character(0))
   constrained <- as.character(method$constrained %||% character(0))
-  mode        <- as.character(method$mode %||% "manual")[1]
+  # mode        <- as.character(method$mode %||% "manual")[1]
 
   # pass-through solver controls / progress / verbosity
   dots <- list(...)
@@ -1052,9 +1036,9 @@
   if (length(constrained) == 0L) {
     stop("epsilon_constraint: no constrained objectives were defined.", call. = FALSE)
   }
-  if (!mode %in% c("manual", "auto")) {
-    stop("epsilon_constraint: unknown mode '", mode, "'.", call. = FALSE)
-  }
+  # if (!mode %in% c("manual", "auto")) {
+  #   stop("epsilon_constraint: unknown mode '", mode, "'.", call. = FALSE)
+  # }
 
   .pamo_cli_step(
     "Primary objective: {.val {primary}}. Secondary objectives: {.val {paste(constrained, collapse = ', ')}}.",
@@ -1064,41 +1048,49 @@
   # ---------------------------------------------------------
   # Build or recover epsilon design
   # ---------------------------------------------------------
-  if (identical(mode, "manual")) {
-    .pamo_cli_step("Using user-supplied epsilon grid.", verbose = verbose)
+  # if (identical(mode, "manual")) {
+  #   .pamo_cli_step("Using user-supplied epsilon grid.", verbose = verbose)
+  #
+  #   design_df <- method$runs
+  #
+  #   if (is.null(design_df) || !inherits(design_df, "data.frame") || nrow(design_df) == 0L) {
+  #     stop("epsilon_constraint (manual): x$data$method$runs is missing/empty.", call. = FALSE)
+  #   }
+  #
+  # } else {
+  #   .pamo_cli_step("Building automatic epsilon grid.", verbose = verbose)
+  #
+  #   if (!exists(".pamo_build_auto_epsilon_runs", mode = "function")) {
+  #     stop(
+  #       "epsilon_constraint (auto): missing internal helper .pamo_build_auto_epsilon_runs().",
+  #       call. = FALSE
+  #     )
+  #   }
+  #
+  #   design_df <- method$runs %||% NULL
+  #   if (is.null(design_df)) {
+  #     design_df <- .pamo_build_auto_epsilon_runs(
+  #       x,
+  #       gap_limit = gap_limit,
+  #       time_limit = time_limit,
+  #       verbose = verbose
+  #     )
+  #   }
+  #
+  #   if (is.null(design_df) || !inherits(design_df, "data.frame") || nrow(design_df) == 0L) {
+  #     stop("epsilon_constraint (auto): generated epsilon runs are empty.", call. = FALSE)
+  #   }
+  #
+  #   x$data$method$runs <- design_df
+  # }
 
-    design_df <- method$runs
-
-    if (is.null(design_df) || !inherits(design_df, "data.frame") || nrow(design_df) == 0L) {
-      stop("epsilon_constraint (manual): x$data$method$runs is missing/empty.", call. = FALSE)
-    }
-
-  } else {
-    .pamo_cli_step("Building automatic epsilon grid.", verbose = verbose)
-
-    if (!exists(".pamo_build_auto_epsilon_runs", mode = "function")) {
-      stop(
-        "epsilon_constraint (auto): missing internal helper .pamo_build_auto_epsilon_runs().",
-        call. = FALSE
-      )
-    }
-
-    design_df <- method$runs %||% NULL
-    if (is.null(design_df)) {
-      design_df <- .pamo_build_auto_epsilon_runs(
-        x,
-        gap_limit = gap_limit,
-        time_limit = time_limit,
-        verbose = verbose
-      )
-    }
-
-    if (is.null(design_df) || !inherits(design_df, "data.frame") || nrow(design_df) == 0L) {
-      stop("epsilon_constraint (auto): generated epsilon runs are empty.", call. = FALSE)
-    }
-
-    x$data$method$runs <- design_df
-  }
+  design_df <- .pamo_compile_epsilon_runs(
+    x = x,
+    method = method,
+    gap_limit = gap_limit,
+    time_limit = time_limit,
+    verbose = verbose
+  )
 
   if (!("run_id" %in% names(design_df))) {
     design_df$run_id <- seq_len(nrow(design_df))
@@ -1133,6 +1125,28 @@
   runtime <- numeric(n_runs)
   gap     <- numeric(n_runs)
 
+  messages <- character(n_runs)
+
+  control <- method$control %||% list()
+
+  stop_on_infeasible <- isTRUE(
+    control$stop_on_infeasible %||%
+      method$stop_on_infeasible %||%
+      FALSE
+  )
+
+  stop_on_no_solution <- isTRUE(
+    control$stop_on_no_solution %||%
+      method$stop_on_no_solution %||%
+      FALSE
+  )
+
+  stop_on_error <- isTRUE(
+    control$stop_on_error %||%
+      method$stop_on_error %||%
+      TRUE
+  )
+
   progress_id <- NULL
   if (progress && n_runs > 1L) {
     progress_id <- NULL
@@ -1151,7 +1165,7 @@
     eps_r <- as.list(design_df[r, eps_cols, drop = FALSE])
     names(eps_r) <- constrained
 
-    one <- .pamo_solve_one(
+    one <- .pamo_solve_one_or_keep_failed(
       x = x,
       spec = list(
         type = "epsilon_constraint",
@@ -1159,7 +1173,10 @@
         eps = eps_r,
         gap_limit = gap_limit,
         time_limit = time_limit
-      )
+      ),
+      stop_on_infeasible = stop_on_infeasible,
+      stop_on_no_solution = stop_on_no_solution,
+      stop_on_error = stop_on_error
     )
 
     solutions[[r]] <- one$solution
@@ -1167,18 +1184,19 @@
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
 
-    alias_values <- stats::setNames(
-      vapply(
-        aliases,
-        function(a) .pamo_eval_alias_on_solution(x, one$solution, a),
-        numeric(1)
-      ),
-      aliases
-    )
-
-    value_mat[r, ] <- unname(as.numeric(alias_values))
-
     if (!is.null(solutions[[r]]) && inherits(solutions[[r]], "Solution")) {
+
+      alias_values <- stats::setNames(
+        vapply(
+          aliases,
+          function(a) .pamo_eval_alias_on_solution(x, one$solution, a),
+          numeric(1)
+        ),
+        aliases
+      )
+
+      value_mat[r, ] <- unname(as.numeric(alias_values))
+
       solutions[[r]]$solution$alias_values <- alias_values
       solutions[[r]]$meta$run_id <- design_df$run_id[r]
       solutions[[r]]$method$type <- "epsilon_constraint"
@@ -1187,6 +1205,10 @@
         as.numeric(design_df[r, eps_cols, drop = TRUE]),
         constrained
       )
+
+    } else {
+
+      value_mat[r, ] <- NA_real_
     }
 
     if (!is.null(progress_id)) {
@@ -1206,6 +1228,7 @@
     status = status,
     runtime = runtime,
     gap = gap,
+    message = messages,
     stringsAsFactors = FALSE
   )
 
@@ -1213,6 +1236,50 @@
     runs,
     as.data.frame(value_mat, stringsAsFactors = FALSE)
   )
+
+  n_infeasible <- sum(
+    runs$status %in% c("infeasible", "infeasible_or_unbounded"),
+    na.rm = TRUE
+  )
+
+  n_no_solution <- sum(
+    runs$status %in% c("no_solution"),
+    na.rm = TRUE
+  )
+
+  n_failed <- sum(
+    runs$status %in% c("failed"),
+    na.rm = TRUE
+  )
+
+  if (n_infeasible > 0L) {
+    warning(
+      n_infeasible, " of ", nrow(runs),
+      " epsilon-constraint runs were infeasible and were kept in the SolutionSet with missing objective values. ",
+      "Feasible runs were retained.",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+
+  if (n_no_solution > 0L) {
+    warning(
+      n_no_solution, " of ", nrow(runs),
+      " epsilon-constraint runs did not return a solution vector and were kept in the SolutionSet with missing objective values. ",
+      "This may indicate infeasibility, numerical issues, or solver termination before finding a feasible solution.",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+
+  if (n_failed > 0L) {
+    warning(
+      n_failed, " of ", nrow(runs),
+      " epsilon-constraint runs failed for reasons other than infeasibility/no-solution.",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
 
   # ---------------------------------------------------------
   # Extras: method-specific metadata
@@ -1286,9 +1353,11 @@
     diagnostics = list(
       n_design = nrow(design_df),
       n_runs = nrow(runs),
-      n_solutions = length(solutions),
+      n_solutions = sum(vapply(solutions, inherits, logical(1), "Solution")),
       n_optimal = sum(runs$status == "optimal", na.rm = TRUE),
       n_infeasible = sum(runs$status %in% c("infeasible", "infeasible_or_unbounded"), na.rm = TRUE),
+      n_no_solution = sum(runs$status == "no_solution", na.rm = TRUE),
+      n_failed = sum(runs$status == "failed", na.rm = TRUE),
       status_summary = .pa_solutionset_status_summary(runs),
       runtime_range = if ("runtime" %in% names(runs)) .pa_solutionset_range_text(runs$runtime, digits = 3) else "none",
       gap_range = if ("gap" %in% names(runs)) .pa_solutionset_range_text(runs$gap, digits = 4) else "none"
@@ -3548,8 +3617,8 @@ add_objective <- function(x, objective) {
   primary      <- as.character(method$primary %||% NA_character_)[1]
   aliases      <- as.character(method$aliases %||% character(0))
   secondary    <- as.character(method$secondary %||% character(0))
-  grid         <- method$grid %||% NULL
-  n_points     <- as.integer(method$n_points %||% NA_integer_)[1]
+  # grid         <- method$grid %||% NULL
+  # n_points     <- as.integer(method$n_points %||% NA_integer_)[1]
   augmentation <- as.numeric(method$augmentation %||% NA_real_)[1]
 
   dots <- list(...)
@@ -3598,27 +3667,35 @@ add_objective <- function(x, objective) {
   )
 
   # design
-  design_df <- method$runs %||% NULL
-  if (is.null(design_df)) {
-    if (is.null(grid)) {
-      .pamo_cli_step("Building automatic epsilon grid.", verbose = verbose)
+  # design_df <- method$runs %||% NULL
+  # if (is.null(design_df)) {
+  #   if (is.null(grid)) {
+  #     .pamo_cli_step("Building automatic epsilon grid.", verbose = verbose)
+  #
+  #     design_df <- .pamo_build_auto_augmecon_runs(
+  #       x = x,
+  #       gap_limit = gap_limit,
+  #       time_limit = time_limit,
+  #       verbose = verbose
+  #     )
+  #   } else {
+  #     .pamo_cli_step("Using user-supplied epsilon grid.", verbose = verbose)
+  #
+  #     design_df <- .pamo_build_manual_augmecon_runs(
+  #       x = x,
+  #       verbose = verbose
+  #     )
+  #   }
+  #   x$data$method$runs <- design_df
+  # }
 
-      design_df <- .pamo_build_auto_augmecon_runs(
-        x = x,
-        gap_limit = gap_limit,
-        time_limit = time_limit,
-        verbose = verbose
-      )
-    } else {
-      .pamo_cli_step("Using user-supplied epsilon grid.", verbose = verbose)
-
-      design_df <- .pamo_build_manual_augmecon_runs(
-        x = x,
-        verbose = verbose
-      )
-    }
-    x$data$method$runs <- design_df
-  }
+  design_df <- .pamo_compile_augmecon_runs(
+    x = x,
+    method = method,
+    gap_limit = gap_limit,
+    time_limit = time_limit,
+    verbose = verbose
+  )
 
   if (!("run_id" %in% names(design_df))) {
     design_df$run_id <- seq_len(nrow(design_df))
@@ -4601,6 +4678,518 @@ add_objective <- function(x, objective) {
   out$data$mo_cache <- out$data$mo_cache %||% list()
   out$data$mo_cache$compiled_method <- method_name
   out$data$mo_cache$compiled_aliases <- aliases
+
+  out
+}
+
+
+# -------------------------------------------------------------------------
+# Weighted run compiler
+# -------------------------------------------------------------------------
+
+.pamo_compile_weighted_runs <- function(x, method) {
+  stopifnot(inherits(x, "Problem"))
+
+  aliases <- as.character(method$aliases %||% character(0))
+  if (length(aliases) == 0L) {
+    stop("Weighted method: missing objective aliases.", call. = FALSE)
+  }
+
+  runs <- method$runs %||% NULL
+  .pamo_check_run_design(runs)
+
+  if (.pamo_is_run_manual(runs)) {
+    return(.pamo_compile_weighted_manual_runs(
+      values = runs$values,
+      aliases = aliases,
+      normalize_weights = isTRUE(method$normalize_weights)
+    ))
+  }
+
+  if (.pamo_is_run_grid(runs)) {
+    return(.pamo_compile_weighted_grid_runs(
+      aliases = aliases,
+      n = runs$n,
+      include_extremes = runs$include_extremes,
+      normalize_weights = isTRUE(method$normalize_weights)
+    ))
+  }
+
+  stop("Unsupported weighted run design.", call. = FALSE)
+}
+
+
+.pamo_compile_weighted_manual_runs <- function(values,
+                                               aliases,
+                                               normalize_weights = TRUE) {
+  values <- as.data.frame(values, stringsAsFactors = FALSE)
+
+  weight_cols <- paste0("weight_", aliases)
+  miss <- setdiff(weight_cols, names(values))
+
+  if (length(miss) > 0L) {
+    stop(
+      "Manual weighted runs are missing columns: ",
+      paste(miss, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (!("run_id" %in% names(values))) {
+    values$run_id <- seq_len(nrow(values))
+  }
+
+  out <- values[, c("run_id", weight_cols), drop = FALSE]
+
+  .pamo_validate_weighted_design(
+    out,
+    aliases = aliases,
+    normalize_weights = normalize_weights
+  )
+}
+
+
+.pamo_compile_weighted_grid_runs <- function(aliases,
+                                             n,
+                                             include_extremes = TRUE,
+                                             normalize_weights = TRUE) {
+  aliases <- as.character(aliases)
+  k <- length(aliases)
+
+  if (k < 2L) {
+    stop("Weighted run grids require at least two objectives.", call. = FALSE)
+  }
+
+  n <- as.integer(n)[1]
+  if (!is.finite(n) || is.na(n) || n < 2L) {
+    stop("`n` must be an integer >= 2.", call. = FALSE)
+  }
+
+  # 2 objectives: simple line grid
+  if (k == 2L) {
+    w1 <- seq(1, 0, length.out = n)
+    w2 <- 1 - w1
+
+    W <- cbind(w1, w2)
+    colnames(W) <- paste0("weight_", aliases)
+
+    if (!isTRUE(include_extremes)) {
+      keep <- W[, 1] > 0 & W[, 1] < 1
+      W <- W[keep, , drop = FALSE]
+    }
+
+    out <- data.frame(
+      run_id = seq_len(nrow(W)),
+      W,
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+
+    return(.pamo_validate_weighted_design(
+      out,
+      aliases = aliases,
+      normalize_weights = normalize_weights
+    ))
+  }
+
+  # 3+ objectives: regular simplex grid
+  # n controls the number of levels per weight, so denominator is n - 1.
+  denom <- n - 1L
+
+  comp <- .pamo_simplex_integer_compositions(total = denom, parts = k)
+  W <- comp / denom
+  colnames(W) <- paste0("weight_", aliases)
+
+  if (!isTRUE(include_extremes)) {
+    # Drop pure-objective vertices such as (1,0,0,...).
+    W <- W[apply(W, 1, max) < 1, , drop = FALSE]
+  }
+
+  out <- data.frame(
+    run_id = seq_len(nrow(W)),
+    W,
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  .pamo_validate_weighted_design(
+    out,
+    aliases = aliases,
+    normalize_weights = normalize_weights
+  )
+}
+
+
+.pamo_validate_weighted_design <- function(design,
+                                           aliases,
+                                           normalize_weights = TRUE,
+                                           tol = 1e-10) {
+  aliases <- as.character(aliases)
+  weight_cols <- paste0("weight_", aliases)
+
+  for (nm in weight_cols) {
+    design[[nm]] <- as.numeric(design[[nm]])
+  }
+
+  W <- as.matrix(design[, weight_cols, drop = FALSE])
+
+  if (any(!is.finite(W) | is.na(W))) {
+    stop("Weighted runs contain non-finite or missing weights.", call. = FALSE)
+  }
+
+  # if (any(W < -tol)) {
+  #   stop("Weighted runs cannot contain negative weights.", call. = FALSE)
+  # }
+
+  W[abs(W) < tol] <- 0
+
+  row_sum <- rowSums(W)
+
+  # if (any(row_sum <= tol)) {
+  #   stop("Each weighted run must contain at least one positive weight.", call. = FALSE)
+  # }
+
+  if (isTRUE(normalize_weights)) {
+    W <- sweep(W, 1, row_sum, "/")
+  } else {
+    bad <- abs(row_sum - 1) > sqrt(tol)
+    if (any(bad)) {
+      # stop(
+      #   "Weights must sum to 1 in each run when `normalize_weights = FALSE`.",
+      #   call. = FALSE
+      # )
+    }
+  }
+
+  design[, weight_cols] <- W
+
+  # Keep run_id first
+  design <- design[, c("run_id", weight_cols), drop = FALSE]
+  rownames(design) <- NULL
+
+  design
+}
+
+
+.pamo_simplex_integer_compositions <- function(total, parts) {
+  total <- as.integer(total)[1]
+  parts <- as.integer(parts)[1]
+
+  if (parts == 1L) {
+    return(matrix(total, nrow = 1L, ncol = 1L))
+  }
+
+  out <- list()
+  idx <- 1L
+
+  rec <- function(prefix, remaining, p_left) {
+    if (p_left == 1L) {
+      out[[idx]] <<- c(prefix, remaining)
+      idx <<- idx + 1L
+      return(invisible(NULL))
+    }
+
+    for (v in seq.int(remaining, 0L)) {
+      rec(c(prefix, v), remaining - v, p_left - 1L)
+    }
+
+    invisible(NULL)
+  }
+
+  rec(integer(0), total, parts)
+
+  mat <- do.call(rbind, out)
+  storage.mode(mat) <- "integer"
+  mat
+}
+
+
+# -------------------------------------------------------------------------
+# Epsilon-constraint run compiler
+# -------------------------------------------------------------------------
+
+.pamo_compile_epsilon_runs <- function(x,
+                                       method,
+                                       gap_limit = NULL,
+                                       time_limit = NULL,
+                                       verbose = FALSE) {
+  stopifnot(inherits(x, "Problem"))
+
+  runs <- method$runs %||% NULL
+  .pamo_check_run_design(runs)
+
+  constrained <- as.character(method$constrained %||% character(0))
+  if (length(constrained) == 0L) {
+    stop("epsilon_constraint: missing constrained objective(s).", call. = FALSE)
+  }
+
+  if (.pamo_is_run_manual(runs)) {
+    return(.pamo_compile_epsilon_manual_runs(
+      values = runs$values,
+      constrained = constrained
+    ))
+  }
+
+  if (.pamo_is_run_grid(runs)) {
+    # Reuse the existing automatic builder by passing n/include_extremes
+    # through the method object.
+    x2 <- x
+    x2$data$method <- method
+    x2$data$method$n_points <- runs$n
+    x2$data$method$include_extremes <- runs$include_extremes
+
+    return(.pamo_build_auto_epsilon_runs(
+      x = x2,
+      gap_limit = gap_limit,
+      time_limit = time_limit,
+      verbose = verbose
+    ))
+  }
+
+  stop("Unsupported epsilon-constraint run design.", call. = FALSE)
+}
+
+
+.pamo_compile_epsilon_manual_runs <- function(values, constrained) {
+  values <- as.data.frame(values, stringsAsFactors = FALSE)
+
+  eps_cols <- paste0("eps_", constrained)
+  miss <- setdiff(eps_cols, names(values))
+
+  if (length(miss) > 0L) {
+    stop(
+      "Manual epsilon runs are missing columns: ",
+      paste(miss, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (!("run_id" %in% names(values))) {
+    values$run_id <- seq_len(nrow(values))
+  }
+
+  out <- values[, c("run_id", eps_cols), drop = FALSE]
+
+  for (nm in eps_cols) {
+    out[[nm]] <- as.numeric(out[[nm]])
+  }
+
+  if (any(!is.finite(as.matrix(out[, eps_cols, drop = FALSE])))) {
+    stop("Manual epsilon runs contain non-finite epsilon values.", call. = FALSE)
+  }
+
+  rownames(out) <- NULL
+  out
+}
+
+
+# -------------------------------------------------------------------------
+# AUGMECON run compiler
+# -------------------------------------------------------------------------
+
+.pamo_compile_augmecon_runs <- function(x,
+                                        method,
+                                        gap_limit = NULL,
+                                        time_limit = NULL,
+                                        verbose = FALSE) {
+  stopifnot(inherits(x, "Problem"))
+
+  runs <- method$runs %||% NULL
+  .pamo_check_run_design(runs)
+
+  secondary <- as.character(method$secondary %||% character(0))
+  if (length(secondary) == 0L) {
+    stop("augmecon: missing secondary objective(s).", call. = FALSE)
+  }
+
+  if (.pamo_is_run_manual(runs)) {
+    return(.pamo_compile_augmecon_manual_runs(
+      values = runs$values,
+      secondary = secondary
+    ))
+  }
+
+  if (.pamo_is_run_grid(runs)) {
+    # Reuse the existing automatic builder by passing n/include_extremes
+    # through the method object.
+    x2 <- x
+    x2$data$method <- method
+    x2$data$method$n_points <- runs$n
+    x2$data$method$include_extremes <- runs$include_extremes
+
+    return(.pamo_build_auto_augmecon_runs(
+      x = x2,
+      gap_limit = gap_limit,
+      time_limit = time_limit,
+      verbose = verbose
+    ))
+  }
+
+  stop("Unsupported AUGMECON run design.", call. = FALSE)
+}
+
+
+.pamo_compile_augmecon_manual_runs <- function(values, secondary) {
+  values <- as.data.frame(values, stringsAsFactors = FALSE)
+
+  eps_cols <- paste0("eps_", secondary)
+  miss <- setdiff(eps_cols, names(values))
+
+  if (length(miss) > 0L) {
+    stop(
+      "Manual AUGMECON runs are missing columns: ",
+      paste(miss, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (!("run_id" %in% names(values))) {
+    values$run_id <- seq_len(nrow(values))
+  }
+
+  out <- values[, c("run_id", eps_cols), drop = FALSE]
+
+  for (nm in eps_cols) {
+    out[[nm]] <- as.numeric(out[[nm]])
+  }
+
+  if (any(!is.finite(as.matrix(out[, eps_cols, drop = FALSE])))) {
+    stop("Manual AUGMECON runs contain non-finite epsilon values.", call. = FALSE)
+  }
+
+  rownames(out) <- NULL
+  out
+}
+
+
+.pa_deprecate_arg <- function(old, new) {
+  warning(
+    "`", old, "` is deprecated. Use `", new, "` instead.",
+    call. = FALSE
+  )
+}
+
+.pamo_eps_to_manual_df <- function(eps, constrained) {
+  if (is.numeric(eps) && !is.null(names(eps))) {
+    eps_list <- as.list(eps)
+    eps_list <- lapply(eps_list, function(v) c(as.numeric(v)[1]))
+  } else if (is.list(eps) && length(eps) > 0 && !is.null(names(eps))) {
+    eps_list <- lapply(eps, function(v) as.numeric(v))
+  } else {
+    stop(
+      "`eps` must be a named numeric vector or a named list of numeric vectors.",
+      call. = FALSE
+    )
+  }
+
+  miss <- setdiff(constrained, names(eps_list))
+  if (length(miss) > 0L) {
+    stop(
+      "`eps` must include all constrained objectives. Missing: ",
+      paste(miss, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  extra <- setdiff(names(eps_list), constrained)
+  if (length(extra) > 0L) {
+    stop(
+      "`eps` contains aliases that are not constrained objectives: ",
+      paste(extra, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  bad_empty <- names(eps_list)[vapply(eps_list, length, integer(1)) == 0L]
+  if (length(bad_empty) > 0L) {
+    stop("`eps` contains empty vectors for: ", paste(bad_empty, collapse = ", "), call. = FALSE)
+  }
+
+  bad_nonfinite <- names(eps_list)[vapply(eps_list, function(v) any(!is.finite(v)), logical(1))]
+  if (length(bad_nonfinite) > 0L) {
+    stop("`eps` contains non-finite values for: ", paste(bad_nonfinite, collapse = ", "), call. = FALSE)
+  }
+
+  grid <- expand.grid(
+    eps_list[constrained],
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  if (nrow(grid) == 0L) {
+    stop("Empty epsilon grid.", call. = FALSE)
+  }
+
+  names(grid) <- paste0("eps_", names(grid))
+  grid$run_id <- seq_len(nrow(grid))
+  grid <- grid[, c("run_id", setdiff(names(grid), "run_id")), drop = FALSE]
+
+  grid
+}
+
+.pamo_augmecon_grid_to_manual_df <- function(grid, secondary) {
+  if (is.atomic(grid) && !is.list(grid)) {
+    stop("`grid` must be NULL or a named list.", call. = FALSE)
+  }
+
+  if (!is.list(grid) ||
+      length(grid) == 0L ||
+      is.null(names(grid)) ||
+      any(!nzchar(names(grid)))) {
+    stop("`grid` must be a named non-empty list when supplied.", call. = FALSE)
+  }
+
+  gnames <- names(grid)
+
+  extra <- setdiff(gnames, secondary)
+  miss  <- setdiff(secondary, gnames)
+
+  if (length(extra) > 0L) {
+    stop(
+      "`grid` contains names not corresponding to secondary objectives: ",
+      paste(extra, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (length(miss) > 0L) {
+    stop(
+      "`grid` is missing secondary objectives: ",
+      paste(miss, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  grid <- grid[secondary]
+
+  grid <- lapply(seq_along(grid), function(i) {
+    nm <- secondary[i]
+    v  <- grid[[i]]
+
+    if (!is.numeric(v) ||
+        length(v) == 0L ||
+        anyNA(v) ||
+        any(!is.finite(v))) {
+      stop(
+        "`grid[['", nm, "']]` must be a non-empty numeric vector of finite values.",
+        call. = FALSE
+      )
+    }
+
+    sort(unique(as.numeric(v)))
+  })
+
+  names(grid) <- secondary
+
+  out <- expand.grid(
+    grid,
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  names(out) <- paste0("eps_", names(out))
+  out$run_id <- seq_len(nrow(out))
+  out <- out[, c("run_id", setdiff(names(out), "run_id")), drop = FALSE]
 
   out
 }

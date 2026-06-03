@@ -6,11 +6,11 @@
 #'
 #' AUGMECON is an exact multi-objective optimization method in which one
 #' objective is treated as the primary objective and the remaining objectives
-#' are converted into \eqn{\varepsilon}-constraints. In the augmented formulation,
-#' each secondary objective is associated with a non-negative slack variable,
-#' and the primary objective is augmented with a small reward term based on the
-#' normalized slacks. This augmentation is used to avoid weakly efficient
-#' solutions, following Mavrotas (2009).
+#' are converted into \eqn{\varepsilon}-constraints. In the augmented
+#' formulation, each secondary objective is associated with a non-negative
+#' slack variable, and the primary objective is augmented with a small reward
+#' term based on the normalized slacks. This augmentation is used to avoid
+#' weakly efficient solutions, following Mavrotas (2009).
 #'
 #' This function does not solve the problem directly. It stores the AUGMECON
 #' configuration in \code{x$data$method}, to be used later by
@@ -33,8 +33,8 @@
 #' \eqn{f_p(x)}, and treats the remaining \eqn{m - 1} objectives as secondary
 #' objectives.
 #'
-#' For a fixed combination of epsilon levels, the method solves a sequence of
-#' single-objective subproblems of the form:
+#' For a fixed combination of epsilon levels, the method solves a
+#' single-objective subproblem of the form:
 #'
 #' \deqn{
 #' \max \; f_p(x) + \rho \sum_{k \in \mathcal{S}} \frac{s_k}{R_k}
@@ -99,26 +99,72 @@
 #'   \item the primary objective is augmented with a small slack-based reward.
 #' }
 #'
-#' \strong{Manual and automatic epsilon grids}
+#' \strong{Run designs}
 #'
-#' AUGMECON requires a grid of epsilon levels for each secondary objective.
+#' AUGMECON runs are specified through the \code{runs} argument. This argument
+#' must be created with either \code{\link{run_grid}} or
+#' \code{\link{run_manual}}.
 #'
-#' If \code{grid} is supplied, it must be a named list with one numeric vector
-#' per secondary objective. Each vector defines the exact epsilon levels to be
-#' explored for that objective.
+#' \code{run_grid(n = ...)} requests automatic generation of epsilon levels for
+#' the secondary objectives during \code{\link{solve}}. In that case, the
+#' method first computes extreme points and payoff-table ranges for the
+#' secondary objectives, and then generates \code{n} levels for each one.
 #'
-#' If \code{grid = NULL}, the grid is generated automatically later during
-#' \code{\link{solve}}. In that case, the method first computes extreme points
-#' and payoff-table ranges for the secondary objectives, and then generates
-#' \code{n_points} levels for each one.
+#' \code{run_manual()} allows users to provide explicit epsilon combinations.
+#' In manual AUGMECON runs, each row is one optimization run and columns must be
+#' named \code{eps_<alias>}, where \code{<alias>} is the alias of a secondary
+#' objective. For example, if \code{primary = "benefit"} and
+#' \code{aliases = c("benefit", "cost", "loss")}, the manual run table must
+#' contain columns \code{eps_cost} and \code{eps_loss}.
 #'
-#' If \code{include_extremes = TRUE}, the automatic grid includes the extreme
-#' values of each secondary objective.
+#' In \code{run_manual()}, each row is used exactly as supplied. The function
+#' does not automatically create a Cartesian product of epsilon values. If a
+#' Cartesian product is desired, it should be created explicitly by the user,
+#' for example with \code{\link{expand.grid}}, and then passed to
+#' \code{run_manual()}.
+#'
+#' The older arguments \code{grid}, \code{n_points}, and
+#' \code{include_extremes} are deprecated. They are still accepted for
+#' backwards compatibility and are internally converted to \code{run_grid()} or
+#' \code{run_manual()} designs.
+#'
+#' \strong{Automatic epsilon grids}
+#'
+#' When \code{runs = run_grid(n = ...)} is used, the epsilon design is not built
+#' immediately. Instead, it is constructed later during \code{\link{solve}}
+#' using extreme-point or payoff-table information.
+#'
+#' For each secondary objective, \code{run_grid()} generates a sequence of
+#' epsilon levels. With multiple secondary objectives, the final AUGMECON design
+#' is the Cartesian product of these sequences. Therefore, the number of runs
+#' can grow quickly as the number of secondary objectives increases.
+#'
+#' If \code{include_extremes = TRUE} is supplied inside \code{run_grid()}, the
+#' automatic grid includes the extreme values of each secondary objective.
+#' Otherwise, only interior values are used.
 #'
 #' If \code{lexicographic = TRUE}, extreme points are computed using
 #' lexicographic anchoring, which can improve payoff-table quality when
 #' objectives are tightly competing. The tolerance used for lexicographic
 #' anchoring is controlled by \code{lexicographic_tol}.
+#'
+#' \strong{Manual epsilon runs}
+#'
+#' Manual run designs are the most explicit way to use AUGMECON, especially
+#' when more than two objectives are involved or when only selected epsilon
+#' combinations should be explored.
+#'
+#' For example, with one primary objective and two secondary objectives, a
+#' manual run design may contain:
+#' \preformatted{
+#' data.frame(
+#'   eps_cost = c(4, 6, 8),
+#'   eps_loss = c(0, 1, 1)
+#' )
+#' }
+#'
+#' This creates three runs, not a full Cartesian grid. To create all
+#' combinations, use \code{expand.grid()} before calling \code{run_manual()}.
 #'
 #' \strong{Normalization and augmentation}
 #'
@@ -141,17 +187,34 @@
 #' coefficient \eqn{\rho}, while the normalized slack coefficients are computed
 #' internally at solve time using the corresponding payoff-table ranges.
 #'
+#' \strong{Failure handling and technical controls}
+#'
+#' The \code{control} argument controls how failed runs and technical AUGMECON
+#' settings are handled. It must be created with \code{\link{mo_control}}.
+#'
+#' Some epsilon combinations may define infeasible subproblems. By default,
+#' failed runs can be retained in the returned \code{SolutionSet} with missing
+#' objective values, while feasible runs are preserved. Alternatively, users can
+#' request that the solve stops when an infeasible run, a run without a solution,
+#' or an unexpected error is encountered.
+#'
+#' The \code{control} object also stores technical AUGMECON settings such as
+#' \code{slack_upper_bound}, the positive upper bound imposed on explicit slack
+#' variables associated with secondary objectives.
+#'
 #' \strong{Stored configuration}
 #'
 #' This function stores the method definition in \code{x$data$method} with:
 #' \itemize{
 #'   \item \code{name = "augmecon"},
+#'   \item \code{type = "augmecon"},
 #'   \item the primary objective alias,
 #'   \item the full set of participating aliases,
 #'   \item the set of secondary aliases,
-#'   \item either a manual grid or the information required to generate one
-#'   automatically,
-#'   \item augmentation and slack-bound parameters.
+#'   \item \code{runs},
+#'   \item lexicographic configuration,
+#'   \item \code{augmentation},
+#'   \item \code{control}.
 #' }
 #'
 #' The actual payoff table, grid construction, and subproblem solution loop are
@@ -163,15 +226,19 @@
 #' @param aliases Optional character vector of objective aliases to include in
 #'   the method. If \code{NULL}, all registered objective aliases are used. The
 #'   value of \code{primary} must be included in \code{aliases}.
-#' @param grid Optional named list defining manual epsilon levels for the
-#'   secondary objectives. Each name must correspond to a secondary objective
-#'   alias, and each element must be a non-empty numeric vector of finite
-#'   values. If \code{NULL}, the grid is generated automatically.
-#' @param n_points Number of automatically generated epsilon levels per
-#'   secondary objective when \code{grid = NULL}. Must be at least 2. Ignored
-#'   when \code{grid} is supplied.
-#' @param include_extremes Logical. If \code{TRUE}, automatically generated
-#'   grids include extreme values of each secondary objective.
+#' @param runs A run design created with \code{\link{run_grid}} or
+#'   \code{\link{run_manual}}. For AUGMECON, \code{run_grid()} requests
+#'   automatic epsilon-level generation for secondary objectives, while
+#'   \code{run_manual()} requires columns named \code{eps_<alias>} for each
+#'   secondary objective.
+#' @param grid Deprecated. Previous manual-grid argument. It must be a named
+#'   list with one numeric vector per secondary objective. New code should use
+#'   \code{runs = run_manual(...)} instead.
+#' @param n_points Deprecated. Previous automatic-grid argument. New code should
+#'   use \code{runs = run_grid(n = ...)} instead.
+#' @param include_extremes Deprecated. Previous automatic-grid argument. New
+#'   code should use \code{runs = run_grid(n = ..., include_extremes = ...)}
+#'   instead.
 #' @param lexicographic Logical. If \code{TRUE}, use lexicographic anchoring
 #'   when computing extreme points for automatic grid construction.
 #' @param lexicographic_tol Non-negative numeric tolerance used in
@@ -180,16 +247,19 @@
 #'   \eqn{\rho}. The effective coefficient of each secondary slack is computed
 #'   internally as \eqn{\rho / R_k}, where \eqn{R_k} is the payoff-table range
 #'   of the corresponding secondary objective.
-#' @param slack_upper_bound Positive numeric upper bound imposed on the explicit
-#'   non-negative slack variables associated with the secondary objectives.
+#' @param control A control object created with \code{\link{mo_control}}. It
+#'   controls how infeasible runs, runs without a solution, and unexpected
+#'   errors are handled. It also stores technical AUGMECON settings such as
+#'   \code{slack_upper_bound}.
 #'
 #' @return The updated \code{Problem} object with the AUGMECON method
 #'   configuration stored in \code{x$data$method}.
 #'
 #' @references
 #' Mavrotas, G. (2009). Effective implementation of the
-#' \eqn{\varepsilon}-constraint method in multi-objective mathematical programming
-#' problems. \emph{Applied Mathematics and Computation}, 213(2), 455--465.
+#' \eqn{\varepsilon}-constraint method in multi-objective mathematical
+#' programming problems. \emph{Applied Mathematics and Computation}, 213(2),
+#' 455--465.
 #'
 #' @examples
 #' # Small toy problem
@@ -240,16 +310,63 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost"),
-#'   n_points = 5,
-#'   include_extremes = TRUE,
+#'   runs = run_grid(n = 5, include_extremes = TRUE),
 #'   lexicographic = TRUE,
 #'   augmentation = 1e-3
 #' )
 #'
 #' x1$data$method
 #'
-#' # Manual epsilon grids for two secondary objectives
+#' # Manual runs for one secondary objective
+#' aug_runs <- data.frame(
+#'   eps_cost = c(4, 6, 8)
+#' )
+#'
 #' x2 <- set_method_augmecon(
+#'   x,
+#'   primary = "benefit",
+#'   aliases = c("benefit", "cost"),
+#'   runs = run_manual(aug_runs),
+#'   augmentation = 1e-3
+#' )
+#'
+#' x2$data$method
+#'
+#' # Manual runs for two secondary objectives
+#' aug_runs_3obj <- data.frame(
+#'   eps_cost = c(4, 6, 8),
+#'   eps_loss = c(0, 1, 1)
+#' )
+#'
+#' x3 <- set_method_augmecon(
+#'   x,
+#'   primary = "benefit",
+#'   aliases = c("benefit", "cost", "loss"),
+#'   runs = run_manual(aug_runs_3obj),
+#'   augmentation = 1e-3
+#' )
+#'
+#' x3$data$method
+#'
+#' # Cartesian epsilon design created explicitly by the user
+#' aug_cartesian <- expand.grid(
+#'   eps_cost = c(4, 6, 8),
+#'   eps_loss = c(0, 1),
+#'   KEEP.OUT.ATTRS = FALSE
+#' )
+#'
+#' x4 <- set_method_augmecon(
+#'   x,
+#'   primary = "benefit",
+#'   aliases = c("benefit", "cost", "loss"),
+#'   runs = run_manual(aug_cartesian),
+#'   augmentation = 1e-3
+#' )
+#'
+#' x4$data$method
+#'
+#' # Backwards-compatible deprecated usage
+#' x5 <- set_method_augmecon(
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost", "loss"),
@@ -257,46 +374,78 @@
 #'     cost = c(4, 6, 8),
 #'     loss = c(0, 1)
 #'   ),
-#'   augmentation = 1e-3,
-#'   slack_upper_bound = 1e6
+#'   augmentation = 1e-3
 #' )
 #'
-#' x2$data$method
+#' x5$data$method
+#'
+#' # Control failure handling and the AUGMECON slack upper bound
+#' x6 <- set_method_augmecon(
+#'   x,
+#'   primary = "benefit",
+#'   aliases = c("benefit", "cost"),
+#'   runs = run_manual(data.frame(eps_cost = c(4, 6, 8))),
+#'   augmentation = 1e-3,
+#'   control = mo_control(
+#'     stop_on_infeasible = FALSE,
+#'     stop_on_no_solution = FALSE,
+#'     stop_on_error = TRUE,
+#'     slack_upper_bound = 1e6
+#'   )
+#' )
+#'
+#' x6$data$method
 #'
 #' @seealso
+#' \code{\link{run_grid}},
+#' \code{\link{run_manual}},
+#' \code{\link{mo_control}},
 #' \code{\link{set_method_epsilon_constraint}},
 #' \code{\link{set_method_weighted_sum}},
 #' \code{\link{solve}}
 #'
 #' @export
-set_method_augmecon <- function(
-    x,
-    primary,
-    aliases = NULL,
-    grid = NULL,
-    n_points = 10,
-    include_extremes = TRUE,
-    lexicographic = TRUE,
-    lexicographic_tol = 1e-9,
-    augmentation = 1e-3,
-    slack_upper_bound = 1e6
-) {
+set_method_augmecon <- function(x,
+                                primary,
+                                aliases = NULL,
+                                runs = NULL,
+                                grid = NULL,
+                                n_points = NULL,
+                                include_extremes = NULL,
+                                lexicographic = TRUE,
+                                lexicographic_tol = 1e-9,
+                                augmentation = 1e-3,
+                                control = mo_control()) {
+  stopifnot(inherits(x, "Problem"))
+
+  if (exists(".pa_clone_data", mode = "function")) {
+    x <- .pa_clone_data(x)
+  }
 
   # ---- primary
-  if (!is.character(primary) || length(primary) != 1L || is.na(primary) || !nzchar(primary)) {
-    stop("`primary` must be a non-empty character string.", call. = FALSE)
+  primary <- as.character(primary)[1]
+
+  if (is.na(primary) || !nzchar(primary)) {
+    stop("`primary` must be a non-empty objective alias.", call. = FALSE)
   }
-  primary <- as.character(primary)
 
   # ---- aliases
+  .pamo_validate_objectives(x)
+
+  specs_all <- .pamo_get_specs(x)
+  obj_alias <- names(specs_all)
+
+  if (!primary %in% obj_alias) {
+    stop("`primary` alias not found: '", primary, "'.", call. = FALSE)
+  }
+
   if (is.null(aliases)) {
-    aliases <- .pamo_get_specs(x)
-    obj_alias <- names(aliases)
     aliases <- obj_alias
   } else {
     if (!is.character(aliases) || length(aliases) == 0L || anyNA(aliases)) {
       stop("`aliases` must be NULL or a non-empty character vector without NA.", call. = FALSE)
     }
+
     aliases <- as.character(aliases)
 
     if (any(!nzchar(aliases))) {
@@ -309,121 +458,116 @@ set_method_augmecon <- function(
     }
   }
 
-  # validate aliases exist
-  .pamo_get_objective_specs(x, aliases)
+  if (any(!aliases %in% obj_alias)) {
+    bad <- aliases[!aliases %in% obj_alias]
+    stop("Unknown aliases: ", paste(bad, collapse = ", "), call. = FALSE)
+  }
 
-  if (!(primary %in% aliases)) {
+  if (!primary %in% aliases) {
     stop("`primary` must be included in `aliases`.", call. = FALSE)
   }
 
   if (length(aliases) < 2L) {
-    stop("AUGMECON requires at least 2 objectives.", call. = FALSE)
+    stop("AUGMECON requires at least two objectives.", call. = FALSE)
   }
 
   secondary <- setdiff(aliases, primary)
+
   if (length(secondary) == 0L) {
     stop("AUGMECON requires at least one secondary objective.", call. = FALSE)
   }
 
-  # ---- common arguments
-  if (!is.logical(include_extremes) || length(include_extremes) != 1L || is.na(include_extremes)) {
-    stop("`include_extremes` must be TRUE or FALSE.", call. = FALSE)
-  }
-  include_extremes <- isTRUE(include_extremes)
+  .pamo_get_objective_specs(x, aliases)
 
-  if (!is.logical(lexicographic) || length(lexicographic) != 1L || is.na(lexicographic)) {
+  # -----------------------------------------------------------------------
+  # Backwards compatibility for run design only
+  # -----------------------------------------------------------------------
+
+  old_args_used <- !is.null(grid) ||
+    !is.null(n_points) ||
+    !is.null(include_extremes)
+
+  if (old_args_used && !is.null(runs)) {
+    stop(
+      "Use either `runs` or deprecated arguments (`grid`, `n_points`, `include_extremes`), not both.",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(runs) && old_args_used) {
+    .pa_deprecate_arg(
+      old = "grid/n_points/include_extremes",
+      new = "runs = run_grid(...) or runs = run_manual(...)"
+    )
+
+    if (is.null(grid)) {
+      n_points <- as.integer(n_points %||% 10L)[1]
+      include_extremes <- include_extremes %||% TRUE
+
+      runs <- run_grid(
+        n = n_points,
+        include_extremes = isTRUE(include_extremes)
+      )
+
+    } else {
+      grid_df <- .pamo_augmecon_grid_to_manual_df(
+        grid = grid,
+        secondary = secondary
+      )
+
+      runs <- run_manual(grid_df)
+    }
+  }
+
+  if (is.null(runs)) {
+    stop(
+      "`runs` must be supplied. Use `runs = run_grid(n = ...)` or `runs = run_manual(...)`.",
+      call. = FALSE
+    )
+  }
+
+  .pamo_check_run_design(runs)
+
+  # ---- lexicographic
+  if (!is.logical(lexicographic) ||
+      length(lexicographic) != 1L ||
+      is.na(lexicographic)) {
     stop("`lexicographic` must be TRUE or FALSE.", call. = FALSE)
   }
+
   lexicographic <- isTRUE(lexicographic)
 
-  if (!is.numeric(lexicographic_tol) || length(lexicographic_tol) != 1L ||
-      is.na(lexicographic_tol) || !is.finite(lexicographic_tol) || lexicographic_tol < 0) {
-    stop("`lexicographic_tol` must be a single finite non-negative number.", call. = FALSE)
+  lexicographic_tol <- as.numeric(lexicographic_tol)[1]
+
+  if (!is.finite(lexicographic_tol) || lexicographic_tol < 0) {
+    stop("`lexicographic_tol` must be a finite non-negative number.", call. = FALSE)
   }
-  lexicographic_tol <- as.numeric(lexicographic_tol)
 
-  if (!is.numeric(augmentation) || length(augmentation) != 1L ||
-      is.na(augmentation) || !is.finite(augmentation) || augmentation <= 0) {
-    stop("`augmentation` must be a single finite positive number.", call. = FALSE)
+  # ---- augmentation
+  augmentation <- as.numeric(augmentation)[1]
+
+  if (!is.finite(augmentation) || augmentation <= 0) {
+    stop("`augmentation` must be a finite positive number.", call. = FALSE)
   }
-  augmentation <- as.numeric(augmentation)
 
-  if (!is.numeric(slack_upper_bound) || length(slack_upper_bound) != 1L ||
-      is.na(slack_upper_bound) || !is.finite(slack_upper_bound) || slack_upper_bound <= 0) {
-    stop("`slack_upper_bound` must be a single finite positive number.", call. = FALSE)
-  }
-  slack_upper_bound <- as.numeric(slack_upper_bound)
-
-  # ---- automatic grid
-  if (is.null(grid)) {
-
-    if (!is.numeric(n_points) || length(n_points) != 1L ||
-        is.na(n_points) || !is.finite(n_points) || n_points < 2) {
-      stop("`n_points` must be a single number >= 2 when `grid = NULL`.", call. = FALSE)
-    }
-    n_points <- as.integer(n_points)
-
-  } else {
-
-    # ---- manual grid
-    if (is.atomic(grid) && !is.list(grid)) {
-      stop("`grid` must be NULL or a named list.", call. = FALSE)
-    }
-
-    if (!is.list(grid) || length(grid) == 0L || is.null(names(grid)) || any(!nzchar(names(grid)))) {
-      stop("`grid` must be a named non-empty list when supplied.", call. = FALSE)
-    }
-
-    gnames <- names(grid)
-
-    extra <- setdiff(gnames, secondary)
-    miss  <- setdiff(secondary, gnames)
-
-    if (length(extra) > 0L) {
-      stop(
-        "`grid` contains names not corresponding to secondary objectives: ",
-        paste(extra, collapse = ", "),
-        call. = FALSE
-      )
-    }
-
-    if (length(miss) > 0L) {
-      stop(
-        "`grid` is missing secondary objectives: ",
-        paste(miss, collapse = ", "),
-        call. = FALSE
-      )
-    }
-
-    grid <- grid[secondary]
-
-    grid <- lapply(seq_along(grid), function(i) {
-      nm <- secondary[i]
-      v  <- grid[[i]]
-
-      if (!is.numeric(v) || length(v) == 0L || anyNA(v) || any(!is.finite(v))) {
-        stop("`grid[['", nm, "']]` must be a non-empty numeric vector of finite values.", call. = FALSE)
-      }
-
-      sort(unique(as.numeric(v)))
-    })
-    names(grid) <- secondary
-
-    n_points <- NULL
-  }
+  # ---- control
+  .pamo_check_mo_control(control)
 
   x$data$method <- list(
     name = "augmecon",
+    type = "augmecon",
     primary = primary,
     aliases = aliases,
     secondary = secondary,
-    grid = grid,
-    n_points = n_points,
-    include_extremes = include_extremes,
+    runs = runs,
     lexicographic = lexicographic,
     lexicographic_tol = lexicographic_tol,
     augmentation = augmentation,
-    slack_upper_bound = slack_upper_bound
+    slack_upper_bound = control$slack_upper_bound,
+    stop_on_infeasible = control$stop_on_infeasible,
+    stop_on_no_solution = control$stop_on_no_solution,
+    stop_on_error = control$stop_on_error,
+    control = control
   )
 
   x

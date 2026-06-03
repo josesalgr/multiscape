@@ -120,6 +120,22 @@
   x <- .pa_build_model_set_needs_from_objective(x)
 
   # ------------------------------------------------------------
+  # implicit simple conservation model
+  # ------------------------------------------------------------
+  # If the user supplied planning units, features and dist_features, but did
+  # not supply actions or effects, create the classical conservation-planning
+  # model internally:
+  #
+  #   one implicit conservation action per planning unit
+  #   effect_type = "after"
+  #   amount_after = baseline feature amount
+  #
+  # This must happen before ensure_tables(), prepare_tables(), targets, and
+  # objective validation.
+  x <- .pa_build_model_ensure_implicit_conservation(x)
+
+
+  # ------------------------------------------------------------
   # legacy adapters
   # ------------------------------------------------------------
   # if (identical(input_format, "legacy")) {
@@ -511,9 +527,11 @@
   # ------------------------------------------------------------
   if (isTRUE(has_actions_model) && isTRUE(has_targets) && !isTRUE(has_effects_model)) {
     .pa_abort(
-      "This problem includes actions and feature targets, but no action effects were provided.\n",
-      "Because targets are defined on features, multiscape needs to know how each action affects each feature.\n",
-      "Run add_effects() after add_actions() before solve()."
+      "This problem includes explicit actions and feature targets, but no action effects were provided.\n",
+      "Because targets are defined on features, multiscape needs to know how each explicit action contributes to each feature.\n",
+      "Run add_effects() after add_actions() before solve().\n",
+      "If you intended to use the simple conservation-planning model, do not call add_actions(); ",
+      "multiscape will then create an implicit conservation action automatically."
     )
   }
 
@@ -521,8 +539,10 @@
 
     if (!.has_rows(x$data$dist_effects_model)) {
       .pa_abort(
-        "Objective 'maximizeBenefits' requires effects/benefits, but dist_effects is empty.\n",
-        "Run add_benefits() / add_effects() after add_actions()."
+        "Objective 'maximizeBenefits' requires effects, but dist_effects is empty.\n",
+        "In explicit action-based models, run add_effects() after add_actions().\n",
+        "In the simple conservation model, omit both add_actions() and add_effects() ",
+        "so multiscape can create implicit conservation effects."
       )
     }
 
@@ -572,14 +592,24 @@
         )
       }
 
-      .pa_abort(
-        "Objective '", obj_alias, "' has no matching effect rows after applying ",
-        "the selected action/feature filters.",
-        feature_msg,
-        action_msg,
-        "\nBenefit objectives are based on action effects, not directly on baseline feature values.",
-        "\nCheck that the selected feature(s) appear in add_effects() with positive non-zero effects."
-      )
+      if (identical(bcol, "amount_after")) {
+        .pa_abort(
+          "Objective '", obj_alias, "' has no positive non-zero representation coefficients.",
+          feature_msg,
+          action_msg,
+          "\nBecause this is an implicit simple conservation model, ",
+          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
+          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
+        )
+      } else {
+        .pa_abort(
+          "Objective '", obj_alias, "' has no positive non-zero benefit coefficients.",
+          feature_msg,
+          action_msg,
+          "\nThis objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.",
+          "\nFor add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects()."
+        )
+      }
     }
 
     bb <- as.numeric(de[[bcol]])
@@ -1011,12 +1041,21 @@
 
       obj_alias <- .pa_active_objective_alias(x) %||% "maximizeBenefits"
 
-      .pa_abort(
-        "Objective '", obj_alias, "' produced an empty or zero objective vector.",
-        "\nThis usually means that the selected feature(s) have no positive non-zero effects ",
-        "for the feasible action set.",
-        "\nCheck add_effects(), especially the `feature` column and the selected `features=` argument."
-      )
+      if (identical(bcol, "amount_after")) {
+        .pa_abort(
+          "Objective '", obj_alias, "' produced an empty or zero representation vector.",
+          "\nBecause this is an implicit simple conservation model, ",
+          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
+          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
+        )
+      } else {
+        .pa_abort(
+          "Objective '", obj_alias, "' produced an empty or zero objective vector.",
+          "\nThis usually means that the selected feature(s) have no positive non-zero effects ",
+          "for the feasible action set.",
+          "\nCheck add_effects(), especially the `feature` column and the selected `features=` argument."
+        )
+      }
     }
 
     res <- rcpp_add_objective_max_benefit(
@@ -1351,5 +1390,126 @@
   )
 
   x$data$model_registry$cons$action_max_per_pu <- res
+  x
+}
+
+
+#' Ensure implicit conservation model when actions/effects are omitted
+#'
+#' @noRd
+.pa_build_model_ensure_implicit_conservation <- function(x) {
+  stopifnot(inherits(x, "Problem"))
+
+  if (.pa_needs_implicit_conservation_model(x)) {
+    x <- .pa_add_implicit_conservation_model(x)
+  }
+
+  x
+}
+
+
+.pa_needs_implicit_conservation_model <- function(x) {
+  stopifnot(inherits(x, "Problem"))
+
+  has_rows <- function(df) {
+    !is.null(df) && inherits(df, "data.frame") && nrow(df) > 0
+  }
+
+  has_actions <- has_rows(x$data$actions) || has_rows(x$data$dist_actions)
+  has_effects <- has_rows(x$data$dist_effects)
+
+  !has_actions && !has_effects
+}
+
+
+.pa_add_implicit_conservation_model <- function(x,
+                                                action_id = "conservation",
+                                                action_name = "Conservation") {
+  stopifnot(inherits(x, "Problem"))
+
+  has_rows <- function(df) {
+    !is.null(df) && inherits(df, "data.frame") && nrow(df) > 0
+  }
+
+  has_actions <- has_rows(x$data$actions) || has_rows(x$data$dist_actions)
+  has_effects <- has_rows(x$data$dist_effects)
+
+  if (has_actions || has_effects) {
+    return(x)
+  }
+
+  if (is.null(x$data$pu) ||
+      is.null(x$data$features) ||
+      is.null(x$data$dist_features)) {
+    stop(
+      "Implicit conservation mode requires planning units, features, and dist_features.",
+      call. = FALSE
+    )
+  }
+
+  if (!all(c("id", "internal_id") %in% names(x$data$pu))) {
+    stop(
+      "Implicit conservation mode requires x$data$pu to contain 'id' and 'internal_id'.",
+      call. = FALSE
+    )
+  }
+
+  if (!all(c("id", "internal_id") %in% names(x$data$features))) {
+    stop(
+      "Implicit conservation mode requires x$data$features to contain 'id' and 'internal_id'.",
+      call. = FALSE
+    )
+  }
+
+  if (!all(c("pu", "feature", "amount") %in% names(x$data$dist_features))) {
+    stop(
+      "Implicit conservation mode requires dist_features columns 'pu', 'feature', and 'amount'.",
+      call. = FALSE
+    )
+  }
+
+  actions <- data.frame(
+    id = action_id,
+    name = action_name,
+    action_set = "conservation",
+    stringsAsFactors = FALSE
+  )
+
+  x <- add_actions(
+    x = x,
+    actions = actions,
+    include_pairs = NULL,
+    exclude_pairs = NULL,
+    cost = 0
+  )
+
+  effects <- data.frame(
+    action = action_id,
+    feature = x$data$features$id,
+    multiplier = 1,
+    stringsAsFactors = FALSE
+  )
+
+  x <- add_effects(
+    x = x,
+    effects = effects,
+    effect_type = "after",
+    component = "any"
+  )
+
+  x$data$meta <- x$data$meta %||% list()
+  x$data$meta$model_mode <- "simple_conservation"
+  x$data$meta$implicit_actions <- TRUE
+  x$data$meta$implicit_effects <- TRUE
+  x$data$meta$implicit_action_id <- action_id
+  x$data$meta$model_dirty <- TRUE
+
+  x$data$effects_meta <- x$data$effects_meta %||% list()
+  x$data$effects_meta$input <- "implicit_conservation"
+  x$data$effects_meta$effect_type <- "after"
+  x$data$effects_meta$component <- "amount_after"
+  x$data$effects_meta$action_id <- action_id
+  x$data$effects_meta$action_name <- action_name
+
   x
 }
