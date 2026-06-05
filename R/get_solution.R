@@ -867,18 +867,19 @@ get_runs <- function(x, feasible_only = FALSE) {
 #' returned by \code{\link{solve}}.
 #'
 #' Objective values are read from run-table columns named
-#' \code{value_<alias>}, where \code{<alias>} is the objective alias.
+#' \code{value_<objective>}, where \code{<objective>} is the objective alias.
 #'
-#' @param x A \code{\link{solutionset-class}} object.
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
 #' @param format Character. Either \code{"long"} or \code{"wide"}.
 #' @param feasible_only Logical. If \code{TRUE}, use only feasible runs.
 #'
 #' @return
 #' If \code{format = "long"}, a \code{data.frame} with columns
-#' \code{run_id}, \code{objective}, and \code{value}.
+#' \code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
 #'
-#' If \code{format = "wide"}, a \code{data.frame} with one row per run and one
-#' column per objective.
+#' If \code{format = "wide"}, a \code{data.frame} with one row per run,
+#' columns \code{run_id} and \code{solution_id}, and one column per objective.
 #'
 #' @export
 get_objectives <- function(x,
@@ -897,7 +898,7 @@ get_objectives <- function(x,
   if (length(value_cols) == 0L) {
     stop(
       "No objective value columns found in the run table. ",
-      "Expected columns named 'value_<alias>'.",
+      "Expected columns named 'value_<objective>'.",
       call. = FALSE
     )
   }
@@ -906,11 +907,15 @@ get_objectives <- function(x,
     runs$run_id <- seq_len(nrow(runs))
   }
 
-  aliases <- sub("^value_", "", value_cols)
+  if (!("solution_id" %in% names(runs))) {
+    runs$solution_id <- NA_character_
+  }
+
+  objectives <- sub("^value_", "", value_cols)
 
   if (identical(format, "wide")) {
-    out <- runs[, c("run_id", value_cols), drop = FALSE]
-    names(out) <- c("run_id", aliases)
+    out <- runs[, c("run_id", "solution_id", value_cols), drop = FALSE]
+    names(out) <- c("run_id", "solution_id", objectives)
     rownames(out) <- NULL
     return(out)
   }
@@ -920,7 +925,8 @@ get_objectives <- function(x,
     lapply(seq_along(value_cols), function(i) {
       data.frame(
         run_id = runs$run_id,
-        objective = aliases[i],
+        solution_id = runs$solution_id,
+        objective = objectives[i],
         value = as.numeric(runs[[value_cols[i]]]),
         stringsAsFactors = FALSE
       )

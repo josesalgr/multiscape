@@ -1007,10 +1007,23 @@
       .pa_abort("Missing x$data$dist_effects_model for objective 'maximizeBenefits'.")
     }
 
-    for (nm in c("internal_pu", "internal_action", "internal_feature", "benefit")) {
+    bcol <- as.character(oargs$benefit_col %||% "benefit")[1]
+
+    if (is.na(bcol) || !nzchar(bcol)) {
+      .pa_abort("`benefit_col` must be a non-empty string.")
+    }
+
+    for (nm in c("internal_pu", "internal_action", "internal_feature")) {
       if (!(nm %in% names(de))) {
         .pa_abort("dist_effects_model must contain column '", nm, "'.")
       }
+    }
+
+    if (!(bcol %in% names(de))) {
+      .pa_abort(
+        "dist_effects_model must contain column '", bcol,
+        "' for objective 'maximizeBenefits'."
+      )
     }
 
     # filter action subset if requested
@@ -1023,6 +1036,19 @@
     feats <- oargs$features %||% NULL
     if (!is.null(feats)) {
       de <- de[de$internal_feature %in% as.integer(feats), , drop = FALSE]
+    }
+
+    # The C++ objective builder expects a column named 'benefit'. For the usual
+    # benefit objective this is already the canonical column. If a different
+    # coefficient column is requested, for example 'amount_after' in the implicit
+    # conservation model, copy it locally into 'benefit' before calling C++.
+    de$benefit <- as.numeric(de[[bcol]])
+
+    if (anyNA(de$benefit) || any(!is.finite(de$benefit))) {
+      .pa_abort(
+        "Objective 'maximizeBenefits' uses column '", bcol,
+        "', but it contains NA or non-finite values."
+      )
     }
 
     prep <- rcpp_prepare_objective_max_benefit(

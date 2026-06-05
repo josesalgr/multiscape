@@ -7,7 +7,8 @@
 get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
 }
 \arguments{
-\item{x}{A \code{\link{solutionset-class}} object.}
+\item{x}{A \code{\link{solutionset-class}} object returned by
+\code{\link{solve}}.}
 
 \item{format}{Character. Either \code{"long"} or \code{"wide"}.}
 
@@ -15,15 +16,15 @@ get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
 }
 \value{
 If \code{format = "long"}, a \code{data.frame} with columns
-\code{run_id}, \code{objective}, and \code{value}.
+\code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
 
-If \code{format = "wide"}, a \code{data.frame} with one row per run and one
-column per objective.
+If \code{format = "wide"}, a \code{data.frame} with one row per run,
+columns \code{run_id} and \code{solution_id}, and one column per objective.
 }
 \description{
 Extract objective values from a \code{\link{solutionset-class}} object
 returned by \code{\link{solve}}.
 
 Objective values are read from run-table columns named
-\code{value_<alias>}, where \code{<alias>} is the objective alias.
+\code{value_<objective>}, where \code{<objective>} is the objective alias.
 }
