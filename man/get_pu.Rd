@@ -2,19 +2,19 @@
 % Please edit documentation in R/get_solution.R
 \name{get_pu}
 \alias{get_pu}
-\title{Get planning-unit results from a solution}
+\title{Get planning-unit results from a solution set}
 \usage{
 get_pu(x, only_selected = FALSE, run = NULL)
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object returned by
+\item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
 \item{only_selected}{Logical. If \code{TRUE}, return only rows where
 \code{selected == 1}. Default is \code{FALSE}.}
 
-\item{run}{Optional positive integer giving the run index to extract from a
-\code{SolutionSet}. If \code{NULL}, all runs are returned when available.}
+\item{run}{Optional positive integer giving the run index to extract. If
+\code{NULL}, all runs are returned when available.}
 }
 \value{
 A \code{data.frame} containing the stored planning-unit summary.
@@ -22,12 +22,12 @@ Typical columns include planning-unit identifiers, optional labels, and a
 \code{selected} indicator.
 }
 \description{
-Extract the planning-unit summary table from a \code{Solution} or
-\code{SolutionSet} object returned by \code{\link{solve}}.
+Extract the planning-unit summary table from a \code{\link{solutionset-class}}
+object returned by \code{\link{solve}}.
 
 The returned table summarizes solution values at the planning-unit level and
 typically includes a \code{selected} indicator showing whether each planning
-unit is selected in the solution.
+unit is selected in a run.
 }
 \details{
 This function reads the planning-unit summary stored in
@@ -35,13 +35,12 @@ This function reads the planning-unit summary stored in
 vector; it simply returns the stored summary after optional filtering.
 
 Let \eqn{w_i} denote the planning-unit selection variable for planning unit
-\eqn{i}. In standard \code{multiscape} workflows, the \code{selected} column is the
-user-facing representation of that planning-unit decision, typically coded as
-\code{0} or \code{1}.
+\eqn{i}. In standard \pkg{multiscape} workflows, the \code{selected} column
+is the user-facing representation of that planning-unit decision, typically
+coded as \code{0} or \code{1}.
 
-If \code{x} is a \code{SolutionSet} and \code{run} is provided, only rows
-belonging to that run are returned. This requires the summary table to
-contain a \code{run_id} column.
+If \code{run} is provided, only rows belonging to that run are returned. This
+requires the summary table to contain a \code{run_id} column.
 
 If \code{only_selected = TRUE}, only rows with \code{selected == 1} are
 returned. This requires the summary table to contain a \code{selected}
@@ -69,37 +68,23 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_pu(sol)
-  get_pu(sol, only_selected = TRUE)
+  get_pu(solset)
+  get_pu(solset, only_selected = TRUE)
 }
 }
+
 }
 \seealso{
 \code{\link{get_actions}},

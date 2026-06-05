@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plot_spatial_features}
 \alias{plot_spatial_features}
-\title{Plot spatial feature values from a solution}
+\title{Plot spatial feature values from a solution set}
 \usage{
 plot_spatial_features(
   x,
@@ -24,11 +24,11 @@ plot_spatial_features(
 )
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object.}
+\item{x}{A \code{\link{solutionset-class}} object returned by
+\code{\link{solve}}.}
 
-\item{runs}{Optional integer vector of run ids. If \code{NULL}, a
-\code{Solution} is used directly and a \code{SolutionSet} defaults to the
-first run.}
+\item{runs}{Optional integer vector of run ids. If \code{NULL}, the first
+available run is plotted by default.}
 
 \item{features}{Optional feature subset to display. Matching is attempted
 against both feature ids and feature names.}
@@ -73,11 +73,12 @@ available, use a continuous viridis scale.}
 Invisibly returns a \code{ggplot} object.
 }
 \description{
-Plot feature values in space from a \code{Solution} or \code{SolutionSet}.
+Plot feature values in space from a \code{\link{solutionset-class}} object
+returned by \code{\link{solve}}.
 
-This function combines baseline feature amounts from
-\code{x$problem$data$dist_features} with positive effects induced by selected
-actions to produce planning-unit-level feature maps.
+This function combines baseline feature amounts from the associated
+\code{Problem} object with positive effects induced by selected actions to
+produce planning-unit-level feature maps.
 }
 \details{
 For each planning unit \eqn{i} and feature \eqn{f}, the plotted quantities
@@ -95,8 +96,8 @@ are:
 In the current implementation:
 \itemize{
 \item \code{baseline} is the summed baseline amount from
-\code{x$problem$data$dist_features},
-\item \code{benefit} is the summed positive effect from selected actions,
+\code{dist_features};
+\item \code{benefit} is the summed positive effect from selected actions;
 \item \code{final} is \code{baseline + benefit}.
 }
 
@@ -110,7 +111,7 @@ per feature.
 If multiple runs are plotted, exactly one feature must be requested, and
 faceting is done by run.
 
-Planning-unit geometry must be available in \code{x$problem$data$pu_sf}.
+Planning-unit geometry must be available in the associated problem object.
 }
 \examples{
 if (requireNamespace("sf", quietly = TRUE) &&
@@ -156,21 +157,27 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
-    list(
-      problem = problem,
-      summary = list(
-        actions = data.frame(
-          pu = ids,
-          action = "conservation",
-          selected = 1L
-        )
+  run_result <- list(
+    problem = problem,
+    summary = list(
+      actions = data.frame(
+        pu = ids,
+        action = "conservation",
+        selected = 1L
       )
-    ),
-    class = "Solution"
+    )
   )
 
-  plot_spatial_features(sol, features = "feature_1", value = "final")
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial_features(solset, features = "feature_1", value = "final")
 }
 
 }

@@ -2,36 +2,40 @@
 % Please edit documentation in R/get_solution.R
 \name{get_solution_vector}
 \alias{get_solution_vector}
-\title{Get raw solution vector from a solution}
+\title{Get raw decision vector from a solution set}
 \usage{
-get_solution_vector(x, run = 1L)
+get_solution_vector(x, run = NULL, solution_id = NULL)
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object returned by
+\item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{run}{Positive integer giving the run index to extract when \code{x} is
-a \code{SolutionSet}. Default is \code{1L}.}
+\item{run}{Optional positive integer giving the run id to extract. If
+\code{NULL}, the first stored solution is used unless \code{solution_id}
+is supplied.}
+
+\item{solution_id}{Optional character string giving the solution id to
+extract. If supplied, \code{run} must be \code{NULL}.}
 }
 \value{
 A numeric vector with one value per internal model variable.
 }
 \description{
-Return the raw decision-variable vector produced by the solver, in the
-internal model-variable order used by the optimization backend.
+Return the raw decision-variable vector for a selected run in a
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
+
+The vector is returned in the internal model-variable order used by the
+optimization backend.
 }
 \details{
-This function extracts the raw solution vector stored at
-\code{x$solution$vector} for a \code{Solution} or for a selected run of a
-\code{SolutionSet}.
-
-The returned vector is in the internal variable order of the optimization
-model. Depending on the problem formulation, it may include:
+This function extracts the raw decision vector for one run. The returned
+vector is in the internal variable order of the optimization model. Depending
+on the problem formulation, it may include:
 \itemize{
-\item planning-unit selection variables,
-\item action-allocation variables,
+\item planning-unit selection variables;
+\item action-allocation variables;
 \item auxiliary variables introduced for targets, budgets, fragmentation,
-or other constraints/objectives,
+or other constraints/objectives;
 \item and potentially additional blocks created internally by the model
 builder.
 }
@@ -42,10 +46,6 @@ table.
 
 To inspect selected planning units or selected actions in a more interpretable
 form, use \code{\link{get_pu}} or \code{\link{get_actions}} instead.
-
-For a single solution, the returned vector corresponds to that solution.
-For a \code{SolutionSet}, the \code{run} argument selects which run to
-extract.
 }
 \examples{
 \donttest{
@@ -66,34 +66,19 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  v <- get_solution_vector(sol)
+  v <- get_solution_vector(solset)
   v
   length(v)
 }

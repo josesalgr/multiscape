@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plot_tradeoff}
 \alias{plot_tradeoff}
-\title{Plot trade-offs from a multi-objective solution set}
+\title{Plot trade-offs from a solution set}
 \usage{
 plot_tradeoff(
   x,
@@ -18,7 +18,7 @@ plot_tradeoff(
 )
 }
 \arguments{
-\item{x}{A \code{SolutionSet} object.}
+\item{x}{A \code{\link{solutionset-class}} object.}
 
 \item{objectives}{Optional character vector of objective aliases to display.
 These must match the suffixes of the \code{value_*} columns in
@@ -52,11 +52,11 @@ Invisibly returns a \code{ggplot} object.
 }
 \description{
 Plot pairwise trade-offs among objective values stored in a
-\code{SolutionSet}.
+\code{\link{solutionset-class}} object.
 
-This function is intended for multi-objective workflows in which the solution
-set contains one row per run and one or more objective value columns of the
-form \code{value_*}.
+This function is intended for workflows in which the solution set contains
+one row per run and two or more objective-value columns of the form
+\code{value_*}.
 
 If exactly two objectives are selected, the function returns a single
 scatterplot. If three or more objectives are selected, all pairwise
@@ -97,7 +97,7 @@ the number of objectives.
 If \code{color_by} is supplied, points are coloured by either:
 \itemize{
 \item one of the selected objective aliases, in which case the
-corresponding \code{value_*} column is used,
+corresponding \code{value_*} column is used;
 \item or one of the run-level columns \code{run_id}, \code{status},
 \code{runtime}, or \code{gap}.
 }
@@ -133,18 +133,13 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
     class = "SolutionSet"
   )
 
-  # Plot all pairwise trade-offs
   plot_tradeoff(solset)
-
-  # Plot two selected objectives
   plot_tradeoff(solset, objectives = c("cost", "benefit"))
-
-  # Colour points by one objective and label runs
   plot_tradeoff(solset, color_by = "loss", label_runs = TRUE)
 }
 
 }
 \seealso{
 \code{\link{solve}},
-\code{\link{get_solution_vector}}
+\code{\link{solutionset-class}}
 }

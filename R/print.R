@@ -26,11 +26,6 @@ print.Problem <- function(x, ...) x$print()
 
 
 #' @rdname print
-#' @method print Solution
-#' @export
-print.Solution <- function(x, ...) x$print()
-
-#' @rdname print
 #' @method print SolutionSet
 #' @export
 print.SolutionSet <- function(x, ...) x$print()

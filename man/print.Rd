@@ -3,13 +3,10 @@
 \name{print}
 \alias{print}
 \alias{print.Problem}
-\alias{print.Solution}
 \alias{print.SolutionSet}
 \title{Print}
 \usage{
 \method{print}{Problem}(x, ...)
-
-\method{print}{Solution}(x, ...)
 
 \method{print}{SolutionSet}(x, ...)
 }

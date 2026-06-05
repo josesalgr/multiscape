@@ -6,14 +6,14 @@ NULL
 # -------------------------------------------------------------------
 
 .pa_plot_spatial_resolve_solutions <- function(x, runs = NULL) {
+  # Backward-compatible internal path. Users should pass SolutionSet objects.
   if (inherits(x, "Solution")) {
     if (!is.null(runs)) {
       runs <- as.integer(runs)
       if (length(runs) != 1L || is.na(runs[1]) || runs[1] != 1L) {
-        stop("For a Solution object, `runs` must be NULL or 1.", call. = FALSE)
+        stop("For this single-run object, `runs` must be NULL or 1.", call. = FALSE)
       }
     }
-    runs <- 1L
     solutions <- list(x)
     names(solutions) <- "1"
     return(solutions)
@@ -22,44 +22,95 @@ NULL
   if (inherits(x, "SolutionSet")) {
     all_solutions <- x$solution$solutions %||% NULL
     if (is.null(all_solutions) || !is.list(all_solutions) || length(all_solutions) == 0L) {
-      stop("SolutionSet has no solutions in x$solution$solutions.", call. = FALSE)
+      stop("SolutionSet has no stored run-level results.", call. = FALSE)
     }
+
+    if (is.null(names(all_solutions)) || any(!nzchar(names(all_solutions)))) {
+      ids <- vapply(seq_along(all_solutions), function(i) {
+        as.character(all_solutions[[i]]$meta$solution_id %||% paste0("s", i))[1]
+      }, character(1))
+      names(all_solutions) <- ids
+    }
+
+    runs_tbl <- x$solution$runs %||% NULL
 
     if (is.null(runs)) {
-      runs <- 1L
-    } else {
-      runs <- as.integer(runs)
-      if (any(!is.finite(runs)) || any(is.na(runs)) || any(runs < 1L)) {
-        stop("`runs` must contain positive integers.", call. = FALSE)
-      }
-      if (any(runs > length(all_solutions))) {
-        stop(
-          "`runs` contains values larger than the number of available solutions (",
-          length(all_solutions), ").",
-          call. = FALSE
-        )
-      }
-      runs <- unique(runs)
+      # Default to the first stored solution, not necessarily run_id = 1.
+      solutions <- all_solutions[1]
+      rid <- solutions[[1]]$meta$run_id %||% NA_integer_
+      names(solutions) <- as.character(rid)
+      return(solutions)
     }
 
-    solutions <- all_solutions[runs]
+    runs <- as.integer(runs)
+    if (any(!is.finite(runs)) || any(is.na(runs)) || any(runs < 1L)) {
+      stop("`runs` must contain positive integer run ids.", call. = FALSE)
+    }
+    runs <- unique(runs)
+
+    if (is.null(runs_tbl) ||
+        !inherits(runs_tbl, "data.frame") ||
+        !all(c("run_id", "solution_id") %in% names(runs_tbl))) {
+      stop(
+        "Cannot resolve `runs` because the SolutionSet run table does not contain ",
+        "both 'run_id' and 'solution_id'.",
+        call. = FALSE
+      )
+    }
+
+    idx <- match(runs, runs_tbl$run_id)
+    if (anyNA(idx)) {
+      bad <- runs[is.na(idx)]
+      stop("Unknown run id(s): ", paste(bad, collapse = ", "), ".", call. = FALSE)
+    }
+
+    solution_ids <- runs_tbl$solution_id[idx]
+    missing <- is.na(solution_ids) | !nzchar(solution_ids)
+    if (any(missing)) {
+      bad_runs <- runs[missing]
+      status_msg <- ""
+      if ("status" %in% names(runs_tbl)) {
+        status_msg <- paste0(
+          " Status: ",
+          paste(paste0(bad_runs, "=", runs_tbl$status[idx][missing]), collapse = ", "),
+          "."
+        )
+      }
+      stop(
+        "No stored solution is available for run id(s): ",
+        paste(bad_runs, collapse = ", "), ".",
+        status_msg,
+        call. = FALSE
+      )
+    }
+
+    bad_sid <- setdiff(solution_ids, names(all_solutions))
+    if (length(bad_sid) > 0L) {
+      stop(
+        "Some run ids point to missing stored solution ids: ",
+        paste(bad_sid, collapse = ", "), ".",
+        call. = FALSE
+      )
+    }
+
+    solutions <- all_solutions[solution_ids]
     names(solutions) <- as.character(runs)
     return(solutions)
   }
 
-  stop("x must be a Solution or SolutionSet.", call. = FALSE)
+  stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
 }
 
 .pa_plot_spatial_get_geometry <- function(solutions) {
   sol0 <- solutions[[1]]
   pr <- sol0$problem %||% NULL
   if (is.null(pr) || !inherits(pr, "Problem")) {
-    stop("Solution does not contain a valid problem object.", call. = FALSE)
+    stop("Stored run-level result does not contain a valid problem object.", call. = FALSE)
   }
 
   pu_sf <- pr$data$pu_sf %||% NULL
   if (is.null(pu_sf) || !inherits(pu_sf, "sf")) {
-    stop("No PU geometry found in solution$problem$data$pu_sf.", call. = FALSE)
+    stop("No PU geometry found in the associated problem object.", call. = FALSE)
   }
   if (!("id" %in% names(pu_sf))) {
     stop("PU geometry must contain an 'id' column.", call. = FALSE)
@@ -89,11 +140,11 @@ NULL
   p + ggplot2::theme_minimal()
 }
 
-#' @title Plot spatial outputs from a solution or solution set
+#' @title Plot spatial outputs from a solution set
 #'
 #' @description
-#' Convenience wrapper to plot spatial outputs from a \code{Solution} or
-#' \code{SolutionSet}.
+#' Convenience wrapper to plot spatial outputs from a
+#' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 #'
 #' Depending on \code{what}, this function dispatches to one of:
 #' \itemize{
@@ -106,12 +157,12 @@ NULL
 #' plotting functions provide a cleaner and more explicit user interface for
 #' each spatial output type.
 #'
-#' @param x A \code{Solution} or \code{SolutionSet} object.
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
 #' @param what Character string indicating what to plot. Must be one of
 #'   \code{"pu"}, \code{"actions"}, or \code{"features"}.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, a
-#'   \code{Solution} is used directly and a \code{SolutionSet} defaults to the
-#'   first run.
+#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
+#'   available run is plotted by default.
 #' @param actions Optional action subset used when \code{what = "actions"}.
 #' @param features Optional feature subset used when \code{what = "features"}.
 #' @param value Character string used only when \code{what = "features"}.
@@ -154,7 +205,7 @@ NULL
 #'     class = "Problem"
 #'   )
 #'
-#'   sol <- structure(
+#'   run_result <- structure(
 #'     list(
 #'       problem = problem,
 #'       summary = list(
@@ -167,7 +218,16 @@ NULL
 #'     class = "Solution"
 #'   )
 #'
-#'   plot_spatial(sol, what = "pu")
+#'   solset <- structure(
+#'     list(
+#'       solution = list(
+#'         solutions = list(run_result)
+#'       )
+#'     ),
+#'     class = "SolutionSet"
+#'   )
+#'
+#'   plot_spatial(solset, what = "pu")
 #' }
 #'
 #' @seealso
@@ -260,7 +320,7 @@ plot_spatial <- function(
 #'
 #' @description
 #' Plot the spatial distribution of selected planning units from a
-#' \code{Solution} or \code{SolutionSet}.
+#' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 #'
 #' This function maps the planning-unit selection summary returned by
 #' \code{\link{get_pu}} onto the planning-unit geometry stored in the associated
@@ -273,12 +333,12 @@ plot_spatial <- function(
 #'
 #' If several runs are requested, the output is faceted by \code{run_id}.
 #'
-#' Planning-unit geometry must be available in \code{x$problem$data$pu_sf}.
+#' Planning-unit geometry must be available in the associated problem object.
 #'
-#' @param x A \code{Solution} or \code{SolutionSet} object.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, a
-#'   \code{Solution} is used directly and a \code{SolutionSet} defaults to the
-#'   first run.
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
+#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
+#'   available run is plotted by default.
 #' @param ... Reserved for future extensions.
 #' @param base_alpha Numeric value in \eqn{[0,1]} giving the alpha of the base
 #'   planning-unit layer.
@@ -307,7 +367,7 @@ plot_spatial <- function(
 #'     class = "Problem"
 #'   )
 #'
-#'   sol <- structure(
+#'   run_result <- structure(
 #'     list(
 #'       problem = problem,
 #'       summary = list(
@@ -320,7 +380,16 @@ plot_spatial <- function(
 #'     class = "Solution"
 #'   )
 #'
-#'   plot_spatial_pu(sol)
+#'   solset <- structure(
+#'     list(
+#'       solution = list(
+#'         solutions = list(run_result)
+#'       )
+#'     ),
+#'     class = "SolutionSet"
+#'   )
+#'
+#'   plot_spatial_pu(solset)
 #' }
 #'
 #' @seealso
@@ -410,11 +479,11 @@ plot_spatial_pu <- function(
 #'
 #' @description
 #' Plot the spatial distribution of selected actions from a
-#' \code{Solution} or \code{SolutionSet}.
+#' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 #'
-#' This function maps the selected planning unit--action pairs returned by
-#' \code{\link{get_actions}(only_selected = TRUE)} onto the planning-unit
-#' geometry stored in the associated \code{Problem} object.
+#' This function maps the selected planning unit--action pairs returned by the
+#' stored action summary onto the planning-unit geometry stored in the associated
+#' \code{Problem} object.
 #'
 #' @details
 #' Let \eqn{x_{ia} \in \{0,1\}} denote whether action \eqn{a} is selected in
@@ -430,12 +499,12 @@ plot_spatial_pu <- function(
 #'
 #' When plotting multiple runs, only \code{layout = "single"} is supported.
 #'
-#' Planning-unit geometry must be available in \code{x$problem$data$pu_sf}.
+#' Planning-unit geometry must be available in the associated problem object.
 #'
-#' @param x A \code{Solution} or \code{SolutionSet} object.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, a
-#'   \code{Solution} is used directly and a \code{SolutionSet} defaults to the
-#'   first run.
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
+#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
+#'   available run is plotted by default.
 #' @param actions Optional action subset to display. Entries may match action
 #'   ids or action-set labels.
 #' @param layout Character string controlling the layout. Must be one of
@@ -482,21 +551,28 @@ plot_spatial_pu <- function(
 #'   )
 #'
 #'   ids <- sim_pu_sf$id[seq_len(min(6, nrow(sim_pu_sf)))]
-#'   sol <- structure(
-#'     list(
-#'       problem = problem,
-#'       summary = list(
-#'         actions = data.frame(
-#'           pu = c(ids[1:3], ids[4:6]),
-#'           action = c(rep("conservation", 3), rep("restoration", 3)),
-#'           selected = 1L
-#'         )
+#'
+#'   run_result <- list(
+#'     problem = problem,
+#'     summary = list(
+#'       actions = data.frame(
+#'         pu = c(ids[1:3], ids[4:6]),
+#'         action = c(rep("conservation", 3), rep("restoration", 3)),
+#'         selected = 1L
 #'       )
-#'     ),
-#'     class = "Solution"
+#'     )
 #'   )
 #'
-#'   plot_spatial_actions(sol, layout = "facet")
+#'   solset <- structure(
+#'     list(
+#'       solution = list(
+#'         solutions = list(run_result)
+#'       )
+#'     ),
+#'     class = "SolutionSet"
+#'   )
+#'
+#'   plot_spatial_actions(solset, layout = "facet")
 #' }
 #'
 #' @seealso
@@ -558,10 +634,16 @@ plot_spatial_actions <- function(
     sol_i <- solutions[[i]]
     run_i <- as.integer(names(solutions)[i])
 
-    act_tbl <- get_actions(sol_i, only_selected = TRUE)
+    act_tbl <- sol_i$summary$actions %||% NULL
+    if (is.null(act_tbl) || !inherits(act_tbl, "data.frame")) {
+      stop("No actions summary found for the selected run.", call. = FALSE)
+    }
+
     if (!all(c("pu", "action", "selected") %in% names(act_tbl))) {
       stop("Action summary must contain 'pu', 'action', and 'selected'.", call. = FALSE)
     }
+
+    act_tbl <- act_tbl[act_tbl$selected == 1L, , drop = FALSE]
 
     act_tbl$pu <- as.integer(act_tbl$pu)
     act_tbl$action <- as.character(act_tbl$action)
@@ -722,14 +804,16 @@ plot_spatial_actions <- function(
   invisible(p)
 }
 
-#' @title Plot spatial feature values from a solution
+
+#' @title Plot spatial feature values from a solution set
 #'
 #' @description
-#' Plot feature values in space from a \code{Solution} or \code{SolutionSet}.
+#' Plot feature values in space from a \code{\link{solutionset-class}} object
+#' returned by \code{\link{solve}}.
 #'
-#' This function combines baseline feature amounts from
-#' \code{x$problem$data$dist_features} with positive effects induced by selected
-#' actions to produce planning-unit-level feature maps.
+#' This function combines baseline feature amounts from the associated
+#' \code{Problem} object with positive effects induced by selected actions to
+#' produce planning-unit-level feature maps.
 #'
 #' @details
 #' For each planning unit \eqn{i} and feature \eqn{f}, the plotted quantities
@@ -747,8 +831,8 @@ plot_spatial_actions <- function(
 #' In the current implementation:
 #' \itemize{
 #'   \item \code{baseline} is the summed baseline amount from
-#'   \code{x$problem$data$dist_features},
-#'   \item \code{benefit} is the summed positive effect from selected actions,
+#'   \code{dist_features};
+#'   \item \code{benefit} is the summed positive effect from selected actions;
 #'   \item \code{final} is \code{baseline + benefit}.
 #' }
 #'
@@ -762,12 +846,12 @@ plot_spatial_actions <- function(
 #' If multiple runs are plotted, exactly one feature must be requested, and
 #' faceting is done by run.
 #'
-#' Planning-unit geometry must be available in \code{x$problem$data$pu_sf}.
+#' Planning-unit geometry must be available in the associated problem object.
 #'
-#' @param x A \code{Solution} or \code{SolutionSet} object.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, a
-#'   \code{Solution} is used directly and a \code{SolutionSet} defaults to the
-#'   first run.
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
+#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
+#'   available run is plotted by default.
 #' @param features Optional feature subset to display. Matching is attempted
 #'   against both feature ids and feature names.
 #' @param value Character string indicating which feature quantity to plot. Must
@@ -840,21 +924,27 @@ plot_spatial_actions <- function(
 #'     class = "Problem"
 #'   )
 #'
-#'   sol <- structure(
-#'     list(
-#'       problem = problem,
-#'       summary = list(
-#'         actions = data.frame(
-#'           pu = ids,
-#'           action = "conservation",
-#'           selected = 1L
-#'         )
+#'   run_result <- list(
+#'     problem = problem,
+#'     summary = list(
+#'       actions = data.frame(
+#'         pu = ids,
+#'         action = "conservation",
+#'         selected = 1L
 #'       )
-#'     ),
-#'     class = "Solution"
+#'     )
 #'   )
 #'
-#'   plot_spatial_features(sol, features = "feature_1", value = "final")
+#'   solset <- structure(
+#'     list(
+#'       solution = list(
+#'         solutions = list(run_result)
+#'       )
+#'     ),
+#'     class = "SolutionSet"
+#'   )
+#'
+#'   plot_spatial_features(solset, features = "feature_1", value = "final")
 #' }
 #'
 #' @seealso
@@ -917,10 +1007,10 @@ plot_spatial_features <- function(
   feats <- pr$data$features %||% NULL
 
   if (is.null(distf) || !inherits(distf, "data.frame")) {
-    stop("Missing problem$data$dist_features.", call. = FALSE)
+    stop("Missing dist_features in the associated problem object.", call. = FALSE)
   }
   if (is.null(feats) || !inherits(feats, "data.frame")) {
-    stop("Missing problem$data$features.", call. = FALSE)
+    stop("Missing features in the associated problem object.", call. = FALSE)
   }
   if (!all(c("pu", "feature", "amount") %in% names(distf))) {
     stop("dist_features must contain 'pu', 'feature', and 'amount'.", call. = FALSE)
@@ -941,15 +1031,24 @@ plot_spatial_features <- function(
     )
     names(base_tbl)[names(base_tbl) == "amount"] <- "baseline"
 
-    eff <- sol_i$problem$data$dist_effects_model %||% sol_i$problem$data$dist_effects %||% NULL
+    eff <- sol_i$problem$data$dist_effects_model %||%
+      sol_i$problem$data$dist_effects %||%
+      NULL
+
     ben_tbl <- NULL
 
     if (!is.null(eff) &&
         inherits(eff, "data.frame") &&
         all(c("pu", "feature", "action", "benefit") %in% names(eff))) {
 
-      act_sel <- get_actions(sol_i, only_selected = TRUE)
-      if (all(c("pu", "action") %in% names(act_sel))) {
+      act_sel <- sol_i$summary$actions %||% NULL
+
+      if (!is.null(act_sel) &&
+          inherits(act_sel, "data.frame") &&
+          all(c("pu", "action", "selected") %in% names(act_sel))) {
+
+        act_sel <- act_sel[act_sel$selected == 1L, , drop = FALSE]
+
         key_sel <- paste(act_sel$pu, act_sel$action, sep = "||")
         key_eff <- paste(eff$pu, eff$action, sep = "||")
         eff2 <- eff[key_eff %in% key_sel, , drop = FALSE]
@@ -1042,15 +1141,15 @@ plot_spatial_features <- function(
 }
 
 
-#' @title Plot trade-offs from a multi-objective solution set
+#' @title Plot trade-offs from a solution set
 #'
 #' @description
 #' Plot pairwise trade-offs among objective values stored in a
-#' \code{SolutionSet}.
+#' \code{\link{solutionset-class}} object.
 #'
-#' This function is intended for multi-objective workflows in which the solution
-#' set contains one row per run and one or more objective value columns of the
-#' form \code{value_*}.
+#' This function is intended for workflows in which the solution set contains
+#' one row per run and two or more objective-value columns of the form
+#' \code{value_*}.
 #'
 #' If exactly two objectives are selected, the function returns a single
 #' scatterplot. If three or more objectives are selected, all pairwise
@@ -1091,7 +1190,7 @@ plot_spatial_features <- function(
 #' If \code{color_by} is supplied, points are coloured by either:
 #' \itemize{
 #'   \item one of the selected objective aliases, in which case the
-#'   corresponding \code{value_*} column is used,
+#'   corresponding \code{value_*} column is used;
 #'   \item or one of the run-level columns \code{run_id}, \code{status},
 #'   \code{runtime}, or \code{gap}.
 #' }
@@ -1108,7 +1207,7 @@ plot_spatial_features <- function(
 #' If \code{label_runs = TRUE}, each point is labelled by its \code{run_id}. If
 #' the \pkg{ggrepel} package is available, repelled labels are used.
 #'
-#' @param x A \code{SolutionSet} object.
+#' @param x A \code{\link{solutionset-class}} object.
 #' @param objectives Optional character vector of objective aliases to display.
 #'   These must match the suffixes of the \code{value_*} columns in
 #'   \code{x$solution$runs}. If \code{NULL}, all available objective columns are
@@ -1149,19 +1248,14 @@ plot_spatial_features <- function(
 #'     class = "SolutionSet"
 #'   )
 #'
-#'   # Plot all pairwise trade-offs
 #'   plot_tradeoff(solset)
-#'
-#'   # Plot two selected objectives
 #'   plot_tradeoff(solset, objectives = c("cost", "benefit"))
-#'
-#'   # Colour points by one objective and label runs
 #'   plot_tradeoff(solset, color_by = "loss", label_runs = TRUE)
 #' }
 #'
 #' @seealso
 #' \code{\link{solve}},
-#' \code{\link{get_solution_vector}}
+#' \code{\link{solutionset-class}}
 #'
 #' @export
 plot_tradeoff <- function(

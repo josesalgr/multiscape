@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plot_spatial}
 \alias{plot_spatial}
-\title{Plot spatial outputs from a solution or solution set}
+\title{Plot spatial outputs from a solution set}
 \usage{
 plot_spatial(
   x,
@@ -27,14 +27,14 @@ plot_spatial(
 )
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object.}
+\item{x}{A \code{\link{solutionset-class}} object returned by
+\code{\link{solve}}.}
 
 \item{what}{Character string indicating what to plot. Must be one of
 \code{"pu"}, \code{"actions"}, or \code{"features"}.}
 
-\item{runs}{Optional integer vector of run ids. If \code{NULL}, a
-\code{Solution} is used directly and a \code{SolutionSet} defaults to the
-first run.}
+\item{runs}{Optional integer vector of run ids. If \code{NULL}, the first
+available run is plotted by default.}
 
 \item{actions}{Optional action subset used when \code{what = "actions"}.}
 
@@ -81,8 +81,8 @@ available, use viridis scales.}
 Invisibly returns a \code{ggplot} object.
 }
 \description{
-Convenience wrapper to plot spatial outputs from a \code{Solution} or
-\code{SolutionSet}.
+Convenience wrapper to plot spatial outputs from a
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 
 Depending on \code{what}, this function dispatches to one of:
 \itemize{
@@ -109,7 +109,7 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
+  run_result <- structure(
     list(
       problem = problem,
       summary = list(
@@ -122,7 +122,16 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Solution"
   )
 
-  plot_spatial(sol, what = "pu")
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial(solset, what = "pu")
 }
 
 }

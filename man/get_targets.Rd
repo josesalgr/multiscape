@@ -2,36 +2,35 @@
 % Please edit documentation in R/get_solution.R
 \name{get_targets}
 \alias{get_targets}
-\title{Get target achievement summary from a solution}
+\title{Get target achievement summary from a solution set}
 \usage{
 get_targets(x, run = NULL)
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object returned by
+\item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{run}{Optional positive integer giving the run index to extract from a
-\code{SolutionSet}. If \code{NULL}, all runs are returned when available.}
+\item{run}{Optional positive integer giving the run index to extract. If
+\code{NULL}, all runs are returned when available.}
 }
 \value{
 A simplified \code{data.frame} target summary, or \code{NULL} if the
-solution does not contain targets. Typical columns include
-\code{feature}, \code{feature_name}, \code{target_level},
-\code{total_available}, \code{target}, \code{achieved}, \code{gap}, and
-\code{met}.
+result does not contain targets. Typical columns include \code{feature},
+\code{feature_name}, \code{target_level}, \code{total_available},
+\code{target}, \code{achieved}, \code{gap}, and \code{met}.
 }
 \description{
-Extract a user-facing target-achievement table from a \code{Solution} or
-\code{SolutionSet} object returned by \code{\link{solve}}.
+Extract a user-facing target-achievement table from a
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 
 The returned table summarizes, for each stored target, the target level, the
-achieved value in the solution, the gap between achieved and required values,
-and whether the target was met.
+achieved value, the gap between achieved and required values, and whether the
+target was met in each run.
 }
 \details{
-Targets are optional in \code{multiscape}. If the solution object does not contain
-a targets summary table at \code{x$summary$targets}, this function returns
-\code{NULL} without error.
+Targets are optional in \pkg{multiscape}. If the result object does not
+contain a targets summary table at \code{x$summary$targets}, this function
+returns \code{NULL} without error.
 
 This function reads the stored targets summary and returns a simplified
 user-facing table. If the summary contains \code{achieved} and
@@ -51,9 +50,9 @@ The interpretation of the target direction is taken from the \code{sense}
 column when available:
 \itemize{
 \item \code{"ge"}, \code{">="}, or \code{"min"} are treated as lower-bound
-targets,
+targets;
 \item \code{"le"}, \code{"<="}, or \code{"max"} are treated as upper-bound
-targets,
+targets;
 \item if \code{sense} is missing, the target is treated as a lower bound by
 default.
 }
@@ -61,15 +60,15 @@ default.
 The returned table is simplified and renames some internal fields for
 readability:
 \itemize{
-\item \code{target_raw} is returned as \code{target_level},
-\item \code{basis_total} is returned as \code{total_available},
+\item \code{target_raw} is returned as \code{target_level};
+\item \code{basis_total} is returned as \code{total_available};
 \item \code{target_value} is returned as \code{target}.
 }
 
-If \code{x} is a \code{SolutionSet} and \code{run} is provided, only rows
-belonging to that run are returned. If the result contains a \code{run_id}
-column but only a single run is present and \code{run} was not requested
-explicitly, the \code{run_id} column is removed for convenience.
+If \code{run} is provided, only rows belonging to that run are returned. If
+the result contains a \code{run_id} column but only a single run is present and
+\code{run} was not requested explicitly, the \code{run_id} column is removed
+for convenience.
 
 The \code{gap} column is expected to be part of the stored summary. When
 present, it typically represents:
@@ -96,34 +95,19 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_targets(sol)
+  get_targets(solset)
 }
 }
 

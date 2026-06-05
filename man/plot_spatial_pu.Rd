@@ -18,11 +18,11 @@ plot_spatial_pu(
 )
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object.}
+\item{x}{A \code{\link{solutionset-class}} object returned by
+\code{\link{solve}}.}
 
-\item{runs}{Optional integer vector of run ids. If \code{NULL}, a
-\code{Solution} is used directly and a \code{SolutionSet} defaults to the
-first run.}
+\item{runs}{Optional integer vector of run ids. If \code{NULL}, the first
+available run is plotted by default.}
 
 \item{...}{Reserved for future extensions.}
 
@@ -48,7 +48,7 @@ Invisibly returns a \code{ggplot} object.
 }
 \description{
 Plot the spatial distribution of selected planning units from a
-\code{Solution} or \code{SolutionSet}.
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 
 This function maps the planning-unit selection summary returned by
 \code{\link{get_pu}} onto the planning-unit geometry stored in the associated
@@ -61,7 +61,7 @@ planning unit \eqn{i}. This function plots the user-facing
 
 If several runs are requested, the output is faceted by \code{run_id}.
 
-Planning-unit geometry must be available in \code{x$problem$data$pu_sf}.
+Planning-unit geometry must be available in the associated problem object.
 }
 \examples{
 if (requireNamespace("sf", quietly = TRUE) &&
@@ -77,7 +77,7 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
+  run_result <- structure(
     list(
       problem = problem,
       summary = list(
@@ -90,7 +90,16 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Solution"
   )
 
-  plot_spatial_pu(sol)
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial_pu(solset)
 }
 
 }

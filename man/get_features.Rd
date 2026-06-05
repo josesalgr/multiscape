@@ -2,16 +2,16 @@
 % Please edit documentation in R/get_solution.R
 \name{get_features}
 \alias{get_features}
-\title{Get feature summary from a solution}
+\title{Get feature summary from a solution set}
 \usage{
 get_features(x, run = NULL)
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object returned by
+\item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{run}{Optional positive integer giving the run index to extract from a
-\code{SolutionSet}. If \code{NULL}, all runs are returned when available.}
+\item{run}{Optional positive integer giving the run index to extract. If
+\code{NULL}, all runs are returned when available.}
 }
 \value{
 A \code{data.frame} with one row per feature, or one row per
@@ -23,27 +23,26 @@ includes, when available or derivable, the columns
 \code{selected_fraction_of_baseline}.
 }
 \description{
-Extract the per-feature summary table from a \code{Solution} or
-\code{SolutionSet} object returned by \code{\link{solve}}.
+Extract the per-feature summary table from a
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 
 The returned table summarizes, for each feature, how much of the feature was
 available in the full baseline landscape and how much is represented by the
-actions selected in the solution.
+selected planning units or selected actions in each run.
 }
 \details{
 This function reads the feature summary stored in \code{x$summary$features}.
 It errors if that table is missing.
 
-In action-based planning problems, feature summaries distinguish between
-baseline availability in the full landscape and the contribution of the
-selected actions.
+Feature summaries distinguish between baseline availability in the full
+landscape and the contribution of selected planning units or selected actions.
 
 Let \eqn{B_f} denote the total baseline amount of feature \eqn{f} available
 in the full landscape. Let \eqn{S_f} denote the baseline amount of feature
-\eqn{f} in planning-unit--action pairs selected by the solution. Let
-\eqn{A_f} denote the after-action amount of feature \eqn{f} contributed by
-those selected actions. Let \eqn{G_f} and \eqn{L_f} denote the positive and
-negative net-change components induced by selected actions. Then:
+\eqn{f} in selected rows. Let \eqn{A_f} denote the after-action amount of
+feature \eqn{f} contributed by those selected rows. Let \eqn{G_f} and
+\eqn{L_f} denote the positive and negative net-change components induced by
+selected actions. Then:
 
 \deqn{
 \mathrm{selected\_net}_f = G_f - L_f,
@@ -57,15 +56,15 @@ A_f = S_f + \mathrm{selected\_net}_f.
 
 The main returned columns are:
 \itemize{
-\item \code{baseline_total}: total baseline amount in the full landscape,
-\item \code{selected_baseline}: baseline amount in selected action rows,
+\item \code{baseline_total}: total baseline amount in the full landscape;
+\item \code{selected_baseline}: baseline amount in selected rows;
 \item \code{selected_amount_after}: after-action amount contributed by
-selected actions,
+selected rows;
 \item \code{selected_benefit}: positive net-change component from selected
-actions,
+actions;
 \item \code{selected_loss}: negative net-change component from selected
-actions,
-\item \code{selected_net}: net change from selected actions,
+actions;
+\item \code{selected_net}: net change from selected actions;
 \item \code{selected_fraction_of_baseline}: ratio between
 \code{selected_amount_after} and \code{baseline_total}.
 }
@@ -76,19 +75,19 @@ achieved amount for a feature is represented by
 \code{selected_amount_after}, not by a full-landscape total obtained by adding
 net changes to the baseline.
 
-For backwards compatibility with older solution objects, if the newer
+For backwards compatibility with older result objects, if the newer
 selected-action columns are missing, this function attempts to construct them
 from older columns such as \code{total_available}, \code{benefit},
 \code{loss}, \code{net}, and \code{amount_after}. However, the returned table
 is organized using the newer selected-action terminology.
 
-If \code{x} is a \code{SolutionSet} and \code{run} is provided, only rows
-belonging to that run are returned. If the result contains a \code{run_id}
-column but only a single run is present and \code{run} was not requested
-explicitly, the \code{run_id} column is removed for convenience.
+If \code{run} is provided, only rows belonging to that run are returned. If
+the result contains a \code{run_id} column but only a single run is present and
+\code{run} was not requested explicitly, the \code{run_id} column is removed
+for convenience.
 
-This function summarizes feature outcomes in the solution. It is different
-from \code{\link{get_targets}}, which focuses on target achievement.
+This function summarizes feature outcomes in the result. It is different from
+\code{\link{get_targets}}, which focuses on target achievement.
 }
 \examples{
 \donttest{
@@ -109,33 +108,19 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    after = c(5, 0, 2, 1)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df, effect_type = "after") |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_features(sol)
+  get_features(solset)
 }
 }
 

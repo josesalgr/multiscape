@@ -974,7 +974,7 @@
 
   .pamo_cli_done("Weighted solve finished.", verbose = verbose)
 
-  pproto(
+  out <- pproto(
     NULL, SolutionSet,
     problem = x,
     solution = list(
@@ -997,6 +997,8 @@
     ),
     name = "solset"
   )
+
+  .pa_finalize_solution_ids(out)
 }
 
 
@@ -1335,7 +1337,7 @@
     )
   }
 
-  pproto(
+  out <- pproto(
     NULL, SolutionSet,
     problem = x,
     solution = list(
@@ -1368,6 +1370,8 @@
     ),
     name = "solset"
   )
+
+  .pa_finalize_solution_ids(out)
 }
 
 
@@ -2419,52 +2423,131 @@ add_objective <- function(x, objective) {
 .mo_abort <- function(...) stop(paste0(...), call. = FALSE)
 
 #' @keywords internal
-.mo_get_solution_from <- function(x, run = 1L) {
+.mo_get_solution_from <- function(x, run = NULL, solution_id = NULL) {
 
-  run <- as.integer(run)[1]
-  if (!is.finite(run) || is.na(run) || run < 1L) {
-    .mo_abort("run must be a positive integer (1-based).")
-  }
-
-  # Case 1: already a Solution
+  # Backward-compatible internal path.
   if (inherits(x, "Solution")) {
     return(x)
   }
 
-  # Case 2: SolutionSet -> x$solution$solutions[[run]]
-  if (inherits(x, "SolutionSet")) {
-    sols <- x$solution$solutions %||% NULL
-
-    if (is.null(sols)) {
-      .mo_abort("SolutionSet has no solutions (x$solution$solutions is NULL).")
-    }
-    if (!is.list(sols) || length(sols) == 0L) {
-      .mo_abort("SolutionSet contains an empty solutions list.")
-    }
-    if (run > length(sols)) {
-      .mo_abort("run=", run, " out of range. There are only ", length(sols), " solutions.")
-    }
-
-    sol <- sols[[run]]
-    if (!inherits(sol, "Solution")) {
-      .mo_abort("x$solution$solutions[[run]] is not a Solution.")
-    }
-
-    return(sol)
+  if (!inherits(x, "SolutionSet")) {
+    .mo_abort("x must be a SolutionSet object returned by solve().")
   }
 
-  # Case 3: plain list of Solution (optional internal convenience)
-  if (is.list(x) && length(x) > 0L && inherits(x[[1]], "Solution")) {
-    if (run > length(x)) {
-      .mo_abort("run=", run, " out of range. There are only ", length(x), " solutions.")
-    }
-    return(x[[run]])
+  if (!is.null(run) && !is.null(solution_id)) {
+    .mo_abort("Use either `run` or `solution_id`, not both.")
   }
 
-  .mo_abort(
-    "Unsupported object. Expected a Solution or SolutionSet."
-  )
+  sols <- x$solution$solutions %||% NULL
+
+  if (is.null(sols) || !is.list(sols) || length(sols) == 0L) {
+    .mo_abort("No stored solutions found in this SolutionSet.")
+  }
+
+  # Keep only valid stored run-level solution objects. This protects against
+  # older SolutionSet objects where infeasible runs were stored as NULL entries.
+  is_sol <- vapply(sols, inherits, logical(1), "Solution")
+  sols <- sols[is_sol]
+
+  if (length(sols) == 0L) {
+    .mo_abort("No stored valid solutions found in this SolutionSet.")
+  }
+
+  # Ensure names exist for older objects when possible.
+  if (is.null(names(sols)) || any(!nzchar(names(sols)))) {
+    ids <- vapply(seq_along(sols), function(i) {
+      as.character(sols[[i]]$meta$solution_id %||% paste0("s", i))[1]
+    }, character(1))
+    names(sols) <- ids
+  }
+
+  # ------------------------------------------------------------
+  # Case 1: selected by solution_id
+  # ------------------------------------------------------------
+  if (!is.null(solution_id)) {
+    solution_id <- as.character(solution_id)[1]
+
+    if (is.na(solution_id) || !nzchar(solution_id)) {
+      .mo_abort("`solution_id` must be a non-empty string.")
+    }
+
+    if (!solution_id %in% names(sols)) {
+      .mo_abort(
+        "No stored solution found for solution_id = '", solution_id, "'. ",
+        "Available solution ids are: ", paste(names(sols), collapse = ", "), "."
+      )
+    }
+
+    return(sols[[solution_id]])
+  }
+
+  # ------------------------------------------------------------
+  # Case 2: selected by run_id
+  # ------------------------------------------------------------
+  if (!is.null(run)) {
+    run <- as.integer(run)[1]
+
+    if (!is.finite(run) || is.na(run) || run < 1L) {
+      .mo_abort("`run` must be a positive integer run id.")
+    }
+
+    runs <- x$solution$runs %||% NULL
+
+    if (!is.null(runs) &&
+        inherits(runs, "data.frame") &&
+        all(c("run_id", "solution_id") %in% names(runs))) {
+
+      idx <- match(run, runs$run_id)
+
+      if (is.na(idx)) {
+        .mo_abort("No run found with run_id = ", run, ".")
+      }
+
+      sid <- runs$solution_id[idx]
+
+      if (is.na(sid) || !nzchar(sid)) {
+        status_msg <- ""
+        if ("status" %in% names(runs)) {
+          status_msg <- paste0(" Run status is '", runs$status[idx], "'.")
+        }
+
+        .mo_abort(
+          "No stored solution is available for run_id = ", run, ".",
+          status_msg
+        )
+      }
+
+      if (!sid %in% names(sols)) {
+        .mo_abort(
+          "Run ", run, " points to solution_id = '", sid,
+          "', but that solution is not stored."
+        )
+      }
+
+      return(sols[[sid]])
+    }
+
+    # Fallback for old objects without solution_id.
+    stored_run_ids <- vapply(seq_along(sols), function(i) {
+      rid <- sols[[i]]$meta$run_id %||% NA_integer_
+      as.integer(rid)[1]
+    }, integer(1))
+
+    idx <- match(run, stored_run_ids)
+
+    if (is.na(idx)) {
+      .mo_abort("No stored solution is available for run_id = ", run, ".")
+    }
+
+    return(sols[[idx]])
+  }
+
+  # ------------------------------------------------------------
+  # Case 3: default = first stored solution
+  # ------------------------------------------------------------
+  sols[[1]]
 }
+
 
 
 
@@ -3918,7 +4001,7 @@ add_objective <- function(x, objective) {
     )
   }
 
-  pproto(
+  out <- pproto(
     NULL, SolutionSet,
     problem = x,
     solution = list(
@@ -3951,6 +4034,8 @@ add_objective <- function(x, objective) {
     ),
     name = "solset"
   )
+
+  .pa_finalize_solution_ids(out)
 }
 
 
@@ -5192,4 +5277,168 @@ add_objective <- function(x, objective) {
   out <- out[, c("run_id", setdiff(names(out), "run_id")), drop = FALSE]
 
   out
+}
+
+
+
+#' Get run ids for stored run-level results
+#'
+#' @noRd
+.pa_get_stored_run_ids <- function(x) {
+  if (!inherits(x, "SolutionSet")) {
+    stop("x must be a SolutionSet object.", call. = FALSE)
+  }
+
+  sols <- x$solution$solutions %||% NULL
+
+  if (is.null(sols) || !is.list(sols) || length(sols) == 0L) {
+    return(integer(0))
+  }
+
+  nms <- names(sols)
+
+  if (!is.null(nms) && all(nzchar(nms))) {
+    out <- suppressWarnings(as.integer(nms))
+    if (!anyNA(out)) {
+      return(out)
+    }
+  }
+
+  # Fallback for older objects.
+  out <- vapply(seq_along(sols), function(i) {
+    sol <- sols[[i]]
+    as.integer(sol$meta$run_id %||% i)
+  }, integer(1))
+
+  out
+}
+
+#' Make sequential solution ids
+#'
+#' @noRd
+.pa_make_solution_ids <- function(n, prefix = "s") {
+  n <- as.integer(n)[1]
+
+  if (is.na(n) || n < 0L) {
+    stop("`n` must be a non-negative integer.", call. = FALSE)
+  }
+
+  if (n == 0L) {
+    return(character(0))
+  }
+
+  paste0(prefix, seq_len(n))
+}
+
+#' Finalize solution ids in a SolutionSet
+#'
+#' @noRd
+.pa_finalize_solution_ids <- function(x) {
+  if (!inherits(x, "SolutionSet")) {
+    stop("x must be a SolutionSet object.", call. = FALSE)
+  }
+
+  runs <- x$solution$runs %||% NULL
+  sols <- x$solution$solutions %||% NULL
+
+  if (is.null(runs) || !inherits(runs, "data.frame")) {
+    return(x)
+  }
+
+  if (!("run_id" %in% names(runs))) {
+    runs$run_id <- seq_len(nrow(runs))
+  }
+
+  runs$solution_id <- NA_character_
+
+  if (is.null(sols) || !is.list(sols) || length(sols) == 0L) {
+    x$solution$runs <- runs
+    return(x)
+  }
+
+  # Keep only stored solutions. Infeasible/no-solution runs may be represented
+  # as NULL entries in older multi-objective workflows; they should remain in
+  # the run table, but they should not receive a solution_id.
+  is_sol <- vapply(sols, inherits, logical(1), "Solution")
+  sols_valid <- sols[is_sol]
+
+  if (length(sols_valid) == 0L) {
+    x$solution$runs <- runs
+    x$solution$solutions <- list()
+    return(x)
+  }
+
+  solution_ids <- .pa_make_solution_ids(length(sols_valid))
+
+  stored_run_ids <- vapply(seq_along(sols_valid), function(i) {
+    sol_i <- sols_valid[[i]]
+
+    rid <- sol_i$meta$run_id %||% NULL
+
+    if (is.null(rid)) {
+      # Fallback for old objects: if the original list had numeric names,
+      # interpret them as run ids. Otherwise, use the position of the valid
+      # solution among all original entries.
+      original_i <- which(is_sol)[i]
+      nm <- names(sols)[original_i] %||% NA_character_
+      rid <- suppressWarnings(as.integer(nm))
+      if (is.na(rid)) rid <- original_i
+    }
+
+    if (is.null(rid) || length(rid) == 0L || is.na(rid)) {
+      NA_integer_
+    } else {
+      as.integer(rid)[1]
+    }
+  }, integer(1))
+
+  for (i in seq_along(solution_ids)) {
+    rid <- stored_run_ids[i]
+
+    if (!is.na(rid)) {
+      idx <- match(rid, runs$run_id)
+      if (!is.na(idx)) {
+        runs$solution_id[idx] <- solution_ids[i]
+      }
+    }
+
+    sols_valid[[i]]$meta <- sols_valid[[i]]$meta %||% list()
+    sols_valid[[i]]$meta$solution_id <- solution_ids[i]
+    sols_valid[[i]]$meta$run_id <- rid
+  }
+
+  names(sols_valid) <- solution_ids
+
+  x$solution$runs <- runs
+  x$solution$solutions <- sols_valid
+
+  # Add solution_id to summary tables when they have run_id.
+  if (!is.null(x$summary) && is.list(x$summary)) {
+    run_map <- runs[, c("run_id", "solution_id"), drop = FALSE]
+
+    for (nm in names(x$summary)) {
+      tab <- x$summary[[nm]]
+
+      if (inherits(tab, "data.frame") &&
+          "run_id" %in% names(tab) &&
+          !("solution_id" %in% names(tab))) {
+        tab <- merge(
+          tab,
+          run_map,
+          by = "run_id",
+          all.x = TRUE,
+          sort = FALSE
+        )
+
+        first <- intersect(c("run_id", "solution_id"), names(tab))
+        rest <- setdiff(names(tab), first)
+        tab <- tab[, c(first, rest), drop = FALSE]
+        rownames(tab) <- NULL
+
+        x$summary[[nm]] <- tab
+      }
+    }
+  }
+
+  x
 }

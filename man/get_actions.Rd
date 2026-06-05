@@ -2,19 +2,19 @@
 % Please edit documentation in R/get_solution.R
 \name{get_actions}
 \alias{get_actions}
-\title{Get action results from a solution}
+\title{Get action results from a solution set}
 \usage{
 get_actions(x, only_selected = FALSE, run = NULL)
 }
 \arguments{
-\item{x}{A \code{Solution} or \code{SolutionSet} object returned by
+\item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
 \item{only_selected}{Logical. If \code{TRUE}, return only rows where
 \code{selected == 1}. Default is \code{FALSE}.}
 
-\item{run}{Optional positive integer giving the run index to extract from a
-\code{SolutionSet}. If \code{NULL}, all runs are returned when available.}
+\item{run}{Optional positive integer giving the run index to extract. If
+\code{NULL}, all runs are returned when available.}
 }
 \value{
 A \code{data.frame} containing the stored action-allocation summary.
@@ -22,13 +22,13 @@ Typical columns include planning-unit ids, action ids, optional labels, and
 a \code{selected} indicator.
 }
 \description{
-Extract the action-allocation summary table from a \code{Solution} or
-\code{SolutionSet} object returned by \code{\link{solve}}.
+Extract the action-allocation summary table from a
+\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 
 The returned table summarizes solution values at the
 planning unit--action level and typically includes a \code{selected}
 indicator showing whether each feasible \code{(pu, action)} pair is selected
-in the solution.
+in a run.
 }
 \details{
 This function reads the action summary stored in \code{x$summary$actions}. It
@@ -36,13 +36,12 @@ does not reconstruct the table from the raw decision vector; it simply
 returns the stored summary after optional filtering.
 
 Let \eqn{x_{ia}} denote the decision variable associated with selecting
-action \eqn{a} in planning unit \eqn{i}. In standard \code{multiscape} workflows,
-the \code{selected} column is the user-facing representation of that
-decision, typically coded as \code{0} or \code{1}.
+action \eqn{a} in planning unit \eqn{i}. In standard \pkg{multiscape}
+workflows, the \code{selected} column is the user-facing representation of
+that decision, typically coded as \code{0} or \code{1}.
 
-If \code{x} is a \code{SolutionSet} and \code{run} is provided, only rows
-belonging to that run are returned. This requires the summary table to
-contain a \code{run_id} column.
+If \code{run} is provided, only rows belonging to that run are returned. This
+requires the summary table to contain a \code{run_id} column.
 
 If \code{only_selected = TRUE}, only rows with \code{selected == 1} are
 returned. This requires the summary table to contain a \code{selected}
@@ -71,16 +70,14 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   )
 
   actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
+    id = c("conservation", "restoration"),
+    name = c("conservation", "restoration")
   )
 
   effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
+    action = rep(c("conservation", "restoration"), each = 2),
+    feature = rep(feat_tbl$id, times = 2),
+    multiplier = c(1.0, 1.0, 1.5, 1.5)
   )
 
   p <- create_problem(
@@ -89,16 +86,16 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
+    add_actions(actions_df, cost = c(conservation = 0, restoration = 2)) |>
+    add_effects(effects_df, effect_type = "after") |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_actions(sol)
-  get_actions(sol, only_selected = TRUE)
+  get_actions(solset)
+  get_actions(solset, only_selected = TRUE)
 }
 }
 
