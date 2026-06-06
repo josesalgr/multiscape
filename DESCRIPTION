@@ -71,7 +71,8 @@ Suggests:
     tibble,
     reshape2,
     rcbc,
-    gurobi
+    gurobi,
+    moocore
 LinkingTo:
   Rcpp, 
   RcppArmadillo (>= 0.10.1.0.0), 
@@ -101,6 +102,7 @@ Collate:
     'compile_model.R'
     'create_problem.R'
     'data-sim.R'
+    'frontier.R'
     'internalMO.R'
     'get_solution.R'
     'globals.R'
@@ -111,6 +113,7 @@ Collate:
     'print.R'
     'problem-class.R'
     'run_design.R'
+    'selection_analysis.R'
     'set_method_augmecon.R'
     'set_method_epsilon_constraint.R'
     'set_method_weighted_sum.R'
@@ -118,6 +121,7 @@ Collate:
     'solutionset-class.R'
     'solution-class.R'
     'show.R'
+    'solution_management.R'
     'solve.R'
     'utils-pipe.R'
     'zzz.R'

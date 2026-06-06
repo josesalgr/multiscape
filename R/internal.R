@@ -5101,3 +5101,146 @@ NULL
   out
 }
 
+
+#' Prepare an objective matrix for internal multi-objective operations
+#'
+#' @noRd
+.pa_get_objective_matrix <- function(x,
+                                     objectives = NULL,
+                                     feasible_only = TRUE,
+                                     minimize = TRUE,
+                                     drop_na = TRUE) {
+  if (!inherits(x, "SolutionSet")) {
+    stop("x must be a SolutionSet object.", call. = FALSE)
+  }
+
+  vals <- get_objectives(
+    x,
+    format = "wide",
+    feasible_only = feasible_only
+  )
+
+  if (!inherits(vals, "data.frame") || nrow(vals) == 0L) {
+    stop("No objective values are available.", call. = FALSE)
+  }
+
+  if (!("run_id" %in% names(vals))) {
+    stop("Objective table must contain a 'run_id' column.", call. = FALSE)
+  }
+
+  if (!("solution_id" %in% names(vals))) {
+    vals$solution_id <- NA_character_
+  }
+
+  available <- setdiff(names(vals), c("run_id", "solution_id"))
+
+  if (length(available) == 0L) {
+    stop("No objective columns found.", call. = FALSE)
+  }
+
+  if (is.null(objectives)) {
+    objectives <- available
+  } else {
+    objectives <- as.character(objectives)
+    objectives <- objectives[!is.na(objectives) & nzchar(objectives)]
+
+    if (length(objectives) == 0L) {
+      stop("`objectives` must contain at least one objective name.", call. = FALSE)
+    }
+
+    bad <- setdiff(objectives, available)
+
+    if (length(bad) > 0L) {
+      stop(
+        "Unknown objective(s): ",
+        paste(bad, collapse = ", "),
+        ". Available objectives are: ",
+        paste(available, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+  }
+
+  if (length(objectives) < 2L) {
+    stop(
+      "At least two objectives are required to evaluate dominance.",
+      call. = FALSE
+    )
+  }
+
+  mat <- as.matrix(vals[, objectives, drop = FALSE])
+  storage.mode(mat) <- "double"
+
+  if (isTRUE(drop_na)) {
+    ok <- stats::complete.cases(mat)
+
+    vals <- vals[ok, , drop = FALSE]
+    mat <- mat[ok, , drop = FALSE]
+  }
+
+  if (nrow(mat) == 0L) {
+    stop("No complete objective rows are available.", call. = FALSE)
+  }
+
+  specs <- get_objective_specs(x)
+
+  if (!all(c("objective", "sense") %in% names(specs))) {
+    stop(
+      "Objective specifications must contain 'objective' and 'sense' columns.",
+      call. = FALSE
+    )
+  }
+
+  sense <- stats::setNames(as.character(specs$sense), specs$objective)
+  sense <- sense[objectives]
+
+  if (anyNA(sense) || any(!nzchar(sense))) {
+    missing <- objectives[is.na(sense) | !nzchar(sense)]
+
+    stop(
+      "Missing optimization sense for objective(s): ",
+      paste(missing, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (!all(sense %in% c("min", "max"))) {
+    bad <- objectives[!sense %in% c("min", "max")]
+
+    stop(
+      "Invalid optimization sense for objective(s): ",
+      paste(bad, collapse = ", "),
+      ". Expected 'min' or 'max'.",
+      call. = FALSE
+    )
+  }
+
+  if (isTRUE(minimize)) {
+    max_cols <- which(sense == "max")
+
+    if (length(max_cols) > 0L) {
+      mat[, max_cols] <- -mat[, max_cols, drop = FALSE]
+    }
+  }
+
+  row_ids <- vals$solution_id
+
+  missing_solution_id <- is.na(row_ids) | !nzchar(row_ids)
+
+  if (any(missing_solution_id)) {
+    row_ids[missing_solution_id] <- paste0("run_", vals$run_id[missing_solution_id])
+  }
+
+  rownames(mat) <- row_ids
+
+  list(
+    run_id = vals$run_id,
+    solution_id = vals$solution_id,
+    objectives = objectives,
+    sense = sense,
+    minimize = isTRUE(minimize),
+    matrix = mat
+  )
+}

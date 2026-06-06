@@ -95,7 +95,6 @@ NULL
   txt
 }
 
-#' @export
 Solution <- pproto(
   "Solution",
   problem = NULL,
