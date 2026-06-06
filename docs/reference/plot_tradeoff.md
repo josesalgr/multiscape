@@ -1,11 +1,12 @@
-# Plot trade-offs from a multi-objective solution set
+# Plot trade-offs from a solution set
 
 Plot pairwise trade-offs among objective values stored in a
-`SolutionSet`.
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object.
 
-This function is intended for multi-objective workflows in which the
-solution set contains one row per run and one or more objective value
-columns of the form `value_*`.
+This function is intended for workflows in which the solution set
+contains one row per run and two or more objective-value columns of the
+form `value_*`.
 
 If exactly two objectives are selected, the function returns a single
 scatterplot. If three or more objectives are selected, all pairwise
@@ -32,7 +33,9 @@ plot_tradeoff(
 
 - x:
 
-  A `SolutionSet` object.
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object.
 
 - objectives:
 
@@ -110,7 +113,7 @@ the number of objectives.
 If `color_by` is supplied, points are coloured by either:
 
 - one of the selected objective aliases, in which case the corresponding
-  `value_*` column is used,
+  `value_*` column is used;
 
 - or one of the run-level columns `run_id`, `status`, `runtime`, or
   `gap`.
@@ -130,7 +133,7 @@ ggrepel package is available, repelled labels are used.
 ## See also
 
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md),
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
 
 ## Examples
 
@@ -153,13 +156,8 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
     class = "SolutionSet"
   )
 
-  # Plot all pairwise trade-offs
   plot_tradeoff(solset)
-
-  # Plot two selected objectives
   plot_tradeoff(solset, objectives = c("cost", "benefit"))
-
-  # Colour points by one objective and label runs
   plot_tradeoff(solset, color_by = "loss", label_runs = TRUE)
 }
 

@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@
       </dl></div><div class="section level2">
       <h2 id="actions-effects-and-profits">Actions, effects and profits<a class="anchor" aria-label="anchor" href="#actions-effects-and-profits"></a></h2>
 
-      <div class="section-desc"><p>Define feasible actions, their effects and optional profits.</p></div>
+      <div class="section-desc"><p>Define feasible actions, their effects, and optional profits.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -277,36 +277,6 @@
         </dt>
         <dd>Add objective: minimize intervention impact</dd>
       </dl></div><div class="section level2">
-      <h2 id="multi-objective-methods">Multi-objective methods<a class="anchor" aria-label="anchor" href="#multi-objective-methods"></a></h2>
-
-      <div class="section-desc"><p>Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="set_method_weighted_sum.html">set_method_weighted_sum()</a></code>
-
-        </dt>
-        <dd>Set the weighted-sum multi-objective method</dd>
-
-        <dt>
-
-          <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint()</a></code>
-
-        </dt>
-        <dd>Set the epsilon-constraint multi-objective method</dd>
-
-        <dt>
-
-          <code><a href="set_method_augmecon.html">set_method_augmecon()</a></code>
-
-        </dt>
-        <dd>Set the AUGMECON multi-objective method</dd>
-      </dl></div><div class="section level2">
       <h2 id="solver-configuration">Solver configuration<a class="anchor" aria-label="anchor" href="#solver-configuration"></a></h2>
 
       <div class="section-desc"><p>Store solver and runtime options before calling solve().</p></div>
@@ -351,9 +321,69 @@
         </dt>
         <dd>Configure SYMPHONY solver settings</dd>
       </dl></div><div class="section level2">
+      <h2 id="multi-objective-methods">Multi-objective methods<a class="anchor" aria-label="anchor" href="#multi-objective-methods"></a></h2>
+
+      <div class="section-desc"><p>Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="set_method_weighted_sum.html">set_method_weighted_sum()</a></code>
+
+        </dt>
+        <dd>Set the weighted-sum multi-objective method</dd>
+
+        <dt>
+
+          <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint()</a></code>
+
+        </dt>
+        <dd>Set the epsilon-constraint multi-objective method</dd>
+
+        <dt>
+
+          <code><a href="set_method_augmecon.html">set_method_augmecon()</a></code>
+
+        </dt>
+        <dd>Set the AUGMECON multi-objective method</dd>
+      </dl></div><div class="section level2">
+      <h2 id="multi-objective-workflow-configuration">Multi-objective workflow configuration<a class="anchor" aria-label="anchor" href="#multi-objective-workflow-configuration"></a></h2>
+
+      <div class="section-desc"><p>Define run designs and execution controls for multi-objective workflows.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="run_grid.html">run_grid()</a></code>
+
+        </dt>
+        <dd>Define an automatic run grid</dd>
+
+        <dt>
+
+          <code><a href="run_manual.html">run_manual()</a></code>
+
+        </dt>
+        <dd>Define a manual run design</dd>
+
+        <dt>
+
+          <code><a href="mo_control.html">mo_control()</a></code>
+
+        </dt>
+        <dd>Control multi-objective method behavior</dd>
+      </dl></div><div class="section level2">
       <h2 id="results-and-extraction">Results and extraction<a class="anchor" aria-label="anchor" href="#results-and-extraction"></a></h2>
 
-      <div class="section-desc"><p>Extract user-facing summaries and raw solution vectors.</p></div>
+      <div class="section-desc"><p>Extract run metadata, objective values, and solution-level results.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -369,38 +399,135 @@
 
         <dt>
 
+          <code><a href="get_runs.html">get_runs()</a></code>
+
+        </dt>
+        <dd>Get run-level results from a solution set</dd>
+
+        <dt>
+
+          <code><a href="get_objectives.html">get_objectives()</a></code>
+
+        </dt>
+        <dd>Get objective values from a solution set</dd>
+
+        <dt>
+
+          <code><a href="get_objective_specs.html">get_objective_specs()</a></code>
+
+        </dt>
+        <dd>Get objective specifications from a solution set</dd>
+
+        <dt>
+
           <code><a href="get_pu.html">get_pu()</a></code>
 
         </dt>
-        <dd>Get planning-unit results from a solution</dd>
+        <dd>Get planning-unit results from a solution set</dd>
 
         <dt>
 
           <code><a href="get_actions.html">get_actions()</a></code>
 
         </dt>
-        <dd>Get action results from a solution</dd>
+        <dd>Get action results from a solution set</dd>
 
         <dt>
 
           <code><a href="get_features.html">get_features()</a></code>
 
         </dt>
-        <dd>Get feature summary from a solution</dd>
+        <dd>Get feature summary from a solution set</dd>
 
         <dt>
 
           <code><a href="get_targets.html">get_targets()</a></code>
 
         </dt>
-        <dd>Get target achievement summary from a solution</dd>
+        <dd>Get target achievement summary from a solution set</dd>
 
         <dt>
 
           <code><a href="get_solution_vector.html">get_solution_vector()</a></code>
 
         </dt>
-        <dd>Get raw solution vector from a solution</dd>
+        <dd>Get raw decision vector from a solution set</dd>
+      </dl></div><div class="section level2">
+      <h2 id="solution-set-management">Solution-set management<a class="anchor" aria-label="anchor" href="#solution-set-management"></a></h2>
+
+      <div class="section-desc"><p>Filter, combine, and remove repeated solutions while preserving SolutionSet consistency.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="solution_filter.html">solution_filter()</a></code>
+
+        </dt>
+        <dd>Filter solutions in a solution set</dd>
+
+        <dt>
+
+          <code><a href="solution_append.html">solution_append()</a></code>
+
+        </dt>
+        <dd>Append solutions from another solution set</dd>
+
+        <dt>
+
+          <code><a href="solution_unique.html">solution_unique()</a></code>
+
+        </dt>
+        <dd>Keep unique solutions in a solution set</dd>
+      </dl></div><div class="section level2">
+      <h2 id="frontier-analysis">Frontier analysis<a class="anchor" aria-label="anchor" href="#frontier-analysis"></a></h2>
+
+      <div class="section-desc"><p>Characterize objective ranges and distances to observed reference points.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="frontier_extremes.html">frontier_extremes()</a></code>
+
+        </dt>
+        <dd>Find objective-wise extreme solutions</dd>
+
+        <dt>
+
+          <code><a href="frontier_distances.html">frontier_distances()</a></code>
+
+        </dt>
+        <dd>Compute distances to observed ideal or nadir points</dd>
+      </dl></div><div class="section level2">
+      <h2 id="selection-analysis">Selection analysis<a class="anchor" aria-label="anchor" href="#selection-analysis"></a></h2>
+
+      <div class="section-desc"><p>Analyze the recurrence and structural similarity of planning-unit and action assignments.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="selection_frequency.html">selection_frequency()</a></code>
+
+        </dt>
+        <dd>Calculate selection frequency across solutions</dd>
+
+        <dt>
+
+          <code><a href="selection_similarity.html">selection_similarity()</a></code>
+
+        </dt>
+        <dd>Calculate structural similarity among solutions</dd>
       </dl></div><div class="section level2">
       <h2 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a></h2>
 
@@ -416,7 +543,7 @@
           <code><a href="plot_spatial.html">plot_spatial()</a></code>
 
         </dt>
-        <dd>Plot spatial outputs from a solution or solution set</dd>
+        <dd>Plot spatial outputs from a solution set</dd>
 
         <dt>
 
@@ -437,18 +564,18 @@
           <code><a href="plot_spatial_features.html">plot_spatial_features()</a></code>
 
         </dt>
-        <dd>Plot spatial feature values from a solution</dd>
+        <dd>Plot spatial feature values from a solution set</dd>
 
         <dt>
 
           <code><a href="plot_tradeoff.html">plot_tradeoff()</a></code>
 
         </dt>
-        <dd>Plot trade-offs from a multi-objective solution set</dd>
+        <dd>Plot trade-offs from a solution set</dd>
       </dl></div><div class="section level2">
       <h2 id="classes">Classes<a class="anchor" aria-label="anchor" href="#classes"></a></h2>
 
-      <div class="section-desc"><p>Core classes used across the package.</p></div>
+      <div class="section-desc"><p>Public classes used across the package.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -461,13 +588,6 @@
 
         </dt>
         <dd>Problem class</dd>
-
-        <dt>
-
-          <code><a href="solution-class.html">solution-class</a></code> <code><a href="solution-class.html">Solution</a></code>
-
-        </dt>
-        <dd>Solution class</dd>
 
         <dt>
 

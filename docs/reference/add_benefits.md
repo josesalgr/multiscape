@@ -4,20 +4,6 @@ Convenience wrapper around
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
 that keeps only positive effects, that is, rows with `benefit > 0`.
 
-This function is useful when the workflow is focused only on beneficial
-consequences of actions and a gain-only wrapper is more convenient than
-calling `add_effects(..., component = "benefit")` directly. Internally,
-it calls
-[`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
-with `component = "benefit"`. The canonical stored result therefore
-contains only rows whose effect satisfies \\\mathrm{benefit}\_{iaf} \>
-0\\.
-
-For backwards compatibility, a mirror table containing only the benefit
-component is also written to `x$data$dist_benefit`. The canonical
-filtered representation remains the one stored by
-[`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md).
-
 ## Usage
 
 ``` r
@@ -77,36 +63,3 @@ An updated `Problem` object containing:
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md),
 [`add_losses`](https://josesalgr.github.io/multiscape/reference/add_losses.md),
 [`add_objective_max_benefit`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md)
-
-## Examples
-
-``` r
-pu <- data.frame(id = 1:2, cost = c(1, 2))
-features <- data.frame(id = 1, name = "sp1")
-dist_features <- data.frame(pu = 1:2, feature = 1, amount = c(5, 10))
-
-p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-p <- add_actions(
-  p,
-  data.frame(id = "restoration")
-)
-
-eff <- data.frame(
-  pu = c(1, 2),
-  action = c("restoration", "restoration"),
-  feature = c(1, 1),
-  delta = c(2, -1)
-)
-
-p <- add_benefits(p, benefits = eff)
-p$data$dist_benefit
-#>   pu      action feature benefit internal_pu internal_action internal_feature
-#> 1  1 restoration       1       2           1               1                1
-#>   feature_name action_name
-#> 1          sp1 restoration
-```

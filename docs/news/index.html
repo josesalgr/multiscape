@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,112 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.7" id="multiscape-107">multiscape 1.0.7<a class="anchor" aria-label="anchor" href="#multiscape-107"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.1.0" id="multiscape-110">multiscape 1.1.0<a class="anchor" aria-label="anchor" href="#multiscape-110"></a></h2>
+<div class="section level3">
+<h3 id="solution-architecture-1-1-0">Solution architecture<a class="anchor" aria-label="anchor" href="#solution-architecture-1-1-0"></a></h3>
+<ul><li>Simplified the public result architecture so that <code><a href="../reference/solve.html">solve()</a></code> consistently returns a <code>SolutionSet</code>, including for single-objective problems.</li>
+<li>Removed the internal <code>Solution</code> class from the public API and documentation. Individual run-level solutions remain available only as internal components of a <code>SolutionSet</code>.</li>
+<li>Added stable <code>solution_id</code> identifiers to distinguish stored solutions from attempted runs identified by <code>run_id</code>.</li>
+<li>Updated run, solution, and summary tables to preserve <code>run_id</code> and <code>solution_id</code> consistently across extraction and analysis functions.</li>
+<li>Improved internal finalization of solution metadata and identifiers after solving.</li>
+<li>Updated <code>SolutionSet</code> printing and documentation to reflect the distinction between run attempts and stored solutions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="simple-conservation-planning-workflow-1-1-0">Simple conservation-planning workflow<a class="anchor" aria-label="anchor" href="#simple-conservation-planning-workflow-1-1-0"></a></h3>
+<ul><li>Added automatic support for simple conservation-planning problems when no explicit actions or effects are supplied.</li>
+<li>Problems without explicit actions are now interpreted as binary conservation decisions, where each planning unit can be conserved or not conserved.</li>
+<li>Added an implicit conservation action and internally generated feature contributions based on the feature amounts stored in <code>dist_features</code>.</li>
+<li>The implicit conservation model uses <code>amount_after</code> to represent the feature amount obtained when a planning unit is conserved.</li>
+<li>Enabled target constraints and benefit objectives to work directly with the implicit conservation model.</li>
+<li>Added validation and clearer error messages for missing or zero feature contributions.</li>
+<li>Improved compatibility of implicit conservation problems with cost, benefit, fragmentation, and multi-objective workflows.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="multi-objective-run-design-and-controls-1-1-0">Multi-objective run design and controls<a class="anchor" aria-label="anchor" href="#multi-objective-run-design-and-controls-1-1-0"></a></h3>
+<ul><li>Revised the multi-objective run-design resolver used by weighted-sum, epsilon-constraint, and AUGMECON methods.</li>
+<li>Improved support for automatic and manually specified run designs through <code><a href="../reference/run_grid.html">run_grid()</a></code> and <code><a href="../reference/run_manual.html">run_manual()</a></code>.</li>
+<li>Added and documented common multi-objective execution controls through <code><a href="../reference/mo_control.html">mo_control()</a></code>.</li>
+<li>Improved handling of infeasible runs, missing solutions, solver errors, and slack upper bounds.</li>
+<li>Standardized the storage of run-design parameters and objective values in the <code>SolutionSet</code> run table.</li>
+<li>Preserved infeasible runs in the run history while assigning <code>solution_id</code> only to runs that produced a stored solution.</li>
+<li>Improved objective evaluation and model preparation across multi-objective methods.</li>
+<li>Fixed weighted-sum objective preparation for implicit conservation benefit objectives.</li>
+<li>Improved validation of objective coefficient vectors and objective-specific error messages.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="result-extraction-1-1-0">Result extraction<a class="anchor" aria-label="anchor" href="#result-extraction-1-1-0"></a></h3>
+<ul><li>Added <code><a href="../reference/get_runs.html">get_runs()</a></code> to extract run-level status, runtime, gap, design parameters, solution identifiers, and objective values.</li>
+<li>Added <code><a href="../reference/get_objectives.html">get_objectives()</a></code> to extract objective values in long or wide format.</li>
+<li>Added <code><a href="../reference/get_objective_specs.html">get_objective_specs()</a></code> to extract registered objective aliases, objective types, model types, optimization senses, and creation metadata.</li>
+<li>Updated objective extraction to include both <code>run_id</code> and <code>solution_id</code>.</li>
+<li>Updated existing extraction functions to work consistently with the unified <code>SolutionSet</code> architecture.</li>
+<li>Improved handling of infeasible runs and missing objective values during extraction.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="solution-set-management-1-1-0">Solution-set management<a class="anchor" aria-label="anchor" href="#solution-set-management-1-1-0"></a></h3>
+<ul><li>Added <code><a href="../reference/solution_filter.html">solution_filter()</a></code> to return a coherently filtered <code>SolutionSet</code>.</li>
+<li>
+<code><a href="../reference/solution_filter.html">solution_filter()</a></code> can filter by <code>run_id</code>, <code>solution_id</code>, solver status, or feasibility.</li>
+<li>Added optional filtering of non-dominated solutions using <code>moocore</code>.</li>
+<li>Added support for selecting the objectives used to evaluate dominance.</li>
+<li>Ensured that filtering updates run tables, design tables, stored solutions, and summary tables consistently.</li>
+<li>Added cloning of <code>SolutionSet</code> objects before modification to prevent reference-based mutation of the original object.</li>
+<li>Added <code><a href="../reference/solution_append.html">solution_append()</a></code> to combine compatible <code>SolutionSet</code> objects generated from the same planning problem.</li>
+<li>
+<code><a href="../reference/solution_append.html">solution_append()</a></code> verifies compatibility of planning units, features, actions, effects, targets, constraints, locks, spatial relations, and objective definitions.</li>
+<li>Appended runs and solutions are automatically assigned unique <code>run_id</code> and <code>solution_id</code> values.</li>
+<li>Added support for combining solution sets obtained from different multi-objective methods or run designs applied to the same planning problem.</li>
+<li>Added <code><a href="../reference/solution_unique.html">solution_unique()</a></code> to retain one representative from groups of equivalent solutions.</li>
+<li>
+<code><a href="../reference/solution_unique.html">solution_unique()</a></code> can identify repeated solutions using either complete decision vectors or objective values.</li>
+<li>Added numerical tolerance controls for identifying equivalent points in objective space.</li>
+<li>Preserved runs without stored solutions when removing duplicated solutions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="frontier-analysis-1-1-0">Frontier analysis<a class="anchor" aria-label="anchor" href="#frontier-analysis-1-1-0"></a></h3>
+<ul><li>Added <code><a href="../reference/frontier_extremes.html">frontier_extremes()</a></code> to identify the observed minimum and maximum values of each objective.</li>
+<li>Added classification of observed bounds as <code>best</code> or <code>worst</code> according to each objective’s optimization sense.</li>
+<li>Added support for returning all tied extreme solutions or only the first representative.</li>
+<li>Added <code><a href="../reference/frontier_distances.html">frontier_distances()</a></code> to calculate normalized distances to observed ideal and nadir points.</li>
+<li>Added automatic transformation of maximization objectives into a common minimization space for frontier calculations.</li>
+<li>Added range normalization so that objectives measured in different units contribute comparably to distance calculations.</li>
+<li>Added Euclidean, Manhattan, and Chebyshev distance metrics.</li>
+<li>Added rankings based on proximity to the observed ideal point and distance from the observed nadir point.</li>
+<li>Added original-scale ideal, nadir, and objective-range metadata to the returned distance tables.</li>
+<li>Clarified that frontier reference points are calculated from the solutions contained in the supplied <code>SolutionSet</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="selection-analysis-1-1-0">Selection analysis<a class="anchor" aria-label="anchor" href="#selection-analysis-1-1-0"></a></h3>
+<ul><li>Added <code><a href="../reference/selection_frequency.html">selection_frequency()</a></code> to calculate how frequently each planning-unit/action assignment is selected across stored solutions.</li>
+<li>Standardized selection analysis around a canonical planning-unit/action representation.</li>
+<li>Simple conservation-planning problems are represented using the implicit <code>conservation</code> action.</li>
+<li>Added <code><a href="../reference/selection_similarity.html">selection_similarity()</a></code> to quantify structural similarity among solutions.</li>
+<li>Added Jaccard similarity for comparing selected planning-unit/action assignments.</li>
+<li>Added Hamming similarity for comparing complete binary assignment vectors, including shared non-selections.</li>
+<li>Added long-format and matrix-format similarity outputs.</li>
+<li>Added internal helpers to construct consistent long-format and matrix-format selection representations.</li>
+<li>Clarified the distinction between selection frequency and formal irreplaceability.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-and-website-1-1-0">Documentation and website<a class="anchor" aria-label="anchor" href="#documentation-and-website-1-1-0"></a></h3>
+<ul><li>Reorganized the pkgdown reference index into dedicated sections for:
+<ul><li>result extraction;</li>
+<li>solution-set management;</li>
+<li>frontier analysis;</li>
+<li>selection analysis;</li>
+<li>multi-objective workflow configuration.</li>
+</ul></li>
+<li>Removed public documentation references to the internal <code>Solution</code> class.</li>
+<li>Updated function documentation to use the unified <code>SolutionSet</code> terminology.</li>
+<li>Updated examples and cross-references for <code>run_id</code>, <code>solution_id</code>, objective extraction, filtering, frontier analysis, and selection analysis.</li>
+<li>Added <code>moocore</code> as an optional dependency for non-dominance filtering.</li>
+<li>Updated GitHub Actions configurations for current Codecov and Node.js runner requirements.</li>
+<li>Updated Codecov uploads to use the PyPI CLI and avoid binary signature-verification failures.</li>
+<li>Updated GitHub Actions versions for Node.js 24 compatibility.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.7" id="multiscape-107">multiscape 1.0.7<a class="anchor" aria-label="anchor" href="#multiscape-107"></a></h2><p class="text-muted">CRAN release: 2026-04-30</p>
 <ul><li>Updated native routine registration to resolve additional CRAN LTO/gcc-ASAN checks.</li>
 <li>Revised examples and package metadata for CRAN compliance.</li>
 </ul></div>
@@ -61,7 +166,7 @@
 <h2 class="pkg-version" data-toc-text="1.0.4" id="multiscape-104">multiscape 1.0.4<a class="anchor" aria-label="anchor" href="#multiscape-104"></a></h2>
 <ul><li>First CRAN release of <code>multiscape</code>.</li>
 <li>Provides a modular workflow for exact multi-objective spatial planning based on mixed-integer programming (MIP).</li>
-<li>Introduces the core <code>Problem</code>, <code>Solution</code>, and <code>SolutionSet</code> classes.</li>
+<li>Introduces the core <code>Problem</code>, <code>Solution</code>, and <code>SolutionSet</code> classes. The public result architecture was later unified around <code>SolutionSet</code> in version 1.1.0.</li>
 <li>Adds support for modular problem construction through <code><a href="../reference/create_problem.html">create_problem()</a></code>, <code>add_*()</code>, <code>set_*()</code>, and <code><a href="../reference/solve.html">solve()</a></code>.</li>
 <li>Supports atomic objective registration and multi-objective solution methods, including weighted-sum, epsilon-constraint, and AUGMECON.</li>
 <li>Includes support for spatial relations such as boundary, rook, queen, k-nearest neighbours, and distance-based relations.</li>

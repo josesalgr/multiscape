@@ -1,25 +1,37 @@
-# Get raw solution vector from a solution
+# Get raw decision vector from a solution set
 
-Return the raw decision-variable vector produced by the solver, in the
-internal model-variable order used by the optimization backend.
+Return the raw decision-variable vector for a selected run in a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
+
+The vector is returned in the internal model-variable order used by the
+optimization backend.
 
 ## Usage
 
 ``` r
-get_solution_vector(x, run = 1L)
+get_solution_vector(x, run = NULL, solution_id = NULL)
 ```
 
 ## Arguments
 
 - x:
 
-  A `Solution` or `SolutionSet` object returned by
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - run:
 
-  Positive integer giving the run index to extract when `x` is a
-  `SolutionSet`. Default is `1L`.
+  Optional positive integer giving the run id to extract. If `NULL`, the
+  first stored solution is used unless `solution_id` is supplied.
+
+- solution_id:
+
+  Optional character string giving the solution id to extract. If
+  supplied, `run` must be `NULL`.
 
 ## Value
 
@@ -27,20 +39,16 @@ A numeric vector with one value per internal model variable.
 
 ## Details
 
-This function extracts the raw solution vector stored at
-`x$solution$vector` for a `Solution` or for a selected run of a
-`SolutionSet`.
+This function extracts the raw decision vector for one run. The returned
+vector is in the internal variable order of the optimization model.
+Depending on the problem formulation, it may include:
 
-The returned vector is in the internal variable order of the
-optimization model. Depending on the problem formulation, it may
-include:
+- planning-unit selection variables;
 
-- planning-unit selection variables,
-
-- action-allocation variables,
+- action-allocation variables;
 
 - auxiliary variables introduced for targets, budgets, fragmentation, or
-  other constraints/objectives,
+  other constraints/objectives;
 
 - and potentially additional blocks created internally by the model
   builder.
@@ -55,9 +63,6 @@ interpretable form, use
 or
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
 instead.
-
-For a single solution, the returned vector corresponds to that solution.
-For a `SolutionSet`, the `run` argument selects which run to extract.
 
 ## See also
 
@@ -87,34 +92,19 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  v <- get_solution_vector(sol)
+  v <- get_solution_vector(solset)
   v
   length(v)
 }

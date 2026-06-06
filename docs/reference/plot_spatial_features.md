@@ -1,10 +1,13 @@
-# Plot spatial feature values from a solution
+# Plot spatial feature values from a solution set
 
-Plot feature values in space from a `Solution` or `SolutionSet`.
+Plot feature values in space from a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-This function combines baseline feature amounts from
-`x$problem$data$dist_features` with positive effects induced by selected
-actions to produce planning-unit-level feature maps.
+This function combines baseline feature amounts from the associated
+`Problem` object with positive effects induced by selected actions to
+produce planning-unit-level feature maps.
 
 ## Usage
 
@@ -33,12 +36,15 @@ plot_spatial_features(
 
 - x:
 
-  A `Solution` or `SolutionSet` object.
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
+  [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - runs:
 
-  Optional integer vector of run ids. If `NULL`, a `Solution` is used
-  directly and a `SolutionSet` defaults to the first run.
+  Optional integer vector of run ids. If `NULL`, the first available run
+  is plotted by default.
 
 - features:
 
@@ -114,10 +120,9 @@ are: \$\$ \mathrm{baseline}\_{if}, \$\$ \$\$ \mathrm{benefit}\_{if},
 
 In the current implementation:
 
-- `baseline` is the summed baseline amount from
-  `x$problem$data$dist_features`,
+- `baseline` is the summed baseline amount from `dist_features`;
 
-- `benefit` is the summed positive effect from selected actions,
+- `benefit` is the summed positive effect from selected actions;
 
 - `final` is `baseline + benefit`.
 
@@ -131,7 +136,8 @@ per feature.
 If multiple runs are plotted, exactly one feature must be requested, and
 faceting is done by run.
 
-Planning-unit geometry must be available in `x$problem$data$pu_sf`.
+Planning-unit geometry must be available in the associated problem
+object.
 
 ## See also
 
@@ -186,21 +192,27 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
-    list(
-      problem = problem,
-      summary = list(
-        actions = data.frame(
-          pu = ids,
-          action = "conservation",
-          selected = 1L
-        )
+  run_result <- list(
+    problem = problem,
+    summary = list(
+      actions = data.frame(
+        pu = ids,
+        action = "conservation",
+        selected = 1L
       )
-    ),
-    class = "Solution"
+    )
   )
 
-  plot_spatial_features(sol, features = "feature_1", value = "final")
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial_features(solset, features = "feature_1", value = "final")
 }
 
 ```

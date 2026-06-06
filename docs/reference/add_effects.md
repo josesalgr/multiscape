@@ -3,17 +3,21 @@
 Define the effects of management actions on features across planning
 units.
 
-Effects are stored in a canonical representation in a effects table,
-with one row per `(pu, action, feature)` triple and two non-negative
+Effects are stored in a canonical representation in an effects table,
+with one row per `(pu, action, feature)` triple and three main effect
 columns:
 
-- `benefit`: the positive component of the effect,
+- `amount_after`: the feature amount expected after applying the action,
 
-- `loss`: the magnitude of the negative component of the effect.
+- `benefit`: the positive component of the net change,
 
-The net effect is therefore interpreted as \$\$ \Delta\_{iaf} =
-\mathrm{benefit}\_{iaf} - \mathrm{loss}\_{iaf}, \$\$ where \\i\\ indexes
-planning units, \\a\\ indexes actions, and \\f\\ indexes features.
+- `loss`: the magnitude of the negative component of the net change.
+
+Let \\i\\ index planning units, \\a\\ index actions, and \\f\\ index
+features. Let \\b\_{if}\\ denote the baseline amount of feature \\f\\ in
+planning unit \\i\\, and let \\\Delta\_{iaf}\\ denote the net effect of
+applying action \\a\\. The after-action amount is: \$\$
+\mathrm{amount\\after}\_{iaf} = b\_{if} + \Delta\_{iaf}. \$\$
 
 Under the semantics adopted by this package, each
 `(pu, action, feature)` triple represents a single net effect.
@@ -76,7 +80,7 @@ add_effects(
   Character string controlling which component of the canonical effects
   table is retained. Must be one of:
 
-  - `"any"`: keep all non-zero rows,
+  - `"any"`: keep all stored effect rows,
 
   - `"benefit"`: keep only rows with `benefit > 0`,
 
@@ -89,7 +93,7 @@ An updated `Problem` object containing:
 - `dist_effects`:
 
   A canonical effects table with columns `pu`, `action`, `feature`,
-  `benefit`, `loss`, `internal_pu`, `internal_action`,
+  `amount_after`, `benefit`, `loss`, `internal_pu`, `internal_action`,
   `internal_feature`, and optional labels such as `feature_name` and
   `action_name`.
 
@@ -109,7 +113,7 @@ This function provides a unified interface for specifying action effects
 from several input formats while enforcing a single internal
 representation. Regardless of how the user supplies the effects, the
 stored output always follows the same canonical structure based on
-non-negative `benefit`/`loss` components.
+`amount_after` and non-negative `benefit`/`loss` components.
 
 Let \\i \in \mathcal{I}\\ index planning units, \\a \in \mathcal{A}\\
 index actions, and \\f \in \mathcal{F}\\ index features. Let \\b\_{if}\\
@@ -117,6 +121,8 @@ denote the baseline amount of feature \\f\\ in planning unit \\i\\, as
 given by the feature-distribution table. Let \\\Delta\_{iaf}\\ denote
 the net change caused by applying action \\a\\ in planning unit \\i\\ to
 feature \\f\\. The canonical stored representation is:
+
+\$\$ \mathrm{amount\\after}\_{iaf} = b\_{if} + \Delta\_{iaf}, \$\$
 
 \$\$ \mathrm{benefit}\_{iaf} = \max(\Delta\_{iaf}, 0), \$\$
 
@@ -128,7 +134,15 @@ Hence:
 
 - if \\\Delta\_{iaf} \< 0\\, then `benefit = 0` and `loss > 0`,
 
-- if \\\Delta\_{iaf} = 0\\, then both are zero.
+- if \\\Delta\_{iaf} = 0\\, then both are zero and `amount_after` equals
+  the baseline amount.
+
+Thus, `benefit` and `loss` describe the net change relative to the
+baseline, whereas `amount_after` describes the final feature amount
+under the action. This distinction is important for actions that
+maintain baseline values. For example, if an action preserves a feature
+unchanged, then `benefit = 0`, `loss = 0`, and `amount_after` equals the
+baseline amount.
 
 **Why split effects into benefit and loss?**
 
@@ -145,17 +159,28 @@ The `effects` argument may be provided in one of the following forms:
 
 2.  A `data.frame(action, feature, multiplier)`. In this case, effects
     are constructed by multiplying baseline feature amounts by the
-    supplied multiplier: \$\$ \Delta\_{iaf} = b\_{if} \times m\_{af},
-    \$\$ where \\m\_{af}\\ is the multiplier associated with action
-    \\a\\ and feature \\f\\. This specification is expanded over all
-    feasible `(pu, action)` pairs.
+    supplied multiplier. The interpretation depends on `effect_type`.
+
+    If `effect_type = "delta"`, the multiplier represents a relative net
+    change: \$\$ \Delta\_{iaf} = b\_{if} \times m\_{af}. \$\$
+
+    If `effect_type = "after"`, the multiplier represents the
+    after-action amount relative to the baseline: \$\$
+    \mathrm{amount\\after}\_{iaf} = b\_{if} \times m\_{af}, \$\$ and the
+    net effect is: \$\$ \Delta\_{iaf} = \mathrm{amount\\after}\_{iaf} -
+    b\_{if} = b\_{if}(m\_{af} - 1). \$\$
+
+    Thus, under `effect_type = "after"`, a multiplier of `1` means no
+    change, a multiplier below `1` means a loss, and a multiplier above
+    `1` means a gain. This specification is expanded over all feasible
+    `(pu, action)` pairs.
 
 3.  A `data.frame(pu, action, feature, ...)` giving explicit effects for
     individual triples. The table may contain:
 
     - `delta` or `effect`: interpreted as signed net changes,
 
-    - `after`: interpreted as after-action amounts if
+    - `after`: interpreted as after-action amounts and requiring
       `effect_type = "after"`,
 
     - `benefit` and/or `loss`: explicit non-negative split components,
@@ -172,12 +197,21 @@ The `effects` argument may be provided in one of the following forms:
 **Interpretation of `effect_type`**
 
 If `effect_type = "delta"`, supplied values are interpreted as net
-changes directly.
+changes directly. For explicit `delta` or `effect` columns, values are
+used as signed changes. For `multiplier` inputs, values are interpreted
+as relative net changes:
+
+\$\$ \Delta\_{iaf} = b\_{if} \times m\_{af}. \$\$
 
 If `effect_type = "after"`, supplied values are interpreted as
 after-action amounts and converted internally to net effects using:
 
 \$\$ \Delta\_{iaf} = \mathrm{after}\_{iaf} - b\_{if}. \$\$
+
+For `multiplier` inputs under `effect_type = "after"`, the after-action
+amount is computed as \\b\_{if} \times m\_{af}\\, so that:
+
+\$\$ \Delta\_{iaf} = b\_{if}(m\_{af} - 1). \$\$
 
 Missing baseline values are treated as zero.
 
@@ -204,13 +238,16 @@ violating this rule are rejected.
 
 After canonicalization and validation, rows can be restricted to:
 
-- `component = "any"`: keep all non-zero effects,
+- `component = "any"`: keep all stored effect rows, including neutral
+  effects,
 
 - `component = "benefit"`: keep only rows with `benefit > 0`,
 
 - `component = "loss"`: keep only rows with `loss > 0`.
 
-Rows with `benefit = 0` and `loss = 0` are always removed.
+Zero-effect rows are retained by default because they may encode valid
+neutral effects. They are removed only when using
+`component = "benefit"` or `component = "loss"`.
 
 **Raster handling**
 
@@ -234,190 +271,3 @@ problem.
 [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md),
 [`add_benefits`](https://josesalgr.github.io/multiscape/reference/add_benefits.md),
 [`add_losses`](https://josesalgr.github.io/multiscape/reference/add_losses.md)
-
-## Examples
-
-``` r
-# ------------------------------------------------------
-# Minimal problem with actions
-# ------------------------------------------------------
-pu <- data.frame(
-  id = 1:3,
-  cost = c(1, 2, 3)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3),
-  feature = c(1, 2, 1, 2),
-  amount = c(10, 5, 8, 4)
-)
-
-p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration"),
-  name = c("Conservation", "Restoration")
-)
-
-p <- add_actions(
-  x = p,
-  actions = actions,
-  cost = c(conservation = 2, restoration = 4)
-)
-
-print(p)
-#> A multiscape object (<Problem>)
-#> ├─data
-#> │├─planning units: <data.frame> (3 total)
-#> │├─costs: min: 1, max: 3
-#> │└─features: 2 total ("sp1", "sp2")
-#> └─actions and effects
-#> │├─actions: 2 total ("Conservation", "Restoration")
-#> │├─feasible action pairs: 6 feasible rows
-#> │├─action costs: min: 2, max: 4
-#> │├─effect data: none
-#> │└─profit data: none
-#> └─spatial
-#> │├─geometry: none
-#> │├─coordinates: none
-#> │└─relations: none
-#> └─targets and constraints
-#> │├─targets: none
-#> │├─area constraints: none
-#> │├─budget constraints: none
-#> │├─planning-unit locks: none
-#> │└─action locks: none
-#> └─model
-#> │├─status: not built yet (will build in solve())
-#> │├─objectives: none
-#> │├─method: single-objective
-#> │├─solver: not set (auto)
-#> │└─checks: incomplete (no objective registered)
-#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
-
-# ------------------------------------------------------
-# 1) Empty effects
-# ------------------------------------------------------
-p0 <- add_effects(p, effects = NULL)
-#> Warning: All effect values are zero after filtering.
-p0$data$dist_effects
-#>  [1] pu               action           feature          benefit         
-#>  [5] loss             internal_pu      internal_action  internal_feature
-#>  [9] feature_name     action_name     
-#> <0 rows> (or 0-length row.names)
-
-# ------------------------------------------------------
-# 2) Multipliers by action and feature
-# delta = baseline amount * multiplier
-# ------------------------------------------------------
-mult <- data.frame(
-  action = c("conservation", "conservation",
-             "restoration", "restoration"),
-  feature = c("sp1", "sp2", "sp1", "sp2"),
-  multiplier = c(0.10, 0.00, -0.20, 0.25)
-)
-
-p1 <- add_effects(
-  x = p,
-  effects = mult,
-  effect_type = "delta"
-)
-
-p1$data$dist_effects
-#>   pu       action feature benefit loss internal_pu internal_action
-#> 1  1 conservation       1    1.00  0.0           1               1
-#> 2  2 conservation       1    0.80  0.0           2               1
-#> 3  1  restoration       1    0.00  2.0           1               2
-#> 4  2  restoration       1    0.00  1.6           2               2
-#> 7  1  restoration       2    1.25  0.0           1               2
-#> 8  3  restoration       2    1.00  0.0           3               2
-#>   internal_feature feature_name  action_name
-#> 1                1          sp1 Conservation
-#> 2                1          sp1 Conservation
-#> 3                1          sp1  Restoration
-#> 4                1          sp1  Restoration
-#> 7                2          sp2  Restoration
-#> 8                2          sp2  Restoration
-
-# ------------------------------------------------------
-# 3) Explicit net effects using signed deltas
-# ------------------------------------------------------
-eff_delta <- data.frame(
-  pu = c(1, 2, 3, 3),
-  action = c("conservation", "restoration", "restoration", "conservation"),
-  feature = c(1, 1, 2, 2),
-  delta = c(2, -3, 1, 0.5)
-)
-
-p2 <- add_effects(
-  x = p,
-  effects = eff_delta
-)
-
-p2$data$dist_effects
-#>   pu       action feature benefit loss internal_pu internal_action
-#> 1  1 conservation       1     2.0    0           1               1
-#> 2  2  restoration       1     0.0    3           2               2
-#> 3  3 conservation       2     0.5    0           3               1
-#> 4  3  restoration       2     1.0    0           3               2
-#>   internal_feature feature_name  action_name
-#> 1                1          sp1 Conservation
-#> 2                1          sp1  Restoration
-#> 3                2          sp2 Conservation
-#> 4                2          sp2  Restoration
-
-# ------------------------------------------------------
-# 4) Explicit after-action amounts
-# delta = after - baseline
-# ------------------------------------------------------
-eff_after <- data.frame(
-  pu = c(1, 2, 3),
-  action = c("conservation", "restoration", "restoration"),
-  feature = c(1, 1, 2),
-  after = c(12, 5, 6)
-)
-
-p3 <- add_effects(
-  x = p,
-  effects = eff_after,
-  effect_type = "after"
-)
-
-p3$data$dist_effects
-#>   pu       action feature benefit loss internal_pu internal_action
-#> 1  1 conservation       1       2    0           1               1
-#> 2  2  restoration       1       0    3           2               2
-#> 3  3  restoration       2       2    0           3               2
-#>   internal_feature feature_name  action_name
-#> 1                1          sp1 Conservation
-#> 2                1          sp1  Restoration
-#> 3                2          sp2  Restoration
-
-# ------------------------------------------------------
-# 5) Keep only beneficial effects
-# ------------------------------------------------------
-p4 <- add_effects(
-  x = p,
-  effects = eff_delta,
-  component = "benefit"
-)
-
-p4$data$dist_effects
-#>   pu       action feature benefit loss internal_pu internal_action
-#> 1  1 conservation       1     2.0    0           1               1
-#> 3  3 conservation       2     0.5    0           3               1
-#> 4  3  restoration       2     1.0    0           3               2
-#>   internal_feature feature_name  action_name
-#> 1                1          sp1 Conservation
-#> 3                2          sp2 Conservation
-#> 4                2          sp2  Restoration
-```

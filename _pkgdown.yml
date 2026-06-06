@@ -15,6 +15,7 @@ template:
       api_key: f00985ff93067595b4da97a65fe69f1a
       index_name: multiscape
     ganalytics: G-6YB8F3838H
+
 destination: docs
 
 navbar:
@@ -42,7 +43,7 @@ reference:
       - solve
 
   - title: Actions, effects and profits
-    desc: Define feasible actions, their effects and optional profits.
+    desc: Define feasible actions, their effects, and optional profits.
     contents:
       - add_actions
       - add_effects
@@ -82,13 +83,6 @@ reference:
       - add_objective_min_fragmentation_action
       - add_objective_min_intervention_impact
 
-  - title: Multi-objective methods
-    desc: Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
-    contents:
-      - set_method_weighted_sum
-      - set_method_epsilon_constraint
-      - set_method_augmecon
-
   - title: Solver configuration
     desc: Store solver and runtime options before calling solve().
     contents:
@@ -98,15 +92,51 @@ reference:
       - set_solver_cbc
       - set_solver_symphony
 
+  - title: Multi-objective methods
+    desc: Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
+    contents:
+      - set_method_weighted_sum
+      - set_method_epsilon_constraint
+      - set_method_augmecon
+
+  - title: Multi-objective workflow configuration
+    desc: Define run designs and execution controls for multi-objective workflows.
+    contents:
+      - run_grid
+      - run_manual
+      - mo_control
+
   - title: Results and extraction
-    desc: Extract user-facing summaries and raw solution vectors.
+    desc: Extract run metadata, objective values, and solution-level results.
     contents:
       - compile_model
+      - get_runs
+      - get_objectives
+      - get_objective_specs
       - get_pu
       - get_actions
       - get_features
       - get_targets
       - get_solution_vector
+
+  - title: Solution-set management
+    desc: Filter, combine, and remove repeated solutions while preserving SolutionSet consistency.
+    contents:
+      - solution_filter
+      - solution_append
+      - solution_unique
+
+  - title: Frontier analysis
+    desc: Characterize objective ranges and distances to observed reference points.
+    contents:
+      - frontier_extremes
+      - frontier_distances
+
+  - title: Selection analysis
+    desc: Analyze the recurrence and structural similarity of planning-unit and action assignments.
+    contents:
+      - selection_frequency
+      - selection_similarity
 
   - title: Plotting
     desc: Visualize spatial outputs and multi-objective trade-offs.
@@ -118,10 +148,9 @@ reference:
       - plot_tradeoff
 
   - title: Classes
-    desc: Core classes used across the package.
+    desc: Public classes used across the package.
     contents:
       - problem-class
-      - solution-class
       - solutionset-class
 
   - title: Data

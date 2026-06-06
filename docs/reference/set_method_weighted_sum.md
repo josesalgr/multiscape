@@ -15,9 +15,11 @@ so that it can be used later by
 set_method_weighted_sum(
   x,
   aliases,
-  weights,
-  normalize_weights = FALSE,
-  objective_scaling = FALSE
+  runs = NULL,
+  weights = NULL,
+  normalize_weights = TRUE,
+  objective_scaling = FALSE,
+  control = mo_control()
 )
 ```
 
@@ -32,21 +34,38 @@ set_method_weighted_sum(
   Character vector of objective aliases to combine. Each alias must
   correspond to a previously registered atomic objective.
 
+- runs:
+
+  A run design created with
+  [`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  or
+  [`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+  For weighted-sum methods, automatic grids define weight combinations,
+  while manual runs must contain columns named `weight_<alias>`.
+
 - weights:
 
-  Numeric vector of weights, with the same length and order as
-  `aliases`. Weights must be finite. If `normalize_weights = TRUE`, they
-  are rescaled to sum to 1 before being stored.
+  Deprecated. Numeric vector of weights, with the same length and order
+  as `aliases`. This argument is kept for backwards compatibility and is
+  internally converted to `runs = run_manual(...)`. New code should use
+  `runs` instead.
 
 - normalize_weights:
 
-  Logical. If `TRUE`, normalize the supplied weights to sum to 1 before
-  storing them.
+  Logical. If `TRUE`, normalize the weights in each run to sum to one
+  before solving.
 
 - objective_scaling:
 
   Logical. If `TRUE`, request scaling of the participating objectives
   before weighted aggregation in the solving layer.
+
+- control:
+
+  A control object created with
+  [`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+  It controls how infeasible runs, runs without a solution, and
+  unexpected errors are handled.
 
 ## Value
 
@@ -63,8 +82,7 @@ weights.
 
 Suppose that a set of atomic objectives has already been registered in
 the problem under aliases \\k \in \mathcal{K}\\. Let \\f_k(x)\\ denote
-the scalar value of objective \\k\\, and let \\w_k\\ denote its
-user-supplied weight.
+the scalar value of objective \\k\\, and let \\w_k\\ denote its weight.
 
 The weighted-sum method combines them into a single scalar objective of
 the form:
@@ -74,8 +92,34 @@ the form:
 In practice, the exact sign convention used internally depends on the
 sense of each registered atomic objective, for example whether it is a
 minimization-type or maximization-type objective. The solving layer is
-therefore responsible for constructing a solver-ready scalar objective
-from the stored objective specifications and the requested weights.
+responsible for constructing a solver-ready scalar objective from the
+stored objective specifications and the requested weights.
+
+**Run designs**
+
+Weighted-sum runs are specified through the `runs` argument. This
+argument must be created with either
+[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+or
+[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+
+`run_grid(n = ...)` automatically generates a grid of weight
+combinations. For two objectives, this is a regular sequence of weights
+along the line between the two objectives. For three or more objectives,
+the grid is generated over the weight simplex, where all weights are
+non-negative and sum to one.
+
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+allows users to provide explicit weight combinations. In manual
+weighted-sum runs, each row is one optimization run and columns must be
+named `weight_<alias>`. For example, if
+`aliases = c("cost", "benefit")`, the manual run table must contain
+columns `weight_cost` and `weight_benefit`.
+
+The older `weights` argument is deprecated. It is still accepted for
+backwards compatibility and is internally converted to a one-row
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+design.
 
 **Atomic objectives requirement**
 
@@ -105,8 +149,8 @@ registered atomic objectives are included in the weighted combination.
 
 **Weight normalization**
 
-If `normalize_weights = TRUE`, the supplied weights are rescaled to sum
-to 1:
+If `normalize_weights = TRUE`, the weights in each run are rescaled to
+sum to one:
 
 \$\$ \tilde{w}\_k = \frac{w_k}{\sum\_{j \in \mathcal{K}} w_j}. \$\$
 
@@ -115,34 +159,48 @@ weighted-sum formulation as long as all weights are multiplied by the
 same positive constant, but it can improve interpretability and
 numerical conditioning.
 
-If `normalize_weights = FALSE`, the supplied weights are stored exactly
-as provided.
+If `normalize_weights = FALSE`, each row of weights must already sum to
+one.
 
 **Objective scaling**
 
-If `objective_scaling = TRUE`, the solving layer is expected to scale
-the participating objectives before combining them. The purpose of
-scaling is to reduce distortions caused by objectives being measured on
-very different numerical ranges.
+If `objective_scaling = TRUE`, the solving layer scales the
+participating objectives before combining them. The purpose of scaling
+is to reduce distortions caused by objectives being measured on very
+different numerical ranges.
 
 Conceptually, if \\R_k\\ denotes a scale or range associated with
 objective \\k\\, then a scaled weighted sum may be interpreted as:
 
 \$\$ \sum\_{k \in \mathcal{K}} w_k \\ \frac{f_k(x)}{R_k}. \$\$
 
-The exact scaling rule is implemented later in the solving layer. This
-function only stores whether objective scaling has been requested.
+The exact scaling rule is implemented in the solving layer.
 
 **Mixed objective senses**
 
 Weighted sums are straightforward when all participating objectives have
 the same optimization sense. When minimization and maximization
-objectives are mixed, the solving layer must standardize them internally
+objectives are mixed, the solving layer standardizes them internally
 before building the scalar objective.
 
-This function validates that the requested aliases exist, but it does
-not itself resolve objective-sense compatibility. That logic is
-delegated to the downstream solving layer.
+Users should provide non-negative weights according to the original
+meaning of each objective. For example, a positive weight on a
+maximization objective means that higher values of that objective are
+preferred.
+
+**Failure handling**
+
+The `control` argument controls how failed runs are handled. It must be
+created with
+[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+
+Weighted-sum runs do not normally introduce additional constraints, so
+they should not usually create infeasible subproblems by themselves.
+However, runs may still fail if the underlying model is infeasible, the
+solver stops before finding a feasible solution, or a numerical/modeling
+issue occurs. The `control` argument determines whether such failures
+stop the whole solve or are retained in the returned `SolutionSet` with
+missing objective values.
 
 **Theoretical limitation**
 
@@ -162,19 +220,26 @@ This function stores the method definition in `x$data$method` with:
 
 - `name = "weighted"`,
 
+- `type = "weighted"`,
+
 - `aliases`,
 
-- `weights`,
+- `runs`,
 
 - `normalize_weights`,
 
-- `objective_scaling`.
+- `objective_scaling`,
+
+- `control`.
 
 The actual scalarization is performed later by
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 ## See also
 
+[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md),
+[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md),
+[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md),
 [`set_method_epsilon_constraint`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md),
 [`set_method_augmecon`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md),
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
@@ -224,47 +289,175 @@ x <- create_problem(
   add_objective_min_cost(alias = "cost") |>
   add_objective_max_benefit(alias = "benefit")
 
-x <- set_method_weighted_sum(
+# Automatic weight grid
+x1 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  weights = c(0.4, 0.6),
-  normalize_weights = FALSE
+  runs = run_grid(n = 5, include_extremes = TRUE),
+  objective_scaling = TRUE
 )
 
-x$data$method
+x1$data$method
 #> $name
+#> [1] "weighted"
+#> 
+#> $type
 #> [1] "weighted"
 #> 
 #> $aliases
 #> [1] "cost"    "benefit"
 #> 
-#> $weights
-#> [1] 0.4 0.6
+#> $runs
+#> $type
+#> [1] "grid"
+#> 
+#> $n
+#> [1] 5
+#> 
+#> $include_extremes
+#> [1] TRUE
+#> 
+#> attr(,"class")
+#> [1] "RunGrid"   "RunDesign"
 #> 
 #> $normalize_weights
-#> [1] FALSE
+#> [1] TRUE
 #> 
 #> $objective_scaling
+#> [1] TRUE
+#> 
+#> $control
+#> $stop_on_infeasible
 #> [1] FALSE
 #> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
 
-# Normalize weights before storing
+# Manual weighted runs
+manual_weights <- data.frame(
+  weight_cost = c(1.0, 0.75, 0.50, 0.25, 0.0),
+  weight_benefit = c(0.0, 0.25, 0.50, 0.75, 1.0)
+)
+
 x2 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  weights = c(2, 3),
-  normalize_weights = TRUE
+  runs = run_manual(manual_weights),
+  normalize_weights = FALSE,
+  objective_scaling = TRUE
 )
 
 x2$data$method
 #> $name
 #> [1] "weighted"
 #> 
+#> $type
+#> [1] "weighted"
+#> 
 #> $aliases
 #> [1] "cost"    "benefit"
 #> 
-#> $weights
-#> [1] 0.4 0.6
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   weight_cost weight_benefit
+#> 1        1.00           0.00
+#> 2        0.75           0.25
+#> 3        0.50           0.50
+#> 4        0.25           0.75
+#> 5        0.00           1.00
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
+#> 
+#> $normalize_weights
+#> [1] FALSE
+#> 
+#> $objective_scaling
+#> [1] TRUE
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+
+# Manual runs with automatic weight normalization
+manual_weights2 <- data.frame(
+  weight_cost = c(2, 1, 1),
+  weight_benefit = c(1, 1, 3)
+)
+
+x3 <- set_method_weighted_sum(
+  x,
+  aliases = c("cost", "benefit"),
+  runs = run_manual(manual_weights2),
+  normalize_weights = TRUE
+)
+
+x3$data$method
+#> $name
+#> [1] "weighted"
+#> 
+#> $type
+#> [1] "weighted"
+#> 
+#> $aliases
+#> [1] "cost"    "benefit"
+#> 
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   weight_cost weight_benefit
+#> 1           2              1
+#> 2           1              1
+#> 3           1              3
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
 #> 
 #> $normalize_weights
 #> [1] TRUE
@@ -272,29 +465,158 @@ x2$data$method
 #> $objective_scaling
 #> [1] FALSE
 #> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
 
-# Request objective scaling
-x3 <- set_method_weighted_sum(
+# Backwards-compatible deprecated usage
+x4 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  weights = c(0.7, 0.3),
-  objective_scaling = TRUE
+  weights = c(0.4, 0.6),
+  normalize_weights = FALSE
 )
+#> Warning: `weights` is deprecated. Use `runs = run_manual(data.frame(weight_<alias> = ...))` instead.
 
-x3$data$method
+x4$data$method
 #> $name
+#> [1] "weighted"
+#> 
+#> $type
 #> [1] "weighted"
 #> 
 #> $aliases
 #> [1] "cost"    "benefit"
 #> 
-#> $weights
-#> [1] 0.7 0.3
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   run_id weight_cost weight_benefit
+#> 1      1         0.4            0.6
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
 #> 
 #> $normalize_weights
 #> [1] FALSE
 #> 
 #> $objective_scaling
+#> [1] FALSE
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+
+# Control failure handling
+x5 <- set_method_weighted_sum(
+  x,
+  aliases = c("cost", "benefit"),
+  runs = run_grid(n = 5),
+  control = mo_control(
+    stop_on_infeasible = TRUE,
+    stop_on_no_solution = TRUE,
+    stop_on_error = TRUE
+  )
+)
+
+x5$data$method
+#> $name
+#> [1] "weighted"
+#> 
+#> $type
+#> [1] "weighted"
+#> 
+#> $aliases
+#> [1] "cost"    "benefit"
+#> 
+#> $runs
+#> $type
+#> [1] "grid"
+#> 
+#> $n
+#> [1] 5
+#> 
+#> $include_extremes
+#> [1] TRUE
+#> 
+#> attr(,"class")
+#> [1] "RunGrid"   "RunDesign"
+#> 
+#> $normalize_weights
+#> [1] TRUE
+#> 
+#> $objective_scaling
+#> [1] FALSE
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] TRUE
+#> 
+#> $stop_on_no_solution
+#> [1] TRUE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] TRUE
+#> 
+#> $stop_on_no_solution
+#> [1] TRUE
+#> 
+#> $stop_on_error
 #> [1] TRUE
 #> 
 ```

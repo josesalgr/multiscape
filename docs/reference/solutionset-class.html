@@ -6,24 +6,22 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="SolutionSet class — solutionset-class"><meta name="description" content="The SolutionSet class stores the result of solving a
-Problem object when multiple runs are produced.
-A SolutionSet object is the multi-run counterpart of
-solution-class. It contains the original problem, run-level
-design and outcome tables, the list of individual Solution objects,
-diagnostics summarizing the full set of runs, method metadata, and additional
-metadata.
-Objects of this class are typically created by solve in
-workflows that generate more than one optimization run, such as weighted-sum
-scans, \(\epsilon\)-constraint designs, or AUGMECON grids."><meta property="og:description" content="The SolutionSet class stores the result of solving a
-Problem object when multiple runs are produced.
-A SolutionSet object is the multi-run counterpart of
-solution-class. It contains the original problem, run-level
-design and outcome tables, the list of individual Solution objects,
-diagnostics summarizing the full set of runs, method metadata, and additional
-metadata.
-Objects of this class are typically created by solve in
-workflows that generate more than one optimization run, such as weighted-sum
-scans, \(\epsilon\)-constraint designs, or AUGMECON grids."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+Problem object.
+A SolutionSet object is the standard result object returned by
+solve. It may contain a single solved run, as in ordinary
+single-objective optimization, or multiple solved runs, as in weighted-sum,
+\(\epsilon\)-constraint, or AUGMECON workflows.
+The object stores the original problem, run-level design and outcome tables,
+objective values, diagnostics, method metadata, and additional metadata needed
+to inspect, compare, and analyse optimization results."><meta property="og:description" content="The SolutionSet class stores the result of solving a
+Problem object.
+A SolutionSet object is the standard result object returned by
+solve. It may contain a single solved run, as in ordinary
+single-objective optimization, or multiple solved runs, as in weighted-sum,
+\(\epsilon\)-constraint, or AUGMECON workflows.
+The object stores the original problem, run-level design and outcome tables,
+objective values, diagnostics, method metadata, and additional metadata needed
+to inspect, compare, and analyse optimization results."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -37,7 +35,7 @@ scans, \(\epsilon\)-constraint designs, or AUGMECON grids."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,15 +62,14 @@ scans, \(\epsilon\)-constraint designs, or AUGMECON grids."><meta property="og:i
 
     <div class="ref-description section level2">
     <p>The <code>SolutionSet</code> class stores the result of solving a
-<code><a href="problem-class.html">Problem</a></code> object when multiple runs are produced.</p>
-<p>A <code>SolutionSet</code> object is the multi-run counterpart of
-<code><a href="solution-class.html">solution-class</a></code>. It contains the original problem, run-level
-design and outcome tables, the list of individual <code>Solution</code> objects,
-diagnostics summarizing the full set of runs, method metadata, and additional
-metadata.</p>
-<p>Objects of this class are typically created by <code><a href="solve.html">solve</a></code> in
-workflows that generate more than one optimization run, such as weighted-sum
-scans, \(\epsilon\)-constraint designs, or AUGMECON grids.</p>
+<code><a href="problem-class.html">Problem</a></code> object.</p>
+<p>A <code>SolutionSet</code> object is the standard result object returned by
+<code><a href="solve.html">solve</a></code>. It may contain a single solved run, as in ordinary
+single-objective optimization, or multiple solved runs, as in weighted-sum,
+\(\epsilon\)-constraint, or AUGMECON workflows.</p>
+<p>The object stores the original problem, run-level design and outcome tables,
+objective values, diagnostics, method metadata, and additional metadata needed
+to inspect, compare, and analyse optimization results.</p>
     </div>
 
 
@@ -83,34 +80,37 @@ scans, \(\epsilon\)-constraint designs, or AUGMECON grids.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Conceptual role</strong></p>
-<p>The <code>SolutionSet</code> class represents the result of a multi-run solving
-workflow:</p><div class="sourceCode"><pre><code><span></span>
+<p>The <code>SolutionSet</code> class represents the result of a solving workflow:</p><div class="sourceCode"><pre><code><span></span>
 <span><span class="va">Problem</span> <span class="op">-&gt;</span> <span class="fu"><a href="../reference/solve.html">solve</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="va">SolutionSet</span></span></code></pre></div>
 
-<p>Each run corresponds to one specific optimization subproblem, parameter
-setting, or trade-off configuration. The <code>SolutionSet</code> object keeps all
-these runs together in a structured form.</p>
-<p>Thus, a <code>SolutionSet</code> is not a single solution with multiple labels, but
-a collection of distinct <code>Solution</code> objects linked to a shared problem
-and a shared multi-run design.</p>
+<p>Single-objective workflows are represented as <code>SolutionSet</code> objects with
+one run. Multi-objective workflows are represented as <code>SolutionSet</code>
+objects with one or more runs generated by the selected method.</p>
+<p>This design provides a common result structure for downstream analysis,
+including objective-value extraction, run diagnostics, trade-off analysis,
+Pareto-frontier summaries, distance-based ranking, and comparison between
+scenarios.</p>
 <p><strong>Typical use cases</strong></p>
-<p>A <code>SolutionSet</code> is typically returned when the chosen solution method
-generates multiple runs, for example:</p><ul><li><p>several weighted-sum configurations,</p></li>
-<li><p>a grid of \(\epsilon\)-constraint runs,</p></li>
-<li><p>an AUGMECON exploration of multiple
-\(\epsilon\)-combinations,</p></li>
-<li><p>or any other workflow producing more than one optimizer call.</p></li>
+<p>A <code>SolutionSet</code> is used to inspect and analyse the results returned by
+<code><a href="solve.html">solve</a></code>. Typical use cases include:</p><ul><li><p>inspecting selected planning units or actions;</p></li>
+<li><p>extracting run-level objective values;</p></li>
+<li><p>comparing alternative solutions produced by a multi-objective method;</p></li>
+<li><p>analysing trade-offs between objectives;</p></li>
+<li><p>filtering feasible, unique, or non-dominated solutions;</p></li>
+<li><p>computing distances to reference points such as utopia or nadir
+points;</p></li>
+<li><p>preparing plots and tables for reporting.</p></li>
 </ul><p><strong>Internal structure</strong></p>
 <p>A <code>SolutionSet</code> object separates information into several layers:</p>
 <dl><dt><code>problem</code></dt>
-<dd><p>The original <code>Problem</code> object shared by all
-runs.</p></dd>
+<dd><p>The <code>Problem</code> object used to generate the
+solution set.</p></dd>
 
 
 <dt><code>solution</code></dt>
-<dd><p>A named <code>list</code> containing the core multi-run
-optimization outputs. This typically includes the run design, the run
-summary table, and the list of individual <code>Solution</code> objects.</p></dd>
+<dd><p>A named <code>list</code> containing the core solving
+outputs. This typically includes the run design, the run summary table, and
+the stored run-level solution objects used internally by <span class="pkg">multiscape</span>.</p></dd>
 
 
 <dt><code>summary</code></dt>
@@ -124,8 +124,8 @@ the solution set as a whole.</p></dd>
 
 
 <dt><code>method</code></dt>
-<dd><p>A named <code>list</code> describing the multi-run
-optimization method used.</p></dd>
+<dd><p>A named <code>list</code> describing the optimization method
+used.</p></dd>
 
 
 <dt><code>meta</code></dt>
@@ -137,95 +137,104 @@ optimization method used.</p></dd>
 
 
 </dl><p><strong>Run-level content</strong></p>
-<p>The <code>solution</code> field is the main entry point for run-level information.
-Typical entries include:</p><dl><dt><code>design</code></dt>
-<dd><p>A <code>data.frame</code> describing the experimental or
-optimization design, for example weights or \(\epsilon\)-levels.</p></dd>
+<p>The <code>solution</code> field is the main internal container for run-level
+information. Typical entries include:</p>
+<dl><dt><code>design</code></dt>
+<dd><p>A <code>data.frame</code> describing the optimization
+design. In multi-objective workflows this may include weights,
+\(\epsilon\)-levels, or other method-specific parameters. In
+single-objective workflows this table usually contains one row.</p></dd>
 
 
 <dt><code>runs</code></dt>
 <dd><p>A <code>data.frame</code> summarizing the outcome of each run.
-This typically includes run identifiers, solver status, runtime, gap, and
-objective values.</p></dd>
+This typically includes run identifiers, solver status, runtime, optimality
+gap, objective values, and method-specific information.</p></dd>
 
 
 <dt><code>solutions</code></dt>
-<dd><p>A list of individual <code>Solution</code> objects, one
-per run.</p></dd>
+<dd><p>A list of stored run-level solution objects used
+internally by <span class="pkg">multiscape</span>. Users should normally rely on accessor
+functions rather than directly manipulating this list.</p></dd>
 
 
-</dl><p>In many workflows, the <code>runs</code> table is the most important compact
-representation of the solution set, while <code>solutions[[i]]</code> provides the
-full detailed output for run \(i\).</p>
+</dl><p>In most workflows, the <code>runs</code> table is the most useful compact
+representation of the solution set. Detailed inspection should preferably be
+done through accessor functions such as <code><a href="get_pu.html">get_pu</a></code>,
+<code><a href="get_actions.html">get_actions</a></code>, <code><a href="get_features.html">get_features</a></code>, and
+<code><a href="get_targets.html">get_targets</a></code>.</p>
 <p><strong>Objective values and run tables</strong></p>
-<p>In multi-objective workflows, the run table often stores objective values in
-columns named <code>value_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of a
-registered objective. For example:</p><ul><li><p><code>value_cost</code>,</p></li>
+<p>The run table may store objective values in columns named
+<code>value_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of a registered
+objective. For example:</p><ul><li><p><code>value_cost</code>,</p></li>
 <li><p><code>value_frag</code>,</p></li>
 <li><p><code>value_benefit</code>.</p></li>
-</ul><p>This naming convention is used by downstream functions such as
-<code><a href="plot_tradeoff.html">plot_tradeoff</a></code>.</p>
+</ul><p>This convention provides a compact format for downstream functions that
+analyse trade-offs, frontiers, or distances between solutions.</p>
 <p>Depending on the solving method, the run table may also contain design
-columns such as:</p><ul><li><p><code>weight_&lt;alias&gt;</code> for weighted-sum runs,</p></li>
+columns such as:</p><ul><li><p><code>weight_&lt;alias&gt;</code> for weighted-sum runs;</p></li>
 <li><p><code>eps_&lt;alias&gt;</code> for \(\epsilon\)-constraint or AUGMECON runs.</p></li>
-</ul><p><strong>Relationship with <code>Solution</code></strong></p>
-<p>A <code>SolutionSet</code> is conceptually a collection of <code>Solution</code> objects.
-The individual runs are typically stored in:
-$$
-\code{x$solution$solutions[[i]]}
-$$</p>
-<p>where each element is itself a full <code>Solution</code> object.</p>
-<p>Therefore:</p><ul><li><p>use <code>SolutionSet</code> when working with the full set of runs,</p></li>
-<li><p>use an individual <code>Solution</code> when inspecting one particular run
-in detail.</p></li>
-</ul><p><strong>Diagnostics</strong></p>
-<p>The <code>diagnostics</code> field stores metadata about the multi-run solve
-process. Depending on the implementation, it may summarize:</p><ul><li><p>number of runs,</p></li>
-<li><p>status frequencies,</p></li>
-<li><p>runtime ranges,</p></li>
-<li><p>gap ranges,</p></li>
+</ul><p><strong>Single-objective and multi-objective results</strong></p>
+<p><code><a href="solve.html">solve()</a></code> always returns a <code>SolutionSet</code>. For a single-objective
+problem, the returned object contains one run. For a multi-objective
+workflow, the returned object contains one or more runs generated by the
+selected method.</p>
+<p>This unified output structure makes it possible to use the same inspection
+and analysis functions regardless of whether the original problem was
+single-objective or multi-objective.</p>
+<p><strong>Diagnostics</strong></p>
+<p>The <code>diagnostics</code> field stores metadata about the solve process.
+Depending on the workflow, it may summarize:</p><ul><li><p>number of design rows;</p></li>
+<li><p>number of attempted runs;</p></li>
+<li><p>number of stored solutions;</p></li>
+<li><p>status frequencies;</p></li>
+<li><p>runtime ranges;</p></li>
+<li><p>gap ranges;</p></li>
 <li><p>and other aggregate information about the set of runs.</p></li>
 </ul><p><strong>Printing</strong></p>
-<p>The <code><a href="print.html">print()</a></code> method provides a concise summary of the full solution set.
-It reports:</p><ul><li><p>the optimization method name,</p></li>
-<li><p>the participating objective aliases,</p></li>
-<li><p>the number of design rows, runs, and stored solutions,</p></li>
-<li><p>run-level status summaries,</p></li>
-<li><p>runtime and gap ranges,</p></li>
+<p>The <code><a href="print.html">print()</a></code> method provides a concise summary of the solution set.
+It reports:</p><ul><li><p>the optimization method name;</p></li>
+<li><p>the participating objective aliases;</p></li>
+<li><p>the number of design rows, runs, and stored solutions;</p></li>
+<li><p>run-level status summaries;</p></li>
+<li><p>runtime and gap ranges;</p></li>
 <li><p>and the names of design and objective-value columns when available.</p></li>
 </ul><p>This printed output is intended as a quick overview. Detailed inspection
-should use:</p><ul><li><p><code>x$solution$runs</code>,</p></li>
-<li><p><code>x$solution$design</code>,</p></li>
-<li><p><code>x$solution$solutions[[i]]</code>,</p></li>
-<li><p>or the accessor methods documented below.</p></li>
-</ul></div>
+should use accessor functions or the run-level tables stored in the object.</p>
+    </div>
     <div class="section level2">
     <h2 id="fields">Fields<a class="anchor" aria-label="anchor" href="#fields"></a></h2>
 
 
 <dl><dt><code>problem</code></dt>
-<dd><p>The <code>Problem</code> object used to generate the full
+<dd><p>The <code>Problem</code> object used to generate the
 solution set.</p></dd>
 
+
 <dt><code>solution</code></dt>
-<dd><p>A named <code>list</code> containing the core multi-run
-outputs, typically including <code>design</code>, <code>runs</code>, and
-<code>solutions</code>.</p></dd>
+<dd><p>A named <code>list</code> containing the core solving
+outputs, typically including <code>design</code>, <code>runs</code>, and internally
+stored run-level solutions.</p></dd>
+
 
 <dt><code>summary</code></dt>
 <dd><p>A named <code>list</code> containing user-facing summaries
 associated with the solution set.</p></dd>
 
+
 <dt><code>diagnostics</code></dt>
 <dd><p>A named <code>list</code> containing diagnostics about
 the solution set as a whole.</p></dd>
+
 
 <dt><code>method</code></dt>
 <dd><p>A named <code>list</code> describing the optimization method
 used.</p></dd>
 
+
 <dt><code>meta</code></dt>
 <dd><p>A named <code>list</code> of additional metadata.</p></dd>
+
 
 <dt><code>name</code></dt>
 <dd><p>A <code>character(1)</code> name for the solution set
@@ -267,20 +276,20 @@ solution set.</p></dd>
 
 
 <dt><code>getSolutions()</code></dt>
-<dd><p>Return the list of individual
-<code>Solution</code> objects stored in <code>self$solution$solutions</code>.</p></dd>
+<dd><p>Return the internally stored run-level
+solution objects. This is mainly intended for advanced use; most users
+should prefer higher-level accessor functions.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="solution-class.html">solution-class</a></code>,
+    <div class="dont-index"><p><code><a href="solve.html">solve</a></code>,
 <code><a href="plot_tradeoff.html">plot_tradeoff</a></code>,
 <code><a href="get_pu.html">get_pu</a></code>,
 <code><a href="get_actions.html">get_actions</a></code>,
 <code><a href="get_features.html">get_features</a></code>,
-<code><a href="get_targets.html">get_targets</a></code>,
-<code><a href="solve.html">solve</a></code></p></div>
+<code><a href="get_targets.html">get_targets</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

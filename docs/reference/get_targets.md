@@ -1,12 +1,13 @@
-# Get target achievement summary from a solution
+# Get target achievement summary from a solution set
 
-Extract a user-facing target-achievement table from a `Solution` or
-`SolutionSet` object returned by
+Extract a user-facing target-achievement table from a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 The returned table summarizes, for each stored target, the target level,
-the achieved value in the solution, the gap between achieved and
-required values, and whether the target was met.
+the achieved value, the gap between achieved and required values, and
+whether the target was met in each run.
 
 ## Usage
 
@@ -18,24 +19,26 @@ get_targets(x, run = NULL)
 
 - x:
 
-  A `Solution` or `SolutionSet` object returned by
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - run:
 
-  Optional positive integer giving the run index to extract from a
-  `SolutionSet`. If `NULL`, all runs are returned when available.
+  Optional positive integer giving the run index to extract. If `NULL`,
+  all runs are returned when available.
 
 ## Value
 
-A simplified `data.frame` target summary, or `NULL` if the solution does
+A simplified `data.frame` target summary, or `NULL` if the result does
 not contain targets. Typical columns include `feature`, `feature_name`,
 `target_level`, `total_available`, `target`, `achieved`, `gap`, and
 `met`.
 
 ## Details
 
-Targets are optional in `multiscape`. If the solution object does not
+Targets are optional in multiscape. If the result object does not
 contain a targets summary table at `x$summary$targets`, this function
 returns `NULL` without error.
 
@@ -52,9 +55,9 @@ and for upper-bound targets: \$\$ \mathrm{met} = (\mathrm{achieved} \le
 The interpretation of the target direction is taken from the `sense`
 column when available:
 
-- `"ge"`, `">="`, or `"min"` are treated as lower-bound targets,
+- `"ge"`, `">="`, or `"min"` are treated as lower-bound targets;
 
-- `"le"`, `"<="`, or `"max"` are treated as upper-bound targets,
+- `"le"`, `"<="`, or `"max"` are treated as upper-bound targets;
 
 - if `sense` is missing, the target is treated as a lower bound by
   default.
@@ -62,16 +65,16 @@ column when available:
 The returned table is simplified and renames some internal fields for
 readability:
 
-- `target_raw` is returned as `target_level`,
+- `target_raw` is returned as `target_level`;
 
-- `basis_total` is returned as `total_available`,
+- `basis_total` is returned as `total_available`;
 
 - `target_value` is returned as `target`.
 
-If `x` is a `SolutionSet` and `run` is provided, only rows belonging to
-that run are returned. If the result contains a `run_id` column but only
-a single run is present and `run` was not requested explicitly, the
-`run_id` column is removed for convenience.
+If `run` is provided, only rows belonging to that run are returned. If
+the result contains a `run_id` column but only a single run is present
+and `run` was not requested explicitly, the `run_id` column is removed
+for convenience.
 
 The `gap` column is expected to be part of the stored summary. When
 present, it typically represents: \$\$ \mathrm{gap} =
@@ -104,37 +107,22 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_targets(sol)
+  get_targets(solset)
 }
 #>   feature feature_name target_level total_available target achieved gap  met
-#> 1       1    feature_1          0.2               9    1.8        2 0.2 TRUE
+#> 1       1    feature_1          0.2               9    1.8        5 3.2 TRUE
 #> 2       2    feature_2          0.2               6    1.2        2 0.8 TRUE
 # }
 ```

@@ -1,12 +1,13 @@
 # Plot selected actions in space
 
-Plot the spatial distribution of selected actions from a `Solution` or
-`SolutionSet`.
+Plot the spatial distribution of selected actions from a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 This function maps the selected planning unit–action pairs returned by
-[`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md)`(only_selected = TRUE)`
-onto the planning-unit geometry stored in the associated `Problem`
-object.
+the stored action summary onto the planning-unit geometry stored in the
+associated `Problem` object.
 
 ## Usage
 
@@ -35,12 +36,15 @@ plot_spatial_actions(
 
 - x:
 
-  A `Solution` or `SolutionSet` object.
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
+  [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - runs:
 
-  Optional integer vector of run ids. If `NULL`, a `Solution` is used
-  directly and a `SolutionSet` defaults to the first run.
+  Optional integer vector of run ids. If `NULL`, the first available run
+  is plotted by default.
 
 - actions:
 
@@ -124,7 +128,8 @@ planning unit, the action labels are collapsed using `"+"`.
 
 When plotting multiple runs, only `layout = "single"` is supported.
 
-Planning-unit geometry must be available in `x$problem$data$pu_sf`.
+Planning-unit geometry must be available in the associated problem
+object.
 
 ## See also
 
@@ -156,21 +161,28 @@ if (requireNamespace("sf", quietly = TRUE) &&
   )
 
   ids <- sim_pu_sf$id[seq_len(min(6, nrow(sim_pu_sf)))]
-  sol <- structure(
-    list(
-      problem = problem,
-      summary = list(
-        actions = data.frame(
-          pu = c(ids[1:3], ids[4:6]),
-          action = c(rep("conservation", 3), rep("restoration", 3)),
-          selected = 1L
-        )
+
+  run_result <- list(
+    problem = problem,
+    summary = list(
+      actions = data.frame(
+        pu = c(ids[1:3], ids[4:6]),
+        action = c(rep("conservation", 3), rep("restoration", 3)),
+        selected = 1L
       )
-    ),
-    class = "Solution"
+    )
   )
 
-  plot_spatial_actions(sol, layout = "facet")
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial_actions(solset, layout = "facet")
 }
 
 ```

@@ -1,7 +1,9 @@
-# Plot spatial outputs from a solution or solution set
+# Plot spatial outputs from a solution set
 
-Convenience wrapper to plot spatial outputs from a `Solution` or
-`SolutionSet`.
+Convenience wrapper to plot spatial outputs from a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 Depending on `what`, this function dispatches to one of:
 
@@ -45,7 +47,10 @@ plot_spatial(
 
 - x:
 
-  A `Solution` or `SolutionSet` object.
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
+  [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - what:
 
@@ -54,8 +59,8 @@ plot_spatial(
 
 - runs:
 
-  Optional integer vector of run ids. If `NULL`, a `Solution` is used
-  directly and a `SolutionSet` defaults to the first run.
+  Optional integer vector of run ids. If `NULL`, the first available run
+  is plotted by default.
 
 - actions:
 
@@ -155,7 +160,7 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
+  run_result <- structure(
     list(
       problem = problem,
       summary = list(
@@ -168,7 +173,16 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Solution"
   )
 
-  plot_spatial(sol, what = "pu")
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial(solset, what = "pu")
 }
 
 ```

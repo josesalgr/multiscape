@@ -1,12 +1,13 @@
-# Get feature summary from a solution
+# Get feature summary from a solution set
 
-Extract the per-feature summary table from a `Solution` or `SolutionSet`
+Extract the per-feature summary table from a
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
 object returned by
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-The returned table summarizes, for each feature, the total amount
-available in the landscape together with the positive and negative
-contributions induced by the selected actions in the solution.
+The returned table summarizes, for each feature, how much of the feature
+was available in the full baseline landscape and how much is represented
+by the selected planning units or selected actions in each run.
 
 ## Usage
 
@@ -18,67 +19,86 @@ get_features(x, run = NULL)
 
 - x:
 
-  A `Solution` or `SolutionSet` object returned by
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - run:
 
-  Optional positive integer giving the run index to extract from a
-  `SolutionSet`. If `NULL`, all runs are returned when available.
+  Optional positive integer giving the run index to extract. If `NULL`,
+  all runs are returned when available.
 
 ## Value
 
 A `data.frame` with one row per feature, or one row per feature–run
-combination when multiple runs are present. The returned table always
-includes the columns `total_available`, `benefit`, `loss`, `net`, and
-`total`.
+combination when multiple runs are present. The returned table includes,
+when available or derivable, the columns `baseline_total`,
+`selected_baseline`, `selected_amount_after`, `selected_benefit`,
+`selected_loss`, `selected_net`, and `selected_fraction_of_baseline`.
 
 ## Details
 
 This function reads the feature summary stored in `x$summary$features`.
 It errors if that table is missing.
 
-Let \\B_f\\ denote the total baseline amount available in the landscape
-for feature \\f\\. Let \\G_f\\ denote the total positive contribution
-induced by selected actions, and let \\L_f\\ denote the total negative
-contribution. Then the returned table is intended to summarize
-quantities of the form:
+Feature summaries distinguish between baseline availability in the full
+landscape and the contribution of selected planning units or selected
+actions.
 
-\$\$ \mathrm{net}\_f = G_f - L_f, \$\$
+Let \\B_f\\ denote the total baseline amount of feature \\f\\ available
+in the full landscape. Let \\S_f\\ denote the baseline amount of feature
+\\f\\ in selected rows. Let \\A_f\\ denote the after-action amount of
+feature \\f\\ contributed by those selected rows. Let \\G_f\\ and
+\\L_f\\ denote the positive and negative net-change components induced
+by selected actions. Then:
 
-\$\$ \mathrm{total}\_f = B_f + \mathrm{net}\_f. \$\$
+\$\$ \mathrm{selected\\net}\_f = G_f - L_f, \$\$
 
-In the stored summary, these quantities are typically represented by the
-columns:
+and:
 
-- `total_available`, corresponding to \\B_f\\,
+\$\$ A_f = S_f + \mathrm{selected\\net}\_f. \$\$
 
-- `benefit`, corresponding to \\G_f\\,
+The main returned columns are:
 
-- `loss`, corresponding to \\L_f\\,
+- `baseline_total`: total baseline amount in the full landscape;
 
-- `net`, corresponding to \\G_f - L_f\\,
+- `selected_baseline`: baseline amount in selected rows;
 
-- `total`, corresponding to \\B_f + G_f - L_f\\.
+- `selected_amount_after`: after-action amount contributed by selected
+  rows;
 
-If any of the core numeric columns `total_available`, `benefit`, or
-`loss` are missing, they are created and filled with zero. If `net` is
-missing, it is computed as `benefit - loss`. If `total` is missing, it
-is computed as `total_available + net`.
+- `selected_benefit`: positive net-change component from selected
+  actions;
 
-Thus, this function guarantees that the returned table contains the
-columns `total_available`, `benefit`, `loss`, `net`, and `total`, even
-if some of them were absent from the stored summary.
+- `selected_loss`: negative net-change component from selected actions;
 
-If `x` is a `SolutionSet` and `run` is provided, only rows belonging to
-that run are returned. If the result contains a `run_id` column but only
-a single run is present and `run` was not requested explicitly, the
-`run_id` column is removed for convenience.
+- `selected_net`: net change from selected actions;
 
-This function summarizes feature outcomes in the solution. It is
-different from
+- `selected_fraction_of_baseline`: ratio between `selected_amount_after`
+  and `baseline_total`.
+
+Importantly, this summary does not assume that planning units without a
+selected action contribute to the achieved feature amount. Therefore,
+the achieved amount for a feature is represented by
+`selected_amount_after`, not by a full-landscape total obtained by
+adding net changes to the baseline.
+
+For backwards compatibility with older result objects, if the newer
+selected-action columns are missing, this function attempts to construct
+them from older columns such as `total_available`, `benefit`, `loss`,
+`net`, and `amount_after`. However, the returned table is organized
+using the newer selected-action terminology.
+
+If `run` is provided, only rows belonging to that run are returned. If
+the result contains a `run_id` column but only a single run is present
+and `run` was not requested explicitly, the `run_id` column is removed
+for convenience.
+
+This function summarizes feature outcomes in the result. It is different
+from
 [`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md),
-which focuses on target achievement rather than total feature balance.
+which focuses on target achievement.
 
 ## See also
 
@@ -107,37 +127,28 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     amount = c(5, 2, 3, 4, 1)
   )
 
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  effects_df <- data.frame(
-    pu = c(1, 2, 3, 4),
-    action = "conservation",
-    feature = c(1, 1, 2, 2),
-    benefit = c(2, 1, 1, 2),
-    loss = c(0, 0, 0, 0)
-  )
-
   p <- create_problem(
     pu = pu_tbl,
     features = feat_tbl,
     dist_features = dist_feat_tbl,
     cost = "cost"
   ) |>
-    add_actions(actions_df, cost = 0) |>
-    add_effects(effects_df) |>
     add_constraint_targets_relative(0.2) |>
     add_objective_min_cost() |>
     set_solver_cbc(time_limit = 10)
 
-  sol <- solve(p)
+  solset <- solve(p)
 
-  get_features(sol)
+  get_features(solset)
 }
-#>   feature feature_name total_available benefit loss net total
-#> 1       1    feature_1               9       2    0   2    11
-#> 2       2    feature_2               6       2    0   2     8
+#>   feature feature_name baseline_total selected_baseline selected_amount_after
+#> 1       1    feature_1              9                 5                     5
+#> 2       2    feature_2              6                 2                     2
+#>   selected_benefit selected_loss selected_net selected_fraction_of_baseline
+#> 1                0             0            0                     0.5555556
+#> 2                0             0            0                     0.3333333
+#>   solution_id
+#> 1          s1
+#> 2          s1
 # }
 ```

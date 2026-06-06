@@ -6,34 +6,38 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add action effects to a planning problem — add_effects"><meta name="description" content="Define the effects of management actions on features across planning units.
-Effects are stored in a canonical representation in a effects table, with one
-row per (pu, action, feature) triple and two non-negative columns:
-benefit: the positive component of the effect,
-loss: the magnitude of the negative component of the effect.
+Effects are stored in a canonical representation in an effects table, with one
+row per (pu, action, feature) triple and three main effect columns:
+amount_after: the feature amount expected after applying the action,
+benefit: the positive component of the net change,
+loss: the magnitude of the negative component of the net change.
 
 
-The net effect is therefore interpreted as
+Let \(i\) index planning units, \(a\) index actions, and \(f\) index
+features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
+planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
+applying action \(a\). The after-action amount is:
 $$
-\Delta_{iaf} = \mathrm{benefit}_{iaf} - \mathrm{loss}_{iaf},
+\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
 $$
-where \(i\) indexes planning units, \(a\) indexes actions, and
-\(f\) indexes features.
 Under the semantics adopted by this package, each
 (pu, action, feature) triple represents a single net effect.
 Consequently, after validation and aggregation, a stored row cannot have both
 benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:description" content="Define the effects of management actions on features across planning units.
-Effects are stored in a canonical representation in a effects table, with one
-row per (pu, action, feature) triple and two non-negative columns:
-benefit: the positive component of the effect,
-loss: the magnitude of the negative component of the effect.
+Effects are stored in a canonical representation in an effects table, with one
+row per (pu, action, feature) triple and three main effect columns:
+amount_after: the feature amount expected after applying the action,
+benefit: the positive component of the net change,
+loss: the magnitude of the negative component of the net change.
 
 
-The net effect is therefore interpreted as
+Let \(i\) index planning units, \(a\) index actions, and \(f\) index
+features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
+planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
+applying action \(a\). The after-action amount is:
 $$
-\Delta_{iaf} = \mathrm{benefit}_{iaf} - \mathrm{loss}_{iaf},
+\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
 $$
-where \(i\) indexes planning units, \(a\) indexes actions, and
-\(f\) indexes features.
 Under the semantics adopted by this package, each
 (pu, action, feature) triple represents a single net effect.
 Consequently, after validation and aggregation, a stored row cannot have both
@@ -51,7 +55,7 @@ benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,15 +82,17 @@ benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:ima
 
     <div class="ref-description section level2">
     <p>Define the effects of management actions on features across planning units.</p>
-<p>Effects are stored in a canonical representation in a effects table, with one
-row per <code>(pu, action, feature)</code> triple and two non-negative columns:</p><ul><li><p><code>benefit</code>: the positive component of the effect,</p></li>
-<li><p><code>loss</code>: the magnitude of the negative component of the effect.</p></li>
-</ul><p>The net effect is therefore interpreted as
+<p>Effects are stored in a canonical representation in an effects table, with one
+row per <code>(pu, action, feature)</code> triple and three main effect columns:</p><ul><li><p><code>amount_after</code>: the feature amount expected after applying the action,</p></li>
+<li><p><code>benefit</code>: the positive component of the net change,</p></li>
+<li><p><code>loss</code>: the magnitude of the negative component of the net change.</p></li>
+</ul><p>Let \(i\) index planning units, \(a\) index actions, and \(f\) index
+features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
+planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
+applying action \(a\). The after-action amount is:
 $$
-\Delta_{iaf} = \mathrm{benefit}_{iaf} - \mathrm{loss}_{iaf},
-$$
-where \(i\) indexes planning units, \(a\) indexes actions, and
-\(f\) indexes features.</p>
+\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
+$$</p>
 <p>Under the semantics adopted by this package, each
 <code>(pu, action, feature)</code> triple represents a single net effect.
 Consequently, after validation and aggregation, a stored row cannot have both
@@ -137,7 +143,7 @@ converting raster values to planning-unit level. Must be one of
 
 <dt id="arg-component">component<a class="anchor" aria-label="anchor" href="#arg-component"></a></dt>
 <dd><p>Character string controlling which component of the
-canonical effects table is retained. Must be one of:</p><ul><li><p><code>"any"</code>: keep all non-zero rows,</p></li>
+canonical effects table is retained. Must be one of:</p><ul><li><p><code>"any"</code>: keep all stored effect rows,</p></li>
 <li><p><code>"benefit"</code>: keep only rows with <code>benefit &gt; 0</code>,</p></li>
 <li><p><code>"loss"</code>: keep only rows with <code>loss &gt; 0</code>.</p></li>
 </ul></dd>
@@ -147,9 +153,10 @@ canonical effects table is retained. Must be one of:</p><ul><li><p><code>"any"</
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An updated <code>Problem</code> object containing:</p><dl><dt><code>dist_effects</code></dt>
 <dd><p>A canonical effects table with columns
-<code>pu</code>, <code>action</code>, <code>feature</code>, <code>benefit</code>, <code>loss</code>,
-<code>internal_pu</code>, <code>internal_action</code>, <code>internal_feature</code>, and
-optional labels such as <code>feature_name</code> and <code>action_name</code>.</p></dd>
+<code>pu</code>, <code>action</code>, <code>feature</code>, <code>amount_after</code>,
+<code>benefit</code>, <code>loss</code>, <code>internal_pu</code>,
+<code>internal_action</code>, <code>internal_feature</code>, and optional labels such
+as <code>feature_name</code> and <code>action_name</code>.</p></dd>
 
 <dt><code>effects_meta</code></dt>
 <dd><p>Metadata describing how effects were
@@ -166,8 +173,8 @@ to feature-level ecological or functional consequences.</p>
 <p>This function provides a unified interface for specifying action effects from
 several input formats while enforcing a single internal representation.
 Regardless of how the user supplies the effects, the stored output always
-follows the same canonical structure based on non-negative
-<code>benefit</code>/<code>loss</code> components.</p>
+follows the same canonical structure based on <code>amount_after</code> and
+non-negative <code>benefit</code>/<code>loss</code> components.</p>
 <p>Let \(i \in \mathcal{I}\) index planning units,
 \(a \in \mathcal{A}\) index actions, and
 \(f \in \mathcal{F}\) index features.
@@ -177,6 +184,9 @@ unit \(i\), as given by the feature-distribution table. Let
 \(a\) in planning unit \(i\) to feature \(f\). The canonical stored
 representation is:</p>
 <p>$$
+\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf},
+$$</p>
+<p>$$
 \mathrm{benefit}_{iaf} = \max(\Delta_{iaf}, 0),
 $$</p>
 <p>$$
@@ -184,8 +194,15 @@ $$</p>
 $$</p>
 <p>Hence:</p><ul><li><p>if \(\Delta_{iaf} &gt; 0\), then <code>benefit &gt; 0</code> and <code>loss = 0</code>,</p></li>
 <li><p>if \(\Delta_{iaf} &lt; 0\), then <code>benefit = 0</code> and <code>loss &gt; 0</code>,</p></li>
-<li><p>if \(\Delta_{iaf} = 0\), then both are zero.</p></li>
-</ul><p><strong>Why split effects into benefit and loss?</strong></p>
+<li><p>if \(\Delta_{iaf} = 0\), then both are zero and
+<code>amount_after</code> equals the baseline amount.</p></li>
+</ul><p>Thus, <code>benefit</code> and <code>loss</code> describe the net change relative to the
+baseline, whereas <code>amount_after</code> describes the final feature amount under
+the action. This distinction is important for actions that maintain baseline
+values. For example, if an action preserves a feature unchanged, then
+<code>benefit = 0</code>, <code>loss = 0</code>, and <code>amount_after</code> equals the
+baseline amount.</p>
+<p><strong>Why split effects into benefit and loss?</strong></p>
 <p>This representation avoids ambiguity in downstream optimization models. It
 allows the package to support, for example, objectives that maximize
 beneficial effects, minimize damages, impose no-net-loss conditions, or
@@ -195,16 +212,29 @@ combine both components differently in multi-objective formulations.</p>
 <ol><li><p><code>NULL</code>. An empty effects table is stored.</p></li>
 <li><p>A <code>data.frame(action, feature, multiplier)</code>. In this case,
 effects are constructed by multiplying baseline feature amounts by the
-supplied multiplier:
+supplied multiplier. The interpretation depends on <code>effect_type</code>.</p>
+<p>If <code>effect_type = "delta"</code>, the multiplier represents a relative net
+change:
 $$
-  \Delta_{iaf} = b_{if} \times m_{af},
+  \Delta_{iaf} = b_{if} \times m_{af}.
+  $$</p>
+<p>If <code>effect_type = "after"</code>, the multiplier represents the
+after-action amount relative to the baseline:
+$$
+  \mathrm{amount\_after}_{iaf} = b_{if} \times m_{af},
   $$
-where \(m_{af}\) is the multiplier associated with action \(a\) and
-feature \(f\). This specification is expanded over all feasible
-<code>(pu, action)</code> pairs.</p></li>
+and the net effect is:
+$$
+  \Delta_{iaf} = \mathrm{amount\_after}_{iaf} - b_{if}
+               = b_{if}(m_{af} - 1).
+  $$</p>
+<p>Thus, under <code>effect_type = "after"</code>, a multiplier of <code>1</code>
+means no change, a multiplier below <code>1</code> means a loss, and a multiplier
+above <code>1</code> means a gain. This specification is expanded over all
+feasible <code>(pu, action)</code> pairs.</p></li>
 <li><p>A <code>data.frame(pu, action, feature, ...)</code> giving explicit effects
 for individual triples. The table may contain:</p><ul><li><p><code>delta</code> or <code>effect</code>: interpreted as signed net changes,</p></li>
-<li><p><code>after</code>: interpreted as after-action amounts if
+<li><p><code>after</code>: interpreted as after-action amounts and requiring
 <code>effect_type = "after"</code>,</p></li>
 <li><p><code>benefit</code> and/or <code>loss</code>: explicit non-negative split
 components,</p></li>
@@ -217,11 +247,21 @@ layer per feature. Raster values are aggregated to planning-unit level
 using <code>effect_aggregation</code>.</p></li>
 </ol><p><strong>Interpretation of <code>effect_type</code></strong></p>
 <p>If <code>effect_type = "delta"</code>, supplied values are interpreted as net
-changes directly.</p>
+changes directly. For explicit <code>delta</code> or <code>effect</code> columns, values
+are used as signed changes. For <code>multiplier</code> inputs, values are
+interpreted as relative net changes:</p>
+<p>$$
+\Delta_{iaf} = b_{if} \times m_{af}.
+$$</p>
 <p>If <code>effect_type = "after"</code>, supplied values are interpreted as
 after-action amounts and converted internally to net effects using:</p>
 <p>$$
 \Delta_{iaf} = \mathrm{after}_{iaf} - b_{if}.
+$$</p>
+<p>For <code>multiplier</code> inputs under <code>effect_type = "after"</code>, the
+after-action amount is computed as \(b_{if} \times m_{af}\), so that:</p>
+<p>$$
+\Delta_{iaf} = b_{if}(m_{af} - 1).
 $$</p>
 <p>Missing baseline values are treated as zero.</p>
 <p><strong>Feasibility and locked-out decisions</strong></p>
@@ -237,10 +277,13 @@ separately. The resulting triple must still respect the package semantics,
 namely that both components cannot be strictly positive simultaneously.
 Inputs violating this rule are rejected.</p>
 <p><strong>Component filtering</strong></p>
-<p>After canonicalization and validation, rows can be restricted to:</p><ul><li><p><code>component = "any"</code>: keep all non-zero effects,</p></li>
+<p>After canonicalization and validation, rows can be restricted to:</p><ul><li><p><code>component = "any"</code>: keep all stored effect rows, including
+neutral effects,</p></li>
 <li><p><code>component = "benefit"</code>: keep only rows with <code>benefit &gt; 0</code>,</p></li>
 <li><p><code>component = "loss"</code>: keep only rows with <code>loss &gt; 0</code>.</p></li>
-</ul><p>Rows with <code>benefit = 0</code> and <code>loss = 0</code> are always removed.</p>
+</ul><p>Zero-effect rows are retained by default because they may encode valid
+neutral effects. They are removed only when using
+<code>component = "benefit"</code> or <code>component = "loss"</code>.</p>
 <p><strong>Raster handling</strong></p>
 <p>When effects are supplied as rasters, they are automatically aligned to the
 planning-unit raster or geometry when needed before extraction or zonal
@@ -260,193 +303,6 @@ beneficial or harmful effects, and then solving the configured problem.</p>
 <code><a href="add_losses.html">add_losses</a></code></p></div>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># Minimal problem with actions</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Conservation"</span>, <span class="st">"Restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>conservation <span class="op">=</span> <span class="fl">2</span>, restoration <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape object (<span style="color: #5F87AF; font-weight: bold;">&lt;Problem&gt;</span>)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">data</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning units: <span style="color: #5F87AF; font-weight: bold;">&lt;data.frame&gt;</span> (3 total)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─costs: min: 1, max: 3</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─features: 2 total ("sp1", "sp2")</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">actions and effects</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─actions: 2 total ("Conservation", "Restoration")</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─feasible action pairs: 6 feasible rows</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─action costs: min: 2, max: 4</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─effect data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─profit data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">spatial</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─geometry: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─coordinates: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─relations: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">targets and constraints</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─targets: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─area constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─budget constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning-unit locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─action locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">model</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─status: <span style="color: #D7AF00; font-weight: bold;">not built yet (will build in solve())</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─method: <span style="color: #87AF5F; font-weight: bold;">single-objective</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─solver: <span style="color: #949494;">not set (auto)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># 1) Empty effects</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p</span>, effects <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>All effect values are zero after filtering.</span>
-<span class="r-in"><span><span class="va">p0</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] pu               action           feature          benefit         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] loss             internal_pu      internal_action  internal_feature</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] feature_name     action_name     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># 2) Multipliers by action and feature</span></span></span>
-<span class="r-in"><span><span class="co"># delta = baseline amount * multiplier</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">mult</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"conservation"</span>,</span></span>
-<span class="r-in"><span>             <span class="st">"restoration"</span>, <span class="st">"restoration"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span>, <span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.10</span>, <span class="fl">0.00</span>, <span class="op">-</span><span class="fl">0.20</span>, <span class="fl">0.25</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  effects <span class="op">=</span> <span class="va">mult</span>,</span></span>
-<span class="r-in"><span>  effect_type <span class="op">=</span> <span class="st">"delta"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p1</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action feature benefit loss internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation       1    1.00  0.0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation       1    0.80  0.0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  1  restoration       1    0.00  2.0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  2  restoration       1    0.00  1.6           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  1  restoration       2    1.25  0.0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  3  restoration       2    1.00  0.0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_feature feature_name  action_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                1          sp1 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                1          sp1 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                1          sp1  Restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                1          sp1  Restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                2          sp2  Restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                2          sp2  Restoration</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># 3) Explicit net effects using signed deltas</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">eff_delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span>, <span class="st">"restoration"</span>, <span class="st">"conservation"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  delta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  effects <span class="op">=</span> <span class="va">eff_delta</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action feature benefit loss internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation       1     2.0    0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2  restoration       1     0.0    3           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation       2     0.5    0           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  3  restoration       2     1.0    0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_feature feature_name  action_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                1          sp1 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                1          sp1  Restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                2          sp2 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                2          sp2  Restoration</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># 4) Explicit after-action amounts</span></span></span>
-<span class="r-in"><span><span class="co"># delta = after - baseline</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">eff_after</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span>, <span class="st">"restoration"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  after <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  effects <span class="op">=</span> <span class="va">eff_after</span>,</span></span>
-<span class="r-in"><span>  effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action feature benefit loss internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation       1       2    0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2  restoration       1       0    3           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3  restoration       2       2    0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_feature feature_name  action_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                1          sp1 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                1          sp1  Restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                2          sp2  Restoration</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># 5) Keep only beneficial effects</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  effects <span class="op">=</span> <span class="va">eff_delta</span>,</span></span>
-<span class="r-in"><span>  component <span class="op">=</span> <span class="st">"benefit"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action feature benefit loss internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation       1     2.0    0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation       2     0.5    0           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  3  restoration       2     1.0    0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_feature feature_name  action_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                1          sp1 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                2          sp2 Conservation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                2          sp2  Restoration</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

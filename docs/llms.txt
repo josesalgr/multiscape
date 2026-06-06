@@ -511,7 +511,7 @@ Core workflow to create a planning problem, configure it, and solve it.
 
 ## Actions, effects and profits
 
-Define feasible actions, their effects and optional profits.
+Define feasible actions, their effects, and optional profits.
 
 - [`add_actions()`](https://josesalgr.github.io/multiscape/reference/add_actions.md)
   : Add management actions to a planning problem
@@ -581,17 +581,6 @@ multi-objective workflows.
 - [`add_objective_min_intervention_impact()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.md)
   : Add objective: minimize intervention impact
 
-## Multi-objective methods
-
-Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
-
-- [`set_method_weighted_sum()`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md)
-  : Set the weighted-sum multi-objective method
-- [`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md)
-  : Set the epsilon-constraint multi-objective method
-- [`set_method_augmecon()`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md)
-  : Set the AUGMECON multi-objective method
-
 ## Solver configuration
 
 Store solver and runtime options before calling solve().
@@ -607,48 +596,105 @@ Store solver and runtime options before calling solve().
 - [`set_solver_symphony()`](https://josesalgr.github.io/multiscape/reference/set_solver_symphony.md)
   : Configure SYMPHONY solver settings
 
+## Multi-objective methods
+
+Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
+
+- [`set_method_weighted_sum()`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md)
+  : Set the weighted-sum multi-objective method
+- [`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md)
+  : Set the epsilon-constraint multi-objective method
+- [`set_method_augmecon()`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md)
+  : Set the AUGMECON multi-objective method
+
+## Multi-objective workflow configuration
+
+Define run designs and execution controls for multi-objective workflows.
+
+- [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  : Define an automatic run grid
+- [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+  : Define a manual run design
+- [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
+  : Control multi-objective method behavior
+
 ## Results and extraction
 
-Extract user-facing summaries and raw solution vectors.
+Extract run metadata, objective values, and solution-level results.
 
 - [`compile_model()`](https://josesalgr.github.io/multiscape/reference/compile_model.md)
   : Compile the optimization model stored in a Problem
+- [`get_runs()`](https://josesalgr.github.io/multiscape/reference/get_runs.md)
+  : Get run-level results from a solution set
+- [`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.md)
+  : Get objective values from a solution set
+- [`get_objective_specs()`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md)
+  : Get objective specifications from a solution set
 - [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
-  : Get planning-unit results from a solution
+  : Get planning-unit results from a solution set
 - [`get_actions()`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
-  : Get action results from a solution
+  : Get action results from a solution set
 - [`get_features()`](https://josesalgr.github.io/multiscape/reference/get_features.md)
-  : Get feature summary from a solution
+  : Get feature summary from a solution set
 - [`get_targets()`](https://josesalgr.github.io/multiscape/reference/get_targets.md)
-  : Get target achievement summary from a solution
+  : Get target achievement summary from a solution set
 - [`get_solution_vector()`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
-  : Get raw solution vector from a solution
+  : Get raw decision vector from a solution set
+
+## Solution-set management
+
+Filter, combine, and remove repeated solutions while preserving
+SolutionSet consistency.
+
+- [`solution_filter()`](https://josesalgr.github.io/multiscape/reference/solution_filter.md)
+  : Filter solutions in a solution set
+- [`solution_append()`](https://josesalgr.github.io/multiscape/reference/solution_append.md)
+  : Append solutions from another solution set
+- [`solution_unique()`](https://josesalgr.github.io/multiscape/reference/solution_unique.md)
+  : Keep unique solutions in a solution set
+
+## Frontier analysis
+
+Characterize objective ranges and distances to observed reference
+points.
+
+- [`frontier_extremes()`](https://josesalgr.github.io/multiscape/reference/frontier_extremes.md)
+  : Find objective-wise extreme solutions
+- [`frontier_distances()`](https://josesalgr.github.io/multiscape/reference/frontier_distances.md)
+  : Compute distances to observed ideal or nadir points
+
+## Selection analysis
+
+Analyze the recurrence and structural similarity of planning-unit and
+action assignments.
+
+- [`selection_frequency()`](https://josesalgr.github.io/multiscape/reference/selection_frequency.md)
+  : Calculate selection frequency across solutions
+- [`selection_similarity()`](https://josesalgr.github.io/multiscape/reference/selection_similarity.md)
+  : Calculate structural similarity among solutions
 
 ## Plotting
 
 Visualize spatial outputs and multi-objective trade-offs.
 
 - [`plot_spatial()`](https://josesalgr.github.io/multiscape/reference/plot_spatial.md)
-  : Plot spatial outputs from a solution or solution set
+  : Plot spatial outputs from a solution set
 - [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
   : Plot selected planning units in space
 - [`plot_spatial_actions()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.md)
   : Plot selected actions in space
 - [`plot_spatial_features()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_features.md)
-  : Plot spatial feature values from a solution
+  : Plot spatial feature values from a solution set
 - [`plot_tradeoff()`](https://josesalgr.github.io/multiscape/reference/plot_tradeoff.md)
-  : Plot trade-offs from a multi-objective solution set
+  : Plot trade-offs from a solution set
 
 ## Classes
 
-Core classes used across the package.
+Public classes used across the package.
 
 - [`problem-class`](https://josesalgr.github.io/multiscape/reference/problem-class.md)
   [`Problem`](https://josesalgr.github.io/multiscape/reference/problem-class.md)
   : Problem class
-- [`solution-class`](https://josesalgr.github.io/multiscape/reference/solution-class.md)
-  [`Solution`](https://josesalgr.github.io/multiscape/reference/solution-class.md)
-  : Solution class
 - [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
   [`SolutionSet`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
   : SolutionSet class

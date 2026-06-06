@@ -1,7 +1,9 @@
 # Plot selected planning units in space
 
 Plot the spatial distribution of selected planning units from a
-`Solution` or `SolutionSet`.
+[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+object returned by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 This function maps the planning-unit selection summary returned by
 [`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
@@ -29,12 +31,15 @@ plot_spatial_pu(
 
 - x:
 
-  A `Solution` or `SolutionSet` object.
+  A
+  [`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
+  object returned by
+  [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 - runs:
 
-  Optional integer vector of run ids. If `NULL`, a `Solution` is used
-  directly and a `SolutionSet` defaults to the first run.
+  Optional integer vector of run ids. If `NULL`, the first available run
+  is plotted by default.
 
 - ...:
 
@@ -83,7 +88,8 @@ representation of \\w_i\\.
 
 If several runs are requested, the output is faceted by `run_id`.
 
-Planning-unit geometry must be available in `x$problem$data$pu_sf`.
+Planning-unit geometry must be available in the associated problem
+object.
 
 ## See also
 
@@ -108,7 +114,7 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Problem"
   )
 
-  sol <- structure(
+  run_result <- structure(
     list(
       problem = problem,
       summary = list(
@@ -121,7 +127,16 @@ if (requireNamespace("sf", quietly = TRUE) &&
     class = "Solution"
   )
 
-  plot_spatial_pu(sol)
+  solset <- structure(
+    list(
+      solution = list(
+        solutions = list(run_result)
+      )
+    ),
+    class = "SolutionSet"
+  )
+
+  plot_spatial_pu(solset)
 }
 
 ```

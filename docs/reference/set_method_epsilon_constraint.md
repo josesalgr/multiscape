@@ -5,17 +5,8 @@ multi-objective method.
 
 In this method, one objective is designated as the *primary* objective
 and is optimized directly, while the remaining objectives are
-transformed into \\\varepsilon\\-constraints.
-
-Two operating modes are supported:
-
-- **manual mode**: the user supplies the \\\varepsilon\\-levels
-  explicitly,
-
-- **automatic mode**: the \\\varepsilon\\-levels are generated later
-  during
-  [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
-  from extreme-point or payoff information.
+transformed into \\\varepsilon\\-constraints. Multiple subproblems are
+generated using a run design supplied through `runs`.
 
 This function does not solve the problem. It stores the method
 configuration in `x$data$method`, to be used later by
@@ -27,13 +18,15 @@ configuration in `x$data$method`, to be used later by
 set_method_epsilon_constraint(
   x,
   primary,
-  eps = NULL,
   aliases = NULL,
-  mode = c("manual", "auto"),
-  n_points = 10,
-  include_extremes = TRUE,
+  runs = NULL,
+  eps = NULL,
+  mode = NULL,
+  n_points = NULL,
+  include_extremes = NULL,
   lexicographic = TRUE,
-  lexicographic_tol = 1e-08
+  lexicographic_tol = 1e-08,
+  control = mo_control()
 )
 ```
 
@@ -48,60 +41,68 @@ set_method_epsilon_constraint(
   Character string giving the alias of the primary objective to optimize
   directly.
 
-- eps:
-
-  Optional epsilon specification used only in `mode = "manual"`. It may
-  be:
-
-  - a named numeric vector, defining epsilon values for a single run,
-
-  - or a named list of numeric vectors, defining epsilon values for a
-    grid of runs.
-
-  Names must correspond exactly to the constrained objective aliases.
-
 - aliases:
 
   Optional character vector of objective aliases to include. By default,
   all registered objective aliases are used. The value of `primary` must
   be included in `aliases`.
 
+- runs:
+
+  A run design created with
+  [`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  or
+  [`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+  For epsilon-constraint methods,
+  [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  requests automatic epsilon-level generation, while
+  [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+  requires columns named `eps_<alias>` for each constrained objective.
+
+- eps:
+
+  Deprecated. Epsilon specification used by the previous
+  `mode = "manual"` interface. It may be a named numeric vector or a
+  named list of numeric vectors. New code should use
+  `runs = run_manual(...)` instead.
+
 - mode:
 
-  Character string. Must be either `"manual"` or `"auto"`.
+  Deprecated. Previous interface selector, either `"manual"` or
+  `"auto"`. New code should use `runs = run_manual(...)` or
+  `runs = run_grid(...)` instead.
 
 - n_points:
 
-  Integer scalar used only in `mode = "auto"`. Number of epsilon points
-  to generate automatically for the constrained objective. Must be at
-  least 2.
+  Deprecated. Previous automatic-grid argument. New code should use
+  `runs = run_grid(n = ...)` instead.
 
 - include_extremes:
 
-  Logical scalar used only in `mode = "auto"`. If `TRUE`, include
-  extreme epsilon values in the automatically generated grid.
+  Deprecated. Previous automatic-grid argument. New code should use
+  `runs = run_grid(n = ..., include_extremes = ...)` instead.
 
 - lexicographic:
 
-  Logical scalar used only in `mode = "auto"`. If `TRUE`, compute
-  extreme points lexicographically.
+  Logical scalar. If `TRUE`, compute automatic-grid extreme points
+  lexicographically when `runs = run_grid(...)` is used.
 
 - lexicographic_tol:
 
   Numeric scalar \\\ge 0\\. Tolerance used in lexicographic
   extreme-point computation.
 
+- control:
+
+  A control object created with
+  [`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+  It controls how infeasible runs, runs without a solution, and
+  unexpected errors are handled.
+
 ## Value
 
 An updated `Problem` object with the epsilon-constraint method
 configuration stored in `x$data$method`.
-
-In manual mode, `x$data$method$runs` contains the explicit
-epsilon-design grid.
-
-In automatic mode, `x$data$method$runs` is `NULL` until the grid is
-generated later during
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 ## Details
 
@@ -133,9 +134,10 @@ subject to
 together with all original feasibility constraints of the planning
 problem, where \\\mathcal{C}\\ is the set of constrained objectives.
 
-Depending on objective sense, the internal implementation may transform
-minimization objectives into equivalent constrained forms, but the
-method always follows the same principle:
+Depending on the sense of each objective, the internal implementation
+may transform minimization and maximization objectives into equivalent
+solver-ready constrained forms. The method always follows the same
+principle:
 
 - one objective is optimized directly,
 
@@ -143,7 +145,50 @@ method always follows the same principle:
   \\\varepsilon\\-constraints.
 
 By solving the problem repeatedly for different epsilon levels, the
-method generates a set of efficient trade-off solutions.
+method generates a set of trade-off solutions.
+
+**Run designs**
+
+Epsilon-constraint runs are specified through the `runs` argument. This
+argument must be created with either
+[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+or
+[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+
+`run_grid(n = ...)` requests automatic generation of epsilon levels
+during
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
+The epsilon levels are computed from extreme-point or payoff
+information. In the current implementation,
+[`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+for epsilon-constraint supports exactly two objectives: one primary
+objective and one constrained objective.
+
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+allows users to provide explicit epsilon combinations. In manual
+epsilon-constraint runs, each row is one optimization run and columns
+must be named `eps_<alias>`, where `<alias>` is the alias of a
+constrained objective. For example, if `primary = "benefit"` and
+`aliases = c("benefit", "cost", "loss")`, the manual run table must
+contain columns `eps_cost` and `eps_loss`.
+
+In
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md),
+each row is used exactly as supplied. The function does not
+automatically create a Cartesian product of epsilon values. If a
+Cartesian product is desired, it should be created explicitly by the
+user, for example with
+[`expand.grid`](https://rdrr.io/r/base/expand.grid.html), and then
+passed to
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+
+The older arguments `eps`, `mode`, `n_points`, and `include_extremes`
+are deprecated. They are still accepted for backwards compatibility and
+are internally converted to
+[`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+or
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+designs.
 
 **Atomic objectives requirement**
 
@@ -161,68 +206,66 @@ for example:
 The `primary` argument selects which registered objective is optimized
 directly. The remaining aliases are treated as constrained objectives.
 
-**Manual mode**
+**Automatic epsilon grids**
 
-In `mode = "manual"`, the user must provide `eps`.
-
-The `eps` argument can be supplied as:
-
-- a named numeric vector, defining a single run,
-
-- or a named list of numeric vectors, defining a grid of runs.
-
-The names of `eps` must correspond exactly to the constrained objective
-aliases, that is, to all aliases in `aliases` except `primary`.
-
-If the constrained objectives are \\\mathcal{C} = \\c_1, \dots, c_q\\\\,
-then manual mode creates a design grid containing all combinations of
-the supplied epsilon levels for the constrained objectives.
-
-Each row of this grid defines one subproblem to be solved later.
-
-**Important:** manual mode supports **two or more objectives**. In
-particular, it can be used with:
-
-- 2 objectives: 1 primary + 1 constrained objective,
-
-- 3 or more objectives: 1 primary + multiple constrained objectives.
-
-Thus, manual mode is the general way to use the epsilon-constraint
-method when more than two objectives are involved.
-
-In manual mode, the generated design grid is stored immediately in
-`x$data$method$runs`. Its epsilon columns are named `eps_<alias>`, for
-example `eps_frag`.
-
-**Automatic mode**
-
-In `mode = "auto"`, the user omits `eps` and instead supplies
-`n_points`.
-
-In this case, the epsilon grid is not built immediately. Instead, it is
-constructed later during
+When `runs = run_grid(n = ...)` is used, the epsilon grid is not built
+immediately. Instead, it is constructed later during
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
-using extreme-point or payoff-table information.
+using extreme-point or payoff information.
 
-In the current implementation, automatic mode supports **exactly two
-objectives only**:
+In the current implementation, automatic epsilon-grid generation
+supports exactly two objectives:
 
 - one primary objective,
 
 - one constrained objective.
 
-Therefore, if `mode = "auto"`, then `aliases` must contain exactly two
-objective aliases. Problems with three or more objectives must use
-`mode = "manual"`.
+Therefore, if `runs = run_grid(...)`, then `aliases` must contain
+exactly two objective aliases. Problems with three or more objectives
+must use `runs = run_manual(...)`.
 
-If `include_extremes = TRUE`, the automatically generated grid includes
-the extreme values of the constrained objective. Otherwise, only
-interior values are used.
+If `include_extremes = TRUE` is supplied inside
+[`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md),
+the automatically generated grid includes the extreme values of the
+constrained objective. Otherwise, only interior values are used.
 
 If `lexicographic = TRUE`, the extreme points used to generate the grid
 are computed lexicographically. In that case, one objective is optimized
 first, and then the second objective is optimized while constraining the
 first to remain within `lexicographic_tol` of its optimum.
+
+**Manual epsilon runs**
+
+Manual run designs support two or more objectives. They are the general
+way to use the epsilon-constraint method when more than two objectives
+are involved.
+
+For example, with one primary objective and two constrained objectives,
+a manual run design may contain:
+
+
+    data.frame(
+      eps_cost = c(4, 6, 8),
+      eps_loss = c(0, 1, 1)
+    )
+
+This creates three runs, not a full Cartesian grid. To create all
+combinations, use
+[`expand.grid()`](https://rdrr.io/r/base/expand.grid.html) before
+calling
+[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+
+**Failure handling**
+
+The `control` argument controls how failed runs are handled. It must be
+created with
+[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+
+Some epsilon levels may define infeasible subproblems. By default,
+failed runs can be retained in the returned `SolutionSet` with missing
+objective values, while feasible runs are preserved. Alternatively,
+users can request that the solve stops when an infeasible run, a run
+without a solution, or an unexpected error is encountered.
 
 **Stored configuration**
 
@@ -230,7 +273,7 @@ The configured method stores:
 
 - `name = "epsilon_constraint"`,
 
-- `mode`,
+- `type = "epsilon_constraint"`,
 
 - `primary`,
 
@@ -238,22 +281,24 @@ The configured method stores:
 
 - `constrained`,
 
-- epsilon design information,
+- `runs`,
 
-- lexicographic configuration.
+- lexicographic configuration,
 
-In manual mode, `x$data$method$runs` contains the explicit design grid.
+- `control`.
 
-In automatic mode, `x$data$method$runs` is initially `NULL` and is
-generated later during
+With `runs = run_grid(...)`, the actual epsilon design is generated
+later during
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
-
-For more than two objectives, automatic grid generation is currently
-unavailable because the number of epsilon combinations grows rapidly and
-requires explicit user control.
+With `runs = run_manual(...)`, the explicit user-supplied run design is
+stored and then used by
+[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 ## See also
 
+[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md),
+[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md),
+[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md),
 [`set_method_augmecon`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md),
 [`set_method_weighted_sum`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md),
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
@@ -304,21 +349,22 @@ x <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   add_objective_min_loss(alias = "loss")
 
-# Manual mode with one constrained objective
+# Automatic epsilon grid for two objectives
 x1 <- set_method_epsilon_constraint(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost"),
-  mode = "manual",
-  eps = c(cost = 5)
+  runs = run_grid(n = 5, include_extremes = TRUE),
+  lexicographic = TRUE,
+  lexicographic_tol = 1e-8
 )
 
 x1$data$method
 #> $name
 #> [1] "epsilon_constraint"
 #> 
-#> $mode
-#> [1] "manual"
+#> $type
+#> [1] "epsilon_constraint"
 #> 
 #> $primary
 #> [1] "benefit"
@@ -329,14 +375,18 @@ x1$data$method
 #> $constrained
 #> [1] "cost"
 #> 
-#> $eps
-#> $eps$cost
+#> $runs
+#> $type
+#> [1] "grid"
+#> 
+#> $n
 #> [1] 5
 #> 
+#> $include_extremes
+#> [1] TRUE
 #> 
-#> $runs
-#>   eps_cost run_id
-#> 1        5      1
+#> attr(,"class")
+#> [1] "RunGrid"   "RunDesign"
 #> 
 #> $lexicographic
 #> [1] TRUE
@@ -344,59 +394,273 @@ x1$data$method
 #> $lexicographic_tol
 #> [1] 1e-08
 #> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
 
-# Manual mode with multiple epsilon values
+# Manual runs with one constrained objective
+eps_runs <- data.frame(
+  eps_cost = c(4, 6, 8)
+)
+
 x2 <- set_method_epsilon_constraint(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost"),
-  mode = "manual",
-  eps = list(cost = c(4, 6, 8))
+  runs = run_manual(eps_runs)
 )
 
-x2$data$method$runs
-#>   eps_cost run_id
-#> 1        4      1
-#> 2        6      2
-#> 3        8      3
+x2$data$method
+#> $name
+#> [1] "epsilon_constraint"
+#> 
+#> $type
+#> [1] "epsilon_constraint"
+#> 
+#> $primary
+#> [1] "benefit"
+#> 
+#> $aliases
+#> [1] "benefit" "cost"   
+#> 
+#> $constrained
+#> [1] "cost"
+#> 
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   eps_cost
+#> 1        4
+#> 2        6
+#> 3        8
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
+#> 
+#> $lexicographic
+#> [1] TRUE
+#> 
+#> $lexicographic_tol
+#> [1] 1e-08
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
 
-# Manual mode with more than two objectives
+# Manual runs with more than two objectives
+eps_runs_3obj <- data.frame(
+  eps_cost = c(4, 6, 8),
+  eps_loss = c(0, 1, 1)
+)
+
 x3 <- set_method_epsilon_constraint(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost", "loss"),
-  mode = "manual",
-  eps = list(
-    cost = c(4, 6),
-    loss = c(0, 1)
-  )
+  runs = run_manual(eps_runs_3obj)
 )
 
-x3$data$method$runs
-#>   eps_cost eps_loss run_id
-#> 1        4        0      1
-#> 2        6        0      2
-#> 3        4        1      3
-#> 4        6        1      4
+x3$data$method
+#> $name
+#> [1] "epsilon_constraint"
+#> 
+#> $type
+#> [1] "epsilon_constraint"
+#> 
+#> $primary
+#> [1] "benefit"
+#> 
+#> $aliases
+#> [1] "benefit" "cost"    "loss"   
+#> 
+#> $constrained
+#> [1] "cost" "loss"
+#> 
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   eps_cost eps_loss
+#> 1        4        0
+#> 2        6        1
+#> 3        8        1
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
+#> 
+#> $lexicographic
+#> [1] TRUE
+#> 
+#> $lexicographic_tol
+#> [1] 1e-08
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
 
-# Automatic mode currently supports exactly two objectives
+# Cartesian epsilon design created explicitly by the user
+eps_cartesian <- expand.grid(
+  eps_cost = c(4, 6, 8),
+  eps_loss = c(0, 1),
+  KEEP.OUT.ATTRS = FALSE
+)
+
 x4 <- set_method_epsilon_constraint(
   x,
   primary = "benefit",
-  aliases = c("benefit", "cost"),
-  mode = "auto",
-  n_points = 5,
-  include_extremes = TRUE,
-  lexicographic = TRUE,
-  lexicographic_tol = 1e-8
+  aliases = c("benefit", "cost", "loss"),
+  runs = run_manual(eps_cartesian)
 )
 
 x4$data$method
 #> $name
 #> [1] "epsilon_constraint"
 #> 
-#> $mode
-#> [1] "auto"
+#> $type
+#> [1] "epsilon_constraint"
+#> 
+#> $primary
+#> [1] "benefit"
+#> 
+#> $aliases
+#> [1] "benefit" "cost"    "loss"   
+#> 
+#> $constrained
+#> [1] "cost" "loss"
+#> 
+#> $runs
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   eps_cost eps_loss
+#> 1        4        0
+#> 2        6        0
+#> 3        8        0
+#> 4        4        1
+#> 5        6        1
+#> 6        8        1
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
+#> 
+#> $lexicographic
+#> [1] TRUE
+#> 
+#> $lexicographic_tol
+#> [1] 1e-08
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+
+# Backwards-compatible deprecated usage
+x5 <- set_method_epsilon_constraint(
+  x,
+  primary = "benefit",
+  aliases = c("benefit", "cost"),
+  mode = "manual",
+  eps = list(cost = c(4, 6, 8))
+)
+#> Warning: `eps/mode/n_points/include_extremes` is deprecated. Use `runs = run_grid(...) or runs = run_manual(...)` instead.
+
+x5$data$method
+#> $name
+#> [1] "epsilon_constraint"
+#> 
+#> $type
+#> [1] "epsilon_constraint"
 #> 
 #> $primary
 #> [1] "benefit"
@@ -407,11 +671,18 @@ x4$data$method
 #> $constrained
 #> [1] "cost"
 #> 
-#> $n_points
-#> [1] 5
+#> $runs
+#> $type
+#> [1] "manual"
 #> 
-#> $include_extremes
-#> [1] TRUE
+#> $values
+#>   run_id eps_cost
+#> 1      1        4
+#> 2      2        6
+#> 3      3        8
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
 #> 
 #> $lexicographic
 #> [1] TRUE
@@ -419,7 +690,103 @@ x4$data$method
 #> $lexicographic_tol
 #> [1] 1e-08
 #> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+
+# Control failure handling
+x6 <- set_method_epsilon_constraint(
+  x,
+  primary = "benefit",
+  aliases = c("benefit", "cost"),
+  runs = run_manual(data.frame(eps_cost = c(4, 6, 8))),
+  control = mo_control(
+    stop_on_infeasible = FALSE,
+    stop_on_no_solution = FALSE,
+    stop_on_error = TRUE
+  )
+)
+
+x6$data$method
+#> $name
+#> [1] "epsilon_constraint"
+#> 
+#> $type
+#> [1] "epsilon_constraint"
+#> 
+#> $primary
+#> [1] "benefit"
+#> 
+#> $aliases
+#> [1] "benefit" "cost"   
+#> 
+#> $constrained
+#> [1] "cost"
+#> 
 #> $runs
-#> NULL
+#> $type
+#> [1] "manual"
+#> 
+#> $values
+#>   eps_cost
+#> 1        4
+#> 2        6
+#> 3        8
+#> 
+#> attr(,"class")
+#> [1] "RunManual" "RunDesign"
+#> 
+#> $lexicographic
+#> [1] TRUE
+#> 
+#> $lexicographic_tol
+#> [1] 1e-08
+#> 
+#> $control
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
+#> 
+#> $slack_upper_bound
+#> [1] 1e+06
+#> 
+#> attr(,"class")
+#> [1] "MOControl" "list"     
+#> 
+#> $stop_on_infeasible
+#> [1] FALSE
+#> 
+#> $stop_on_no_solution
+#> [1] FALSE
+#> 
+#> $stop_on_error
+#> [1] TRUE
 #> 
 ```

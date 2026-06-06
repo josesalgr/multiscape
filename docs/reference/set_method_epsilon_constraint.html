@@ -9,27 +9,15 @@
 epsilon-constraint multi-objective method.
 In this method, one objective is designated as the primary objective
 and is optimized directly, while the remaining objectives are transformed
-into \(\varepsilon\)-constraints.
-Two operating modes are supported:
-manual mode: the user supplies the \(\varepsilon\)-levels
-explicitly,
-automatic mode: the \(\varepsilon\)-levels are generated
-later during solve from extreme-point or payoff information.
-
-
+into \(\varepsilon\)-constraints. Multiple subproblems are generated using
+a run design supplied through runs.
 This function does not solve the problem. It stores the method configuration
 in x$data$method, to be used later by solve."><meta property="og:description" content="Configure a Problem object to be solved with the
 epsilon-constraint multi-objective method.
 In this method, one objective is designated as the primary objective
 and is optimized directly, while the remaining objectives are transformed
-into \(\varepsilon\)-constraints.
-Two operating modes are supported:
-manual mode: the user supplies the \(\varepsilon\)-levels
-explicitly,
-automatic mode: the \(\varepsilon\)-levels are generated
-later during solve from extreme-point or payoff information.
-
-
+into \(\varepsilon\)-constraints. Multiple subproblems are generated using
+a run design supplied through runs.
 This function does not solve the problem. It stores the method configuration
 in x$data$method, to be used later by solve."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
@@ -45,7 +33,7 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,12 +63,9 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
 epsilon-constraint multi-objective method.</p>
 <p>In this method, one objective is designated as the <em>primary</em> objective
 and is optimized directly, while the remaining objectives are transformed
-into \(\varepsilon\)-constraints.</p>
-<p>Two operating modes are supported:</p><ul><li><p><strong>manual mode</strong>: the user supplies the \(\varepsilon\)-levels
-explicitly,</p></li>
-<li><p><strong>automatic mode</strong>: the \(\varepsilon\)-levels are generated
-later during <code><a href="solve.html">solve</a></code> from extreme-point or payoff information.</p></li>
-</ul><p>This function does not solve the problem. It stores the method configuration
+into \(\varepsilon\)-constraints. Multiple subproblems are generated using
+a run design supplied through <code>runs</code>.</p>
+<p>This function does not solve the problem. It stores the method configuration
 in <code>x$data$method</code>, to be used later by <code><a href="solve.html">solve</a></code>.</p>
     </div>
 
@@ -89,13 +74,15 @@ in <code>x$data$method</code>, to be used later by <code><a href="solve.html">so
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">primary</span>,</span>
-<span>  eps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  aliases <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"manual"</span>, <span class="st">"auto"</span><span class="op">)</span>,</span>
-<span>  n_points <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  include_extremes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  runs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  eps <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mode <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_points <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  include_extremes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-08</span></span>
+<span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="mo_control.html">mo_control</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,55 +99,64 @@ in <code>x$data$method</code>, to be used later by <code><a href="solve.html">so
 optimize directly.</p></dd>
 
 
-<dt id="arg-eps">eps<a class="anchor" aria-label="anchor" href="#arg-eps"></a></dt>
-<dd><p>Optional epsilon specification used only in <code>mode = "manual"</code>.
-It may be:</p><ul><li><p>a named numeric vector, defining epsilon values for a single run,</p></li>
-<li><p>or a named list of numeric vectors, defining epsilon values for a
-grid of runs.</p></li>
-</ul><p>Names must correspond exactly to the constrained objective aliases.</p></dd>
-
-
 <dt id="arg-aliases">aliases<a class="anchor" aria-label="anchor" href="#arg-aliases"></a></dt>
 <dd><p>Optional character vector of objective aliases to include.
 By default, all registered objective aliases are used. The value of
 <code>primary</code> must be included in <code>aliases</code>.</p></dd>
 
 
+<dt id="arg-runs">runs<a class="anchor" aria-label="anchor" href="#arg-runs"></a></dt>
+<dd><p>A run design created with <code><a href="run_grid.html">run_grid</a></code> or
+<code><a href="run_manual.html">run_manual</a></code>. For epsilon-constraint methods,
+<code><a href="run_grid.html">run_grid()</a></code> requests automatic epsilon-level generation, while
+<code><a href="run_manual.html">run_manual()</a></code> requires columns named <code>eps_&lt;alias&gt;</code> for each
+constrained objective.</p></dd>
+
+
+<dt id="arg-eps">eps<a class="anchor" aria-label="anchor" href="#arg-eps"></a></dt>
+<dd><p>Deprecated. Epsilon specification used by the previous
+<code>mode = "manual"</code> interface. It may be a named numeric vector or a
+named list of numeric vectors. New code should use
+<code>runs = run_manual(...)</code> instead.</p></dd>
+
+
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
-<dd><p>Character string. Must be either <code>"manual"</code> or
-<code>"auto"</code>.</p></dd>
+<dd><p>Deprecated. Previous interface selector, either <code>"manual"</code>
+or <code>"auto"</code>. New code should use <code>runs = run_manual(...)</code> or
+<code>runs = run_grid(...)</code> instead.</p></dd>
 
 
 <dt id="arg-n-points">n_points<a class="anchor" aria-label="anchor" href="#arg-n-points"></a></dt>
-<dd><p>Integer scalar used only in <code>mode = "auto"</code>. Number of
-epsilon points to generate automatically for the constrained objective.
-Must be at least 2.</p></dd>
+<dd><p>Deprecated. Previous automatic-grid argument. New code should
+use <code>runs = run_grid(n = ...)</code> instead.</p></dd>
 
 
 <dt id="arg-include-extremes">include_extremes<a class="anchor" aria-label="anchor" href="#arg-include-extremes"></a></dt>
-<dd><p>Logical scalar used only in <code>mode = "auto"</code>. If
-<code>TRUE</code>, include extreme epsilon values in the automatically generated
-grid.</p></dd>
+<dd><p>Deprecated. Previous automatic-grid argument. New
+code should use <code>runs = run_grid(n = ..., include_extremes = ...)</code>
+instead.</p></dd>
 
 
 <dt id="arg-lexicographic">lexicographic<a class="anchor" aria-label="anchor" href="#arg-lexicographic"></a></dt>
-<dd><p>Logical scalar used only in <code>mode = "auto"</code>. If
-<code>TRUE</code>, compute extreme points lexicographically.</p></dd>
+<dd><p>Logical scalar. If <code>TRUE</code>, compute automatic-grid
+extreme points lexicographically when <code>runs = run_grid(...)</code> is used.</p></dd>
 
 
 <dt id="arg-lexicographic-tol">lexicographic_tol<a class="anchor" aria-label="anchor" href="#arg-lexicographic-tol"></a></dt>
 <dd><p>Numeric scalar \(\ge 0\). Tolerance used in
 lexicographic extreme-point computation.</p></dd>
 
+
+<dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
+<dd><p>A control object created with <code><a href="mo_control.html">mo_control</a></code>. It
+controls how infeasible runs, runs without a solution, and unexpected
+errors are handled.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An updated <code>Problem</code> object with the epsilon-constraint method
 configuration stored in <code>x$data$method</code>.</p>
-<p>In manual mode, <code>x$data$method$runs</code> contains the explicit
-epsilon-design grid.</p>
-<p>In automatic mode, <code>x$data$method$runs</code> is <code>NULL</code> until the grid is
-generated later during <code><a href="solve.html">solve</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -188,13 +184,37 @@ f_k(x) \ge \varepsilon_k, \qquad k \in \mathcal{C},
 $$</p>
 <p>together with all original feasibility constraints of the planning problem,
 where \(\mathcal{C}\) is the set of constrained objectives.</p>
-<p>Depending on objective sense, the internal implementation may transform
-minimization objectives into equivalent constrained forms, but the method
-always follows the same principle:</p><ul><li><p>one objective is optimized directly,</p></li>
+<p>Depending on the sense of each objective, the internal implementation may
+transform minimization and maximization objectives into equivalent
+solver-ready constrained forms. The method always follows the same principle:</p><ul><li><p>one objective is optimized directly,</p></li>
 <li><p>all remaining objectives are imposed through
 \(\varepsilon\)-constraints.</p></li>
 </ul><p>By solving the problem repeatedly for different epsilon levels, the method
-generates a set of efficient trade-off solutions.</p>
+generates a set of trade-off solutions.</p>
+<p><strong>Run designs</strong></p>
+<p>Epsilon-constraint runs are specified through the <code>runs</code> argument. This
+argument must be created with either <code><a href="run_grid.html">run_grid</a></code> or
+<code><a href="run_manual.html">run_manual</a></code>.</p>
+<p><code>run_grid(n = ...)</code> requests automatic generation of epsilon levels
+during <code><a href="solve.html">solve</a></code>. The epsilon levels are computed from
+extreme-point or payoff information. In the current implementation,
+<code><a href="run_grid.html">run_grid()</a></code> for epsilon-constraint supports exactly two objectives:
+one primary objective and one constrained objective.</p>
+<p><code><a href="run_manual.html">run_manual()</a></code> allows users to provide explicit epsilon combinations.
+In manual epsilon-constraint runs, each row is one optimization run and
+columns must be named <code>eps_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of
+a constrained objective. For example, if <code>primary = "benefit"</code> and
+<code>aliases = c("benefit", "cost", "loss")</code>, the manual run table must
+contain columns <code>eps_cost</code> and <code>eps_loss</code>.</p>
+<p>In <code><a href="run_manual.html">run_manual()</a></code>, each row is used exactly as supplied. The function
+does not automatically create a Cartesian product of epsilon values. If a
+Cartesian product is desired, it should be created explicitly by the user,
+for example with <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></code>, and then passed to
+<code><a href="run_manual.html">run_manual()</a></code>.</p>
+<p>The older arguments <code>eps</code>, <code>mode</code>, <code>n_points</code>, and
+<code>include_extremes</code> are deprecated. They are still accepted for
+backwards compatibility and are internally converted to <code><a href="run_grid.html">run_grid()</a></code> or
+<code><a href="run_manual.html">run_manual()</a></code> designs.</p>
 <p><strong>Atomic objectives requirement</strong></p>
 <p>The epsilon-constraint method can only be used with atomic objectives that
 have already been registered under aliases. These aliases are typically
@@ -207,62 +227,64 @@ example:</p><div class="sourceCode"><pre><code><span></span>
 
 <p>The <code>primary</code> argument selects which registered objective is optimized
 directly. The remaining aliases are treated as constrained objectives.</p>
-<p><strong>Manual mode</strong></p>
-<p>In <code>mode = "manual"</code>, the user must provide <code>eps</code>.</p>
-<p>The <code>eps</code> argument can be supplied as:</p><ul><li><p>a named numeric vector, defining a single run,</p></li>
-<li><p>or a named list of numeric vectors, defining a grid of runs.</p></li>
-</ul><p>The names of <code>eps</code> must correspond exactly to the constrained objective
-aliases, that is, to all aliases in <code>aliases</code> except <code>primary</code>.</p>
-<p>If the constrained objectives are
-\(\mathcal{C} = \{c_1, \dots, c_q\}\), then manual mode creates a design
-grid containing all combinations of the supplied epsilon levels for the
-constrained objectives.</p>
-<p>Each row of this grid defines one subproblem to be solved later.</p>
-<p><strong>Important:</strong> manual mode supports <strong>two or more objectives</strong>.
-In particular, it can be used with:</p><ul><li><p>2 objectives: 1 primary + 1 constrained objective,</p></li>
-<li><p>3 or more objectives: 1 primary + multiple constrained objectives.</p></li>
-</ul><p>Thus, manual mode is the general way to use the epsilon-constraint method
-when more than two objectives are involved.</p>
-<p>In manual mode, the generated design grid is stored immediately in
-<code>x$data$method$runs</code>. Its epsilon columns are named
-<code>eps_&lt;alias&gt;</code>, for example <code>eps_frag</code>.</p>
-<p><strong>Automatic mode</strong></p>
-<p>In <code>mode = "auto"</code>, the user omits <code>eps</code> and instead supplies
-<code>n_points</code>.</p>
-<p>In this case, the epsilon grid is not built immediately. Instead, it is
-constructed later during <code><a href="solve.html">solve</a></code> using extreme-point or
-payoff-table information.</p>
-<p>In the current implementation, automatic mode supports
-<strong>exactly two objectives only</strong>:</p><ul><li><p>one primary objective,</p></li>
+<p><strong>Automatic epsilon grids</strong></p>
+<p>When <code>runs = run_grid(n = ...)</code> is used, the epsilon grid is not built
+immediately. Instead, it is constructed later during <code><a href="solve.html">solve</a></code>
+using extreme-point or payoff information.</p>
+<p>In the current implementation, automatic epsilon-grid generation supports
+exactly two objectives:</p><ul><li><p>one primary objective,</p></li>
 <li><p>one constrained objective.</p></li>
-</ul><p>Therefore, if <code>mode = "auto"</code>, then <code>aliases</code> must contain exactly
-two objective aliases. Problems with three or more objectives must use
-<code>mode = "manual"</code>.</p>
-<p>If <code>include_extremes = TRUE</code>, the automatically generated grid includes
-the extreme values of the constrained objective. Otherwise, only interior
-values are used.</p>
+</ul><p>Therefore, if <code>runs = run_grid(...)</code>, then <code>aliases</code> must contain
+exactly two objective aliases. Problems with three or more objectives must
+use <code>runs = run_manual(...)</code>.</p>
+<p>If <code>include_extremes = TRUE</code> is supplied inside <code><a href="run_grid.html">run_grid()</a></code>, the
+automatically generated grid includes the extreme values of the constrained
+objective. Otherwise, only interior values are used.</p>
 <p>If <code>lexicographic = TRUE</code>, the extreme points used to generate the grid
 are computed lexicographically. In that case, one objective is optimized
 first, and then the second objective is optimized while constraining the
 first to remain within <code>lexicographic_tol</code> of its optimum.</p>
+<p><strong>Manual epsilon runs</strong></p>
+<p>Manual run designs support two or more objectives. They are the general way
+to use the epsilon-constraint method when more than two objectives are
+involved.</p>
+<p>For example, with one primary objective and two constrained objectives,
+a manual run design may contain:</p><div class="sourceCode"><pre><code><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span>,</span>
+<span>  eps_loss <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+
+<p>This creates three runs, not a full Cartesian grid. To create all
+combinations, use <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> before calling <code><a href="run_manual.html">run_manual()</a></code>.</p>
+<p><strong>Failure handling</strong></p>
+<p>The <code>control</code> argument controls how failed runs are handled. It must be
+created with <code><a href="mo_control.html">mo_control</a></code>.</p>
+<p>Some epsilon levels may define infeasible subproblems. By default, failed
+runs can be retained in the returned <code>SolutionSet</code> with missing
+objective values, while feasible runs are preserved. Alternatively, users can
+request that the solve stops when an infeasible run, a run without a solution,
+or an unexpected error is encountered.</p>
 <p><strong>Stored configuration</strong></p>
 <p>The configured method stores:</p><ul><li><p><code>name = "epsilon_constraint"</code>,</p></li>
-<li><p><code>mode</code>,</p></li>
+<li><p><code>type = "epsilon_constraint"</code>,</p></li>
 <li><p><code>primary</code>,</p></li>
 <li><p><code>aliases</code>,</p></li>
 <li><p><code>constrained</code>,</p></li>
-<li><p>epsilon design information,</p></li>
-<li><p>lexicographic configuration.</p></li>
-</ul><p>In manual mode, <code>x$data$method$runs</code> contains the explicit design grid.</p>
-<p>In automatic mode, <code>x$data$method$runs</code> is initially <code>NULL</code> and is
-generated later during <code><a href="solve.html">solve</a></code>.</p>
-<p>For more than two objectives, automatic grid generation is currently
-unavailable because the number of epsilon combinations grows rapidly and
-requires explicit user control.</p>
+<li><p><code>runs</code>,</p></li>
+<li><p>lexicographic configuration,</p></li>
+<li><p><code>control</code>.</p></li>
+</ul><p>With <code>runs = run_grid(...)</code>, the actual epsilon design is generated
+later during <code><a href="solve.html">solve</a></code>. With <code>runs = run_manual(...)</code>, the
+explicit user-supplied run design is stored and then used by
+<code><a href="solve.html">solve</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
+    <div class="dont-index"><p><code><a href="run_grid.html">run_grid</a></code>,
+<code><a href="run_manual.html">run_manual</a></code>,
+<code><a href="mo_control.html">mo_control</a></code>,
+<code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
 <code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>,
 <code><a href="solve.html">solve</a></code></p></div>
     </div>
@@ -312,21 +334,22 @@ requires explicit user control.</p>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_min_loss.html">add_objective_min_loss</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"loss"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Manual mode with one constrained objective</span></span></span>
+<span class="r-in"><span><span class="co"># Automatic epsilon grid for two objectives</span></span></span>
 <span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"manual"</span>,</span></span>
-<span class="r-in"><span>  eps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cost <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span>, include_extremes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-8</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x1</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
@@ -337,14 +360,18 @@ requires explicit user control.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $eps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $eps$cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "grid"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $include_extremes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost run_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        5      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunGrid"   "RunDesign"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -352,59 +379,273 @@ requires explicit user control.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Manual mode with multiple epsilon values</span></span></span>
+<span class="r-in"><span><span class="co"># Manual runs with one constrained objective</span></span></span>
+<span class="r-in"><span><span class="va">eps_runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"manual"</span>,</span></span>
-<span class="r-in"><span>  eps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_runs</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">x2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span><span class="op">$</span><span class="va">runs</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost run_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6      2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8      3</span>
+<span class="r-in"><span><span class="va">x2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $aliases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit" "cost"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Manual mode with more than two objectives</span></span></span>
+<span class="r-in"><span><span class="co"># Manual runs with more than two objectives</span></span></span>
+<span class="r-in"><span><span class="va">eps_runs_3obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  eps_loss <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x3</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"manual"</span>,</span></span>
-<span class="r-in"><span>  eps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    loss <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_runs_3obj</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">x3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span><span class="op">$</span><span class="va">runs</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost eps_loss run_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4        0      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6        0      2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        4        1      3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        6        1      4</span>
+<span class="r-in"><span><span class="va">x3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $aliases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit" "cost"    "loss"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost" "loss"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost eps_loss</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Automatic mode currently supports exactly two objectives</span></span></span>
+<span class="r-in"><span><span class="co"># Cartesian epsilon design created explicitly by the user</span></span></span>
+<span class="r-in"><span><span class="va">eps_cartesian</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  eps_loss <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  KEEP.OUT.ATTRS <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x4</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
-<span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"auto"</span>,</span></span>
-<span class="r-in"><span>  n_points <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>  include_extremes <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-8</span></span></span>
+<span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_cartesian</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "auto"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $aliases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit" "cost"    "loss"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost" "loss"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost eps_loss</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        4        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        6        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        8        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Backwards-compatible deprecated usage</span></span></span>
+<span class="r-in"><span><span class="va">x5</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">x</span>,</span></span>
+<span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
+<span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"manual"</span>,</span></span>
+<span class="r-in"><span>  eps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`eps/mode/n_points/include_extremes` is deprecated. Use `runs = run_grid(...) or runs = run_manual(...)` instead.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">x5</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
@@ -415,11 +656,18 @@ requires explicit user control.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $n_points</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $include_extremes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id eps_cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2        6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3        8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -427,8 +675,104 @@ requires explicit user control.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Control failure handling</span></span></span>
+<span class="r-in"><span><span class="va">x6</span> <span class="op">&lt;-</span> <span class="fu">set_method_epsilon_constraint</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">x</span>,</span></span>
+<span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
+<span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="mo_control.html">mo_control</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    stop_on_infeasible <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    stop_on_no_solution <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    stop_on_error <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">x6</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epsilon_constraint"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $primary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $aliases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "benefit" "cost"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $constrained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cost"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $runs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexicographic_tol</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
