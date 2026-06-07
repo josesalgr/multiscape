@@ -223,29 +223,6 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   print(solset_actions)
 }
 
-# ------------------------------------------------------------
-# Minimal multi-objective example
-# ------------------------------------------------------------
-x_mo <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
-  cost = "cost"
-) |>
-  add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit") |>
-  set_method_weighted_sum(
-    aliases = c("cost", "benefit"),
-    weights = c(0.5, 0.5),
-    normalize_weights = TRUE
-  )
-
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  x_mo <- set_solver_cbc(x_mo, verbose = FALSE)
-  solset_mo <- solve(x_mo)
-  print(solset_mo)
-}
 
 }
 \seealso{

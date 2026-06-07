@@ -517,6 +517,10 @@ set_method_augmecon <- function(x,
         secondary = secondary
       )
 
+      # `run_manual()` only accepts weight_<alias> and eps_<alias>
+      # columns. Run identifiers are generated later.
+      grid_df$run_id <- NULL
+
       runs <- run_manual(grid_df)
     }
   }

@@ -5158,7 +5158,7 @@ add_objective <- function(x, objective) {
   if (is.numeric(eps) && !is.null(names(eps))) {
     eps_list <- as.list(eps)
     eps_list <- lapply(eps_list, function(v) c(as.numeric(v)[1]))
-  } else if (is.list(eps) && length(eps) > 0 && !is.null(names(eps))) {
+  } else if (is.list(eps) && length(eps) > 0L && !is.null(names(eps))) {
     eps_list <- lapply(eps, function(v) as.numeric(v))
   } else {
     stop(
@@ -5185,14 +5185,32 @@ add_objective <- function(x, objective) {
     )
   }
 
-  bad_empty <- names(eps_list)[vapply(eps_list, length, integer(1)) == 0L]
+  bad_empty <- names(eps_list)[
+    vapply(eps_list, length, integer(1)) == 0L
+  ]
+
   if (length(bad_empty) > 0L) {
-    stop("`eps` contains empty vectors for: ", paste(bad_empty, collapse = ", "), call. = FALSE)
+    stop(
+      "`eps` contains empty vectors for: ",
+      paste(bad_empty, collapse = ", "),
+      call. = FALSE
+    )
   }
 
-  bad_nonfinite <- names(eps_list)[vapply(eps_list, function(v) any(!is.finite(v)), logical(1))]
+  bad_nonfinite <- names(eps_list)[
+    vapply(
+      eps_list,
+      function(v) any(!is.finite(v)),
+      logical(1)
+    )
+  ]
+
   if (length(bad_nonfinite) > 0L) {
-    stop("`eps` contains non-finite values for: ", paste(bad_nonfinite, collapse = ", "), call. = FALSE)
+    stop(
+      "`eps` contains non-finite values for: ",
+      paste(bad_nonfinite, collapse = ", "),
+      call. = FALSE
+    )
   }
 
   grid <- expand.grid(
@@ -5206,65 +5224,78 @@ add_objective <- function(x, objective) {
   }
 
   names(grid) <- paste0("eps_", names(grid))
-  grid$run_id <- seq_len(nrow(grid))
-  grid <- grid[, c("run_id", setdiff(names(grid), "run_id")), drop = FALSE]
+  rownames(grid) <- NULL
 
   grid
 }
 
 .pamo_augmecon_grid_to_manual_df <- function(grid, secondary) {
-  if (is.atomic(grid) && !is.list(grid)) {
-    stop("`grid` must be NULL or a named list.", call. = FALSE)
+  if (!is.list(grid) || length(grid) == 0L) {
+    stop("`grid` must be a non-empty named list.", call. = FALSE)
   }
 
-  if (!is.list(grid) ||
-      length(grid) == 0L ||
-      is.null(names(grid)) ||
+  if (is.null(names(grid)) ||
+      anyNA(names(grid)) ||
       any(!nzchar(names(grid)))) {
-    stop("`grid` must be a named non-empty list when supplied.", call. = FALSE)
-  }
-
-  gnames <- names(grid)
-
-  extra <- setdiff(gnames, secondary)
-  miss  <- setdiff(secondary, gnames)
-
-  if (length(extra) > 0L) {
     stop(
-      "`grid` contains names not corresponding to secondary objectives: ",
-      paste(extra, collapse = ", "),
+      "`grid` must be a fully named list.",
       call. = FALSE
     )
   }
 
-  if (length(miss) > 0L) {
+  if (anyDuplicated(names(grid)) != 0L) {
     stop(
-      "`grid` is missing secondary objectives: ",
-      paste(miss, collapse = ", "),
+      "`grid` names must not contain duplicates.",
       call. = FALSE
     )
   }
 
+  missing_secondary <- setdiff(secondary, names(grid))
+  unknown_secondary <- setdiff(names(grid), secondary)
+
+  if (length(missing_secondary) > 0L) {
+    stop(
+      "`grid` is missing secondary objective(s): ",
+      paste(missing_secondary, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (length(unknown_secondary) > 0L) {
+    stop(
+      "`grid` contains unknown secondary objective(s): ",
+      paste(unknown_secondary, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  # Preserve the order of the secondary objectives
   grid <- grid[secondary]
 
-  grid <- lapply(seq_along(grid), function(i) {
-    nm <- secondary[i]
-    v  <- grid[[i]]
+  valid <- vapply(
+    grid,
+    function(z) {
+      is.numeric(z) &&
+        length(z) > 0L &&
+        !anyNA(z) &&
+        all(is.finite(z))
+    },
+    logical(1)
+  )
 
-    if (!is.numeric(v) ||
-        length(v) == 0L ||
-        anyNA(v) ||
-        any(!is.finite(v))) {
-      stop(
-        "`grid[['", nm, "']]` must be a non-empty numeric vector of finite values.",
-        call. = FALSE
-      )
-    }
+  if (any(!valid)) {
+    bad <- names(grid)[!valid]
 
-    sort(unique(as.numeric(v)))
-  })
-
-  names(grid) <- secondary
+    stop(
+      "Every element of `grid` must be a non-empty finite numeric vector. ",
+      "Invalid objective(s): ",
+      paste(bad, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
 
   out <- expand.grid(
     grid,
@@ -5273,8 +5304,8 @@ add_objective <- function(x, objective) {
   )
 
   names(out) <- paste0("eps_", names(out))
-  out$run_id <- seq_len(nrow(out))
-  out <- out[, c("run_id", setdiff(names(out), "run_id")), drop = FALSE]
+
+  rownames(out) <- NULL
 
   out
 }

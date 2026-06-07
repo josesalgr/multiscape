@@ -47,16 +47,6 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          dependencies: '"hard"'
-          extra-packages: |
-            any::rcmdcheck
-            any::sessioninfo
-            any::testthat
-            knitr
-          needs: check
-
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -80,6 +70,16 @@ jobs:
             coinor-libclp-dev \
             coinor-libsymphony-dev
         shell: bash
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::sessioninfo
+            any::testthat
+            knitr
+          needs: check
 
       - name: Session information
         run: |

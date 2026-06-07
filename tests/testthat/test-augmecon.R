@@ -70,3 +70,39 @@ test_that("augmecon returns a SolutionSet with runs", {
     ) %in% names(runs))
   )
 })
+
+
+test_that("deprecated AUGMECON grid is converted to a manual run design", {
+  toy <- toy_equivalent_basic()
+
+  x <- create_problem(
+    pu = toy$pu,
+    features = toy$features,
+    dist_features = toy$dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(toy$actions) |>
+    add_effects(toy$effects) |>
+    add_objective_max_benefit(alias = "benefit") |>
+    add_objective_min_cost(alias = "cost")
+
+  expect_warning(
+    out <- set_method_augmecon(
+      x,
+      primary = "benefit",
+      aliases = c("benefit", "cost"),
+      grid = list(
+        cost = c(4, 6, 8)
+      )
+    ),
+    "deprecated"
+  )
+
+  values <- out$data$method$runs$values
+
+  expect_s3_class(out$data$method$runs, "RunManual")
+  expect_identical(names(values), "eps_cost")
+  expect_false("run_id" %in% names(values))
+  expect_equal(nrow(values), 3L)
+  expect_equal(values$eps_cost, c(4, 6, 8))
+})
