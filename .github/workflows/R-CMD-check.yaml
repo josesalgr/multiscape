@@ -3,29 +3,47 @@ name: R-CMD-check
 on:
   push:
     branches: [main, master]
+
   pull_request:
     branches: [main, master]
+
   schedule:
     - cron: "0 0 * * 1"
+
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+
     name: ${{ matrix.config.os }} (R ${{ matrix.config.r }})
 
     strategy:
       fail-fast: false
+
       matrix:
         config:
-          - { os: ubuntu-latest,  r: "devel",   http-user-agent: "release" }
-          - { os: ubuntu-latest,  r: "release" }
-          - { os: ubuntu-latest,  r: "oldrel-1" }
-          - { os: windows-latest, r: "release" }
-          - { os: macos-latest,   r: "release" }
+          - os: ubuntu-latest
+            r: "devel"
+            http-user-agent: "release"
+
+          - os: ubuntu-latest
+            r: "release"
+
+          - os: ubuntu-latest
+            r: "oldrel-1"
+
+          - os: windows-latest
+            r: "release"
+
+          - os: macos-latest
+            r: "release"
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -37,11 +55,14 @@ jobs:
       NOT_CRAN: true
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: r-lib/actions/setup-r@v2
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
@@ -51,6 +72,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
+
           sudo apt-get install -y \
             libcurl4-openssl-dev \
             libssl-dev \
@@ -66,21 +88,53 @@ jobs:
             libgeos-dev \
             libproj-dev \
             libudunits2-dev \
+            pkg-config \
+            coinor-cbc \
             coinor-libcbc-dev \
             coinor-libclp-dev \
             coinor-libsymphony-dev
         shell: bash
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
             any::sessioninfo
             any::testthat
+            any::pak
             knitr
-            github::dirkschumacher/rcbc
           needs: check
+
+      - name: Install rcbc on Linux
+        if: runner.os == 'Linux'
+        run: |
+          pak::pkg_install(
+            "github::dirkschumacher/rcbc",
+            upgrade = FALSE
+          )
+        shell: Rscript {0}
+
+      - name: Verify CBC installation on Linux
+        if: runner.os == 'Linux'
+        run: |
+          cat("CBC executable:\n")
+          print(Sys.which("cbc"))
+
+          if (!nzchar(Sys.which("cbc"))) {
+            stop("CBC executable was not found.")
+          }
+
+          cat("\nrcbc package:\n")
+
+          if (!requireNamespace("rcbc", quietly = TRUE)) {
+            stop("The `rcbc` R package was not installed.")
+          }
+
+          print(packageVersion("rcbc"))
+          print(system.file(package = "rcbc"))
+        shell: Rscript {0}
 
       - name: Session information
         run: |
@@ -91,7 +145,11 @@ jobs:
       - name: Check
         run: |
           rcmdcheck::rcmdcheck(
-            args = c("--no-manual", "--as-cran", "--no-build-vignettes"),
+            args = c(
+              "--no-manual",
+              "--as-cran",
+              "--no-build-vignettes"
+            ),
             error_on = "warning",
             check_dir = "check"
           )
@@ -100,7 +158,9 @@ jobs:
       - name: Show testthat output
         if: always()
         run: |
-          find check -name 'testthat.Rout*' -exec cat '{}' \; || true
+          find check \
+            -name 'testthat.Rout*' \
+            -exec cat '{}' \; || true
         shell: bash
 
       - name: Upload check results
