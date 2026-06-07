@@ -79,6 +79,7 @@ jobs:
             any::sessioninfo
             any::testthat
             knitr
+            github::dirkschumacher/rcbc
           needs: check
 
       - name: Session information

@@ -47,28 +47,21 @@ jobs:
             github::dirkschumacher/rcbc
           needs: check
 
-      - name: Verify solver availability
+      - name: Verify CBC installation
         run: |
           cat("CBC executable:\n")
           print(Sys.which("cbc"))
 
-          cat("\nInstalled solver packages:\n")
-          print(
-            installed.packages()[
-              installed.packages()[, "Package"] %in%
-                c("rcbc", "Rsymphony", "ROI", "ROI.plugin.cbc"),
-              c("Package", "Version"),
-              drop = FALSE
-            ]
-          )
-
           if (!nzchar(Sys.which("cbc"))) {
-            stop("CBC executable was not found.")
+            stop("The CBC executable is not available.")
           }
 
+          cat("\nrcbc package:\n")
           if (!requireNamespace("rcbc", quietly = TRUE)) {
-            stop("The R package `rcbc` is not available.")
+            stop("The `rcbc` R package is not available.")
           }
+
+          print(packageVersion("rcbc"))
         shell: Rscript {0}
 
       - name: Test coverage
