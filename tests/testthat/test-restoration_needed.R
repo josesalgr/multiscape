@@ -17,10 +17,11 @@ test_that("solve uses restoration when restoration-only feature target requires 
 
   s <- multiscape::solve(p)
 
-  expect_s3_class(s, "Solution")
-  expect_true(is.data.frame(s$summary$actions))
+  expect_s3_class(s, "SolutionSet")
+  actions <- multiscape::get_actions(s)
+  expect_true(is.data.frame(actions))
 
-  acts_sel <- s$summary$actions[s$summary$actions$selected > 0.5, , drop = FALSE]
+  acts_sel <- actions[actions$selected > 0.5, , drop = FALSE]
 
   expect_true(any(acts_sel$action == "restoration"))
 })

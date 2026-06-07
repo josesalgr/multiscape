@@ -1,0 +1,23 @@
+        -:    0:Source:rcpp_model_set_objective_vector.cpp
+        -:    0:Graph:./rcpp_model_set_objective_vector.gcno
+        -:    0:Data:./rcpp_model_set_objective_vector.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "OptimizationProblem.h"
+        -:    3:
+        -:    4:// [[Rcpp::export]]
+      126:    5:void rcpp_model_set_objective_vector(SEXP x,
+        -:    6:                                     Rcpp::NumericVector obj,
+        -:    7:                                     std::string model_sense = "min") {
+      126:    8:  Rcpp::XPtr<OptimizationProblem> op(x);
+        -:    9:
+      126:   10:  if ((int)obj.size() != (int)op->_obj.size()) {
+    #####:   11:    Rcpp::stop("Objective vector length does not match model dimension.");
+        -:   12:  }
+        -:   13:
+      126:   14:  op->_modelsense = model_sense;
+        -:   15:
+     1638:   16:  for (int j = 0; j < obj.size(); ++j) {
+     1512:   17:    op->_obj[j] = obj[j];
+        -:   18:  }
+      126:   19:}

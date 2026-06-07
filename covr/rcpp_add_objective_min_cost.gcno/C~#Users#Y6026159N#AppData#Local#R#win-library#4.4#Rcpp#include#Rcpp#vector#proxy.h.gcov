@@ -1,0 +1,303 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/proxy.h
+        -:    0:Graph:./rcpp_add_objective_min_cost.gcno
+        -:    0:Data:./rcpp_add_objective_min_cost.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// proxy.h: Rcpp R/C++ interface class library -- proxies
+        -:    3://
+        -:    4:// Copyright (C) 2010 - 2026  Dirk Eddelbuettel and Romain Francois
+        -:    5://
+        -:    6:// This file is part of Rcpp.
+        -:    7://
+        -:    8:// Rcpp is free software: you can redistribute it and/or modify it
+        -:    9:// under the terms of the GNU General Public License as published by
+        -:   10:// the Free Software Foundation, either version 2 of the License, or
+        -:   11:// (at your option) any later version.
+        -:   12://
+        -:   13:// Rcpp is distributed in the hope that it will be useful, but
+        -:   14:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   15:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   16:// GNU General Public License for more details.
+        -:   17://
+        -:   18:// You should have received a copy of the GNU General Public License
+        -:   19:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   20:
+        -:   21:#ifndef Rcpp__vector__proxy_h
+        -:   22:#define Rcpp__vector__proxy_h
+        -:   23:
+        -:   24:namespace Rcpp{
+        -:   25:namespace internal{
+        -:   26:
+        -:   27:	template <int RTYPE, template <class> class StoragePolicy>
+        -:   28:    class simple_name_proxy {
+        -:   29:	public:
+        -:   30:		typedef ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+        -:   31:		typedef typename ::Rcpp::traits::storage_type<RTYPE>::type CTYPE ;
+        -:   32:
+        -:   33:		simple_name_proxy( VECTOR& v, const std::string& name_) :
+        -:   34:			parent(v), name(name_){} ;
+        -:   35:		simple_name_proxy( const simple_name_proxy& other ) :
+        -:   36:			parent(other.parent), name(other.name){} ;
+        -:   37:		~simple_name_proxy() {} ;
+        -:   38:
+        -:   39:		simple_name_proxy& operator=( CTYPE rhs ){
+        -:   40:			set( rhs ) ;
+        -:   41:			return *this ;
+        -:   42:		}
+        -:   43:		simple_name_proxy& operator=( const simple_name_proxy& other){
+        -:   44:			set( other.get() ) ;
+        -:   45:			return *this ;
+        -:   46:		}
+        -:   47:
+        -:   48:		template <typename T>
+        -:   49:		simple_name_proxy& operator=( const T& rhs ){
+        -:   50:			set( caster<T,CTYPE>(rhs) ) ;
+        -:   51:			return *this ;
+        -:   52:		}
+        -:   53:
+        -:   54:		// TODO: other operators +=, -=, ...
+        -:   55:
+        -:   56:		operator CTYPE() const {
+        -:   57:			 return get() ;
+        -:   58:		}
+        -:   59:
+        -:   60:		// this helps wrap, for example : wrap( x["foo"] )
+        -:   61:		operator SEXP() const {
+        -:   62:			return ::Rcpp::wrap(get()) ;
+        -:   63:		}
+        -:   64:
+        -:   65:	private:
+        -:   66:		VECTOR& parent ;
+        -:   67:		std::string name;
+        -:   68:		void set( CTYPE rhs ){
+        -:   69:			R_xlen_t index = 0 ;
+        -:   70:			try{
+        -:   71:				index = parent.offset(name) ;
+        -:   72:				parent[ index ] = rhs ;
+        -:   73:			} catch( const index_out_of_bounds& ex ){
+        -:   74:				parent.push_back( rhs, name );
+        -:   75:			}
+        -:   76:		}
+        -:   77:		CTYPE get() const {
+        -:   78:			return parent[ parent.offset(name) ];
+        -:   79:		}
+        -:   80:	} ;
+        -:   81:
+        -:   82:	template <int RTYPE, template <class> class StoragePolicy>
+        -:   83:	class string_name_proxy{
+        -:   84:	public:
+        -:   85:		typedef typename ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+        -:   86:		typedef const char* iterator ;
+        -:   87:		typedef const char& reference ;
+        -:   88:
+        -:   89:		string_name_proxy( VECTOR& v, const std::string& name_) :
+        -:   90:			parent(v), name(name_){} ;
+        -:   91:		string_name_proxy( const string_name_proxy& other ) :
+        -:   92:			parent(other.parent), name(other.name){} ;
+        -:   93:		~string_name_proxy(){} ;
+        -:   94:
+        -:   95:		string_name_proxy& operator=( const std::string& rhs ){
+        -:   96:			set( rhs ) ;
+        -:   97:			return *this ;
+        -:   98:		}
+        -:   99:		string_name_proxy& operator=( const string_name_proxy& other){
+        -:  100:			set( other.get() ) ;
+        -:  101:			return *this ;
+        -:  102:		}
+        -:  103:
+        -:  104:		operator char* () const {
+        -:  105:			 return get() ;
+        -:  106:		}
+        -:  107:
+        -:  108:		operator SEXP() const {
+        -:  109:			return ::Rf_mkString(get()) ;
+        -:  110:		}
+        -:  111:
+        -:  112:		inline iterator begin() { return get() ; }
+        -:  113:		inline iterator end(){ return begin() + size() ; }
+        -:  114:		inline reference operator[]( R_xlen_t i ){ return *( get() + i ) ; }
+        -:  115:		inline R_xlen_t size(){ return strlen( get() ) ; }
+        -:  116:
+        -:  117:	private:
+        -:  118:		VECTOR& parent ;
+        -:  119:		std::string name;
+        -:  120:		void set( const std::string& rhs ){
+        -:  121:			R_xlen_t index = 0 ;
+        -:  122:			try{
+        -:  123:				index = parent.offset(name) ;
+        -:  124:				parent[ index ] = rhs ;
+        -:  125:			} catch( const index_out_of_bounds& ex ){
+        -:  126:				parent.push_back( rhs, name );
+        -:  127:			}
+        -:  128:		}
+        -:  129:		char* get() const {
+        -:  130:			return parent[ parent.offset(name) ];
+        -:  131:		}
+        -:  132:
+        -:  133:	} ;
+        -:  134:
+        -:  135:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  136:	class generic_name_proxy {
+        -:  137:	public:
+        -:  138:		typedef ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+    #####:  139:		generic_name_proxy( VECTOR& v, const std::string& name_) :
+    #####:  140:			parent(v), name(name_){}
+        -:  141:		generic_name_proxy( const generic_name_proxy& other ) :
+        -:  142:			parent(other.parent), name(other.name){}
+    #####:  143:		~generic_name_proxy(){} ;
+        -:  144:
+        -:  145:		generic_name_proxy& operator=( SEXP rhs ){
+        -:  146:			set( rhs ) ;
+        -:  147:			return *this ;
+        -:  148:		}
+        -:  149:		generic_name_proxy& operator=( const generic_name_proxy& other){
+        -:  150:			set( other.get() ) ;
+        -:  151:			return *this ;
+        -:  152:		}
+        -:  153:
+        -:  154:		template <typename T>
+        -:  155:		generic_name_proxy& operator=( const T& rhs ){
+        -:  156:		    set(Shield<SEXP>(wrap(rhs)));
+        -:  157:			return *this ;
+        -:  158:		}
+        -:  159:
+        -:  160:		// TODO: other operators +=, -=, ...
+        -:  161:
+        -:  162:		operator SEXP() const {
+        -:  163:			 return get() ;
+        -:  164:		}
+        -:  165:
+        -:  166:		template <typename T>
+    #####:  167:		operator T() const {
+        -:  168:			#if RCPP_DEBUG_LEVEL > 0
+        -:  169:			SEXP res = get() ;
+        -:  170:			RCPP_DEBUG_1( "generic_name_proxy::get() = <%p> ", res ) ;
+        -:  171:			return ::Rcpp::as<T>( res ) ;
+        -:  172:			#else
+    #####:  173:			return ::Rcpp::as<T>( get() ) ;
+        -:  174:			#endif
+        -:  175:		}
+------------------
+_ZNK4Rcpp8internal18generic_name_proxyILi19ENS_15PreserveStorageEEcvT_INS_6VectorILi13ES2_EEEEv:
+    #####:  167:		operator T() const {
+        -:  168:			#if RCPP_DEBUG_LEVEL > 0
+        -:  169:			SEXP res = get() ;
+        -:  170:			RCPP_DEBUG_1( "generic_name_proxy::get() = <%p> ", res ) ;
+        -:  171:			return ::Rcpp::as<T>( res ) ;
+        -:  172:			#else
+    #####:  173:			return ::Rcpp::as<T>( get() ) ;
+        -:  174:			#endif
+        -:  175:		}
+------------------
+_ZNK4Rcpp8internal18generic_name_proxyILi19ENS_15PreserveStorageEEcvT_INS_6VectorILi14ES2_EEEEv:
+    #####:  167:		operator T() const {
+        -:  168:			#if RCPP_DEBUG_LEVEL > 0
+        -:  169:			SEXP res = get() ;
+        -:  170:			RCPP_DEBUG_1( "generic_name_proxy::get() = <%p> ", res ) ;
+        -:  171:			return ::Rcpp::as<T>( res ) ;
+        -:  172:			#else
+    #####:  173:			return ::Rcpp::as<T>( get() ) ;
+        -:  174:			#endif
+        -:  175:		}
+------------------
+        -:  176:
+        -:  177:	private:
+        -:  178:		VECTOR& parent ;
+        -:  179:		std::string name;
+        -:  180:		void set( SEXP rhs ){
+        -:  181:			R_xlen_t index = 0 ;
+        -:  182:			try{
+        -:  183:				index = parent.offset(name) ;
+        -:  184:				parent[ index ] = rhs ;  // #nocov
+        -:  185:			} catch( const index_out_of_bounds& ex ){
+        -:  186:				parent.push_back( rhs, name );
+        -:  187:			}
+        -:  188:		}
+    #####:  189:		SEXP get() const {
+    #####:  190:			return parent[ parent.offset(name) ];
+        -:  191:		}
+        -:  192:	} ;
+        -:  193:}
+        -:  194:
+        -:  195:namespace traits {
+        -:  196:
+        -:  197:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  198:	struct r_vector_name_proxy{
+        -:  199:		typedef typename ::Rcpp::internal::simple_name_proxy<RTYPE, StoragePolicy> type ;
+        -:  200:	} ;
+        -:  201:	template<template <class> class StoragePolicy>
+        -:  202:	struct r_vector_name_proxy<STRSXP, StoragePolicy>{
+        -:  203:		typedef ::Rcpp::internal::string_name_proxy<STRSXP, StoragePolicy> type ;
+        -:  204:	} ;
+        -:  205:	template<template <class> class StoragePolicy>
+        -:  206:	struct r_vector_name_proxy<VECSXP, StoragePolicy>{
+        -:  207:		typedef ::Rcpp::internal::generic_name_proxy<VECSXP, StoragePolicy> type ;
+        -:  208:	} ;
+        -:  209:	template<template <class> class StoragePolicy>
+        -:  210:	struct r_vector_name_proxy<EXPRSXP, StoragePolicy>{
+        -:  211:		typedef ::Rcpp::internal::generic_name_proxy<EXPRSXP, StoragePolicy> type ;
+        -:  212:	} ;
+        -:  213:
+        -:  214:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  215:	struct r_vector_proxy{
+        -:  216:		typedef typename storage_type<RTYPE>::type& type ;
+        -:  217:	} ;
+        -:  218:	template<template <class> class StoragePolicy>
+        -:  219:	struct r_vector_proxy<STRSXP, StoragePolicy> {
+        -:  220:		typedef ::Rcpp::internal::string_proxy<STRSXP, StoragePolicy> type ;
+        -:  221:	} ;
+        -:  222:	template<template <class> class StoragePolicy>
+        -:  223:	struct r_vector_proxy<EXPRSXP, StoragePolicy> {
+        -:  224:		typedef ::Rcpp::internal::generic_proxy<EXPRSXP, StoragePolicy> type ;
+        -:  225:	} ;
+        -:  226:	template<template <class> class StoragePolicy>
+        -:  227:	struct r_vector_proxy<VECSXP, StoragePolicy> {
+        -:  228:		typedef ::Rcpp::internal::generic_proxy<VECSXP, StoragePolicy> type ;
+        -:  229:	} ;
+        -:  230:
+        -:  231:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  232:	struct r_vector_const_proxy{
+        -:  233:		typedef const typename storage_type<RTYPE>::type& type ;
+        -:  234:	} ;
+        -:  235:	template<template <class> class StoragePolicy>
+        -:  236:	struct r_vector_const_proxy<STRSXP, StoragePolicy> {
+        -:  237:		typedef ::Rcpp::internal::const_string_proxy<STRSXP, StoragePolicy> type ;
+        -:  238:	} ;
+        -:  239:	template<template <class> class StoragePolicy>
+        -:  240:	struct r_vector_const_proxy<VECSXP, StoragePolicy> {
+        -:  241:		typedef ::Rcpp::internal::const_generic_proxy<VECSXP, StoragePolicy> type ;
+        -:  242:	} ;
+        -:  243:	template<template <class> class StoragePolicy>
+        -:  244:	struct r_vector_const_proxy<EXPRSXP, StoragePolicy> {
+        -:  245:		typedef ::Rcpp::internal::const_generic_proxy<EXPRSXP, StoragePolicy> type ;
+        -:  246:	} ;
+        -:  247:
+        -:  248:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  249:	struct r_vector_iterator {
+        -:  250:		typedef typename storage_type<RTYPE>::type* type ;
+        -:  251:	};
+        -:  252:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  253:	struct r_vector_const_iterator {
+        -:  254:		typedef const typename storage_type<RTYPE>::type* type ;
+        -:  255:	};
+        -:  256:
+        -:  257:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  258:	struct proxy_based_iterator{
+        -:  259:		typedef ::Rcpp::internal::Proxy_Iterator< typename r_vector_proxy<RTYPE, StoragePolicy>::type > type ;
+        -:  260:	} ;
+        -:  261:	template<template <class> class StoragePolicy> struct r_vector_iterator<VECSXP, StoragePolicy> : proxy_based_iterator<VECSXP, StoragePolicy>{} ;
+        -:  262:	template<template <class> class StoragePolicy> struct r_vector_iterator<EXPRSXP, StoragePolicy> : proxy_based_iterator<EXPRSXP, StoragePolicy>{} ;
+        -:  263:	template<template <class> class StoragePolicy> struct r_vector_iterator<STRSXP, StoragePolicy> : proxy_based_iterator<STRSXP, StoragePolicy>{} ;
+        -:  264:
+        -:  265:	template <int RTYPE, template <class> class StoragePolicy>
+        -:  266:	struct proxy_based_const_iterator{
+        -:  267:		typedef ::Rcpp::internal::Proxy_Iterator< typename r_vector_const_proxy<RTYPE, StoragePolicy>::type > type ;
+        -:  268:	} ;
+        -:  269:	template<template <class> class StoragePolicy> struct r_vector_const_iterator<VECSXP, StoragePolicy> : proxy_based_const_iterator<VECSXP, StoragePolicy>{} ;
+        -:  270:	template<template <class> class StoragePolicy> struct r_vector_const_iterator<EXPRSXP, StoragePolicy> : proxy_based_const_iterator<EXPRSXP, StoragePolicy>{} ;
+        -:  271:	template<template <class> class StoragePolicy> struct r_vector_const_iterator<STRSXP, StoragePolicy> : proxy_based_const_iterator<STRSXP, StoragePolicy>{} ;
+        -:  272:
+        -:  273:}  // traits
+        -:  274:}
+        -:  275:
+        -:  276:#endif

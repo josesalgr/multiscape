@@ -1,0 +1,145 @@
+        -:    0:Source:rcpp_prepare_objective_min_loss.cpp
+        -:    0:Graph:./rcpp_prepare_objective_min_loss.gcno
+        -:    0:Data:./rcpp_prepare_objective_min_loss.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "OptimizationProblem.h"
+        -:    3:
+        -:    4:#include <unordered_map>
+        -:    5:#include <string>
+        -:    6:#include <cmath>
+        -:    7:#include <cstdint>
+        -:    8:#include <vector>
+        -:    9:
+      143:   10:static inline long long key2(int a, int b) {
+      143:   11:  return ( (static_cast<long long>(a) << 32) ^ static_cast<unsigned int>(b) );
+        -:   12:}
+        -:   13:
+        -:   14:// [[Rcpp::export]]
+       13:   15:Rcpp::List rcpp_prepare_objective_min_loss(
+        -:   16:    SEXP x,
+        -:   17:    Rcpp::DataFrame dist_actions_data,
+        -:   18:    Rcpp::DataFrame dist_effects_data,
+        -:   19:    std::string block_name = "prepare_min_loss",
+        -:   20:    std::string tag = ""
+        -:   21:) {
+       13:   22:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   23:
+      13*:   24:  if (op->ncol_used() == 0 || op->_obj.empty()) {
+    #####:   25:    Rcpp::stop("Model has zero variables. Call rcpp_add_base_variables() first.");
+        -:   26:  }
+        -:   27:
+      13*:   28:  if (op->_n_x < 0 || op->_x_offset < 0) {
+    #####:   29:    Rcpp::stop("x block not initialized (op->_n_x/op->_x_offset invalid).");
+        -:   30:  }
+        -:   31:
+       13:   32:  const int n_x = op->_n_x;
+       13:   33:  if (n_x == 0) {
+        -:   34:    return Rcpp::List::create(
+    #####:   35:      Rcpp::Named("ok") = true,
+    #####:   36:      Rcpp::Named("skipped") = true,
+    #####:   37:      Rcpp::Named("reason") = "op->_n_x == 0 (no action variables)",
+    #####:   38:      Rcpp::Named("coef_x") = Rcpp::NumericVector(0)
+    #####:   39:    );
+        -:   40:  }
+        -:   41:
+       52:   42:  for (auto nm : {"internal_pu", "internal_action", "internal_row"}) {
+       39:   43:    if (!dist_actions_data.containsElementNamed(nm)) {
+    #####:   44:      Rcpp::stop(std::string("dist_actions_data must contain column '") + nm + "'.");
+        -:   45:    }
+        -:   46:  }
+        -:   47:
+       52:   48:  for (auto nm : {"internal_pu", "internal_action", "loss"}) {
+       39:   49:    if (!dist_effects_data.containsElementNamed(nm)) {
+    #####:   50:      Rcpp::stop(std::string("dist_effects_data must contain column '") + nm + "'.");
+        -:   51:    }
+        -:   52:  }
+        -:   53:
+       26:   54:  Rcpp::IntegerVector da_ipu  = dist_actions_data["internal_pu"];
+       26:   55:  Rcpp::IntegerVector da_iact = dist_actions_data["internal_action"];
+       26:   56:  Rcpp::IntegerVector da_irow = dist_actions_data["internal_row"];
+       13:   57:  const int n_da = dist_actions_data.nrows();
+        -:   58:
+       13:   59:  std::unordered_map<long long, int> pa_to_row0;
+       13:   60:  pa_to_row0.reserve((std::size_t)n_da * 2);
+        -:   61:
+      117:   62:  for (int r = 0; r < n_da; ++r) {
+      104:   63:    const int ipu  = da_ipu[r];
+      104:   64:    const int ia   = da_iact[r];
+      104:   65:    const int row0 = da_irow[r] - 1;
+        -:   66:
+      104:   67:    if (ipu <= 0 || ia <= 0) {
+    #####:   68:      Rcpp::stop("dist_actions_data internal_pu/internal_action must be positive 1-based.");
+        -:   69:    }
+      104:   70:    if (row0 < 0 || row0 >= n_x) {
+    #####:   71:      Rcpp::stop("dist_actions_data internal_row out of range: must be in [1, op->_n_x].");
+        -:   72:    }
+        -:   73:
+      104:   74:    const long long k = key2(ipu, ia);
+      104:   75:    if (pa_to_row0.find(k) == pa_to_row0.end()) pa_to_row0.emplace(k, row0);
+        -:   76:  }
+        -:   77:
+       26:   78:  Rcpp::IntegerVector de_ipu  = dist_effects_data["internal_pu"];
+       26:   79:  Rcpp::IntegerVector de_iact = dist_effects_data["internal_action"];
+       26:   80:  Rcpp::NumericVector de_loss = dist_effects_data["loss"];
+       13:   81:  const int n_de = dist_effects_data.nrows();
+        -:   82:
+       13:   83:  std::vector<double> coef_x((std::size_t)n_x, 0.0);
+        -:   84:
+       13:   85:  int used_rows = 0;
+       13:   86:  int dropped_missing_action = 0;
+       13:   87:  int dropped_nonfinite_or_zero = 0;
+       13:   88:  double sum_added = 0.0;
+        -:   89:
+      143:   90:  for (int r = 0; r < n_de; ++r) {
+      130:   91:    const double v = (double)de_loss[r];
+      130:   92:    if (!std::isfinite(v) || v == 0.0) {
+       91:   93:      ++dropped_nonfinite_or_zero;
+       91:   94:      continue;
+        -:   95:    }
+        -:   96:
+       39:   97:    const int ipu = de_ipu[r];
+       39:   98:    const int ia  = de_iact[r];
+      39*:   99:    if (ipu <= 0 || ia <= 0) {
+    #####:  100:      ++dropped_missing_action;
+    #####:  101:      continue;
+        -:  102:    }
+        -:  103:
+       39:  104:    const long long k = key2(ipu, ia);
+       39:  105:    auto it = pa_to_row0.find(k);
+      39*:  106:    if (it == pa_to_row0.end()) {
+    #####:  107:      ++dropped_missing_action;
+    #####:  108:      continue;
+        -:  109:    }
+        -:  110:
+       39:  111:    const int row0 = it->second;
+       39:  112:    coef_x[(std::size_t)row0] += v;
+        -:  113:
+       39:  114:    sum_added += v;
+       39:  115:    ++used_rows;
+        -:  116:  }
+        -:  117:
+       13:  118:  std::string full_tag = tag;
+      13*:  119:  if (!full_tag.empty()) full_tag += ";";
+        -:  120:  full_tag +=
+        -:  121:    "kind=prepare"
+        -:  122:    ";component=min_loss"
+        -:  123:    ";loss_col=loss"
+       26:  124:    ";n_x=" + std::to_string(n_x) +
+       52:  125:      ";n_used_rows=" + std::to_string(used_rows) +
+       52:  126:      ";dropped_missing_action=" + std::to_string(dropped_missing_action) +
+       52:  127:      ";dropped_nonfinite_or_zero=" + std::to_string(dropped_nonfinite_or_zero) +
+       39:  128:      ";sum_added=" + std::to_string(sum_added);
+        -:  129:
+        -:  130:  return Rcpp::List::create(
+       39:  131:    Rcpp::Named("ok") = true,
+       39:  132:    Rcpp::Named("skipped") = false,
+       39:  133:    Rcpp::Named("coef_x") = Rcpp::wrap(coef_x),
+       26:  134:    Rcpp::Named("n_used_rows") = used_rows,
+       26:  135:    Rcpp::Named("dropped_missing_action") = dropped_missing_action,
+       26:  136:    Rcpp::Named("dropped_nonfinite_or_zero") = dropped_nonfinite_or_zero,
+       26:  137:    Rcpp::Named("sum_added") = sum_added,
+       26:  138:    Rcpp::Named("tag") = full_tag,
+       26:  139:    Rcpp::Named("block_name") = block_name
+       13:  140:  );
+       13:  141:}

@@ -1,0 +1,88 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/Named.h
+        -:    0:Graph:./rcpp_model_add_columns.gcno
+        -:    0:Data:./rcpp_model_add_columns.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// Named.h: Rcpp R/C++ interface class library -- named object
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2013 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp_Named_h
+        -:   23:#define Rcpp_Named_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:class Argument {
+        -:   28:public:
+        -:   29:	Argument() : name(){} ;
+    #####:   30:	Argument( const std::string& name_) : name(name_){}
+        -:   31:
+        -:   32:	template<typename T>
+      42*:   33:	inline traits::named_object<T> operator=( const T& t){
+      42*:   34:		return traits::named_object<T>( name, t ) ;
+        -:   35:	}
+------------------
+_ZN4Rcpp8ArgumentaSIyEENS_6traits12named_objectIT_EERKS4_:
+       42:   33:	inline traits::named_object<T> operator=( const T& t){
+       42:   34:		return traits::named_object<T>( name, t ) ;
+        -:   35:	}
+------------------
+_ZN4Rcpp8ArgumentaSINS_6VectorILi13ENS_15PreserveStorageEEEEENS_6traits12named_objectIT_EERKS7_:
+    #####:   33:	inline traits::named_object<T> operator=( const T& t){
+    #####:   34:		return traits::named_object<T>( name, t ) ;
+        -:   35:	}
+------------------
+_ZN4Rcpp8ArgumentaSIiEENS_6traits12named_objectIT_EERKS4_:
+    #####:   33:	inline traits::named_object<T> operator=( const T& t){
+    #####:   34:		return traits::named_object<T>( name, t ) ;
+        -:   35:	}
+------------------
+        -:   36:
+        -:   37:	std::string name ;
+        -:   38:} ;
+        -:   39:
+    #####:   40:inline Argument Named( const std::string& name){
+    #####:   41:	return Argument( name );
+        -:   42:}
+        -:   43:template <typename T>
+        -:   44:inline traits::named_object<T> Named( const std::string& name, const T& o){
+        -:   45:	return traits::named_object<T>( name, o );
+        -:   46:}
+        -:   47:
+        -:   48:namespace internal{
+        -:   49:
+        -:   50:class NamedPlaceHolder {
+        -:   51:public:
+    #####:   52:	NamedPlaceHolder(){}
+    #####:   53:	~NamedPlaceHolder(){}
+        -:   54:	Argument operator[]( const std::string& arg) const {
+        -:   55:		return Argument( arg ) ;
+        -:   56:	}
+        -:   57:	Argument operator()(const std::string& arg) const {
+        -:   58:		return Argument( arg ) ;
+        -:   59:	}
+        -:   60:	operator SEXP() const { return R_MissingArg ; }
+        -:   61:} ;
+        -:   62:} // internal
+        -:   63:
+        -:   64:static internal::NamedPlaceHolder _ ;
+        -:   65:
+        -:   66:} // namespace Rcpp
+        -:   67:
+        -:   68:#endif

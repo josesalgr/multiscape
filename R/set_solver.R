@@ -196,75 +196,279 @@
 #' x2$data$solve_args
 #'
 #' @export
-set_solver <- function(x,
-                       solver = c("auto", "gurobi", "cplex", "cbc", "symphony"),
-                       gap_limit = NULL,
-                       time_limit = NULL,
-                       solution_limit = NULL,
-                       cores = NULL,
-                       verbose = FALSE,
-                       log_file = NULL,
-                       write_log = NULL,
-                       solver_params = list(),
-                       ...) {
+set_solver <- function(
+    x,
+    solver = c("auto", "gurobi", "cplex", "cbc", "symphony"),
+    gap_limit = NULL,
+    time_limit = NULL,
+    solution_limit = NULL,
+    cores = NULL,
+    verbose = FALSE,
+    log_file = NULL,
+    write_log = NULL,
+    solver_params = list(),
+    ...
+) {
+  if (!inherits(x, "Problem")) {
+    stop(
+      "`x` must be a Problem object.",
+      call. = FALSE
+    )
+  }
 
-  stopifnot(inherits(x, "Problem"))
+  if (exists(".pa_clone_data", mode = "function")) {
+    x <- .pa_clone_data(x)
+  }
+
   solver <- match.arg(solver)
 
+  # -----------------------------------------------------------------------
+  # Solver-specific parameters
+  # -----------------------------------------------------------------------
+
+  if (is.null(solver_params)) {
+    solver_params <- list()
+  }
+
+  if (!is.list(solver_params)) {
+    stop(
+      "`solver_params` must be a list.",
+      call. = FALSE
+    )
+  }
+
   dots <- list(...)
-  if (length(dots) > 0) {
-    solver_params <- utils::modifyList(solver_params %||% list(), dots)
+
+  if (length(dots) > 0L) {
+    solver_params <- utils::modifyList(
+      solver_params,
+      dots
+    )
   }
-  if (!is.list(solver_params)) stop("solver_params must be a list.", call. = FALSE)
 
-  if (is.null(x$data$solve_args) || !is.list(x$data$solve_args)) x$data$solve_args <- list()
+  # -----------------------------------------------------------------------
+  # Validate common solver arguments
+  # -----------------------------------------------------------------------
 
-  # start from stored (so we can keep values when args are NULL)
-  out <- x$data$solve_args
-
-  # always set solver if explicitly provided
-  out$solver <- solver
-
-  # set numeric/logical args only if not NULL
   if (!is.null(gap_limit)) {
-    assertthat::assert_that(assertthat::is.scalar(gap_limit), is.finite(gap_limit), gap_limit >= 0, gap_limit <= 1)
-    out$gap_limit <- base::round(as.numeric(gap_limit), 3)
+    if (
+      !is.numeric(gap_limit) ||
+      length(gap_limit) != 1L ||
+      is.na(gap_limit) ||
+      !is.finite(gap_limit) ||
+      gap_limit < 0 ||
+      gap_limit > 1
+    ) {
+      stop(
+        "`gap_limit` must be a single finite number between 0 and 1.",
+        call. = FALSE
+      )
+    }
+
+    gap_limit <- round(
+      as.numeric(gap_limit),
+      digits = 3
+    )
   }
+
   if (!is.null(time_limit)) {
-    assertthat::assert_that(assertthat::is.scalar(time_limit), is.finite(time_limit), time_limit >= 0)
-    out$time_limit <- base::round(as.numeric(time_limit), 3)
+    if (
+      !is.numeric(time_limit) ||
+      length(time_limit) != 1L ||
+      is.na(time_limit) ||
+      !is.finite(time_limit) ||
+      time_limit < 0
+    ) {
+      stop(
+        "`time_limit` must be a single non-negative finite number.",
+        call. = FALSE
+      )
+    }
+
+    time_limit <- round(
+      as.numeric(time_limit),
+      digits = 3
+    )
   }
+
   if (!is.null(solution_limit)) {
-    assertthat::assert_that(assertthat::is.flag(solution_limit))
-    out$solution_limit <- isTRUE(solution_limit)
+    if (
+      !is.logical(solution_limit) ||
+      length(solution_limit) != 1L ||
+      is.na(solution_limit)
+    ) {
+      stop(
+        "`solution_limit` must be TRUE or FALSE.",
+        call. = FALSE
+      )
+    }
+
+    solution_limit <- isTRUE(solution_limit)
   }
+
   if (!is.null(cores)) {
-    assertthat::assert_that(assertthat::is.count(cores))
+    if (
+      !is.numeric(cores) ||
+      length(cores) != 1L ||
+      is.na(cores) ||
+      !is.finite(cores) ||
+      cores < 1 ||
+      cores != floor(cores)
+    ) {
+      stop(
+        "`cores` must be a single positive integer.",
+        call. = FALSE
+      )
+    }
+
     cores <- as.integer(cores)
-    max_cores <- parallel::detectCores(TRUE)
-    if (is.finite(max_cores) && cores > max_cores) {
-      warning("cores is larger than detected cores; capping to detected cores.", call. = FALSE, immediate. = TRUE)
+
+    max_cores <- parallel::detectCores(
+      logical = TRUE
+    )
+
+    if (
+      length(max_cores) == 1L &&
+      !is.na(max_cores) &&
+      is.finite(max_cores) &&
+      max_cores >= 1L &&
+      cores > max_cores
+    ) {
+      warning(
+        paste0(
+          "`cores` is larger than the number of detected logical cores; ",
+          "using ",
+          max_cores,
+          " cores instead."
+        ),
+        call. = FALSE,
+        immediate. = TRUE
+      )
+
       cores <- as.integer(max_cores)
     }
+  }
+
+  if (!is.null(verbose)) {
+    if (
+      !is.logical(verbose) ||
+      length(verbose) != 1L ||
+      is.na(verbose)
+    ) {
+      stop(
+        "`verbose` must be TRUE or FALSE.",
+        call. = FALSE
+      )
+    }
+
+    verbose <- isTRUE(verbose)
+  }
+
+  if (!is.null(write_log)) {
+    if (
+      !is.logical(write_log) ||
+      length(write_log) != 1L ||
+      is.na(write_log)
+    ) {
+      stop(
+        "`write_log` must be TRUE or FALSE.",
+        call. = FALSE
+      )
+    }
+
+    write_log <- isTRUE(write_log)
+  }
+
+  if (!is.null(log_file)) {
+    if (
+      !is.character(log_file) ||
+      length(log_file) != 1L ||
+      is.na(log_file) ||
+      !nzchar(log_file)
+    ) {
+      stop(
+        "`log_file` must be a single non-empty character string.",
+        call. = FALSE
+      )
+    }
+
+    log_file <- as.character(log_file)
+  }
+
+  # It is clearer to reject contradictory log settings immediately.
+  if (
+    identical(write_log, TRUE) &&
+    is.null(log_file)
+  ) {
+    stop(
+      "`log_file` must be supplied when `write_log = TRUE`.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    identical(write_log, FALSE) &&
+    !is.null(log_file)
+  ) {
+    warning(
+      "`log_file` was supplied but `write_log = FALSE`; the file name will be stored but logging is disabled.",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+
+  # -----------------------------------------------------------------------
+  # Update stored solver configuration
+  # -----------------------------------------------------------------------
+
+  if (
+    is.null(x$data$solve_args) ||
+    !is.list(x$data$solve_args)
+  ) {
+    x$data$solve_args <- list()
+  }
+
+  # Begin with the existing configuration so that NULL arguments preserve
+  # previously stored values.
+  out <- x$data$solve_args
+
+  out$solver <- solver
+
+  if (!is.null(gap_limit)) {
+    out$gap_limit <- gap_limit
+  }
+
+  if (!is.null(time_limit)) {
+    out$time_limit <- time_limit
+  }
+
+  if (!is.null(solution_limit)) {
+    out$solution_limit <- solution_limit
+  }
+
+  if (!is.null(cores)) {
     out$cores <- cores
   }
+
   if (!is.null(verbose)) {
-    assertthat::assert_that(assertthat::is.flag(verbose))
-    out$verbose <- isTRUE(verbose)
-  }
-  if (!is.null(write_log)) {
-    assertthat::assert_that(assertthat::is.flag(write_log))
-    out$output_file <- isTRUE(write_log)
-  }
-  if (!is.null(log_file)) {
-    assertthat::assert_that(assertthat::is.string(log_file))
-    out$name_output_file <- as.character(log_file)[1]
+    out$verbose <- verbose
   }
 
-  # merge solver_params with stored solver_params (do not drop existing ones)
-  out$solver_params <- utils::modifyList(out$solver_params %||% list(), solver_params)
+  if (!is.null(write_log)) {
+    out$output_file <- write_log
+  }
+
+  if (!is.null(log_file)) {
+    out$name_output_file <- log_file
+  }
+
+  out$solver_params <- utils::modifyList(
+    out$solver_params %||% list(),
+    solver_params
+  )
 
   x$data$solve_args <- out
+
   x
 }
 

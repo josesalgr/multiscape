@@ -1,0 +1,196 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/RcppCommon.h
+        -:    0:Graph:./rcpp_prepare_objective_max_net_profit.gcno
+        -:    0:Data:./rcpp_prepare_objective_max_net_profit.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// RcppCommon.h: Rcpp R/C++ interface class library -- common include and defines statements
+        -:    3://
+        -:    4:// Copyright (C) 2008 - 2009  Dirk Eddelbuettel
+        -:    5:// Copyright (C) 2009 - 2020  Dirk Eddelbuettel and Romain Francois
+        -:    6:// Copyright (C) 2021 - 2026  Dirk Eddelbuettel, Romain Francois and Iñaki Ucar
+        -:    7://
+        -:    8:// This file is part of Rcpp.
+        -:    9://
+        -:   10:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   11:// under the terms of the GNU General Public License as published by
+        -:   12:// the Free Software Foundation, either version 2 of the License, or
+        -:   13:// (at your option) any later version.
+        -:   14://
+        -:   15:// Rcpp is distributed in the hope that it will be useful, but
+        -:   16:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   17:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   18:// GNU General Public License for more details.
+        -:   19://
+        -:   20:// You should have received a copy of the GNU General Public License
+        -:   21:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   22:
+        -:   23:#ifndef RcppCommon_h
+        -:   24:#define RcppCommon_h
+        -:   25:
+        -:   26:// #define RCPP_DEBUG_LEVEL 1
+        -:   27:// #define RCPP_DEBUG_MODULE_LEVEL 1
+        -:   28:
+        -:   29:#include <Rcpp/r/check_r_headers.h>
+        -:   30:#include <Rcpp/r/headers.h>
+        -:   31:#include <Rcpp/r/compat.h>
+        -:   32:
+        -:   33:/**
+        -:   34: * \brief Rcpp API
+        -:   35: */
+        -:   36:namespace Rcpp {
+        -:   37:
+        -:   38:    /**
+        -:   39:     * \brief traits used to dispatch wrap
+        -:   40:     */
+        -:   41:    namespace traits {
+        -:   42:    } // traits
+        -:   43:
+        -:   44:    /**
+        -:   45:     * \brief internal implementation details
+        -:   46:     */
+        -:   47:    namespace internal {
+        -:   48:    } // internal
+        -:   49:} // Rcpp
+        -:   50:
+        -:   51:#include <iterator>
+        -:   52:#include <exception>
+        -:   53:#include <iostream>
+        -:   54:#include <iomanip>
+        -:   55:#include <sstream>
+        -:   56:#include <string>
+        -:   57:#if __cplusplus >= 201703L
+        -:   58:#include <string_view>
+        -:   59:#endif
+        -:   60:#include <list>
+        -:   61:#include <map>
+        -:   62:#include <set>
+        -:   63:#include <stdexcept>
+        -:   64:#include <vector>
+        -:   65:#include <deque>
+        -:   66:#include <functional>
+        -:   67:#include <numeric>
+        -:   68:#include <algorithm>
+        -:   69:#include <complex>
+        -:   70:#include <cfloat>
+        -:   71:#include <limits>
+        -:   72:#include <typeinfo>
+        -:   73:#include <utility>
+        -:   74:#include <Rcpp/sprintf.h>
+        -:   75:#include <Rcpp/utils/tinyformat.h>
+        -:   76:
+        -:   77:#include <Rmath.h>
+        -:   78:#include <Rcpp/sugar/undoRmath.h>
+        -:   79:
+        -:   80:namespace Rcpp {
+        -:   81:
+        -:   82:    SEXP Rcpp_fast_eval(SEXP expr_, SEXP env);
+        -:   83:    SEXP Rcpp_eval(SEXP expr_, SEXP env = R_GlobalEnv);
+        -:   84:
+        -:   85:    SEXP Rcpp_precious_preserve(SEXP object);
+        -:   86:    void Rcpp_precious_remove(SEXP token);
+        -:   87:
+        -:   88:    namespace internal {
+        -:   89:        SEXP Rcpp_eval_impl(SEXP expr, SEXP env);
+        -:   90:    }
+        -:   91:
+        -:   92:    class Module;
+        -:   93:
+        -:   94:    namespace traits {
+        -:   95:        template <typename T> class named_object;
+        -:   96:    }
+        -:   97:
+        -:   98:    // begin deprecated interface not using precious list
+        -:   99:    // use Rcpp_PreciousPreserve + Rcpp_PreciousRelease below it
+        -:  100:    inline SEXP Rcpp_PreserveObject(SEXP x) {
+        -:  101:        if (x != R_NilValue) R_PreserveObject(x);
+        -:  102:        return x;
+        -:  103:    }
+        -:  104:    inline void Rcpp_ReleaseObject(SEXP x) {
+        -:  105:        if (x != R_NilValue) R_ReleaseObject(x);
+        -:  106:    }
+        -:  107:    inline SEXP Rcpp_ReplaceObject(SEXP x, SEXP y) {
+        -:  108:        // if we are setting to the same SEXP as we already have, do nothing
+        -:  109:        if (x != y) {
+        -:  110:            Rcpp_ReleaseObject(x);
+        -:  111:            Rcpp_PreserveObject(y);
+        -:  112:        }
+        -:  113:        return y;
+        -:  114:    }
+        -:  115:    // end deprecated interface not using precious list
+        -:  116:
+        -:  117:    // new preferred interface using token-based precious list
+    #####:  118:    inline SEXP Rcpp_PreciousPreserve(SEXP object) {
+    #####:  119:        return Rcpp_precious_preserve(object);
+        -:  120:    }
+        -:  121:
+    #####:  122:    inline void Rcpp_PreciousRelease(SEXP token) {
+    #####:  123:        Rcpp_precious_remove(token);
+    #####:  124:    }
+        -:  125:
+        -:  126:}
+        -:  127:
+        -:  128:#include <Rcpp/storage/storage.h>
+        -:  129:#include <Rcpp/protection/protection.h>
+        -:  130:#include <Rcpp/routines.h>
+        -:  131:#include <Rcpp/exceptions.h>
+        -:  132:#include <Rcpp/proxy/proxy.h>
+        -:  133:
+        -:  134:#include <Rcpp/unwindProtect.h>
+        -:  135:
+        -:  136:#include <Rcpp/lang.h>
+        -:  137:#include <Rcpp/complex.h>
+        -:  138:#include <Rcpp/barrier.h>
+        -:  139:
+        -:  140:#define RcppExport extern "C" attribute_visible
+        -:  141:
+        -:  142:#include <Rcpp/Interrupt.h>
+        -:  143:
+        -:  144:namespace Rcpp {
+        -:  145:    template <typename T> class object;
+        -:  146:    class String;
+        -:  147:    namespace internal {
+        -:  148:        template <typename Class> SEXP make_new_object(Class* ptr);
+        -:  149:    }
+        -:  150:}
+        -:  151:
+        -:  152:#include <Rcpp/longlong.h>
+        -:  153:
+        -:  154:#include <Rcpp/internal/na.h>
+        -:  155:#include <Rcpp/internal/NAComparator.h>
+        -:  156:#include <Rcpp/internal/NAEquals.h>
+        -:  157:
+        -:  158:#include <Rcpp/traits/traits.h>
+        -:  159:#include <Rcpp/Named.h>
+        -:  160:
+        -:  161:#include <Rcpp/internal/caster.h>
+        -:  162:#include <Rcpp/internal/r_vector.h>
+        -:  163:#include <Rcpp/r_cast.h>
+        -:  164:
+        -:  165:#include <Rcpp/api/bones/bones.h>
+        -:  166:
+        -:  167:#include <Rcpp/internal/export.h>
+        -:  168:#include <Rcpp/internal/r_coerce.h>
+        -:  169:#include <Rcpp/as.h>
+        -:  170:#include <Rcpp/InputParameter.h>
+        -:  171:#include <Rcpp/is.h>
+        -:  172:
+        -:  173:#include <Rcpp/vector/VectorBase.h>
+        -:  174:#include <Rcpp/vector/MatrixBase.h>
+        -:  175:
+        -:  176:#include <Rcpp/internal/ListInitialization.h>
+        -:  177:#include <Rcpp/internal/Proxy_Iterator.h>
+        -:  178:#include <Rcpp/internal/SEXP_Iterator.h>
+        -:  179:#include <Rcpp/internal/converter.h>
+        -:  180:
+        -:  181:#include <Rcpp/print.h>
+        -:  182:#include <Rcpp/algo.h>
+        -:  183:
+        -:  184:#include <Rcpp/sugar/sugar_forward.h>
+        -:  185:
+        -:  186:#include <Rcpp/iostream/Rstreambuf.h>
+        -:  187:
+        -:  188:#include <Rcpp/internal/wrap.h>
+        -:  189:
+        -:  190:#include <Rcpp/macros/mask.h>
+        -:  191:
+        -:  192:#endif

@@ -1,0 +1,83 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/unwindProtect.h
+        -:    0:Graph:./RcppExports.gcno
+        -:    0:Data:./RcppExports.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// unwind.h: Rcpp R/C++ interface class library -- Unwind Protect
+        -:    3://
+        -:    4:// Copyright (C) 2018 - 2020  RStudio
+        -:    5:// Copyright (C) 2021 - 2025  RStudio, Dirk Eddelbuettel and Iñaki Ucar
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef RCPP_UNWINDPROTECT_H
+        -:   23:#define RCPP_UNWINDPROTECT_H
+        -:   24:
+        -:   25:#include <csetjmp>
+        -:   26:#include <functional>
+        -:   27:
+        -:   28:namespace Rcpp { namespace internal {
+        -:   29:
+        -:   30:struct UnwindData {
+        -:   31:    std::jmp_buf jmpbuf;
+        -:   32:};
+        -:   33:
+        -:   34:// First jump back to the protected context with a C longjmp because
+        -:   35:// `Rcpp_protected_eval()` is called from C and we can't safely throw
+        -:   36:// exceptions across C frames.
+    #####:   37:inline void maybeJump(void* unwind_data, Rboolean jump) {
+    #####:   38:    if (jump) {
+    #####:   39:        UnwindData* data = static_cast<UnwindData*>(unwind_data);
+    #####:   40:        longjmp(data->jmpbuf, 1);
+        -:   41:    }
+    #####:   42:}
+        -:   43:
+        -:   44:inline SEXP unwindProtectUnwrap(void* data) {
+        -:   45:    std::function<SEXP(void)>* callback = (std::function<SEXP(void)>*) data;
+        -:   46:    return (*callback)();
+        -:   47:}
+        -:   48:
+        -:   49:}} // namespace Rcpp::internal
+        -:   50:
+        -:   51:
+        -:   52:namespace Rcpp {
+        -:   53:
+    #####:   54:inline SEXP unwindProtect(SEXP (*callback)(void* data), void* data) {
+        -:   55:    internal::UnwindData unwind_data;
+    #####:   56:    Shield<SEXP> token(::R_MakeUnwindCont());
+        -:   57:
+    #####:   58:    if (setjmp(unwind_data.jmpbuf)) {
+        -:   59:        // Keep the token protected while unwinding because R code might run
+        -:   60:        // in C++ destructors. Can't use PROTECT() for this because
+        -:   61:        // UNPROTECT() might be called in a destructor, for instance if a
+        -:   62:        // Shield<SEXP> is on the stack.
+    #####:   63:        ::R_PreserveObject(token);
+        -:   64:
+    #####:   65:        throw LongjumpException(token);
+        -:   66:    }
+        -:   67:
+    #####:   68:    return ::R_UnwindProtect(callback, data,
+        -:   69:                             internal::maybeJump, &unwind_data,
+    #####:   70:                             token);
+    #####:   71:}
+        -:   72:
+        -:   73:inline SEXP unwindProtect(std::function<SEXP(void)> callback) {
+        -:   74:    return unwindProtect(&internal::unwindProtectUnwrap, &callback);
+        -:   75:}
+        -:   76:
+        -:   77:} // namespace Rcpp
+        -:   78:
+        -:   79:#endif

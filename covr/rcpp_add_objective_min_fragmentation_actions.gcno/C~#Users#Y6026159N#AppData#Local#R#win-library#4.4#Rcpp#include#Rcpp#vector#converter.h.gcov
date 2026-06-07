@@ -1,0 +1,134 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/converter.h
+        -:    0:Graph:./rcpp_add_objective_min_fragmentation_actions.gcno
+        -:    0:Data:./rcpp_add_objective_min_fragmentation_actions.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// converter.h: Rcpp R/C++ interface class library -- converters
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2013 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__vector__converters_h
+        -:   23:#define Rcpp__vector__converters_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:namespace internal {
+        -:   27:	template <int RTYPE>
+        -:   28:	class element_converter{
+        -:   29:	public:
+        -:   30:		typedef typename ::Rcpp::traits::storage_type<RTYPE>::type target ;
+        -:   31:
+        -:   32:		template <typename T>
+        -:   33:		static target get( const T& input ){
+        -:   34:			return caster<T,target>(input) ;
+        -:   35:		}
+        -:   36:
+        -:   37:		static target get( const target& input ){
+        -:   38:			return input ;
+        -:   39:		}
+        -:   40:	} ;
+        -:   41:
+        -:   42:	template <int RTYPE>
+        -:   43:	class string_element_converter {
+        -:   44:	public:
+        -:   45:		typedef SEXP target ;
+        -:   46:
+        -:   47:		template <typename T>
+        -:   48:		static SEXP get( const T& input){
+        -:   49:			std::string out(input) ;
+        -:   50:			RCPP_DEBUG_1( "string_element_converter::get< T = %s >()", DEMANGLE(T) )
+        -:   51:			return Rf_mkChar( out.c_str() ) ;
+        -:   52:		}
+        -:   53:
+        -:   54:		static SEXP get(const std::string& input){
+        -:   55:			RCPP_DEBUG( "string_element_converter::get< std::string >()" )
+        -:   56:			return Rf_mkChar( input.c_str() ) ;
+        -:   57:		}
+        -:   58:
+        -:   59:		static SEXP get( const Rcpp::String& input) ;
+        -:   60:
+        -:   61:		static SEXP get(const char& input){
+        -:   62:		    RCPP_DEBUG( "string_element_converter::get< char >()" )
+        -:   63:			return Rf_mkCharLen( &input, 1 ) ;
+        -:   64:		}
+        -:   65:
+        -:   66:		// assuming a CHARSXP
+        -:   67:		static SEXP get(SEXP x){
+        -:   68:		    RCPP_DEBUG( "string_element_converter::get< SEXP >()" )
+        -:   69:		    return x;
+        -:   70:		}
+        -:   71:	} ;
+        -:   72:
+        -:   73:	template <int RTYPE>
+        -:   74:	class generic_element_converter {
+        -:   75:	public:
+        -:   76:		typedef SEXP target ;
+        -:   77:
+        -:   78:		template <typename T>
+    #####:   79:		static SEXP get( const T& input){
+    #####:   80:			return ::Rcpp::wrap( input ) ;
+        -:   81:		}
+------------------
+_ZN4Rcpp8internal25generic_element_converterILi19EE3getIdEEP7SEXPRECRKT_:
+    #####:   79:		static SEXP get( const T& input){
+    #####:   80:			return ::Rcpp::wrap( input ) ;
+        -:   81:		}
+------------------
+_ZN4Rcpp8internal25generic_element_converterILi19EE3getIiEEP7SEXPRECRKT_:
+    #####:   79:		static SEXP get( const T& input){
+    #####:   80:			return ::Rcpp::wrap( input ) ;
+        -:   81:		}
+------------------
+_ZN4Rcpp8internal25generic_element_converterILi19EE3getINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEP7SEXPRECRKT_:
+    #####:   79:		static SEXP get( const T& input){
+    #####:   80:			return ::Rcpp::wrap( input ) ;
+        -:   81:		}
+------------------
+_ZN4Rcpp8internal25generic_element_converterILi19EE3getIbEEP7SEXPRECRKT_:
+    #####:   79:		static SEXP get( const T& input){
+    #####:   80:			return ::Rcpp::wrap( input ) ;
+        -:   81:		}
+------------------
+        -:   82:
+    #####:   83:		static SEXP get( const char* input){
+    #####:   84:			return ::Rcpp::wrap( input );
+        -:   85:		}
+        -:   86:
+        -:   87:		static SEXP get(SEXP input){
+        -:   88:			return input ;
+        -:   89:		}
+        -:   90:	} ;
+        -:   91:}
+        -:   92:
+        -:   93:namespace traits{
+        -:   94:	template <int RTYPE> struct r_vector_element_converter{
+        -:   95:		typedef typename ::Rcpp::internal::element_converter<RTYPE> type ;
+        -:   96:	} ;
+        -:   97:	template<> struct r_vector_element_converter<STRSXP>{
+        -:   98:		typedef ::Rcpp::internal::string_element_converter<STRSXP> type ;
+        -:   99:	} ;
+        -:  100:	template<> struct r_vector_element_converter<VECSXP>{
+        -:  101:		typedef ::Rcpp::internal::generic_element_converter<VECSXP> type ;
+        -:  102:	} ;
+        -:  103:	template<> struct r_vector_element_converter<EXPRSXP>{
+        -:  104:		typedef ::Rcpp::internal::generic_element_converter<EXPRSXP> type ;
+        -:  105:	} ;
+        -:  106:}
+        -:  107:}
+        -:  108:
+        -:  109:#endif

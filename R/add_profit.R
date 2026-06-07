@@ -240,19 +240,75 @@ add_profit <- function(
 
     # keep default 0
 
-  } else if (is.numeric(profit) && length(profit) == 1) {
-
-    base$profit <- as.numeric(profit)
-
   } else if (is.numeric(profit) && !is.null(names(profit))) {
 
-    # named vector by action
-    if (!all(names(profit) %in% action_ids)) {
-      bad <- setdiff(names(profit), action_ids)
-      stop("profit contains unknown action ids: ", paste(bad, collapse = ", "), call. = FALSE)
+    # Named numeric vectors are always interpreted as action-level profit,
+    # including vectors of length one. This branch must be evaluated before
+    # the unnamed scalar branch.
+    profit_names <- names(profit)
+
+    if (
+      anyNA(profit_names) ||
+      any(!nzchar(profit_names))
+    ) {
+      stop(
+        "Named `profit` vectors must have non-empty action ids.",
+        call. = FALSE
+      )
     }
-    base$profit <- as.numeric(profit[base$action])
+
+    if (anyDuplicated(profit_names) > 0L) {
+      duplicates <- unique(
+        profit_names[duplicated(profit_names)]
+      )
+
+      stop(
+        "profit contains duplicated action ids: ",
+        paste(duplicates, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    unknown_actions <- setdiff(
+      profit_names,
+      action_ids
+    )
+
+    if (length(unknown_actions) > 0L) {
+      stop(
+        "profit contains unknown action ids: ",
+        paste(unknown_actions, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    if (anyNA(profit) || any(!is.finite(profit))) {
+      stop(
+        "Named `profit` values must be finite and must not contain NA.",
+        call. = FALSE
+      )
+    }
+
+    base$profit <- as.numeric(
+      profit[base$action]
+    )
     base$profit[is.na(base$profit)] <- 0
+
+  } else if (
+    is.numeric(profit) &&
+    length(profit) == 1L
+  ) {
+
+    if (is.na(profit) || !is.finite(profit)) {
+      stop(
+        "Scalar `profit` must be a finite numeric value.",
+        call. = FALSE
+      )
+    }
+
+    base$profit <- as.numeric(profit)
 
   } else if (inherits(profit, "data.frame")) {
 
@@ -302,6 +358,23 @@ add_profit <- function(
       tmp <- p[, c("pu", "action")]
       if (nrow(dplyr::distinct(tmp)) != nrow(tmp)) {
         stop("profit has duplicate (pu, action) rows.", call. = FALSE)
+      }
+
+      feasible_key <- paste(base$pu, base$action, sep = "||")
+      supplied_key <- paste(p$pu, p$action, sep = "||")
+      infeasible <- !supplied_key %in% feasible_key
+
+      if (any(infeasible)) {
+        bad <- unique(
+          paste0("(", p$pu[infeasible], ", ", p$action[infeasible], ")")
+        )
+
+        stop(
+          "profit contains (pu, action) pair(s) that are not feasible: ",
+          paste(bad, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
       }
 
       base <- dplyr::left_join(base, p, by = c("pu", "action"), suffix = c("", ".new"))

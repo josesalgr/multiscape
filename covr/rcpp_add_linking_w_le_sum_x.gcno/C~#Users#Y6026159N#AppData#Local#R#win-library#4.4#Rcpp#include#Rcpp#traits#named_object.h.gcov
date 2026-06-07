@@ -1,0 +1,98 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/traits/named_object.h
+        -:    0:Graph:./rcpp_add_linking_w_le_sum_x.gcno
+        -:    0:Data:./rcpp_add_linking_w_le_sum_x.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// named_object.h: Rcpp R/C++ interface class library -- named SEXP
+        -:    3://
+        -:    4:// Copyright (C) 2010 - 2020  Dirk Eddelbuettel and Romain Francois
+        -:    5:// Copyright (C) 2021 - 2025  Dirk Eddelbuettel, Romain Francois and Iñaki Ucar
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__traits__named_object__h
+        -:   23:#define Rcpp__traits__named_object__h
+        -:   24:
+        -:   25:#include <type_traits>
+        -:   26:
+        -:   27:namespace Rcpp{
+        -:   28:class Argument ;
+        -:   29:
+        -:   30:namespace traits{
+        -:   31:
+        -:   32:template <typename T> struct needs_protection : false_type{} ;
+        -:   33:template <> struct needs_protection<SEXP> : true_type{} ;
+        -:   34:
+        -:   35:template <typename T> class named_object {
+        -:   36:public:
+    #####:   37:    named_object( const std::string& name_, const T& o_) :
+    #####:   38:        name(name_), object(o_){}
+------------------
+_ZN4Rcpp6traits12named_objectINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEC1ERKS7_SA_:
+    #####:   37:    named_object( const std::string& name_, const T& o_) :
+    #####:   38:        name(name_), object(o_){}
+------------------
+_ZN4Rcpp6traits12named_objectIdEC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKd:
+    #####:   37:    named_object( const std::string& name_, const T& o_) :
+    #####:   38:        name(name_), object(o_){}
+------------------
+_ZN4Rcpp6traits12named_objectIiEC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKi:
+    #####:   37:    named_object( const std::string& name_, const T& o_) :
+    #####:   38:        name(name_), object(o_){}
+------------------
+        -:   39:    const std::string& name;
+        -:   40:    const T& object;
+        -:   41:};
+        -:   42:template <> class named_object<SEXP> {
+        -:   43:public:                                              // #nocov start
+        -:   44:    named_object( const std::string& name_, const SEXP& o_):
+        -:   45:        name(name_), object(o_), token(R_NilValue) {
+        -:   46:        token = Rcpp_PreciousPreserve(object);
+        -:   47:    }
+        -:   48:
+        -:   49:    named_object( const named_object<SEXP>& other ) :
+        -:   50:        name(other.name), object(other.object), token(other.token) {
+        -:   51:        token = Rcpp_PreciousPreserve(object);
+        -:   52:    }
+        -:   53:    ~named_object() {
+        -:   54:        Rcpp_PreciousRelease(token);
+        -:   55:
+        -:   56:    }                          	                     // #nocov end
+        -:   57:    const std::string& name;
+        -:   58:    SEXP object;
+        -:   59:private:
+        -:   60:    SEXP token;
+        -:   61:};
+        -:   62:
+        -:   63:
+        -:   64:template <typename T> struct is_named : public false_type{};
+        -:   65:template <typename T> struct is_named< named_object<T> > : public true_type {};
+        -:   66:template <> struct is_named< Rcpp::Argument > : public true_type {};
+        -:   67:
+        -:   68:template <typename... T> struct is_any_named : public false_type {};
+        -:   69:template <typename T> struct is_any_named<T> : public is_named<T>::type {};
+        -:   70:
+        -:   71:template <typename T, typename... TArgs>
+        -:   72:struct is_any_named<T, TArgs...>
+        -:   73:    : public std::conditional<
+        -:   74:    is_any_named<T>::value,
+        -:   75:    std::true_type,
+        -:   76:    is_any_named<TArgs...>>::type {};
+        -:   77:
+        -:   78:} // namespace traits
+        -:   79:} // namespace Rcpp
+        -:   80:
+        -:   81:#endif

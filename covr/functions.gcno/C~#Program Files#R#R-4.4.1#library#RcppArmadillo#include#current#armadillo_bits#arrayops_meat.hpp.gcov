@@ -1,0 +1,1121 @@
+        -:    0:Source:C:/Program Files/R/R-4.4.1/library/RcppArmadillo/include/current/armadillo_bits/arrayops_meat.hpp
+        -:    0:Graph:./functions.gcno
+        -:    0:Data:./functions.gcda
+        -:    0:Runs:22
+        -:    1:// SPDX-License-Identifier: Apache-2.0
+        -:    2:// 
+        -:    3:// Copyright 2008-2016 Conrad Sanderson (https://conradsanderson.id.au)
+        -:    4:// Copyright 2008-2016 National ICT Australia (NICTA)
+        -:    5:// 
+        -:    6:// Licensed under the Apache License, Version 2.0 (the "License");
+        -:    7:// you may not use this file except in compliance with the License.
+        -:    8:// You may obtain a copy of the License at
+        -:    9:// https://www.apache.org/licenses/LICENSE-2.0
+        -:   10:// 
+        -:   11:// Unless required by applicable law or agreed to in writing, software
+        -:   12:// distributed under the License is distributed on an "AS IS" BASIS,
+        -:   13:// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        -:   14:// See the License for the specific language governing permissions and
+        -:   15:// limitations under the License.
+        -:   16:// ------------------------------------------------------------------------
+        -:   17:
+        -:   18:
+        -:   19://! \addtogroup arrayops
+        -:   20://! @{
+        -:   21:
+        -:   22:
+        -:   23:
+        -:   24:template<typename eT>
+        -:   25:arma_inline
+        -:   26:void
+        -:   27:arrayops::copy(eT* dest, const eT* src, const uword n_elem)
+        -:   28:  {
+        -:   29:  if( (dest == src) || (n_elem == 0) )  { return; }
+        -:   30:  
+        -:   31:  std::memcpy(dest, src, n_elem*sizeof(eT));
+        -:   32:  }
+        -:   33:
+        -:   34:
+        -:   35:
+        -:   36:template<typename eT>
+        -:   37:inline
+        -:   38:void
+    #####:   39:arrayops::fill_zeros(eT* dest, const uword n_elem)
+        -:   40:  {
+        -:   41:  typedef typename get_pod_type<eT>::result pod_type;
+        -:   42:  
+    #####:   43:  if(n_elem == 0)  { return; }
+        -:   44:  
+        -:   45:  if(std::numeric_limits<eT>::is_integer || std::numeric_limits<pod_type>::is_iec559)
+        -:   46:    {
+    #####:   47:    std::memset((void*)dest, 0, sizeof(eT)*n_elem);
+        -:   48:    }
+        -:   49:  else
+        -:   50:    {
+        -:   51:    arrayops::inplace_set_simple(dest, eT(0), n_elem);
+        -:   52:    }
+        -:   53:  }
+        -:   54:
+        -:   55:
+        -:   56:
+        -:   57:template<typename eT>
+        -:   58:inline
+        -:   59:void
+        -:   60:arrayops::replace(eT* mem, const uword n_elem, const eT old_val, const eT new_val)
+        -:   61:  {
+        -:   62:  if(arma_isnan(old_val))
+        -:   63:    {
+        -:   64:    for(uword i=0; i<n_elem; ++i)
+        -:   65:      {
+        -:   66:      eT& val = mem[i];
+        -:   67:      
+        -:   68:      val = (arma_isnan(val)) ? new_val : val;
+        -:   69:      }
+        -:   70:    }
+        -:   71:  else
+        -:   72:    {
+        -:   73:    for(uword i=0; i<n_elem; ++i)
+        -:   74:      {
+        -:   75:      eT& val = mem[i];
+        -:   76:      
+        -:   77:      val = (val == old_val) ? new_val : val;
+        -:   78:      }
+        -:   79:    }
+        -:   80:  }
+        -:   81:
+        -:   82:
+        -:   83:
+        -:   84:template<typename eT>
+        -:   85:inline
+        -:   86:void
+        -:   87:arrayops::clean(eT* mem, const uword n_elem, const eT abs_limit, const typename arma_not_cx<eT>::result* junk)
+        -:   88:  {
+        -:   89:  arma_ignore(junk);
+        -:   90:  
+        -:   91:  for(uword i=0; i<n_elem; ++i)
+        -:   92:    {
+        -:   93:    eT& val = mem[i];
+        -:   94:    
+        -:   95:    val = (eop_aux::arma_abs(val) <= abs_limit) ? eT(0) : val;
+        -:   96:    }
+        -:   97:  }
+        -:   98:
+        -:   99:
+        -:  100:
+        -:  101:template<typename T>
+        -:  102:inline
+        -:  103:void
+        -:  104:arrayops::clean(std::complex<T>* mem, const uword n_elem, const T abs_limit)
+        -:  105:  {
+        -:  106:  typedef typename std::complex<T> eT;
+        -:  107:  
+        -:  108:  for(uword i=0; i<n_elem; ++i)
+        -:  109:    {
+        -:  110:    eT& val = mem[i];
+        -:  111:    
+        -:  112:    T val_real = std::real(val);
+        -:  113:    T val_imag = std::imag(val);
+        -:  114:    
+        -:  115:    if(std::abs(val_real) <= abs_limit)
+        -:  116:      {
+        -:  117:      val_imag = (std::abs(val_imag) <= abs_limit) ? T(0) : val_imag;
+        -:  118:      
+        -:  119:      val = std::complex<T>(T(0), val_imag);
+        -:  120:      }
+        -:  121:    else
+        -:  122:    if(std::abs(val_imag) <= abs_limit)
+        -:  123:      {
+        -:  124:      val = std::complex<T>(val_real, T(0));
+        -:  125:      }
+        -:  126:    }
+        -:  127:  }
+        -:  128:
+        -:  129:
+        -:  130:
+        -:  131:template<typename eT>
+        -:  132:inline
+        -:  133:void
+        -:  134:arrayops::clamp(eT* mem, const uword n_elem, const eT min_val, const eT max_val, const typename arma_not_cx<eT>::result* junk)
+        -:  135:  {
+        -:  136:  arma_ignore(junk);
+        -:  137:  
+        -:  138:  for(uword i=0; i<n_elem; ++i)
+        -:  139:    {
+        -:  140:    eT& val = mem[i];
+        -:  141:    
+        -:  142:    val = (val < min_val) ? min_val : ((val > max_val) ? max_val : val);
+        -:  143:    }
+        -:  144:  }
+        -:  145:
+        -:  146:
+        -:  147:
+        -:  148:template<typename T>
+        -:  149:inline
+        -:  150:void
+        -:  151:arrayops::clamp(std::complex<T>* mem, const uword n_elem, const std::complex<T>& min_val, const std::complex<T>& max_val)
+        -:  152:  {
+        -:  153:  typedef typename std::complex<T> eT;
+        -:  154:  
+        -:  155:  const T min_val_real = std::real(min_val);
+        -:  156:  const T min_val_imag = std::imag(min_val);
+        -:  157:  
+        -:  158:  const T max_val_real = std::real(max_val);
+        -:  159:  const T max_val_imag = std::imag(max_val);
+        -:  160:  
+        -:  161:  for(uword i=0; i<n_elem; ++i)
+        -:  162:    {
+        -:  163:    eT& val = mem[i];
+        -:  164:    
+        -:  165:    T val_real = std::real(val);
+        -:  166:    T val_imag = std::imag(val);
+        -:  167:    
+        -:  168:    val_real = (val_real < min_val_real) ? min_val_real : ((val_real > max_val_real) ? max_val_real : val_real);
+        -:  169:    val_imag = (val_imag < min_val_imag) ? min_val_imag : ((val_imag > max_val_imag) ? max_val_imag : val_imag);
+        -:  170:    
+        -:  171:    val = std::complex<T>(val_real,val_imag);
+        -:  172:    }
+        -:  173:  }
+        -:  174:
+        -:  175:
+        -:  176:
+        -:  177:template<typename out_eT, typename in_eT>
+        -:  178:arma_inline
+        -:  179:void
+        -:  180:arrayops::convert_cx_scalar
+        -:  181:  (
+        -:  182:        out_eT& out,
+        -:  183:  const in_eT&  in,
+        -:  184:  const typename arma_not_cx<out_eT>::result* junk1,
+        -:  185:  const typename arma_not_cx< in_eT>::result* junk2
+        -:  186:  )
+        -:  187:  {
+        -:  188:  arma_ignore(junk1);
+        -:  189:  arma_ignore(junk2);
+        -:  190:  
+        -:  191:  out = out_eT(in);
+        -:  192:  }
+        -:  193:
+        -:  194:
+        -:  195:
+        -:  196:template<typename out_eT, typename in_T>
+        -:  197:arma_inline
+        -:  198:void
+        -:  199:arrayops::convert_cx_scalar
+        -:  200:  (
+        -:  201:        out_eT&             out,
+        -:  202:  const std::complex<in_T>& in,
+        -:  203:  const typename arma_not_cx<out_eT>::result* junk
+        -:  204:  )
+        -:  205:  {
+        -:  206:  arma_ignore(junk);
+        -:  207:  
+        -:  208:  const in_T val = in.real();
+        -:  209:  
+        -:  210:  const bool conversion_ok = (std::is_integral<out_eT>::value && std::is_floating_point<in_T>::value) ? arma_isfinite(val) : true;
+        -:  211:  
+        -:  212:  out = conversion_ok ? out_eT(val) : out_eT(0);
+        -:  213:  }
+        -:  214:
+        -:  215:
+        -:  216:
+        -:  217:template<typename out_T, typename in_T>
+        -:  218:arma_inline
+        -:  219:void
+        -:  220:arrayops::convert_cx_scalar
+        -:  221:  (
+        -:  222:        std::complex<out_T>& out,
+        -:  223:  const std::complex< in_T>& in
+        -:  224:  )
+        -:  225:  {
+        -:  226:  typedef std::complex<out_T> out_eT;
+        -:  227:  
+        -:  228:  out = out_eT(in);
+        -:  229:  }
+        -:  230:
+        -:  231:
+        -:  232:
+        -:  233:template<typename out_eT, typename in_eT>
+        -:  234:inline
+        -:  235:void
+        -:  236:arrayops::convert(out_eT* dest, const in_eT* src, const uword n_elem)
+        -:  237:  {
+        -:  238:  if(is_same_type<out_eT,in_eT>::value)
+        -:  239:    {
+        -:  240:    const out_eT* src2 = (const out_eT*)src;
+        -:  241:    
+        -:  242:    arrayops::copy(dest, src2, n_elem);
+        -:  243:    
+        -:  244:    return;
+        -:  245:    }
+        -:  246:  
+        -:  247:  const bool check_finite = (std::is_integral<out_eT>::value && std::is_floating_point<in_eT>::value);
+        -:  248:  
+        -:  249:  uword j;
+        -:  250:  
+        -:  251:  for(j=1; j<n_elem; j+=2)
+        -:  252:    {
+        -:  253:    const in_eT tmp_i = (*src);  src++;
+        -:  254:    const in_eT tmp_j = (*src);  src++;
+        -:  255:    
+        -:  256:    // dest[i] = out_eT( tmp_i );
+        -:  257:    // dest[j] = out_eT( tmp_j );
+        -:  258:    
+        -:  259:    const bool ok_i = check_finite ? arma_isfinite(tmp_i) : true;
+        -:  260:    const bool ok_j = check_finite ? arma_isfinite(tmp_j) : true;
+        -:  261:    
+        -:  262:    (*dest) = ok_i
+        -:  263:              ? (
+        -:  264:                (is_signed<out_eT>::value)
+        -:  265:                ? out_eT( tmp_i )
+        -:  266:                : ( cond_rel< is_signed<in_eT>::value >::lt(tmp_i, in_eT(0)) ? out_eT(0) : out_eT(tmp_i) )
+        -:  267:                )
+        -:  268:              : out_eT(0);
+        -:  269:    
+        -:  270:    dest++;
+        -:  271:    
+        -:  272:    (*dest) = ok_j
+        -:  273:              ? (
+        -:  274:                (is_signed<out_eT>::value)
+        -:  275:                ? out_eT( tmp_j )
+        -:  276:                : ( cond_rel< is_signed<in_eT>::value >::lt(tmp_j, in_eT(0)) ? out_eT(0) : out_eT(tmp_j) )
+        -:  277:                )
+        -:  278:              : out_eT(0);
+        -:  279:    dest++;
+        -:  280:    }
+        -:  281:  
+        -:  282:  if((j-1) < n_elem)
+        -:  283:    {
+        -:  284:    const in_eT tmp_i = (*src);
+        -:  285:    
+        -:  286:    // dest[i] = out_eT( tmp_i );
+        -:  287:    
+        -:  288:    const bool ok_i = check_finite ? arma_isfinite(tmp_i) : true;
+        -:  289:    
+        -:  290:    (*dest) = ok_i
+        -:  291:              ? (
+        -:  292:                (is_signed<out_eT>::value)
+        -:  293:                ? out_eT( tmp_i )
+        -:  294:                : ( cond_rel< is_signed<in_eT>::value >::lt(tmp_i, in_eT(0)) ? out_eT(0) : out_eT(tmp_i) )
+        -:  295:                )
+        -:  296:              : out_eT(0);
+        -:  297:    }
+        -:  298:  }
+        -:  299:
+        -:  300:
+        -:  301:
+        -:  302:template<typename out_eT, typename in_eT>
+        -:  303:inline
+        -:  304:void
+        -:  305:arrayops::convert_cx(out_eT* dest, const in_eT* src, const uword n_elem)
+        -:  306:  {
+        -:  307:  if(is_same_type<out_eT,in_eT>::value)
+        -:  308:    {
+        -:  309:    const out_eT* src2 = (const out_eT*)src;
+        -:  310:    
+        -:  311:    arrayops::copy(dest, src2, n_elem);
+        -:  312:    
+        -:  313:    return;
+        -:  314:    }
+        -:  315:  
+        -:  316:  uword j;
+        -:  317:  
+        -:  318:  for(j=1; j<n_elem; j+=2)
+        -:  319:    {
+        -:  320:    arrayops::convert_cx_scalar( (*dest), (*src) );  dest++; src++;
+        -:  321:    arrayops::convert_cx_scalar( (*dest), (*src) );  dest++; src++;
+        -:  322:    }
+        -:  323:  
+        -:  324:  if((j-1) < n_elem)
+        -:  325:    {
+        -:  326:    arrayops::convert_cx_scalar( (*dest), (*src) );
+        -:  327:    }
+        -:  328:  }
+        -:  329:
+        -:  330:
+        -:  331:
+        -:  332:template<typename eT>
+        -:  333:inline
+        -:  334:void
+        -:  335:arrayops::inplace_plus(eT* dest, const eT* src, const uword n_elem)
+        -:  336:  {
+        -:  337:  if(memory::is_aligned(dest))
+        -:  338:    {
+        -:  339:    memory::mark_as_aligned(dest);
+        -:  340:    
+        -:  341:    if(memory::is_aligned(src))
+        -:  342:      {
+        -:  343:      memory::mark_as_aligned(src);
+        -:  344:      
+        -:  345:      arrayops::inplace_plus_base(dest, src, n_elem);
+        -:  346:      }
+        -:  347:    else
+        -:  348:      {
+        -:  349:      arrayops::inplace_plus_base(dest, src, n_elem);
+        -:  350:      }
+        -:  351:    }
+        -:  352:  else
+        -:  353:    {
+        -:  354:    if(memory::is_aligned(src))
+        -:  355:      {
+        -:  356:      memory::mark_as_aligned(src);
+        -:  357:      
+        -:  358:      arrayops::inplace_plus_base(dest, src, n_elem);
+        -:  359:      }
+        -:  360:    else
+        -:  361:      {
+        -:  362:      arrayops::inplace_plus_base(dest, src, n_elem);
+        -:  363:      }
+        -:  364:    }
+        -:  365:  }
+        -:  366:
+        -:  367:
+        -:  368:
+        -:  369:template<typename eT>
+        -:  370:inline
+        -:  371:void
+        -:  372:arrayops::inplace_minus(eT* dest, const eT* src, const uword n_elem)
+        -:  373:  {
+        -:  374:  if(memory::is_aligned(dest))
+        -:  375:    {
+        -:  376:    memory::mark_as_aligned(dest);
+        -:  377:    
+        -:  378:    if(memory::is_aligned(src))
+        -:  379:      {
+        -:  380:      memory::mark_as_aligned(src);
+        -:  381:      
+        -:  382:      arrayops::inplace_minus_base(dest, src, n_elem);
+        -:  383:      }
+        -:  384:    else
+        -:  385:      {
+        -:  386:      arrayops::inplace_minus_base(dest, src, n_elem);
+        -:  387:      }
+        -:  388:    }
+        -:  389:  else
+        -:  390:    {
+        -:  391:    if(memory::is_aligned(src))
+        -:  392:      {
+        -:  393:      memory::mark_as_aligned(src);
+        -:  394:      
+        -:  395:      arrayops::inplace_minus_base(dest, src, n_elem);
+        -:  396:      }
+        -:  397:    else
+        -:  398:      {
+        -:  399:      arrayops::inplace_minus_base(dest, src, n_elem);
+        -:  400:      }
+        -:  401:    }
+        -:  402:  }
+        -:  403:
+        -:  404:
+        -:  405:
+        -:  406:template<typename eT>
+        -:  407:inline
+        -:  408:void
+        -:  409:arrayops::inplace_mul(eT* dest, const eT* src, const uword n_elem)
+        -:  410:  {
+        -:  411:  if(memory::is_aligned(dest))
+        -:  412:    {
+        -:  413:    memory::mark_as_aligned(dest);
+        -:  414:    
+        -:  415:    if(memory::is_aligned(src))
+        -:  416:      {
+        -:  417:      memory::mark_as_aligned(src);
+        -:  418:      
+        -:  419:      arrayops::inplace_mul_base(dest, src, n_elem);
+        -:  420:      }
+        -:  421:    else
+        -:  422:      {
+        -:  423:      arrayops::inplace_mul_base(dest, src, n_elem);
+        -:  424:      }
+        -:  425:    }
+        -:  426:  else
+        -:  427:    {
+        -:  428:    if(memory::is_aligned(src))
+        -:  429:      {
+        -:  430:      memory::mark_as_aligned(src);
+        -:  431:      
+        -:  432:      arrayops::inplace_mul_base(dest, src, n_elem);
+        -:  433:      }
+        -:  434:    else
+        -:  435:      {
+        -:  436:      arrayops::inplace_mul_base(dest, src, n_elem);
+        -:  437:      }
+        -:  438:    }
+        -:  439:  }
+        -:  440:
+        -:  441:
+        -:  442:
+        -:  443:template<typename eT>
+        -:  444:inline
+        -:  445:void
+        -:  446:arrayops::inplace_div(eT* dest, const eT* src, const uword n_elem)
+        -:  447:  {
+        -:  448:  if(memory::is_aligned(dest))
+        -:  449:    {
+        -:  450:    memory::mark_as_aligned(dest);
+        -:  451:    
+        -:  452:    if(memory::is_aligned(src))
+        -:  453:      {
+        -:  454:      memory::mark_as_aligned(src);
+        -:  455:      
+        -:  456:      arrayops::inplace_div_base(dest, src, n_elem);
+        -:  457:      }
+        -:  458:    else
+        -:  459:      {
+        -:  460:      arrayops::inplace_div_base(dest, src, n_elem);
+        -:  461:      }
+        -:  462:    }
+        -:  463:  else
+        -:  464:    {
+        -:  465:    if(memory::is_aligned(src))
+        -:  466:      {
+        -:  467:      memory::mark_as_aligned(src);
+        -:  468:      
+        -:  469:      arrayops::inplace_div_base(dest, src, n_elem);
+        -:  470:      }
+        -:  471:    else
+        -:  472:      {
+        -:  473:      arrayops::inplace_div_base(dest, src, n_elem);
+        -:  474:      }
+        -:  475:    }
+        -:  476:  }
+        -:  477:
+        -:  478:
+        -:  479:
+        -:  480:template<typename eT>
+        -:  481:inline
+        -:  482:void
+        -:  483:arrayops::inplace_plus_base(eT* dest, const eT* src, const uword n_elem)
+        -:  484:  {
+        -:  485:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  486:    {
+        -:  487:    for(uword i=0; i<n_elem; ++i)
+        -:  488:      {
+        -:  489:      dest[i] += src[i];
+        -:  490:      }
+        -:  491:    }
+        -:  492:  #else
+        -:  493:    {
+        -:  494:    uword i,j;
+        -:  495:    
+        -:  496:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  497:      {
+        -:  498:      const eT tmp_i = src[i];
+        -:  499:      const eT tmp_j = src[j];
+        -:  500:      
+        -:  501:      dest[i] += tmp_i;
+        -:  502:      dest[j] += tmp_j;
+        -:  503:      }
+        -:  504:    
+        -:  505:    if(i < n_elem)
+        -:  506:      {
+        -:  507:      dest[i] += src[i];
+        -:  508:      }
+        -:  509:    }
+        -:  510:  #endif
+        -:  511:  }
+        -:  512:
+        -:  513:
+        -:  514:
+        -:  515:template<typename eT>
+        -:  516:inline
+        -:  517:void
+        -:  518:arrayops::inplace_minus_base(eT* dest, const eT* src, const uword n_elem)
+        -:  519:  {
+        -:  520:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  521:    {
+        -:  522:    for(uword i=0; i<n_elem; ++i)
+        -:  523:      {
+        -:  524:      dest[i] -= src[i];
+        -:  525:      }
+        -:  526:    }
+        -:  527:  #else
+        -:  528:    {
+        -:  529:    uword i,j;
+        -:  530:    
+        -:  531:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  532:      {
+        -:  533:      const eT tmp_i = src[i];
+        -:  534:      const eT tmp_j = src[j];
+        -:  535:      
+        -:  536:      dest[i] -= tmp_i;
+        -:  537:      dest[j] -= tmp_j;
+        -:  538:      }
+        -:  539:    
+        -:  540:    if(i < n_elem)
+        -:  541:      {
+        -:  542:      dest[i] -= src[i];
+        -:  543:      }
+        -:  544:    }
+        -:  545:  #endif
+        -:  546:  }
+        -:  547:
+        -:  548:
+        -:  549:
+        -:  550:template<typename eT>
+        -:  551:inline
+        -:  552:void
+        -:  553:arrayops::inplace_mul_base(eT* dest, const eT* src, const uword n_elem)
+        -:  554:  {
+        -:  555:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  556:    {
+        -:  557:    for(uword i=0; i<n_elem; ++i)
+        -:  558:      {
+        -:  559:      dest[i] *= src[i];
+        -:  560:      }
+        -:  561:    }
+        -:  562:  #else
+        -:  563:    {
+        -:  564:    uword i,j;
+        -:  565:    
+        -:  566:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  567:      {
+        -:  568:      const eT tmp_i = src[i];
+        -:  569:      const eT tmp_j = src[j];
+        -:  570:      
+        -:  571:      dest[i] *= tmp_i;
+        -:  572:      dest[j] *= tmp_j;
+        -:  573:      }
+        -:  574:    
+        -:  575:    if(i < n_elem)
+        -:  576:      {
+        -:  577:      dest[i] *= src[i];
+        -:  578:      }
+        -:  579:    }
+        -:  580:  #endif
+        -:  581:  }
+        -:  582:
+        -:  583:
+        -:  584:
+        -:  585:template<typename eT>
+        -:  586:inline
+        -:  587:void
+        -:  588:arrayops::inplace_div_base(eT* dest, const eT* src, const uword n_elem)
+        -:  589:  {
+        -:  590:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  591:    {
+        -:  592:    for(uword i=0; i<n_elem; ++i)
+        -:  593:      {
+        -:  594:      dest[i] /= src[i];
+        -:  595:      }
+        -:  596:    }
+        -:  597:  #else
+        -:  598:    {
+        -:  599:    uword i,j;
+        -:  600:    
+        -:  601:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  602:      {
+        -:  603:      const eT tmp_i = src[i];
+        -:  604:      const eT tmp_j = src[j];
+        -:  605:      
+        -:  606:      dest[i] /= tmp_i;
+        -:  607:      dest[j] /= tmp_j;
+        -:  608:      }
+        -:  609:    
+        -:  610:    if(i < n_elem)
+        -:  611:      {
+        -:  612:      dest[i] /= src[i];
+        -:  613:      }
+        -:  614:    }
+        -:  615:  #endif
+        -:  616:  }
+        -:  617:
+        -:  618:
+        -:  619:
+        -:  620:template<typename eT>
+        -:  621:inline
+        -:  622:void
+        -:  623:arrayops::inplace_set(eT* dest, const eT val, const uword n_elem)
+        -:  624:  {
+        -:  625:  if(val == eT(0))
+        -:  626:    {
+        -:  627:    arrayops::fill_zeros(dest, n_elem);
+        -:  628:    }
+        -:  629:  else
+        -:  630:    {
+        -:  631:    arrayops::inplace_set_simple(dest, val, n_elem);
+        -:  632:    }
+        -:  633:  }
+        -:  634:
+        -:  635:
+        -:  636:
+        -:  637:template<typename eT>
+        -:  638:inline
+        -:  639:void
+        -:  640:arrayops::inplace_set_simple(eT* dest, const eT val, const uword n_elem)
+        -:  641:  {
+        -:  642:  if(memory::is_aligned(dest))
+        -:  643:    {
+        -:  644:    memory::mark_as_aligned(dest);
+        -:  645:    
+        -:  646:    arrayops::inplace_set_base(dest, val, n_elem);
+        -:  647:    }
+        -:  648:  else
+        -:  649:    {
+        -:  650:    arrayops::inplace_set_base(dest, val, n_elem);
+        -:  651:    }
+        -:  652:  }
+        -:  653:
+        -:  654:
+        -:  655:
+        -:  656:template<typename eT>
+        -:  657:inline
+        -:  658:void
+        -:  659:arrayops::inplace_set_base(eT* dest, const eT val, const uword n_elem)
+        -:  660:  {
+        -:  661:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  662:    {
+        -:  663:    for(uword i=0; i<n_elem; ++i)
+        -:  664:      {
+        -:  665:      dest[i] = val;
+        -:  666:      }
+        -:  667:    }
+        -:  668:  #else
+        -:  669:    {
+        -:  670:    uword i,j;
+        -:  671:    
+        -:  672:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  673:      {
+        -:  674:      dest[i] = val;
+        -:  675:      dest[j] = val;
+        -:  676:      }
+        -:  677:    
+        -:  678:    if(i < n_elem)
+        -:  679:      {
+        -:  680:      dest[i] = val;
+        -:  681:      }
+        -:  682:    }
+        -:  683:  #endif
+        -:  684:  }
+        -:  685:
+        -:  686:
+        -:  687:
+        -:  688:template<typename eT, const uword n_elem>
+        -:  689:inline
+        -:  690:void
+        -:  691:arrayops::inplace_set_fixed(eT* dest, const eT val)
+        -:  692:  {
+        -:  693:  for(uword i=0; i<n_elem; ++i)
+        -:  694:    {
+        -:  695:    dest[i] = val;
+        -:  696:    }
+        -:  697:  }
+        -:  698:
+        -:  699:
+        -:  700:
+        -:  701:template<typename eT>
+        -:  702:inline
+        -:  703:void
+        -:  704:arrayops::inplace_plus(eT* dest, const eT val, const uword n_elem)
+        -:  705:  {
+        -:  706:  if(memory::is_aligned(dest))
+        -:  707:    {
+        -:  708:    memory::mark_as_aligned(dest);
+        -:  709:    
+        -:  710:    arrayops::inplace_plus_base(dest, val, n_elem);
+        -:  711:    }
+        -:  712:  else
+        -:  713:    {
+        -:  714:    arrayops::inplace_plus_base(dest, val, n_elem);
+        -:  715:    }
+        -:  716:  }
+        -:  717:
+        -:  718:
+        -:  719:
+        -:  720:template<typename eT>
+        -:  721:inline
+        -:  722:void
+        -:  723:arrayops::inplace_minus(eT* dest, const eT val, const uword n_elem)
+        -:  724:  {
+        -:  725:  if(memory::is_aligned(dest))
+        -:  726:    {
+        -:  727:    memory::mark_as_aligned(dest);
+        -:  728:    
+        -:  729:    arrayops::inplace_minus_base(dest, val, n_elem);
+        -:  730:    }
+        -:  731:  else
+        -:  732:    {
+        -:  733:    arrayops::inplace_minus_base(dest, val, n_elem);
+        -:  734:    }
+        -:  735:  }
+        -:  736:
+        -:  737:
+        -:  738:
+        -:  739:template<typename eT>
+        -:  740:inline
+        -:  741:void
+        -:  742:arrayops::inplace_mul(eT* dest, const eT val, const uword n_elem)
+        -:  743:  {
+        -:  744:  if(memory::is_aligned(dest))
+        -:  745:    {
+        -:  746:    memory::mark_as_aligned(dest);
+        -:  747:    
+        -:  748:    arrayops::inplace_mul_base(dest, val, n_elem);
+        -:  749:    }
+        -:  750:  else
+        -:  751:    {
+        -:  752:    arrayops::inplace_mul_base(dest, val, n_elem);
+        -:  753:    }
+        -:  754:  }
+        -:  755:
+        -:  756:
+        -:  757:
+        -:  758:template<typename eT>
+        -:  759:inline
+        -:  760:void
+        -:  761:arrayops::inplace_div(eT* dest, const eT val, const uword n_elem)
+        -:  762:  {
+        -:  763:  if(memory::is_aligned(dest))
+        -:  764:    {
+        -:  765:    memory::mark_as_aligned(dest);
+        -:  766:    
+        -:  767:    arrayops::inplace_div_base(dest, val, n_elem);
+        -:  768:    }
+        -:  769:  else
+        -:  770:    {
+        -:  771:    arrayops::inplace_div_base(dest, val, n_elem);
+        -:  772:    }
+        -:  773:  }
+        -:  774:
+        -:  775:
+        -:  776:
+        -:  777:template<typename eT>
+        -:  778:inline
+        -:  779:void
+        -:  780:arrayops::inplace_plus_base(eT* dest, const eT val, const uword n_elem)
+        -:  781:  {
+        -:  782:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  783:    {
+        -:  784:    for(uword i=0; i<n_elem; ++i)
+        -:  785:      {
+        -:  786:      dest[i] += val;
+        -:  787:      }
+        -:  788:    }
+        -:  789:  #else
+        -:  790:    {
+        -:  791:    uword i,j;
+        -:  792:    
+        -:  793:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  794:      {
+        -:  795:      dest[i] += val;
+        -:  796:      dest[j] += val;
+        -:  797:      }
+        -:  798:    
+        -:  799:    if(i < n_elem)
+        -:  800:      {
+        -:  801:      dest[i] += val;
+        -:  802:      }
+        -:  803:    }
+        -:  804:  #endif
+        -:  805:  }
+        -:  806:
+        -:  807:
+        -:  808:
+        -:  809:template<typename eT>
+        -:  810:inline
+        -:  811:void
+        -:  812:arrayops::inplace_minus_base(eT* dest, const eT val, const uword n_elem)
+        -:  813:  {
+        -:  814:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  815:    {
+        -:  816:    for(uword i=0; i<n_elem; ++i)
+        -:  817:      {
+        -:  818:      dest[i] -= val;
+        -:  819:      }
+        -:  820:    }
+        -:  821:  #else
+        -:  822:    {
+        -:  823:    uword i,j;
+        -:  824:    
+        -:  825:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  826:      {
+        -:  827:      dest[i] -= val;
+        -:  828:      dest[j] -= val;
+        -:  829:      }
+        -:  830:    
+        -:  831:    if(i < n_elem)
+        -:  832:      {
+        -:  833:      dest[i] -= val;
+        -:  834:      }
+        -:  835:    }
+        -:  836:  #endif
+        -:  837:  }
+        -:  838:
+        -:  839:
+        -:  840:
+        -:  841:template<typename eT>
+        -:  842:inline
+        -:  843:void
+        -:  844:arrayops::inplace_mul_base(eT* dest, const eT val, const uword n_elem)
+        -:  845:  {
+        -:  846:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  847:    {
+        -:  848:    for(uword i=0; i<n_elem; ++i)
+        -:  849:      {
+        -:  850:      dest[i] *= val;
+        -:  851:      }
+        -:  852:    }
+        -:  853:  #else
+        -:  854:    {
+        -:  855:    uword i,j;
+        -:  856:    
+        -:  857:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  858:      {
+        -:  859:      dest[i] *= val;
+        -:  860:      dest[j] *= val;
+        -:  861:      }
+        -:  862:    
+        -:  863:    if(i < n_elem)
+        -:  864:      {
+        -:  865:      dest[i] *= val;
+        -:  866:      }
+        -:  867:    }
+        -:  868:  #endif
+        -:  869:  }
+        -:  870:
+        -:  871:
+        -:  872:
+        -:  873:template<typename eT>
+        -:  874:inline
+        -:  875:void
+        -:  876:arrayops::inplace_div_base(eT* dest, const eT val, const uword n_elem)
+        -:  877:  {
+        -:  878:  #if defined(ARMA_SIMPLE_LOOPS)
+        -:  879:    {
+        -:  880:    for(uword i=0; i<n_elem; ++i)
+        -:  881:      {
+        -:  882:      dest[i] /= val;
+        -:  883:      }
+        -:  884:    }
+        -:  885:  #else
+        -:  886:    {
+        -:  887:    uword i,j;
+        -:  888:    
+        -:  889:    for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  890:      {
+        -:  891:      dest[i] /= val;
+        -:  892:      dest[j] /= val;
+        -:  893:      }
+        -:  894:    
+        -:  895:    if(i < n_elem)
+        -:  896:      {
+        -:  897:      dest[i] /= val;
+        -:  898:      }
+        -:  899:    }
+        -:  900:  #endif
+        -:  901:  }
+        -:  902:
+        -:  903:
+        -:  904:
+        -:  905:template<typename eT>
+        -:  906:inline
+        -:  907:eT
+        -:  908:arrayops::accumulate(const eT* src, const uword n_elem)
+        -:  909:  {
+        -:  910:  #if defined(__FAST_MATH__)
+        -:  911:    {
+        -:  912:    eT acc = eT(0);
+        -:  913:    
+        -:  914:    if(memory::is_aligned(src))
+        -:  915:      {
+        -:  916:      memory::mark_as_aligned(src);
+        -:  917:      for(uword i=0; i<n_elem; ++i)  { acc += src[i]; }
+        -:  918:      }
+        -:  919:    else
+        -:  920:      {
+        -:  921:      for(uword i=0; i<n_elem; ++i)  { acc += src[i]; }
+        -:  922:      }
+        -:  923:    
+        -:  924:    return acc;
+        -:  925:    }
+        -:  926:  #else
+        -:  927:    {
+        -:  928:    eT acc1 = eT(0);
+        -:  929:    eT acc2 = eT(0);
+        -:  930:    
+        -:  931:    uword j;
+        -:  932:    
+        -:  933:    for(j=1; j<n_elem; j+=2)
+        -:  934:      {
+        -:  935:      acc1 += (*src);  src++;
+        -:  936:      acc2 += (*src);  src++;
+        -:  937:      }
+        -:  938:    
+        -:  939:    if((j-1) < n_elem)
+        -:  940:      {
+        -:  941:      acc1 += (*src);
+        -:  942:      }
+        -:  943:    
+        -:  944:    return acc1 + acc2;
+        -:  945:    }
+        -:  946:  #endif
+        -:  947:  }
+        -:  948:
+        -:  949:
+        -:  950:
+        -:  951:template<typename eT>
+        -:  952:inline
+        -:  953:eT
+        -:  954:arrayops::product(const eT* src, const uword n_elem)
+        -:  955:  {
+        -:  956:  eT val1 = eT(1);
+        -:  957:  eT val2 = eT(1);
+        -:  958:  
+        -:  959:  uword i,j;
+        -:  960:  
+        -:  961:  for(i=0, j=1; j<n_elem; i+=2, j+=2)
+        -:  962:    {
+        -:  963:    val1 *= src[i];
+        -:  964:    val2 *= src[j];
+        -:  965:    }
+        -:  966:  
+        -:  967:  if(i < n_elem)
+        -:  968:    {
+        -:  969:    val1 *= src[i];
+        -:  970:    }
+        -:  971:  
+        -:  972:  return val1 * val2;
+        -:  973:  }
+        -:  974:
+        -:  975:
+        -:  976:
+        -:  977:template<typename eT>
+        -:  978:inline
+        -:  979:bool
+        -:  980:arrayops::is_zero(const eT* mem, const uword n_elem, const eT abs_limit, const typename arma_not_cx<eT>::result* junk)
+        -:  981:  {
+        -:  982:  arma_ignore(junk);
+        -:  983:  
+        -:  984:  if(n_elem == 0)  { return false; }
+        -:  985:  
+        -:  986:  if(abs_limit == eT(0))
+        -:  987:    {
+        -:  988:    for(uword i=0; i<n_elem; ++i)
+        -:  989:      {
+        -:  990:      if(mem[i] != eT(0))  { return false; }
+        -:  991:      }
+        -:  992:    }
+        -:  993:  else
+        -:  994:    {
+        -:  995:    for(uword i=0; i<n_elem; ++i)
+        -:  996:      {
+        -:  997:      if(eop_aux::arma_abs(mem[i]) > abs_limit)  { return false; }
+        -:  998:      }
+        -:  999:    }
+        -: 1000:  
+        -: 1001:  return true;
+        -: 1002:  }
+        -: 1003:
+        -: 1004:
+        -: 1005:
+        -: 1006:template<typename T>
+        -: 1007:inline
+        -: 1008:bool
+        -: 1009:arrayops::is_zero(const std::complex<T>* mem, const uword n_elem, const T abs_limit)
+        -: 1010:  {
+        -: 1011:  typedef typename std::complex<T> eT;
+        -: 1012:  
+        -: 1013:  if(n_elem == 0)  { return false; }
+        -: 1014:  
+        -: 1015:  if(abs_limit == T(0))
+        -: 1016:    {
+        -: 1017:    for(uword i=0; i<n_elem; ++i)
+        -: 1018:      {
+        -: 1019:      const eT& val = mem[i];
+        -: 1020:      
+        -: 1021:      if(std::real(val) != T(0))  { return false; }
+        -: 1022:      if(std::imag(val) != T(0))  { return false; }
+        -: 1023:      }
+        -: 1024:    }
+        -: 1025:  else
+        -: 1026:    {
+        -: 1027:    for(uword i=0; i<n_elem; ++i)
+        -: 1028:      {
+        -: 1029:      const eT& val = mem[i];
+        -: 1030:      
+        -: 1031:      if(std::abs(std::real(val)) > abs_limit)  { return false; }
+        -: 1032:      if(std::abs(std::imag(val)) > abs_limit)  { return false; }
+        -: 1033:      }
+        -: 1034:    }
+        -: 1035:  
+        -: 1036:  return true;
+        -: 1037:  }
+        -: 1038:
+        -: 1039:
+        -: 1040:
+        -: 1041:template<typename eT>
+        -: 1042:inline
+        -: 1043:bool
+        -: 1044:arrayops::is_finite(const eT* src, const uword n_elem)
+        -: 1045:  {
+        -: 1046:  uword j;
+        -: 1047:  
+        -: 1048:  for(j=1; j<n_elem; j+=2)
+        -: 1049:    {
+        -: 1050:    const eT val_i = (*src);  src++;
+        -: 1051:    const eT val_j = (*src);  src++;
+        -: 1052:    
+        -: 1053:    if(arma_isnonfinite(val_i))  { return false; }
+        -: 1054:    if(arma_isnonfinite(val_j))  { return false; }
+        -: 1055:    }
+        -: 1056:  
+        -: 1057:  if((j-1) < n_elem)
+        -: 1058:    {
+        -: 1059:    if(arma_isnonfinite(*src))  { return false; }
+        -: 1060:    }
+        -: 1061:  
+        -: 1062:  return true;
+        -: 1063:  }
+        -: 1064:
+        -: 1065:
+        -: 1066:
+        -: 1067:template<typename eT>
+        -: 1068:inline
+        -: 1069:bool
+        -: 1070:arrayops::has_inf(const eT* src, const uword n_elem)
+        -: 1071:  {
+        -: 1072:  uword j;
+        -: 1073:  
+        -: 1074:  for(j=1; j<n_elem; j+=2)
+        -: 1075:    {
+        -: 1076:    const eT val_i = (*src);  src++;
+        -: 1077:    const eT val_j = (*src);  src++;
+        -: 1078:    
+        -: 1079:    if( arma_isinf(val_i) || arma_isinf(val_j) )  { return true; }
+        -: 1080:    }
+        -: 1081:  
+        -: 1082:  if((j-1) < n_elem)
+        -: 1083:    {
+        -: 1084:    if(arma_isinf(*src))  { return true; }
+        -: 1085:    }
+        -: 1086:  
+        -: 1087:  return false;
+        -: 1088:  }
+        -: 1089:
+        -: 1090:
+        -: 1091:
+        -: 1092:template<typename eT>
+        -: 1093:inline
+        -: 1094:bool
+        -: 1095:arrayops::has_nan(const eT* src, const uword n_elem)
+        -: 1096:  {
+        -: 1097:  uword j;
+        -: 1098:  
+        -: 1099:  for(j=1; j<n_elem; j+=2)
+        -: 1100:    {
+        -: 1101:    const eT val_i = (*src);  src++;
+        -: 1102:    const eT val_j = (*src);  src++;
+        -: 1103:    
+        -: 1104:    if( arma_isnan(val_i) || arma_isnan(val_j) )  { return true; }
+        -: 1105:    }
+        -: 1106:  
+        -: 1107:  if((j-1) < n_elem)
+        -: 1108:    {
+        -: 1109:    if(arma_isnan(*src))  { return true; }
+        -: 1110:    }
+        -: 1111:  
+        -: 1112:  return false;
+        -: 1113:  }
+        -: 1114:
+        -: 1115:
+        -: 1116:
+        -: 1117://! @}

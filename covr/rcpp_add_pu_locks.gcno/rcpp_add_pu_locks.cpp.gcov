@@ -1,0 +1,95 @@
+        -:    0:Source:rcpp_add_pu_locks.cpp
+        -:    0:Graph:./rcpp_add_pu_locks.gcno
+        -:    0:Data:./rcpp_add_pu_locks.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "functions.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:// [[Rcpp::export]]
+     3846:    6:Rcpp::List rcpp_add_pu_locks(SEXP x,
+        -:    7:                             Rcpp::DataFrame pu_data,
+        -:    8:                             std::string block_name = "pu_locks",
+        -:    9:                             std::string tag = "") {
+        -:   10:
+     3846:   11:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   12:
+        -:   13:  // --- required columns
+     3846:   14:  if (!pu_data.containsElementNamed("locked_in")) {
+    #####:   15:    Rcpp::stop("pu_data must contain column 'locked_in'.");
+        -:   16:  }
+     3846:   17:  if (!pu_data.containsElementNamed("locked_out")) {
+    #####:   18:    Rcpp::stop("pu_data must contain column 'locked_out'.");
+        -:   19:  }
+        -:   20:
+     3846:   21:  const int n = pu_data.nrows();
+     3846:   22:  if (n == 0) {
+        -:   23:    return Rcpp::List::create(
+    #####:   24:      Rcpp::Named("n_constraints_added") = 0,
+    #####:   25:      Rcpp::Named("n_lock_in") = 0,
+    #####:   26:      Rcpp::Named("n_lock_out") = 0,
+    #####:   27:      Rcpp::Named("block_id") = NA_REAL,
+    #####:   28:      Rcpp::Named("row_start") = NA_REAL,
+    #####:   29:      Rcpp::Named("row_end") = NA_REAL,
+    #####:   30:      Rcpp::Named("block_name") = block_name,
+    #####:   31:      Rcpp::Named("tag") = tag
+    #####:   32:    );
+        -:   33:  }
+        -:   34:
+     7692:   35:  Rcpp::LogicalVector locked_in  = pu_data["locked_in"];
+     7692:   36:  Rcpp::LogicalVector locked_out = pu_data["locked_out"];
+        -:   37:
+        -:   38:  // --- registry begin
+     3846:   39:  const std::size_t row_start = op->nrow_used();
+        -:   40:
+     3846:   41:  int n_lock_in  = 0;
+     3846:   42:  int n_lock_out = 0;
+     3846:   43:  int added      = 0;
+        -:   44:
+     3846:   45:  if (tag.empty()) {
+     3846:   46:    tag = "n_pu=" + std::to_string(n);
+        -:   47:  } else {
+    #####:   48:    tag = tag + ";n_pu=" + std::to_string(n);
+        -:   49:  }
+        -:   50:
+     3846:   51:  const std::size_t bid = op->beginConstraintBlock(block_name, tag);
+        -:   52:
+    19298:   53:  for (int i = 0; i < n; ++i) {
+    15452:   54:    const int col_w = op->_w_offset + i;
+        -:   55:
+        -:   56:    // NA handling: if either is NA, skip the row
+   15452*:   57:    if (Rcpp::LogicalVector::is_na(locked_in[i]) || Rcpp::LogicalVector::is_na(locked_out[i])) {
+    #####:   58:      continue;
+        -:   59:    }
+        -:   60:
+    15452:   61:    if (locked_in[i]) {
+      224:   62:      op->addRow({col_w}, {1.0}, "==", 1.0, "pu_lock_in");
+       28:   63:      ++n_lock_in;
+       28:   64:      ++added;
+    15424:   65:    } else if (locked_out[i]) {
+      224:   66:      op->addRow({col_w}, {1.0}, "==", 0.0, "pu_lock_out");
+       28:   67:      ++n_lock_out;
+       28:   68:      ++added;
+        -:   69:    }
+        -:   70:  }
+        -:   71:
+     3846:   72:  const std::size_t row_end = op->nrow_used();
+    11538:   73:  op->endConstraintBlock(bid);
+        -:   74:
+        -:   75:  // opcional: si no se agregó nada, igual el bloque queda registrado como vacío.
+        -:   76:  // si prefieres NO registrar bloques vacíos, dime y lo ajusto con "if (row_end>row_start)".
+        -:   77:
+        -:   78:  // enrich tag (esto no reescribe el tag del bloque ya guardado; si quieres, hay que setear tag antes)
+        -:   79:  // Por simplicidad lo dejamos tal cual.
+        -:   80:
+        -:   81:  return Rcpp::List::create(
+     7692:   82:    Rcpp::Named("n_constraints_added") = added,
+     7692:   83:    Rcpp::Named("n_lock_in") = n_lock_in,
+     7692:   84:    Rcpp::Named("n_lock_out") = n_lock_out,
+    11538:   85:    Rcpp::Named("block_id")  = static_cast<double>(bid),
+    11538:   86:    Rcpp::Named("row_start") = static_cast<double>(row_start + 1), // 1-based friendly
+    11538:   87:    Rcpp::Named("row_end")   = static_cast<double>(row_end),       // end (exclusive in 0-based)
+     7692:   88:    Rcpp::Named("block_name") = block_name,
+     7692:   89:    Rcpp::Named("tag") = tag
+     3846:   90:  );
+     3846:   91:}

@@ -17,10 +17,9 @@ test_that("solve selects at most one action per planning unit", {
 
   s <- multiscape::solve(p)
 
-  expect_s3_class(s, "Solution")
-  expect_true(is.data.frame(s$summary$actions))
-
-  acts <- s$summary$actions
+  expect_s3_class(s, "SolutionSet")
+  acts <- multiscape::get_actions(s)
+  expect_true(is.data.frame(acts))
   acts_sel <- acts[acts$selected > 0.5, , drop = FALSE]
 
   if (nrow(acts_sel) > 0) {

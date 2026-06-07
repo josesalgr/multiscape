@@ -20,7 +20,7 @@ test_that("single-objective solve returns a Solution and respects locked units",
 
   s <- multiscape::solve(p)
 
-  expect_s3_class(s, "Solution")
+  expect_s3_class(s, "SolutionSet")
 
   acts <- multiscape::get_actions(s, only_selected = TRUE)
   expect_true(any(acts$pu == 1))

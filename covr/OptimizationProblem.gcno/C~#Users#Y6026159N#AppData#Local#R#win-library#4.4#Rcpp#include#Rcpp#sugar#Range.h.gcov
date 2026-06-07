@@ -1,0 +1,96 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/sugar/Range.h
+        -:    0:Graph:./OptimizationProblem.gcno
+        -:    0:Data:./OptimizationProblem.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+        -:    2://
+        -:    3:// Range.h: Rcpp R/C++ interface class library --
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2013 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef RCPP_SUGAR_RANGE_H
+        -:   23:#define RCPP_SUGAR_RANGE_H
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:    class Range : public VectorBase<INTSXP,false, Range >{
+        -:   28:    public:
+    22176:   29:        Range( R_xlen_t start_, R_xlen_t end__ ) : start(start_), end_(end__){
+    22176:   30:            if( start_ > end__ ){
+    #####:   31:                throw std::range_error( "upper value must be greater than lower value" ) ;
+        -:   32:            }
+    22176:   33:        }
+        -:   34:
+    22176:   35:        inline R_xlen_t size() const{
+    22176:   36:            return end_ - start + 1;
+        -:   37:        }
+        -:   38:
+   272966:   39:        inline R_xlen_t operator[]( R_xlen_t i) const {
+   272966:   40:            return start + i ;
+        -:   41:        }
+        -:   42:
+        -:   43:        Range& operator++() {
+        -:   44:            start++ ; end_++ ;
+        -:   45:            return *this ;
+        -:   46:        }
+        -:   47:        Range operator++(int) {
+        -:   48:            Range orig(*this) ;
+        -:   49:            ++(*this);
+        -:   50:            return orig ;
+        -:   51:        }
+        -:   52:
+        -:   53:        Range& operator--() {
+        -:   54:            start-- ; end_-- ;
+        -:   55:            return *this ;
+        -:   56:        }
+        -:   57:        Range operator--(int) {
+        -:   58:            Range orig(*this) ;
+        -:   59:            --(*this);
+        -:   60:            return orig ;
+        -:   61:        }
+        -:   62:
+        -:   63:        Range& operator+=( int n ) {
+        -:   64:            start += n ; end_ += n ;
+        -:   65:            return *this ;
+        -:   66:        }
+        -:   67:
+        -:   68:        Range& operator-=( int n ) {
+        -:   69:            start -= n ; end_ -= n ;
+        -:   70:            return *this ;
+        -:   71:        }
+        -:   72:
+        -:   73:        Range operator+( int n ){
+        -:   74:            return Range( start + n, end_ + n ) ;
+        -:   75:        }
+        -:   76:
+        -:   77:        Range operator-( int n ){
+        -:   78:            return Range( start - n, end_ - n ) ;
+        -:   79:        }
+        -:   80:
+        -:   81:        inline R_xlen_t get_start() const { return start ; }
+        -:   82:
+        -:   83:        inline R_xlen_t get_end() const { return end_ ; }
+        -:   84:
+        -:   85:    private:
+        -:   86:        R_xlen_t start ;
+        -:   87:        R_xlen_t end_ ;
+        -:   88:    } ;
+        -:   89:
+        -:   90:}
+        -:   91:
+        -:   92:#endif

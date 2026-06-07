@@ -1,0 +1,110 @@
+        -:    0:Source:rcpp_add_objective_max_benefit.cpp
+        -:    0:Graph:./rcpp_add_objective_max_benefit.gcno
+        -:    0:Data:./rcpp_add_objective_max_benefit.gcda
+        -:    0:Runs:22
+        -:    1:// rcpp_add_objective_max_benefit.cpp
+        -:    2:#include "Package.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:#include <string>
+        -:    6:#include <cmath>
+        -:    7:#include <vector>
+        -:    8:
+        -:    9:// [[Rcpp::export]]
+     2795:   10:Rcpp::List rcpp_add_objective_max_benefit(
+        -:   11:    SEXP x,
+        -:   12:    Rcpp::NumericVector coef_x,                 // prepared vector (length op->_n_x)
+        -:   13:    double weight = 1.0,
+        -:   14:    double weight_multiplier = 1.0,
+        -:   15:    std::string block_name = "objective_add_max_benefit",
+        -:   16:    std::string tag = ""
+        -:   17:) {
+     2795:   18:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   19:
+    2795*:   20:  if (op->ncol_used() == 0 || op->_obj.empty()) {
+    #####:   21:    Rcpp::stop("Model has zero variables. Build base variables first.");
+        -:   22:  }
+        -:   23:
+    2795*:   24:  if (!std::isfinite(weight) || weight < 0.0) {
+    #####:   25:    Rcpp::stop("weight must be finite and >= 0.");
+        -:   26:  }
+    2795*:   27:  if (!std::isfinite(weight_multiplier) || weight_multiplier < 0.0) {
+    #####:   28:    Rcpp::stop("weight_multiplier must be finite and >= 0.");
+        -:   29:  }
+     2795:   30:  if (weight == 0.0) {
+        -:   31:    return Rcpp::List::create(
+    #####:   32:      Rcpp::Named("ok") = true,
+    #####:   33:      Rcpp::Named("skipped") = true,
+    #####:   34:      Rcpp::Named("reason") = "weight==0"
+    #####:   35:    );
+        -:   36:  }
+        -:   37:
+     2795:   38:  if (op->_n_x <= 0) {
+        -:   39:    return Rcpp::List::create(
+    #####:   40:      Rcpp::Named("ok") = true,
+    #####:   41:      Rcpp::Named("skipped") = true,
+    #####:   42:      Rcpp::Named("reason") = "op->_n_x == 0 (no x variables)"
+    #####:   43:    );
+        -:   44:  }
+        -:   45:
+     2795:   46:  const int n_x = op->_n_x;
+     2795:   47:  if (coef_x.size() != n_x) {
+    #####:   48:    Rcpp::stop(
+    #####:   49:      "coef_x length mismatch: coef_x.size()=" + std::to_string((int)coef_x.size()) +
+    #####:   50:        " but op->_n_x=" + std::to_string(n_x) + "."
+        -:   51:    );
+        -:   52:  }
+        -:   53:
+     2795:   54:  const int x0 = op->_x_offset;
+     2795:   55:  const int x1 = op->_x_offset + op->_n_x; // exclusive
+        -:   56:
+    2795*:   57:  if (x0 < 0 || x1 > (int)op->_obj.size()) {
+    #####:   58:    Rcpp::stop("x block out of bounds: check op->_x_offset/op->_n_x.");
+        -:   59:  }
+        -:   60:
+     2795:   61:  const double scale = weight * weight_multiplier;
+        -:   62:
+     2795:   63:  int nnz_added = 0;
+     2795:   64:  double sum_added = 0.0;
+        -:   65:
+    25155:   66:  for (int i = 0; i < n_x; ++i) {
+    22360:   67:    const double b = (double)coef_x[i];
+    22360:   68:    if (!std::isfinite(b) || b == 0.0) continue;
+        -:   69:
+    11180:   70:    const double coef = scale * b;
+    11180:   71:    op->_obj[(std::size_t)(x0 + i)] += coef;
+        -:   72:
+    11180:   73:    sum_added += coef;
+    11180:   74:    ++nnz_added;
+        -:   75:  }
+        -:   76:
+     2795:   77:  std::string full_tag = tag;
+     2795:   78:  if (!full_tag.empty()) full_tag += ";";
+        -:   79:  full_tag +=
+        -:   80:    "kind=objective_add"
+        -:   81:    ";component=max_benefit"
+     5590:   82:    ";weight=" + std::to_string(weight) +
+    11180:   83:      ";multiplier=" + std::to_string(weight_multiplier) +
+    11180:   84:      ";n_x=" + std::to_string(n_x) +
+    11180:   85:      ";nnz_added=" + std::to_string(nnz_added) +
+    11180:   86:      ";sum_added=" + std::to_string(sum_added) +
+     2795:   87:      ";additive=TRUE";
+        -:   88:
+     2795:   89:  const std::size_t bid = op->register_objective_block(
+        -:   90:    block_name,
+        -:   91:    (std::size_t)x0,
+        -:   92:    (std::size_t)x1,
+        -:   93:    full_tag
+        -:   94:  );
+        -:   95:
+        -:   96:  return Rcpp::List::create(
+     8385:   97:    Rcpp::Named("ok") = true,
+     8385:   98:    Rcpp::Named("block_id") = (double)bid,
+     5590:   99:    Rcpp::Named("block_name") = block_name,
+     5590:  100:    Rcpp::Named("tag") = full_tag,
+     5590:  101:    Rcpp::Named("x_offset") = x0,
+     5590:  102:    Rcpp::Named("n_x") = n_x,
+     5590:  103:    Rcpp::Named("nnz_added") = nnz_added,
+     5590:  104:    Rcpp::Named("sum_added") = sum_added
+     2795:  105:  );
+     2795:  106:}

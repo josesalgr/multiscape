@@ -20,10 +20,11 @@ test_that("solve respects locked_in and locked_out planning units", {
 
   s <- multiscape::solve(p)
 
-  expect_s3_class(s, "Solution")
-  expect_true(is.data.frame(s$summary$actions))
+  expect_s3_class(s, "SolutionSet")
+  actions <- multiscape::get_actions(s)
+  expect_true(is.data.frame(actions))
 
-  selected <- s$summary$actions[s$summary$actions$selected > 0.5, , drop = FALSE]
+  selected <- actions[actions$selected > 0.5, , drop = FALSE]
 
   expect_true(any(selected$pu == 1))
   expect_false(any(selected$pu == 4))

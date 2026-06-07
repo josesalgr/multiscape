@@ -1,0 +1,171 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/as.h
+        -:    0:Graph:./rcpp_model_add_columns.gcno
+        -:    0:Data:./rcpp_model_add_columns.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// as.h: Rcpp R/C++ interface class library -- convert SEXP to C++ objects
+        -:    3://
+        -:    4:// Copyright (C) 2009 - 2026  Dirk Eddelbuettel and Romain Francois
+        -:    5://
+        -:    6:// This file is part of Rcpp.
+        -:    7://
+        -:    8:// Rcpp is free software: you can redistribute it and/or modify it
+        -:    9:// under the terms of the GNU General Public License as published by
+        -:   10:// the Free Software Foundation, either version 2 of the License, or
+        -:   11:// (at your option) any later version.
+        -:   12://
+        -:   13:// Rcpp is distributed in the hope that it will be useful, but
+        -:   14:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   15:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   16:// GNU General Public License for more details.
+        -:   17://
+        -:   18:// You should have received a copy of the GNU General Public License
+        -:   19:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   20:
+        -:   21:#ifndef Rcpp__as__h
+        -:   22:#define Rcpp__as__h
+        -:   23:
+        -:   24:#include <Rcpp/internal/Exporter.h>
+        -:   25:
+        -:   26:namespace Rcpp {
+        -:   27:
+        -:   28:    namespace internal {
+        -:   29:
+        -:   30:        template <typename T> T primitive_as(SEXP x) {
+        -:   31:            if (::Rf_length(x) != 1) {
+        -:   32:                const char* fmt = "Expecting a single value: [extent=%i]."; // #nocov
+        -:   33:                throw ::Rcpp::not_compatible(fmt, ::Rf_length(x));			// #nocov
+        -:   34:            }
+        -:   35:            const int RTYPE = ::Rcpp::traits::r_sexptype_traits<T>::rtype;
+        -:   36:            Shield<SEXP> y(r_cast<RTYPE>(x));
+        -:   37:            typedef typename ::Rcpp::traits::storage_type<RTYPE>::type STORAGE;
+        -:   38:            T res = caster<STORAGE,T>(*r_vector_start<RTYPE>(y));
+        -:   39:            return res;
+        -:   40:        }
+        -:   41:
+        -:   42:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_primitive_tag) {
+        -:   43:            return primitive_as<T>(x);
+        -:   44:        }
+        -:   45:
+    #####:   46:        inline const char* check_single_string(SEXP x) {
+    #####:   47:            if (TYPEOF(x) == CHARSXP) return CHAR(x);						// #nocov start
+    #####:   48:            if (! ::Rf_isString(x) || Rf_length(x) != 1) {
+    #####:   49:                const char* fmt = "Expecting a single string value: "
+        -:   50:                                  "[type=%s; extent=%i].";
+        -:   51:                throw ::Rcpp::not_compatible(fmt,
+    #####:   52:                                             Rf_type2char(TYPEOF(x)),
+    #####:   53:                                             Rf_length(x));
+        -:   54:            }																// #nocov end
+        -:   55:
+    #####:   56:            return CHAR(STRING_ELT(::Rcpp::r_cast<STRSXP>(x), 0));
+        -:   57:        }
+        -:   58:
+        -:   59:
+        -:   60:        template <typename T> T as_string(SEXP x, Rcpp::traits::true_type) {
+        -:   61:            const char* y = check_single_string(x);
+        -:   62:            return std::wstring(y, y+strlen(y));
+        -:   63:        }
+        -:   64:
+    #####:   65:        template <typename T> T as_string(SEXP x, Rcpp::traits::false_type) {
+    #####:   66:            return check_single_string(x);
+        -:   67:        }
+        -:   68:
+    #####:   69:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_string_tag) {
+    #####:   70:            return as_string<T>(x, typename Rcpp::traits::is_wide_string<T>::type());
+        -:   71:        }
+        -:   72:
+        -:   73:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_RcppString_tag) {
+        -:   74:            if (! ::Rf_isString(x)) {
+        -:   75:                const char* fmt = "Expecting a single string value: "
+        -:   76:                                  "[type=%s; extent=%i].";
+        -:   77:                throw ::Rcpp::not_compatible(fmt,
+        -:   78:                                             Rf_type2char(TYPEOF(x)),
+        -:   79:                                             Rf_length(x));
+        -:   80:            }
+        -:   81:            return STRING_ELT(::Rcpp::r_cast<STRSXP>(x), 0);
+        -:   82:        }
+        -:   83:
+    #####:   84:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_generic_tag) {
+        -:   85:            RCPP_DEBUG_1("as(SEXP = <%p>, r_type_generic_tag )", x);
+    #####:   86:            ::Rcpp::traits::Exporter<T> exporter(x);
+        -:   87:            RCPP_DEBUG_1("exporter type = %s", DEMANGLE(exporter));
+    #####:   88:            return exporter.get();
+    #####:   89:        }
+        -:   90:
+        -:   91:        void* as_module_object_internal(SEXP obj);
+        -:   92:
+        -:   93:        template <typename T> object<T> as_module_object(SEXP x) {
+        -:   94:            return (T*) as_module_object_internal(x);
+        -:   95:        }
+        -:   96:
+        -:   97:        /** handling object<T> */
+        -:   98:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_module_object_const_pointer_tag) {
+        -:   99:            typedef typename Rcpp::traits::remove_const<T>::type T_NON_CONST;
+        -:  100:            return const_cast<T>((T_NON_CONST)as_module_object_internal(x));
+        -:  101:        }
+        -:  102:
+        -:  103:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_module_object_pointer_tag) {
+        -:  104:            return as_module_object<typename traits::un_pointer<T>::type>(x);
+        -:  105:        }
+        -:  106:
+        -:  107:        /** handling T such that T is exposed by a module */
+        -:  108:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_module_object_tag) {
+        -:  109:            T* obj = as_module_object<T>(x);
+        -:  110:            return *obj;
+        -:  111:        }
+        -:  112:
+        -:  113:        /** handling T such that T is a reference of a class handled by a module */
+        -:  114:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_module_object_reference_tag) {
+        -:  115:            typedef typename traits::remove_reference<T>::type KLASS;
+        -:  116:            KLASS* obj = as_module_object<KLASS>(x);
+        -:  117:            return *obj;
+        -:  118:        }
+        -:  119:
+        -:  120:        /** handling T such that T is a reference of a class handled by a module */
+        -:  121:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_module_object_const_reference_tag) {
+        -:  122:            typedef typename traits::remove_const_and_reference<T>::type KLASS;
+        -:  123:            KLASS* obj = as_module_object<KLASS>(x);
+        -:  124:            return const_cast<T>(*obj);
+        -:  125:        }
+        -:  126:
+        -:  127:        /** handling enums by converting to int first */
+        -:  128:        template <typename T> T as(SEXP x, ::Rcpp::traits::r_type_enum_tag) {
+        -:  129:            return T(primitive_as<int>(x));
+        -:  130:        }
+        -:  131:
+        -:  132:    }
+        -:  133:
+        -:  134:
+        -:  135:    /**
+        -:  136:     * Generic converted from SEXP to the typename. T can be any type that
+        -:  137:     * has a constructor taking a SEXP, which is the case for all our
+        -:  138:     * RObject and derived classes.
+        -:  139:     *
+        -:  140:     * If it is not possible to add the SEXP constructor, e.g you don't control
+        -:  141:     * the type, you can specialize the as template to perform the
+        -:  142:     * requested conversion
+        -:  143:     *
+        -:  144:     * This is used for example in Environment, so that for example the code
+        -:  145:     * below will work as long as there is a way to as<> the Foo type
+        -:  146:     *
+        -:  147:     * Environment x = ... ; // some environment
+        -:  148:     * Foo y = x["bla"] ;    // if as<Foo> makes sense then this works !!
+        -:  149:     */
+    #####:  150:    template <typename T> T as(SEXP x) {
+    #####:  151:        return internal::as<T>(x, typename traits::r_type_traits<T>::r_category());
+        -:  152:    }
+        -:  153:
+        -:  154:    template <> inline char as<char>(SEXP x) {
+        -:  155:        return internal::check_single_string(x)[0];
+        -:  156:    }
+        -:  157:
+        -:  158:    template <typename T>
+        -:  159:    inline typename traits::remove_const_and_reference<T>::type bare_as(SEXP x) {
+        -:  160:        return as< typename traits::remove_const_and_reference<T>::type >(x);
+        -:  161:    }
+        -:  162:
+        -:  163:    template<> inline SEXP as(SEXP x) { return x; }
+        -:  164:
+        -:  165:} // Rcpp
+        -:  166:
+        -:  167:#endif

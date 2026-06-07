@@ -1,0 +1,166 @@
+        -:    0:Source:rcpp_fix_z_ineligible_by_positive_delta.cpp
+        -:    0:Graph:./rcpp_fix_z_ineligible_by_positive_delta.gcno
+        -:    0:Data:./rcpp_fix_z_ineligible_by_positive_delta.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "functions.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:#include <unordered_set>
+        -:    6:#include <string>
+        -:    7:#include <cmath>
+        -:    8:#include <algorithm>
+        -:    9:
+        -:   10:// clave 64-bit para (ipu, ifeat)
+    #####:   11:static inline long long key2(int a, int b) {
+    #####:   12:  return ( (static_cast<long long>(a) << 32) ^ static_cast<unsigned int>(b) );
+        -:   13:}
+        -:   14:
+        -:   15:// Fija ub(z_is)=0 (y opcionalmente lb=0) cuando existe alguna acción con delta>0
+        -:   16:// para ese par (pu, feature). Es decir: si existe "mejora posible" => z_is no elegible.
+        -:   17://
+        -:   18:// dist_features_data: internal_pu, internal_feature   (1-based)
+        -:   19:// dist_benefit_data : internal_pu, internal_feature, benefit (delta, puede ser + o -)
+        -:   20://
+        -:   21:// [[Rcpp::export]]
+    #####:   22:Rcpp::List rcpp_fix_z_ineligible_by_positive_delta(SEXP x,
+        -:   23:                                                   Rcpp::DataFrame dist_features_data,
+        -:   24:                                                   Rcpp::DataFrame dist_benefit_data,
+        -:   25:                                                   bool fix_lb_too = true,
+        -:   26:                                                   double eps = 1e-12) {
+        -:   27:
+    #####:   28:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   29:
+    #####:   30:  for (auto nm : {"internal_pu", "internal_feature"}) {
+    #####:   31:    if (!dist_features_data.containsElementNamed(nm)) {
+    #####:   32:      Rcpp::stop(std::string("dist_features_data must contain column '") + nm + "'.");
+        -:   33:    }
+        -:   34:  }
+    #####:   35:  for (auto nm : {"internal_pu", "internal_feature", "benefit"}) {
+    #####:   36:    if (!dist_benefit_data.containsElementNamed(nm)) {
+    #####:   37:      Rcpp::stop(std::string("dist_benefit_data must contain column '") + nm + "'.");
+        -:   38:    }
+        -:   39:  }
+        -:   40:
+    #####:   41:  if (op->_z_offset < 0) Rcpp::stop("op->_z_offset is not initialized.");
+        -:   42:
+    #####:   43:  const int n_df = dist_features_data.nrows();
+    #####:   44:  if (n_df <= 0) {
+        -:   45:    return Rcpp::List::create(
+    #####:   46:      Rcpp::Named("n_pairs_with_improvement") = 0,
+    #####:   47:      Rcpp::Named("n_z_fixed") = 0,
+    #####:   48:      Rcpp::Named("n_z_already_zero") = 0,
+    #####:   49:      Rcpp::Named("eps") = eps,
+    #####:   50:      Rcpp::Named("z_var_block_id") = NA_REAL,
+    #####:   51:      Rcpp::Named("z_col_range") = Rcpp::NumericVector::create(NA_REAL, NA_REAL),
+    #####:   52:      Rcpp::Named("tag") = ""
+    #####:   53:    );
+        -:   54:  }
+        -:   55:
+    #####:   56:  const int z0 = op->_z_offset;           // 0-based start col for z
+    #####:   57:  const int z1 = op->_z_offset + n_df;    // 0-based end (exclusive)
+    #####:   58:  const int last_z_col = z1 - 1;
+        -:   59:
+    #####:   60:  if (last_z_col >= (int)op->_ub.size()) {
+    #####:   61:    Rcpp::stop("Index out of bounds: op->_ub smaller than z variables range. "
+        -:   62:                 "Create base variables (including z) before calling this.");
+        -:   63:  }
+    #####:   64:  if (fix_lb_too && last_z_col >= (int)op->_lb.size()) {
+    #####:   65:    Rcpp::stop("Index out of bounds: op->_lb smaller than z variables range.");
+        -:   66:  }
+        -:   67:
+        -:   68:  // set de (ipu,ifeat) con alguna mejora posible: delta > eps
+    #####:   69:  Rcpp::IntegerVector db_ipu   = dist_benefit_data["internal_pu"];
+    #####:   70:  Rcpp::IntegerVector db_ifeat = dist_benefit_data["internal_feature"];
+    #####:   71:  Rcpp::NumericVector db_ben   = dist_benefit_data["benefit"];
+    #####:   72:  const int n_db = dist_benefit_data.nrows();
+        -:   73:
+    #####:   74:  std::unordered_set<long long> has_improvement;
+    #####:   75:  has_improvement.reserve((std::size_t)std::min(n_df, n_db));
+        -:   76:
+    #####:   77:  for (int r = 0; r < n_db; ++r) {
+    #####:   78:    const double delta = db_ben[r];
+    #####:   79:    if (!(delta > eps)) continue;  // solo mejoras
+        -:   80:
+    #####:   81:    const int ipu = db_ipu[r];
+    #####:   82:    const int ife = db_ifeat[r];
+    #####:   83:    if (ipu <= 0 || ife <= 0) {
+    #####:   84:      Rcpp::stop("internal_pu/internal_feature in dist_benefit_data must be 1-based positive integers.");
+        -:   85:    }
+    #####:   86:    has_improvement.insert(key2(ipu, ife));
+        -:   87:  }
+        -:   88:
+    #####:   89:  Rcpp::IntegerVector df_ipu   = dist_features_data["internal_pu"];
+    #####:   90:  Rcpp::IntegerVector df_ifeat = dist_features_data["internal_feature"];
+        -:   91:
+    #####:   92:  int n_fixed = 0;
+    #####:   93:  int n_already_zero = 0;
+        -:   94:
+    #####:   95:  for (int row_df = 0; row_df < n_df; ++row_df) {
+        -:   96:
+    #####:   97:    const int ipu = df_ipu[row_df];
+    #####:   98:    const int ife = df_ifeat[row_df];
+    #####:   99:    if (ipu <= 0 || ife <= 0) {
+    #####:  100:      Rcpp::stop("internal_pu/internal_feature in dist_features_data must be 1-based positive integers.");
+        -:  101:    }
+        -:  102:
+    #####:  103:    if (has_improvement.find(key2(ipu, ife)) == has_improvement.end()) continue;
+        -:  104:
+    #####:  105:    const int col_z = op->_z_offset + row_df;
+        -:  106:
+    #####:  107:    if (op->_ub[col_z] <= 0.0) {
+    #####:  108:      ++n_already_zero;
+    #####:  109:      if (fix_lb_too) op->_lb[col_z] = 0.0;
+    #####:  110:      continue;
+        -:  111:    }
+        -:  112:
+    #####:  113:    op->_ub[col_z] = 0.0;
+    #####:  114:    if (fix_lb_too) op->_lb[col_z] = 0.0;
+        -:  115:
+    #####:  116:    ++n_fixed;
+        -:  117:  }
+        -:  118:
+        -:  119:  // ---- Registry: variable block describing a bounds update affecting z range
+    #####:  120:  double z_var_block_id = NA_REAL;
+    #####:  121:  std::string tag = "";
+        -:  122:
+    #####:  123:  if ((n_fixed + n_already_zero) > 0) {
+        -:  124:    tag =
+        -:  125:      "mode=fix_z_ineligible_by_positive_delta"
+    #####:  126:      ";fix_lb_too=" + std::string(fix_lb_too ? "true" : "false") +
+    #####:  127:        ";eps=" + std::to_string(eps) +
+    #####:  128:        ";n_pairs_with_improvement=" + std::to_string((int)has_improvement.size()) +
+    #####:  129:        ";n_z_fixed=" + std::to_string(n_fixed) +
+    #####:  130:        ";n_z_already_zero=" + std::to_string(n_already_zero);
+        -:  131:
+    #####:  132:    const std::size_t bid = op->register_variable_block(
+        -:  133:      "z_bounds_update_ineligible",
+        -:  134:      (std::size_t)z0,
+        -:  135:      (std::size_t)z1,
+        -:  136:      tag
+        -:  137:    );
+        -:  138:
+    #####:  139:    z_var_block_id = static_cast<double>(bid);
+        -:  140:  }
+        -:  141:
+        -:  142:  // 1-based friendly col range for z
+    #####:  143:  auto col_range_to_R = [](int start0, int end0) {
+    #####:  144:    if (end0 <= start0) return Rcpp::NumericVector::create(NA_REAL, NA_REAL);
+        -:  145:    return Rcpp::NumericVector::create(
+    #####:  146:      static_cast<double>(start0 + 1),
+    #####:  147:      static_cast<double>(end0)       // end0 is exclusive in 0-based; this becomes inclusive in 1-based
+    #####:  148:    );
+        -:  149:  };
+        -:  150:
+        -:  151:  return Rcpp::List::create(
+    #####:  152:    Rcpp::Named("n_pairs_with_improvement") = (int)has_improvement.size(),
+    #####:  153:    Rcpp::Named("n_z_fixed") = n_fixed,
+    #####:  154:    Rcpp::Named("n_z_already_zero") = n_already_zero,
+    #####:  155:    Rcpp::Named("eps") = eps,
+        -:  156:
+        -:  157:    // registry outputs (variable-side)
+    #####:  158:    Rcpp::Named("z_var_block_id") = z_var_block_id,
+    #####:  159:    Rcpp::Named("z_col_range")    = col_range_to_R(z0, z1),
+    #####:  160:    Rcpp::Named("tag")            = tag
+    #####:  161:  );
+    #####:  162:}

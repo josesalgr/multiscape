@@ -1,0 +1,63 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/sugar/functions/seq_along.h
+        -:    0:Graph:./OptimizationProblem.gcno
+        -:    0:Data:./OptimizationProblem.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// seq_along.h: Rcpp R/C++ interface class library -- any
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2011 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__sugar__seq_along_h
+        -:   23:#define Rcpp__sugar__seq_along_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:namespace sugar{
+        -:   27:
+        -:   28:class SeqLen : public VectorBase< INTSXP,false,SeqLen > {
+        -:   29:public:
+        -:   30:        SeqLen( R_xlen_t len_ ) : len(len_){}
+        -:   31:
+        -:   32:        inline R_xlen_t operator[]( R_xlen_t i ) const {
+        -:   33:		return 1 + i ;
+        -:   34:	}
+        -:   35:        inline R_xlen_t size() const { return len ; }
+        -:   36:
+        -:   37:private:
+        -:   38:        R_xlen_t len ;
+        -:   39:} ;
+        -:   40:
+        -:   41:} // sugar
+        -:   42:
+        -:   43:template <int RTYPE, bool NA, typename T>
+        -:   44:inline sugar::SeqLen seq_along( const Rcpp::VectorBase<RTYPE,NA,T>& t){
+        -:   45:	return sugar::SeqLen( t.size() ) ;
+        -:   46:}
+        -:   47:
+        -:   48:inline sugar::SeqLen seq_len( const size_t& n){
+        -:   49:	return sugar::SeqLen( n ) ;
+        -:   50:}
+        -:   51:
+    22176:   52:inline Range seq(R_xlen_t start, R_xlen_t end){
+    22176:   53:	return Range( start, end ) ;
+        -:   54:}
+        -:   55:
+        -:   56:
+        -:   57:} // Rcpp
+        -:   58:#endif
+        -:   59:

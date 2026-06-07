@@ -1,0 +1,177 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/VectorBase.h
+        -:    0:Graph:./OptimizationProblem.gcno
+        -:    0:Data:./OptimizationProblem.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// VectorBase.h: Rcpp R/C++ interface class library --
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2013 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__vector__VectorBase_h
+        -:   23:#define Rcpp__vector__VectorBase_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:/** a base class for vectors, modelled after the CRTP */
+        -:   28:template <int RTYPE, bool na, typename VECTOR>
+        -:   29:class VectorBase : public traits::expands_to_logical__impl<RTYPE> {
+        -:   30:public:
+        -:   31:	struct rcpp_sugar_expression{} ;
+        -:   32:    struct r_type : traits::integral_constant<int,RTYPE>{} ;
+        -:   33:	struct can_have_na : traits::integral_constant<bool,na>{} ;
+        -:   34:	typedef typename traits::storage_type<RTYPE>::type stored_type ;
+        -:   35:	typedef typename traits::storage_type<RTYPE>::type elem_type ;
+        -:   36:
+        -:   37:	VECTOR& get_ref(){
+        -:   38:		return static_cast<VECTOR&>(*this) ;
+        -:   39:	}
+        -:   40:
+    22176:   41:	const VECTOR& get_ref() const {
+    22176:   42:		return static_cast<const VECTOR&>(*this) ;
+        -:   43:	}
+        -:   44:
+        -:   45:	inline stored_type operator[]( R_xlen_t i) const {
+        -:   46:	    return static_cast<const VECTOR*>(this)->operator[](i) ;
+        -:   47:	}
+        -:   48:
+    22176:   49:	inline R_xlen_t size() const { return static_cast<const VECTOR*>(this)->size() ; }
+        -:   50:	
+        -:   51:	// We now have the structure to correct const-correctness, but without
+        -:   52:    // major changes to the proxy mechanism, we cannot do it correctly.  As
+        -:   53:    // a result, it turns out that both Vector iterators are effectively
+        -:   54:    // const, but this has always been the way it is so we won't break any
+        -:   55:    // compatibility.  TODO: Fix proxies and make this const correct.
+        -:   56:	struct iter_traits
+        -:   57:	{
+        -:   58:	    typedef stored_type & reference ;
+        -:   59:		typedef stored_type* pointer ;
+        -:   60:		typedef R_xlen_t difference_type ;
+        -:   61:		typedef stored_type value_type;
+        -:   62:		typedef std::random_access_iterator_tag iterator_category ;
+        -:   63:	};
+        -:   64:	
+        -:   65:	struct const_iter_traits
+        -:   66:	{
+        -:   67:	    typedef stored_type reference ;
+        -:   68:		typedef stored_type const * pointer ;
+        -:   69:		typedef R_xlen_t difference_type ;
+        -:   70:		typedef const stored_type value_type;
+        -:   71:		typedef std::random_access_iterator_tag iterator_category ;
+        -:   72:	};
+        -:   73:	
+        -:   74:	template< typename TRAITS >
+        -:   75:	class iter_base {
+        -:   76:	public:
+        -:   77:		typedef typename TRAITS::reference reference;
+        -:   78:		typedef typename TRAITS::pointer pointer;
+        -:   79:		typedef typename TRAITS::difference_type difference_type;
+        -:   80:		typedef typename TRAITS::value_type value_type;
+        -:   81:		typedef typename TRAITS::iterator_category iterator_category;
+        -:   82:
+        -:   83:		iter_base( const VectorBase& object_, R_xlen_t index_ ) : object(object_.get_ref()), index(index_){}
+        -:   84:		
+        -:   85:		inline iter_base& operator++(){
+        -:   86:			index++ ;
+        -:   87:			return *this ;
+        -:   88:		}
+        -:   89:		inline iter_base operator++(int){
+        -:   90:			iterator orig(*this);
+        -:   91:		    ++(*this) ;
+        -:   92:			return orig ;
+        -:   93:		}
+        -:   94:
+        -:   95:		inline iter_base& operator--(){
+        -:   96:			index-- ;
+        -:   97:			return *this ;
+        -:   98:		}
+        -:   99:		inline iter_base operator--(int){
+        -:  100:			iterator orig(*this);
+        -:  101:		    --(*this) ;
+        -:  102:			return orig ;
+        -:  103:		}
+        -:  104:
+        -:  105:		inline iter_base operator+(difference_type n) const {
+        -:  106:			return iterator( object, index+n ) ;
+        -:  107:		}
+        -:  108:		inline iter_base operator-(difference_type n) const {
+        -:  109:			return iterator( object, index-n ) ;
+        -:  110:		}
+        -:  111:
+        -:  112:		inline iter_base& operator+=(difference_type n) {
+        -:  113:			index += n ;
+        -:  114:			return *this ;
+        -:  115:		}
+        -:  116:		inline iter_base& operator-=(difference_type n) {
+        -:  117:			index -= n;
+        -:  118:			return *this ;
+        -:  119:		}
+        -:  120:
+        -:  121:		inline reference operator[](R_xlen_t i){
+        -:  122:		    return object[index+i] ;
+        -:  123:		}
+        -:  124:
+        -:  125:		inline reference operator*() {
+        -:  126:			return object[index] ;
+        -:  127:		}
+        -:  128:		inline pointer operator->(){
+        -:  129:			return &object[index] ;
+        -:  130:		}
+        -:  131:
+        -:  132:		inline bool operator==( const iter_base& y) const {
+        -:  133:			return ( index == y.index ) ;
+        -:  134:		}
+        -:  135:		inline bool operator!=( const iter_base& y) const {
+        -:  136:			return ( index != y.index ) ;
+        -:  137:		}
+        -:  138:		inline bool operator<( const iter_base& other ) const {
+        -:  139:			return index < other.index ;
+        -:  140:		}
+        -:  141:		inline bool operator>( const iter_base& other ) const {
+        -:  142:			return index > other.index ;
+        -:  143:		}
+        -:  144:		inline bool operator<=( const iter_base& other ) const {
+        -:  145:			return index <= other.index ;
+        -:  146:		}
+        -:  147:		inline bool operator>=( const iter_base& other ) const {
+        -:  148:			return index >= other.index ;
+        -:  149:		}
+        -:  150:
+        -:  151:		inline difference_type operator-(const iter_base& other) const {
+        -:  152:			return index - other.index ;
+        -:  153:		}
+        -:  154:
+        -:  155:
+        -:  156:	private:
+        -:  157:		const VECTOR& object ;
+        -:  158:		R_xlen_t index;
+        -:  159:	} ;
+        -:  160:	
+        -:  161:    typedef iter_base< iter_traits > iterator;
+        -:  162:    typedef iter_base< const_iter_traits > const_iterator;
+        -:  163:	
+        -:  164:	inline const_iterator begin() const { return const_iterator(*this, 0) ; }
+        -:  165:	inline const_iterator end() const { return const_iterator(*this, size() ) ; }
+        -:  166:	
+        -:  167:	inline const_iterator cbegin() const { return const_iterator(*this, 0) ; }
+        -:  168:	inline const_iterator cend() const { return const_iterator(*this, size() ) ; }
+        -:  169:
+        -:  170:} ;
+        -:  171:
+        -:  172:} // namespace Rcpp
+        -:  173:#endif

@@ -1,0 +1,118 @@
+        -:    0:Source:rcpp_prepare_objective_max_net_profit.cpp
+        -:    0:Graph:./rcpp_prepare_objective_max_net_profit.gcno
+        -:    0:Data:./rcpp_prepare_objective_max_net_profit.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "functions.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:#include <unordered_map>
+        -:    6:#include <string>
+        -:    7:#include <cmath>
+        -:    8:
+        -:    9:// [[Rcpp::export]]
+       13:   10:Rcpp::List rcpp_prepare_objective_max_net_profit(
+        -:   11:    SEXP x,
+        -:   12:    Rcpp::DataFrame pu_data,
+        -:   13:    Rcpp::DataFrame dist_actions_data,
+        -:   14:    Rcpp::DataFrame dist_profit_data,
+        -:   15:    std::string profit_col = "profit",
+        -:   16:    bool include_pu_cost = true,
+        -:   17:    bool include_action_cost = true,
+        -:   18:    std::string block_name = "objective_max_net_profit",
+        -:   19:    std::string tag = ""
+        -:   20:) {
+      13*:   21:  if (Rf_isNull(x)) Rcpp::stop("model_ptr is NULL.");
+        -:   22:
+       13:   23:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   24:
+       13:   25:  if (op->_obj.empty()) {
+    #####:   26:    Rcpp::stop("Model has zero variables. Call rcpp_add_base_variables() first.");
+        -:   27:  }
+        -:   28:
+        -:   29:  // ---- checks: pu_data cost
+       13:   30:  if (include_pu_cost) {
+       13:   31:    if (!pu_data.containsElementNamed("cost")) {
+    #####:   32:      Rcpp::stop("pu_data must contain column 'cost' when include_pu_cost=TRUE.");
+        -:   33:    }
+        -:   34:  }
+        -:   35:
+        -:   36:  // ---- checks: dist_actions_data
+       52:   37:  for (auto nm : {"internal_pu", "internal_action", "internal_row"}) {
+       39:   38:    if (!dist_actions_data.containsElementNamed(nm)) {
+    #####:   39:      Rcpp::stop(std::string("dist_actions_data must contain column '") + nm + "'.");
+        -:   40:    }
+        -:   41:  }
+       13:   42:  if (include_action_cost) {
+       13:   43:    if (!dist_actions_data.containsElementNamed("cost")) {
+    #####:   44:      Rcpp::stop("dist_actions_data must contain column 'cost' when include_action_cost=TRUE.");
+        -:   45:    }
+        -:   46:  }
+        -:   47:
+        -:   48:  // ---- checks: dist_profit_data
+       39:   49:  for (auto nm : {"internal_pu", "internal_action"}) {
+       26:   50:    if (!dist_profit_data.containsElementNamed(nm)) {
+    #####:   51:      Rcpp::stop(std::string("dist_profit_data must contain column '") + nm + "'.");
+        -:   52:    }
+        -:   53:  }
+       13:   54:  if (!dist_profit_data.containsElementNamed(profit_col.c_str())) {
+    #####:   55:    Rcpp::stop("dist_profit_data must contain profit column '" + profit_col + "'.");
+        -:   56:  }
+        -:   57:
+        -:   58:  // ---- determine w range from MODEL
+      13*:   59:  if (op->_n_pu <= 0) op->_n_pu = pu_data.nrows();
+      13*:   60:  if (op->_n_pu <= 0) Rcpp::stop("Cannot determine n_pu (op->_n_pu <= 0 and pu_data empty).");
+        -:   61:
+       13:   62:  const int w0 = op->_w_offset;
+       13:   63:  const int w1 = op->_w_offset + op->_n_pu;
+        -:   64:
+      13*:   65:  if (w0 < 0 || w1 > (int)op->_obj.size()) {
+    #####:   66:    Rcpp::stop("w block out of bounds. Check op->_w_offset/op->_n_pu and that w variables exist.");
+        -:   67:  }
+        -:   68:
+        -:   69:  // ---- determine x range from MODEL
+      13*:   70:  if (op->_n_x <= 0) op->_n_x = dist_actions_data.nrows();
+      13*:   71:  if (op->_n_x <= 0) Rcpp::stop("Cannot determine n_x (op->_n_x <= 0 and dist_actions_data empty).");
+        -:   72:
+       13:   73:  const int x0 = op->_x_offset;
+       13:   74:  const int x1 = op->_x_offset + op->_n_x;
+        -:   75:
+      13*:   76:  if (x0 < 0 || x1 > (int)op->_obj.size()) {
+    #####:   77:    Rcpp::stop("x block out of bounds. Check op->_x_offset/op->_n_x and that x variables exist.");
+        -:   78:  }
+        -:   79:
+        -:   80:  // ---- extra validation: cost length matches n_pu
+       13:   81:  if (include_pu_cost) {
+       26:   82:    Rcpp::NumericVector pu_cost = pu_data["cost"];
+       13:   83:    if (pu_cost.size() != op->_n_pu) {
+    #####:   84:      Rcpp::stop("pu_data 'cost' length (%d) must match op->_n_pu (%d).",
+    #####:   85:                 pu_cost.size(), op->_n_pu);
+        -:   86:    }
+       13:   87:  }
+        -:   88:
+        -:   89:  // ---- registry blocks (no objective modification)
+       13:   90:  std::string base_tag = tag;
+      13*:   91:  if (!base_tag.empty()) base_tag += ";";
+        -:   92:  base_tag +=
+       26:   93:    "profit_col=" + profit_col +
+      52*:   94:    ";include_pu_cost=" + std::string(include_pu_cost ? "TRUE" : "FALSE") +
+      52*:   95:      ";include_action_cost=" + std::string(include_action_cost ? "TRUE" : "FALSE") +
+       13:   96:        ";prepare_only=TRUE";
+        -:   97:
+       26:   98:  const std::size_t w_block_id = op->register_objective_block(
+       26:   99:    block_name + "::w", (std::size_t)w0, (std::size_t)w1, base_tag
+        -:  100:  );
+        -:  101:
+       26:  102:  const std::size_t x_block_id = op->register_objective_block(
+       26:  103:    block_name + "::x", (std::size_t)x0, (std::size_t)x1, base_tag
+        -:  104:  );
+        -:  105:
+        -:  106:  return Rcpp::List::create(
+       39:  107:    Rcpp::Named("w_block_id") = (double)w_block_id,
+       39:  108:    Rcpp::Named("x_block_id") = (double)x_block_id,
+       52:  109:    Rcpp::Named("w_range")    = Rcpp::NumericVector::create((double)w0 + 1.0, (double)w1),
+       52:  110:    Rcpp::Named("x_range")    = Rcpp::NumericVector::create((double)x0 + 1.0, (double)x1),
+       26:  111:    Rcpp::Named("profit_col") = profit_col,
+       26:  112:    Rcpp::Named("note")       = "Prepared objective blocks (no changes to op->_obj)."
+       26:  113:  );
+       13:  114:}

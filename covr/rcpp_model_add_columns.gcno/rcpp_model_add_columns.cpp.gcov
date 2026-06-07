@@ -1,0 +1,113 @@
+        -:    0:Source:rcpp_model_add_columns.cpp
+        -:    0:Graph:./rcpp_model_add_columns.gcno
+        -:    0:Data:./rcpp_model_add_columns.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "OptimizationProblem.h"
+        -:    3:
+        -:    4:// [[Rcpp::export]]
+       42:    5:Rcpp::List rcpp_model_add_columns(
+        -:    6:    SEXP x,
+        -:    7:    Rcpp::NumericVector obj,
+        -:    8:    Rcpp::NumericVector lb,
+        -:    9:    Rcpp::NumericVector ub,
+        -:   10:    Rcpp::CharacterVector vtype,
+        -:   11:    Rcpp::CharacterVector names = R_NilValue,
+        -:   12:    std::string block_name = "augmecon_slacks",
+        -:   13:    std::string tag = ""
+        -:   14:) {
+        -:   15:  Rcpp::XPtr<OptimizationProblem> op =
+       42:   16:    Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   17:
+       42:   18:  const int k = obj.size();
+        -:   19:
+       42:   20:  if (k <= 0) {
+    #####:   21:    Rcpp::stop("`obj` must have positive length.");
+        -:   22:  }
+       42:   23:  if (lb.size() != k) {
+    #####:   24:    Rcpp::stop("`lb` length must match `obj` length.");
+        -:   25:  }
+       42:   26:  if (ub.size() != k) {
+    #####:   27:    Rcpp::stop("`ub` length must match `obj` length.");
+        -:   28:  }
+       42:   29:  if (vtype.size() != k) {
+    #####:   30:    Rcpp::stop("`vtype` length must match `obj` length.");
+        -:   31:  }
+        -:   32:
+       42:   33:  const bool has_names = (names.size() == k);
+      42*:   34:  if (names.size() != 0 && names.size() != k) {
+    #####:   35:    Rcpp::stop("`names` must have length 0 or the same length as `obj`.");
+        -:   36:  }
+        -:   37:
+       42:   38:  const std::size_t old_ncol = op->_obj.size();
+        -:   39:
+        -:   40:  // append columns
+       84:   41:  for (int i = 0; i < k; ++i) {
+       42:   42:    const double oi = obj[i];
+       42:   43:    const double lbi = lb[i];
+       42:   44:    const double ubi = ub[i];
+       42:   45:    const std::string vt = Rcpp::as<std::string>(vtype[i]);
+        -:   46:
+       42:   47:    if (!R_finite(oi)) {
+    #####:   48:      Rcpp::stop("`obj` contains non-finite values.");
+        -:   49:    }
+       42:   50:    if (!R_finite(lbi)) {
+    #####:   51:      Rcpp::stop("`lb` contains non-finite values.");
+        -:   52:    }
+       42:   53:    if (!R_finite(ubi)) {
+    #####:   54:      Rcpp::stop("`ub` contains non-finite values.");
+        -:   55:    }
+       42:   56:    if (lbi > ubi) {
+    #####:   57:      Rcpp::stop("Each lower bound must be <= upper bound.");
+        -:   58:    }
+      42*:   59:    if (!(vt == "B" || vt == "I" || vt == "C" || vt == "S")) {
+    #####:   60:      Rcpp::stop("`vtype` entries must be one of 'B', 'I', 'C', 'S'.");
+        -:   61:    }
+        -:   62:
+       42:   63:    op->_obj.push_back(oi);
+       42:   64:    op->_lb.push_back(lbi);
+       42:   65:    op->_ub.push_back(ubi);
+       42:   66:    op->_vtype.push_back(vt);
+       42:   67:  }
+        -:   68:
+       42:   69:  const std::size_t new_ncol = op->_obj.size();
+       42:   70:  if (new_ncol != old_ncol + static_cast<std::size_t>(k)) {
+    #####:   71:    Rcpp::stop("Internal error: failed to append model columns.");
+        -:   72:  }
+        -:   73:
+        -:   74:  // 0-based / 1-based indices of new columns
+       42:   75:  Rcpp::IntegerVector col0(k), col1(k);
+       84:   76:  for (int i = 0; i < k; ++i) {
+       42:   77:    col0[i] = static_cast<int>(old_ncol + i);
+       42:   78:    col1[i] = static_cast<int>(old_ncol + i + 1);
+        -:   79:  }
+        -:   80:
+       42:   81:  if (has_names) {
+       84:   82:    col0.attr("names") = names;
+       84:   83:    col1.attr("names") = names;
+        -:   84:  }
+        -:   85:
+        -:   86:  // optional registry block
+        -:   87:  // start/end are 0-based, half-open [start, end)
+       42:   88:  std::size_t block_id = NA_INTEGER;
+        -:   89:  try {
+       42:   90:    block_id = op->register_variable_block(
+        -:   91:      block_name,
+        -:   92:      old_ncol,
+        -:   93:      new_ncol,
+        -:   94:      tag
+        -:   95:    );
+    =====:   96:  } catch (...) {
+        -:   97:    // if your class does not have register_variable_block(), ignore safely
+    =====:   98:    block_id = NA_INTEGER;
+    =====:   99:  }
+        -:  100:
+        -:  101:  return Rcpp::List::create(
+       84:  102:    Rcpp::Named("n_added") = k,
+      126:  103:    Rcpp::Named("old_ncol") = static_cast<int>(old_ncol),
+      126:  104:    Rcpp::Named("new_ncol") = static_cast<int>(new_ncol),
+       84:  105:    Rcpp::Named("col0") = col0,
+       84:  106:    Rcpp::Named("col1") = col1,
+       84:  107:    Rcpp::Named("block_id") = block_id
+       84:  108:  );
+       42:  109:}

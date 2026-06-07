@@ -1,0 +1,105 @@
+        -:    0:Source:rcpp_add_linking_x_le_w.cpp
+        -:    0:Graph:./rcpp_add_linking_x_le_w.gcno
+        -:    0:Data:./rcpp_add_linking_x_le_w.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "functions.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:// [[Rcpp::export]]
+     3846:    6:Rcpp::List rcpp_add_linking_x_le_w(SEXP x,
+        -:    7:                                   Rcpp::DataFrame dist_actions_data,
+        -:    8:                                   std::string block_name = "linking_x_le_w",
+        -:    9:                                   std::string tag = "") {
+        -:   10:
+     3846:   11:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   12:
+     3846:   13:  if (!dist_actions_data.containsElementNamed("internal_pu"))
+    #####:   14:    Rcpp::stop("dist_actions_data must contain column 'internal_pu'.");
+     3846:   15:  if (!dist_actions_data.containsElementNamed("internal_row"))
+    #####:   16:    Rcpp::stop("dist_actions_data must contain column 'internal_row'.");
+        -:   17:
+     7692:   18:  Rcpp::IntegerVector ipu  = dist_actions_data["internal_pu"];
+     7692:   19:  Rcpp::IntegerVector irow = dist_actions_data["internal_row"];
+        -:   20:
+     3846:   21:  const int n = dist_actions_data.nrows();
+     3846:   22:  if (n == 0) {
+        -:   23:    return Rcpp::List::create(
+    #####:   24:      Rcpp::Named("n_constraints_added") = 0,
+    #####:   25:      Rcpp::Named("block_id") = NA_REAL,
+    #####:   26:      Rcpp::Named("row_start") = NA_REAL,
+    #####:   27:      Rcpp::Named("row_end") = NA_REAL,
+    #####:   28:      Rcpp::Named("block_name") = block_name,
+    #####:   29:      Rcpp::Named("tag") = tag
+    #####:   30:    );
+        -:   31:  }
+        -:   32:
+        -:   33:  // ---- record start (0-based row index)
+     3846:   34:  const std::size_t row_start = op->nrow_used();
+        -:   35:
+        -:   36:  // enrich tag
+     3846:   37:  if (tag.empty()) tag = "n=" + std::to_string(n);
+    #####:   38:  else tag = tag + ";n=" + std::to_string(n);
+        -:   39:
+        -:   40:  // We'll open the block, but only keep it if we actually add constraints
+     3846:   41:  const std::size_t bid = op->beginConstraintBlock(block_name, tag);
+        -:   42:
+     3846:   43:  int added = 0;
+        -:   44:
+    31177:   45:  for (int k = 0; k < n; ++k) {
+        -:   46:
+    27331:   47:    const int ipu1  = ipu[k];   // 1-based expected
+    27331:   48:    const int irow1 = irow[k];  // 1-based expected
+        -:   49:
+   27331*:   50:    if (ipu1 == NA_INTEGER || irow1 == NA_INTEGER) continue;
+   27331*:   51:    if (ipu1 <= 0 || irow1 <= 0) Rcpp::stop("internal_pu/internal_row must be positive 1-based.");
+        -:   52:
+    27331:   53:    const int pu0  = ipu1 - 1;      // 0-based
+    27331:   54:    const int row0 = irow1 - 1;     // 0-based row in dist_actions_model
+        -:   55:
+        -:   56:    // optional defensive range checks (only if counters are set)
+   27331*:   57:    if (op->_n_pu > 0 && pu0 >= op->_n_pu) {
+    #####:   58:      Rcpp::stop("internal_pu out of range: %d (n_pu=%d).", ipu1, op->_n_pu);
+        -:   59:    }
+   27331*:   60:    if (op->_n_x > 0 && row0 >= op->_n_x) {
+    #####:   61:      Rcpp::stop("internal_row out of range: %d (n_x=%d).", irow1, op->_n_x);
+        -:   62:    }
+        -:   63:
+    27331:   64:    const int col_w = op->_w_offset + pu0;
+    27331:   65:    const int col_x = op->_x_offset + row0;
+        -:   66:
+        -:   67:    // x - w <= 0
+   136655:   68:    op->addRow(
+    81993:   69:        std::vector<int>{col_x, col_w},
+   109324:   70:        std::vector<double>{1.0, -1.0},
+        -:   71:        "<=",
+        -:   72:        0.0,
+        -:   73:        "x_le_w"
+        -:   74:    );
+        -:   75:
+    27331:   76:    ++added;
+        -:   77:  }
+        -:   78:
+     3846:   79:  const std::size_t row_end = op->nrow_used();
+        -:   80:
+        -:   81:  // close block
+    11538:   82:  op->endConstraintBlock(bid);
+        -:   83:
+        -:   84:  // If you prefer not to register empty blocks, the clean way is:
+        -:   85:  // - delay beginConstraintBlock until first added row, OR
+        -:   86:  // - add a helper in OptimizationProblem to pop last registry entry.
+        -:   87:  //
+        -:   88:  // With current OptimizationProblem.h, we already registered.
+        -:   89:  // So: if you really want "no empty blocks", do delay-open pattern.
+        -:   90:  //
+        -:   91:  // For now we just report what happened.
+        -:   92:
+        -:   93:  return Rcpp::List::create(
+     7692:   94:    Rcpp::Named("n_constraints_added") = added,
+    11538:   95:    Rcpp::Named("block_id")  = static_cast<double>(bid),
+    11538:   96:    Rcpp::Named("row_start") = static_cast<double>(row_start + 1), // 1-based friendly
+    11538:   97:    Rcpp::Named("row_end")   = static_cast<double>(row_end),
+     7692:   98:    Rcpp::Named("block_name") = block_name,
+    11538:   99:    Rcpp::Named("tag") = tag
+     3846:  100:  );
+     3846:  101:}

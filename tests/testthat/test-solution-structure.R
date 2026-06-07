@@ -1,4 +1,4 @@
-test_that("single-objective solve returns a Solution with core components", {
+test_that("single-objective solve returns a one-run SolutionSet", {
   skip_if_no_cbc()
 
   toy <- toy_equivalent_basic()
@@ -17,11 +17,13 @@ test_that("single-objective solve returns a Solution with core components", {
 
   s <- multiscape::solve(p)
 
-  expect_s3_class(s, "Solution")
-  expect_true("problem" %in% names(s))
-  expect_true("solution" %in% names(s))
-  expect_true("summary" %in% names(s))
-  expect_true("diagnostics" %in% names(s))
+  expect_s3_class(s, "SolutionSet")
+  expect_true(inherits(s$problem, "Problem"))
+  expect_true(is.list(s$solution))
+  expect_true(is.list(s$summary))
+  expect_true(is.list(s$diagnostics))
+  expect_equal(nrow(multiscape::get_runs(s)), 1L)
+  expect_equal(sum(!is.na(multiscape::get_runs(s)$solution_id)), 1L)
 })
 
 test_that("weighted solve returns a SolutionSet with core components", {
@@ -43,7 +45,12 @@ test_that("weighted solve returns a SolutionSet with core components", {
     multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "frag"),
-      weights = c(1, 1)
+      runs = multiscape::run_manual(
+        data.frame(
+          weight_cost = 1,
+          weight_frag = 1
+        )
+      )
     ) |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 

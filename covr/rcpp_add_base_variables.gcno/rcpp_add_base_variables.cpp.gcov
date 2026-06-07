@@ -1,0 +1,139 @@
+        -:    0:Source:rcpp_add_base_variables.cpp
+        -:    0:Graph:./rcpp_add_base_variables.gcno
+        -:    0:Data:./rcpp_add_base_variables.gcda
+        -:    0:Runs:22
+        -:    1:#include "Package.h"
+        -:    2:#include "functions.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:// [[Rcpp::export]]
+     3846:    6:Rcpp::List rcpp_add_base_variables(SEXP x,
+        -:    7:                                   Rcpp::DataFrame pu_data,
+        -:    8:                                   Rcpp::DataFrame dist_actions_data,
+        -:    9:                                   Rcpp::DataFrame dist_features_data,
+        -:   10:                                   bool add_z = true) {
+        -:   11:
+     3846:   12:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   13:
+     3846:   14:  const int n_pu = pu_data.nrows();
+     3846:   15:  const int n_x  = dist_actions_data.nrows();
+     3846:   16:  const int n_z  = add_z ? dist_features_data.nrows() : 0;
+        -:   17:
+     3846:   18:  op->_n_pu = n_pu;
+     3846:   19:  op->_n_x  = n_x;
+     3846:   20:  op->_n_z  = n_z;
+        -:   21:
+     3846:   22:  op->_w_offset = 0;
+     3846:   23:  op->_x_offset = n_pu;
+     3846:   24:  op->_z_offset = n_pu + n_x;
+        -:   25:
+        -:   26:  // FULL RESET: esqueleto base desde cero
+     3846:   27:  op->_modelsense.clear();
+        -:   28:
+     3846:   29:  op->_obj.clear();   op->_vtype.clear();
+     3846:   30:  op->_lb.clear();    op->_ub.clear();
+        -:   31:
+     3846:   32:  op->_A_i.clear(); op->_A_j.clear(); op->_A_x.clear();
+     3846:   33:  op->_rhs.clear(); op->_sense.clear();
+     3846:   34:  op->_name.clear();
+        -:   35:
+        -:   36:  // ---- NEW: reset auxiliary blocks (VERY IMPORTANT)
+     3846:   37:  op->_n_y_pu = 0;
+     3846:   38:  op->_n_y_action = 0;
+     3846:   39:  op->_n_y_intervention = 0;
+     3846:   40:  op->_n_u_intervention = 0;
+        -:   41:
+     3846:   42:  op->_y_pu_offset = -1;
+     3846:   43:  op->_y_action_offset = -1;
+     3846:   44:  op->_y_intervention_offset = -1;
+     3846:   45:  op->_u_intervention_offset = -1;
+        -:   46:
+     3846:   47:  op->_boundary_size = 0; // optional, if you use it as cache
+        -:   48:
+        -:   49:
+        -:   50:  // IMPORTANT: en tu OptimizationProblem.h esto también limpia _active_blocks
+     3846:   51:  op->clear_registry();
+        -:   52:
+     3846:   53:  const std::size_t n_total = static_cast<std::size_t>(n_pu + n_x + n_z);
+        -:   54:
+     3846:   55:  op->_obj.reserve(n_total);
+     3846:   56:  op->_vtype.reserve(n_total);
+     3846:   57:  op->_lb.reserve(n_total);
+     3846:   58:  op->_ub.reserve(n_total);
+        -:   59:
+        -:   60:  // w
+    19298:   61:  for (int i = 0; i < n_pu; ++i) {
+    15452:   62:    op->_obj.push_back(0.0);
+    30904:   63:    op->_vtype.push_back("B");
+    15452:   64:    op->_lb.push_back(0.0);
+    15452:   65:    op->_ub.push_back(1.0);
+        -:   66:  }
+        -:   67:
+        -:   68:  // x
+    31177:   69:  for (int r = 0; r < n_x; ++r) {
+    27331:   70:    op->_obj.push_back(0.0);
+    54662:   71:    op->_vtype.push_back("B");
+    27331:   72:    op->_lb.push_back(0.0);
+    27331:   73:    op->_ub.push_back(1.0);
+        -:   74:  }
+        -:   75:
+        -:   76:  // z
+     6617:   77:  for (int t = 0; t < n_z; ++t) {
+     2771:   78:    op->_obj.push_back(0.0);
+     5542:   79:    op->_vtype.push_back("B");
+     2771:   80:    op->_lb.push_back(0.0);
+     2771:   81:    op->_ub.push_back(1.0);
+        -:   82:  }
+        -:   83:
+        -:   84:  // Register variable blocks (0-based half-open)
+     3846:   85:  const std::size_t w0 = static_cast<std::size_t>(op->_w_offset);
+     3846:   86:  const std::size_t w1 = w0 + static_cast<std::size_t>(n_pu);
+        -:   87:
+     3846:   88:  const std::size_t x0 = static_cast<std::size_t>(op->_x_offset);
+     3846:   89:  const std::size_t x1 = x0 + static_cast<std::size_t>(n_x);
+        -:   90:
+     3846:   91:  const std::size_t z0 = static_cast<std::size_t>(op->_z_offset);
+     3846:   92:  const std::size_t z1 = z0 + static_cast<std::size_t>(n_z);
+        -:   93:
+        -:   94:  // tags útiles para debugging / wrappers MO
+        -:   95:  const std::string tag_base =
+     7692:   96:    "n_pu=" + std::to_string(n_pu) +
+    15384:   97:    ";n_x="  + std::to_string(n_x) +
+    11538:   98:    ";n_z="  + std::to_string(n_z);
+        -:   99:
+     7692:  100:  const std::size_t w_block_id = op->register_variable_block("w", w0, w1, tag_base);
+     7692:  101:  const std::size_t x_block_id = op->register_variable_block("x", x0, x1, tag_base);
+        -:  102:
+     3846:  103:  std::size_t z_block_id = 0;
+     4564:  104:  if (n_z > 0) z_block_id = op->register_variable_block("z", z0, z1, tag_base);
+        -:  105:
+        -:  106:  // Return 1-based indices
+     3846:  107:  Rcpp::IntegerVector w_index(n_pu), x_index(n_x), z_index(n_z);
+    19298:  108:  for (int i = 0; i < n_pu; ++i) w_index[i] = op->_w_offset + i + 1;
+    31177:  109:  for (int r = 0; r < n_x;  ++r) x_index[r] = op->_x_offset + r + 1;
+     6617:  110:  for (int t = 0; t < n_z;  ++t) z_index[t] = op->_z_offset + t + 1;
+        -:  111:
+        -:  112:  // Safer ranges: NumericVector (avoids int overflow)
+    11538:  113:  auto range_to_R = [](std::size_t start0, std::size_t end0) {
+    11538:  114:    if (end0 <= start0) return Rcpp::NumericVector::create(NA_REAL, NA_REAL);
+        -:  115:    // 1-based, inclusive-friendly: [start0+1, end0]
+        -:  116:    return Rcpp::NumericVector::create(
+    #####:  117:      static_cast<double>(start0 + 1),
+     8051:  118:      static_cast<double>(end0)
+     8051:  119:    );
+        -:  120:  };
+        -:  121:
+        -:  122:  return Rcpp::List::create(
+     7692:  123:    Rcpp::Named("w_index") = w_index,
+     7692:  124:    Rcpp::Named("x_index") = x_index,
+     7692:  125:    Rcpp::Named("z_index") = z_index,
+        -:  126:
+    15384:  127:    Rcpp::Named("w_range") = range_to_R(w0, w1),
+    15384:  128:    Rcpp::Named("x_range") = range_to_R(x0, x1),
+    15384:  129:    Rcpp::Named("z_range") = range_to_R(z0, z1),
+        -:  130:
+    11538:  131:    Rcpp::Named("w_block_id") = static_cast<double>(w_block_id),
+    11538:  132:    Rcpp::Named("x_block_id") = static_cast<double>(x_block_id),
+    11538:  133:    Rcpp::Named("z_block_id") = (z_block_id == 0 ? NA_REAL : static_cast<double>(z_block_id))
+     7692:  134:  );
+     3846:  135:}

@@ -1,0 +1,124 @@
+        -:    0:Source:C:/Program Files/R/R-4.4.1/library/BH/include/boost/system/detail/generic_category_message.hpp
+        -:    0:Graph:./rcpp_add_base_variables.gcno
+        -:    0:Data:./rcpp_add_base_variables.gcda
+        -:    0:Runs:22
+        -:    1:#ifndef BOOST_SYSTEM_DETAIL_GENERIC_CATEGORY_MESSAGE_HPP_INCLUDED
+        -:    2:#define BOOST_SYSTEM_DETAIL_GENERIC_CATEGORY_MESSAGE_HPP_INCLUDED
+        -:    3:
+        -:    4:// Implementation of generic_error_category_message
+        -:    5://
+        -:    6:// Copyright 2018 Peter Dimov
+        -:    7://
+        -:    8:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    9:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:   10://
+        -:   11:// See library home page at http://www.boost.org/libs/system
+        -:   12:
+        -:   13:#include <boost/config.hpp>
+        -:   14:#include <string>
+        -:   15:#include <cstring>
+        -:   16:
+        -:   17:namespace boost
+        -:   18:{
+        -:   19:
+        -:   20:namespace system
+        -:   21:{
+        -:   22:
+        -:   23:namespace detail
+        -:   24:{
+        -:   25:
+        -:   26:#if defined(__GLIBC__)
+        -:   27:
+        -:   28:// glibc has two incompatible strerror_r definitions
+        -:   29:
+        -:   30:inline char const * strerror_r_helper( char const * r, char const * ) noexcept
+        -:   31:{
+        -:   32:    return r;
+        -:   33:}
+        -:   34:
+        -:   35:inline char const * strerror_r_helper( int r, char const * buffer ) noexcept
+        -:   36:{
+        -:   37:    return r == 0? buffer: "Unknown error";
+        -:   38:}
+        -:   39:
+        -:   40:inline char const * generic_error_category_message( int ev, char * buffer, std::size_t len ) noexcept
+        -:   41:{
+        -:   42:    if( buffer != nullptr )
+        -:   43:    {
+        -:   44:        return strerror_r_helper( strerror_r( ev, buffer, len ), buffer );
+        -:   45:    }
+        -:   46:    else
+        -:   47:    {
+        -:   48:        // strerror_r requires non-null buffer pointer
+        -:   49:
+        -:   50:        char tmp[ 1 ] = {};
+        -:   51:        char const* r = strerror_r_helper( strerror_r( ev, tmp, 0 ), buffer );
+        -:   52:
+        -:   53:        return r == tmp? nullptr: r;
+        -:   54:    }
+        -:   55:}
+        -:   56:
+        -:   57:inline std::string generic_error_category_message( int ev )
+        -:   58:{
+        -:   59:    char buffer[ 128 ];
+        -:   60:    return generic_error_category_message( ev, buffer, sizeof( buffer ) );
+        -:   61:}
+        -:   62:
+        -:   63:#else // #if defined(__GLIBC__)
+        -:   64:
+        -:   65:// std::strerror is thread-safe on everything else, incl. Windows
+        -:   66:
+        -:   67:# if defined( BOOST_MSVC )
+        -:   68:#  pragma warning( push )
+        -:   69:#  pragma warning( disable: 4996 )
+        -:   70:# elif defined(__clang__) && defined(__has_warning)
+        -:   71:#  pragma clang diagnostic push
+        -:   72:#  if __has_warning("-Wdeprecated-declarations")
+        -:   73:  //#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        -:   74:#  endif
+        -:   75:# endif
+        -:   76:
+    #####:   77:inline std::string generic_error_category_message( int ev )
+        -:   78:{
+    #####:   79:    char const * m = std::strerror( ev );
+    #####:   80:    return m? m: "Unknown error";
+        -:   81:}
+        -:   82:
+    #####:   83:inline char const * generic_error_category_message( int ev, char * buffer, std::size_t len ) noexcept
+        -:   84:{
+    #####:   85:    if( len == 0 )
+        -:   86:    {
+    #####:   87:        return buffer;
+        -:   88:    }
+        -:   89:
+    #####:   90:    if( len == 1 )
+        -:   91:    {
+    #####:   92:        buffer[0] = 0;
+    #####:   93:        return buffer;
+        -:   94:    }
+        -:   95:
+    #####:   96:    char const * m = std::strerror( ev );
+        -:   97:
+    #####:   98:    if( m == 0 ) return "Unknown error";
+        -:   99:
+    #####:  100:    std::strncpy( buffer, m, len - 1 );
+    #####:  101:    buffer[ len-1 ] = 0;
+        -:  102:
+    #####:  103:    return buffer;
+        -:  104:}
+        -:  105:
+        -:  106:# if defined( BOOST_MSVC )
+        -:  107:#  pragma warning( pop )
+        -:  108:# elif defined(__clang__) && defined(__has_warning)
+        -:  109:#  pragma clang diagnostic pop
+        -:  110:# endif
+        -:  111:
+        -:  112:#endif // #if defined(__GLIBC__)
+        -:  113:
+        -:  114:} // namespace detail
+        -:  115:
+        -:  116:} // namespace system
+        -:  117:
+        -:  118:} // namespace boost
+        -:  119:
+        -:  120:#endif // #ifndef BOOST_SYSTEM_DETAIL_GENERIC_CATEGORY_MESSAGE_HPP_INCLUDED

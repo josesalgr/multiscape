@@ -1,0 +1,149 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/traits.h
+        -:    0:Graph:./rcpp_prepare_objective_min_intervention_impact.gcno
+        -:    0:Data:./rcpp_prepare_objective_min_intervention_impact.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// traits.h: Rcpp R/C++ interface class library -- support traits for vector
+        -:    3://
+        -:    4:// Copyright (C) 2010 - 2026 Dirk Eddelbuettel and Romain Francois
+        -:    5://
+        -:    6:// This file is part of Rcpp.
+        -:    7://
+        -:    8:// Rcpp is free software: you can redistribute it and/or modify it
+        -:    9:// under the terms of the GNU General Public License as published by
+        -:   10:// the Free Software Foundation, either version 2 of the License, or
+        -:   11:// (at your option) any later version.
+        -:   12://
+        -:   13:// Rcpp is distributed in the hope that it will be useful, but
+        -:   14:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   15:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   16:// GNU General Public License for more details.
+        -:   17://
+        -:   18:// You should have received a copy of the GNU General Public License
+        -:   19:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   20:
+        -:   21:#ifndef Rcpp__vector__traits_h
+        -:   22:#define Rcpp__vector__traits_h
+        -:   23:
+        -:   24:namespace Rcpp{
+        -:   25:namespace traits{
+        -:   26:
+        -:   27:	template <int RTYPE, template <class> class StoragePolicy = PreserveStorage >
+        -:   28:	class r_vector_cache{
+        -:   29:	public:
+        -:   30:		typedef typename ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+        -:   31:		typedef typename r_vector_iterator<RTYPE>::type iterator ;
+        -:   32:		typedef typename r_vector_const_iterator<RTYPE>::type const_iterator ;
+        -:   33:		typedef typename r_vector_proxy<RTYPE>::type proxy ;
+        -:   34:		typedef typename r_vector_const_proxy<RTYPE>::type const_proxy ;
+        -:   35:		typedef typename storage_type<RTYPE>::type storage_type ;
+        -:   36:
+    #####:   37:		r_vector_cache() : start(0), size(0) {} ;
+------------------
+_ZN4Rcpp6traits14r_vector_cacheILi13ENS_15PreserveStorageEEC1Ev:
+    #####:   37:		r_vector_cache() : start(0), size(0) {} ;
+------------------
+_ZN4Rcpp6traits14r_vector_cacheILi14ENS_15PreserveStorageEEC1Ev:
+    #####:   37:		r_vector_cache() : start(0), size(0) {} ;
+------------------
+        -:   38:
+    #####:   39:		inline void update( const VECTOR& v ) {
+    #####:   40:			start = ::Rcpp::internal::r_vector_start<RTYPE>(v) ;
+    #####:   41:			size = v.size();
+    #####:   42:		}
+------------------
+_ZN4Rcpp6traits14r_vector_cacheILi13ENS_15PreserveStorageEE6updateERKNS_6VectorILi13ES2_EE:
+    #####:   39:		inline void update( const VECTOR& v ) {
+    #####:   40:			start = ::Rcpp::internal::r_vector_start<RTYPE>(v) ;
+    #####:   41:			size = v.size();
+    #####:   42:		}
+------------------
+_ZN4Rcpp6traits14r_vector_cacheILi14ENS_15PreserveStorageEE6updateERKNS_6VectorILi14ES2_EE:
+    #####:   39:		inline void update( const VECTOR& v ) {
+    #####:   40:			start = ::Rcpp::internal::r_vector_start<RTYPE>(v) ;
+    #####:   41:			size = v.size();
+    #####:   42:		}
+------------------
+        -:   43:
+    #####:   44:		inline iterator get() const { return start; }
+        -:   45:		inline const_iterator get_const() const { return start; }
+        -:   46:
+        -:   47:		inline proxy ref() { check_index(0); return start[0] ;}
+    #####:   48:		inline proxy ref(R_xlen_t i) { check_index(i); return start[i] ; }
+        -:   49:
+        -:   50:		inline proxy ref() const { check_index(0); return start[0] ;}
+        -:   51:		inline proxy ref(R_xlen_t i) const { check_index(i); return start[i] ; }
+        -:   52:
+        -:   53:	private:
+        -:   54:
+    #####:   55:		void check_index(R_xlen_t i) const {
+        -:   56:#ifndef RCPP_NO_BOUNDS_CHECK
+    #####:   57:			if (i >= size) {
+    #####:   58:				warning("subscript out of bounds (index %s >= vector size %s)", i, size); // #nocov
+        -:   59:			}
+        -:   60:#endif
+    #####:   61:		}
+        -:   62:
+        -:   63:		iterator start ;
+        -:   64:		R_xlen_t size ;
+        -:   65:	} ;
+        -:   66:
+        -:   67:	template <int RTYPE, template <class> class StoragePolicy = PreserveStorage>
+        -:   68:	class proxy_cache{
+        -:   69:	public:
+        -:   70:		typedef typename ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+        -:   71:		typedef typename r_vector_iterator<RTYPE, StoragePolicy>::type iterator ;
+        -:   72:		typedef typename r_vector_const_iterator<RTYPE, StoragePolicy>::type const_iterator ;
+        -:   73:		typedef typename r_vector_proxy<RTYPE, StoragePolicy>::type proxy ;
+        -:   74:		typedef typename r_vector_const_proxy<RTYPE, StoragePolicy>::type const_proxy ;
+        -:   75:
+    #####:   76:		proxy_cache(): p(0){}
+    #####:   77:		~proxy_cache(){}
+    #####:   78:		void update( const VECTOR& v ){
+    #####:   79:			p = const_cast<VECTOR*>(&v) ;
+    #####:   80:		}
+    #####:   81:		inline iterator get() const { return iterator( proxy(*p, 0 ) ) ;}
+        -:   82:		inline const_iterator get_const() const { return const_iterator( const_proxy(*p, 0) ) ; }
+        -:   83:
+        -:   84:		inline proxy ref() { check_index(0); return proxy(*p,0) ; }
+    #####:   85:		inline proxy ref(R_xlen_t i) { check_index(i); return proxy(*p,i);}
+        -:   86:
+        -:   87:		inline const_proxy ref() const { check_index(0); return const_proxy(*p,0) ; }
+        -:   88:		inline const_proxy ref(R_xlen_t i) const { check_index(i); return const_proxy(*p,i);}
+        -:   89:
+        -:   90:	private:
+        -:   91:		VECTOR* p ;
+        -:   92:
+    #####:   93:		void check_index(R_xlen_t i) const {
+        -:   94:#ifndef RCPP_NO_BOUNDS_CHECK
+    #####:   95:			if (i >= p->size()) {
+    #####:   96:				warning("subscript out of bounds (index %s >= vector size %s)", i, p->size()); // #nocov
+        -:   97:			}
+        -:   98:#endif
+    #####:   99:		}
+        -:  100:	} ;
+        -:  101:
+        -:  102:	// regular types for INTSXP, REALSXP, ...
+        -:  103:	template <int RTYPE, template <class> class StoragePolicy = PreserveStorage>
+        -:  104:	struct r_vector_cache_type {
+        -:  105:	    typedef r_vector_cache<RTYPE, StoragePolicy> type ;
+        -:  106:	} ;
+        -:  107:
+        -:  108:	// proxy types for VECSXP, STRSXP and EXPRSXP
+        -:  109:	template <template <class> class StoragePolicy>
+        -:  110:	struct r_vector_cache_type<VECSXP, StoragePolicy>  {
+        -:  111:	    typedef proxy_cache<VECSXP, StoragePolicy> type ;
+        -:  112:	} ;
+        -:  113:	template <template <class> class StoragePolicy>
+        -:  114:	struct r_vector_cache_type<EXPRSXP, StoragePolicy> {
+        -:  115:	    typedef proxy_cache<EXPRSXP, StoragePolicy> type ;
+        -:  116:	} ;
+        -:  117:	template <template <class> class StoragePolicy>
+        -:  118:	struct r_vector_cache_type<STRSXP, StoragePolicy>  {
+        -:  119:	    typedef proxy_cache<STRSXP, StoragePolicy> type ;
+        -:  120:	} ;
+        -:  121:
+        -:  122:} // traits
+        -:  123:}
+        -:  124:
+        -:  125:#endif

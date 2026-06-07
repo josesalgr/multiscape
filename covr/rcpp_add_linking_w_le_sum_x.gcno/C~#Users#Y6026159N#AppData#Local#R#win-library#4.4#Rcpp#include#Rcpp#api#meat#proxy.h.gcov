@@ -1,0 +1,209 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/api/meat/proxy.h
+        -:    0:Graph:./rcpp_add_linking_w_le_sum_x.gcno
+        -:    0:Data:./rcpp_add_linking_w_le_sum_x.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+        -:    2://
+        -:    3:// proxy.h: Rcpp R/C++ interface class library -- proxy meat
+        -:    4://
+        -:    5:// Copyright (C) 2014    Dirk Eddelbuettel, Romain Francois, and Kevin Ushey
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:#ifndef RCPP_API_MEAT_PROXY_H
+        -:   22:#define RCPP_API_MEAT_PROXY_H
+        -:   23:
+        -:   24:// NOTE: Implementing this as 'meat' is necessary as it allows user-defined
+        -:   25:// classes writing their own overloads of 'wrap', 'as' to function correctly!
+        -:   26:namespace Rcpp {
+        -:   27:
+        -:   28:// AttributeProxy
+        -:   29:template <typename CLASS>
+        -:   30:template <typename T>
+        -:   31:typename AttributeProxyPolicy<CLASS>::AttributeProxy&
+    #####:   32:AttributeProxyPolicy<CLASS>::AttributeProxy::operator=(const T& rhs) {
+    #####:   33:    set(wrap(rhs));
+    #####:   34:    return *this;
+        -:   35:}
+        -:   36:
+        -:   37:template <typename CLASS>
+        -:   38:template <typename T>
+        -:   39:AttributeProxyPolicy<CLASS>::AttributeProxy::operator T() const {
+        -:   40:    return as<T>(get());
+        -:   41:}
+        -:   42:
+        -:   43:template <typename CLASS>
+        -:   44:AttributeProxyPolicy<CLASS>::AttributeProxy::operator SEXP() const {
+        -:   45:    return get();
+        -:   46:}
+        -:   47:
+        -:   48:template <typename CLASS>
+        -:   49:template <typename T>
+        -:   50:AttributeProxyPolicy<CLASS>::const_AttributeProxy::operator T() const {
+        -:   51:    return as<T>(get());
+        -:   52:}
+        -:   53:
+        -:   54:template <typename CLASS>
+        -:   55:AttributeProxyPolicy<CLASS>::const_AttributeProxy::operator SEXP() const {
+        -:   56:    return get();
+        -:   57:}
+        -:   58:
+        -:   59:// NamesProxy
+        -:   60:template <typename CLASS>
+        -:   61:template <typename T>
+        -:   62:typename NamesProxyPolicy<CLASS>::NamesProxy&
+        -:   63:NamesProxyPolicy<CLASS>::NamesProxy::operator=(const T& rhs) {
+        -:   64:    set(Shield<SEXP>(wrap(rhs)));
+        -:   65:    return *this;
+        -:   66:}
+        -:   67:
+        -:   68:template <typename CLASS>
+        -:   69:template <typename T>
+        -:   70:NamesProxyPolicy<CLASS>::NamesProxy::operator T() const {
+        -:   71:    return as<T>( get() );
+        -:   72:}
+        -:   73:
+        -:   74:template <typename CLASS>
+        -:   75:template <typename T>
+        -:   76:NamesProxyPolicy<CLASS>::const_NamesProxy::operator T() const {
+        -:   77:    return as<T>( get() );
+        -:   78:}
+        -:   79:
+        -:   80:// SlotProxy
+        -:   81:template <typename CLASS>
+        -:   82:template <typename T>
+        -:   83:typename SlotProxyPolicy<CLASS>::SlotProxy&
+        -:   84:SlotProxyPolicy<CLASS>::SlotProxy::operator=(const T& rhs) {
+        -:   85:    set(Shield<SEXP>(wrap(rhs)));
+        -:   86:    return *this;
+        -:   87:}
+        -:   88:
+        -:   89:template <typename CLASS>
+        -:   90:template <typename T>
+        -:   91:SlotProxyPolicy<CLASS>::SlotProxy::operator T() const {
+        -:   92:    return as<T>(get());
+        -:   93:}
+        -:   94:
+        -:   95:// TagProxy
+        -:   96:template <typename CLASS>
+        -:   97:template <typename T>
+        -:   98:typename TagProxyPolicy<CLASS>::TagProxy&
+        -:   99:TagProxyPolicy<CLASS>::TagProxy::operator=(const T& rhs) {
+        -:  100:    set(Shield<SEXP>(wrap(rhs)));
+        -:  101:    return *this;
+        -:  102:}
+        -:  103:
+        -:  104:template <typename CLASS>
+        -:  105:template <typename T>
+        -:  106:TagProxyPolicy<CLASS>::TagProxy::operator T() const {
+        -:  107:    return as<T>(get());
+        -:  108:}
+        -:  109:
+        -:  110:template <typename CLASS>
+        -:  111:TagProxyPolicy<CLASS>::TagProxy::operator SEXP() const {
+        -:  112:    return get();
+        -:  113:}
+        -:  114:
+        -:  115:template <typename CLASS>
+        -:  116:template <typename T>
+        -:  117:TagProxyPolicy<CLASS>::const_TagProxy::operator T() const {
+        -:  118:    return as<T>(get());
+        -:  119:}
+        -:  120:
+        -:  121:template <typename CLASS>
+        -:  122:TagProxyPolicy<CLASS>::const_TagProxy::operator SEXP() const {
+        -:  123:    return get();
+        -:  124:}
+        -:  125:
+        -:  126:// Binding
+        -:  127:template <typename CLASS>
+        -:  128:template <typename T>
+        -:  129:typename BindingPolicy<CLASS>::Binding&
+        -:  130:BindingPolicy<CLASS>::Binding::operator=(const T& rhs) {
+        -:  131:    set(Shield<SEXP>(wrap(rhs)));
+        -:  132:    return *this;
+        -:  133:}
+        -:  134:
+        -:  135:template <typename CLASS>
+        -:  136:template <typename T>
+        -:  137:BindingPolicy<CLASS>::Binding::operator T() const {
+        -:  138:    return as<T>(get());
+        -:  139:}
+        -:  140:
+        -:  141:template <typename CLASS>
+        -:  142:template <typename T>
+        -:  143:BindingPolicy<CLASS>::const_Binding::operator T() const {
+        -:  144:    return as<T>(get());
+        -:  145:}
+        -:  146:
+        -:  147:// DottedPairProxy
+        -:  148:template <typename CLASS>
+        -:  149:template <typename T>
+        -:  150:typename DottedPairProxyPolicy<CLASS>::DottedPairProxy&
+        -:  151:DottedPairProxyPolicy<CLASS>::DottedPairProxy::operator=(const T& rhs) {
+        -:  152:    set(Shield<SEXP>(wrap(rhs)));
+        -:  153:    return *this;
+        -:  154:}
+        -:  155:
+        -:  156:template <typename CLASS>
+        -:  157:template <typename T>
+        -:  158:typename DottedPairProxyPolicy<CLASS>::DottedPairProxy&
+        -:  159:DottedPairProxyPolicy<CLASS>::DottedPairProxy::operator=(const traits::named_object<T>& rhs) {
+        -:  160:    return set(Shield<SEXP>(wrap(rhs.object)), rhs.name);
+        -:  161:}
+        -:  162:
+        -:  163:template <typename CLASS>
+        -:  164:template <typename T>
+        -:  165:DottedPairProxyPolicy<CLASS>::DottedPairProxy::operator T() const {
+        -:  166:    return as<T>(get());
+        -:  167:}
+        -:  168:
+        -:  169:template <typename CLASS>
+        -:  170:template <typename T>
+        -:  171:DottedPairProxyPolicy<CLASS>::const_DottedPairProxy::operator T() const {
+        -:  172:    return as<T>(get());
+        -:  173:}
+        -:  174:
+        -:  175:// FieldProxy
+        -:  176:template <typename CLASS>
+        -:  177:typename FieldProxyPolicy<CLASS>::FieldProxy&
+        -:  178:FieldProxyPolicy<CLASS>::FieldProxy::operator=(const FieldProxyPolicy<CLASS>::FieldProxy& rhs) {
+        -:  179:    if (this != &rhs) set(rhs.get());
+        -:  180:    return *this;
+        -:  181:}
+        -:  182:
+        -:  183:template <typename CLASS>
+        -:  184:template <typename T>
+        -:  185:typename FieldProxyPolicy<CLASS>::FieldProxy&
+        -:  186:FieldProxyPolicy<CLASS>::FieldProxy::operator=(const T& rhs) {
+        -:  187:    set(Shield<SEXP>(wrap(rhs)));
+        -:  188:    return *this;
+        -:  189:}
+        -:  190:
+        -:  191:template <typename CLASS>
+        -:  192:template <typename T>
+        -:  193:FieldProxyPolicy<CLASS>::FieldProxy::operator T() const {
+        -:  194:    return as<T>(get());
+        -:  195:}
+        -:  196:
+        -:  197:template <typename CLASS>
+        -:  198:template <typename T>
+        -:  199:FieldProxyPolicy<CLASS>::const_FieldProxy::operator T() const {
+        -:  200:    return as<T>(get());
+        -:  201:}
+        -:  202:
+        -:  203:}
+        -:  204:
+        -:  205:#endif

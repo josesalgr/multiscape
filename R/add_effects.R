@@ -358,10 +358,107 @@ add_effects <- function(
     stop("effects$feature must be either numeric ids or character feature names.", call. = FALSE)
   }
 
+
+  # ---- helper: validate numeric effect columns
+  .validate_effect_values <- function(tbl, columns, context = "effects") {
+    columns <- intersect(columns, names(tbl))
+
+    if (length(columns) == 0L) {
+      return(invisible(TRUE))
+    }
+
+    for (nm in columns) {
+      values <- tbl[[nm]]
+
+      if (!is.numeric(values)) {
+        stop(
+          context,
+          ": column '",
+          nm,
+          "' must be numeric.",
+          call. = FALSE
+        )
+      }
+
+      if (anyNA(values)) {
+        stop(
+          context,
+          ": column '",
+          nm,
+          "' must not contain missing values.",
+          call. = FALSE
+        )
+      }
+
+      if (any(!is.finite(values))) {
+        stop(
+          context,
+          ": column '",
+          nm,
+          "' must contain only finite values.",
+          call. = FALSE
+        )
+      }
+    }
+
+    invisible(TRUE)
+  }
+
+  # ---- helper: reject duplicated effect keys
+  .validate_effect_keys <- function(tbl, keys, context = "effects") {
+    keys <- intersect(keys, names(tbl))
+
+    if (length(keys) == 0L || nrow(tbl) == 0L) {
+      return(invisible(TRUE))
+    }
+
+    duplicated_key <- duplicated(tbl[, keys, drop = FALSE])
+
+    if (any(duplicated_key)) {
+      first_duplicate <- tbl[
+        which(duplicated_key)[1L],
+        keys,
+        drop = FALSE
+      ]
+
+      example <- paste(
+        paste0(
+          names(first_duplicate),
+          "=",
+          vapply(
+            first_duplicate,
+            as.character,
+            character(1)
+          )
+        ),
+        collapse = ", "
+      )
+
+      stop(
+        context,
+        " contains duplicated combination(s) of ",
+        paste(keys, collapse = ", "),
+        ". Example: ",
+        example,
+        ".",
+        call. = FALSE
+      )
+    }
+
+    invisible(TRUE)
+  }
+
   # ---- baseline lookup for (pu, feature) -> amount
   df$pu <- as.integer(df$pu)
   df$feature <- as.integer(df$feature)
   df$amount <- as.numeric(df$amount)
+
+  if (anyNA(df$amount) || any(!is.finite(df$amount))) {
+    stop(
+      "x$data$dist_features$amount must contain only finite, non-missing values.",
+      call. = FALSE
+    )
+  }
 
   base_key <- paste(df$pu, df$feature, sep = "||")
   base_amt <- df$amount
@@ -377,7 +474,13 @@ add_effects <- function(
   # ---- helper: split signed delta into benefit/loss
   .split_delta <- function(delta) {
     delta <- as.numeric(delta)
-    delta[is.na(delta)] <- 0
+
+    if (anyNA(delta) || any(!is.finite(delta))) {
+      stop(
+        "Signed effect values must contain only finite, non-missing values.",
+        call. = FALSE
+      )
+    }
 
     list(
       benefit = pmax(delta, 0),
@@ -388,6 +491,13 @@ add_effects <- function(
   # ---- helper: compute amount_after from signed delta
   .amount_after_from_delta <- function(pu_vec, feat_vec, delta_vec) {
     delta_vec <- as.numeric(delta_vec)
+
+    if (anyNA(delta_vec) || any(!is.finite(delta_vec))) {
+      stop(
+        "Signed effect values must contain only finite, non-missing values.",
+        call. = FALSE
+      )
+    }
 
     if (length(delta_vec) == 0) {
       return(numeric(0))
@@ -416,13 +526,31 @@ add_effects <- function(
       )
     }
 
+    if (!is.numeric(tbl$benefit) || !is.numeric(tbl$loss)) {
+      stop(
+        context,
+        ": 'benefit' and 'loss' must be numeric.",
+        call. = FALSE
+      )
+    }
+
     tbl$benefit <- as.numeric(tbl$benefit)
     tbl$loss <- as.numeric(tbl$loss)
 
-    tbl$benefit[is.na(tbl$benefit)] <- 0
-    tbl$loss[is.na(tbl$loss)] <- 0
+    if (
+      anyNA(tbl$benefit) ||
+      anyNA(tbl$loss) ||
+      any(!is.finite(tbl$benefit)) ||
+      any(!is.finite(tbl$loss))
+    ) {
+      stop(
+        context,
+        ": 'benefit' and 'loss' must contain only finite, non-missing values.",
+        call. = FALSE
+      )
+    }
 
-    if (any(tbl$benefit < 0, na.rm = TRUE) || any(tbl$loss < 0, na.rm = TRUE)) {
+    if (any(tbl$benefit < 0) || any(tbl$loss < 0)) {
       stop(
         context,
         ": 'benefit' and 'loss' must be non-negative.",
@@ -646,12 +774,23 @@ add_effects <- function(
         !("pu" %in% names(b)) &&
         !any(c("delta", "effect", "benefit", "loss", "after") %in% names(b))) {
 
+      .validate_effect_keys(
+        b,
+        keys = c("action", "feature"),
+        context = "Compact multiplier effects"
+      )
+
+      .validate_effect_values(
+        b,
+        columns = "multiplier",
+        context = "Compact multiplier effects"
+      )
+
       b$multiplier <- as.numeric(b$multiplier)
 
       assertthat::assert_that(
         assertthat::noNA(b$action),
-        assertthat::noNA(b$feature),
-        assertthat::noNA(b$multiplier)
+        assertthat::noNA(b$feature)
       )
       assertthat::assert_that(all(b$action %in% action_ids), msg = "Unknown action id(s) in effects.")
       assertthat::assert_that(all(b$feature %in% feat_ids), msg = "Unknown feature id(s) in effects.")
@@ -719,6 +858,12 @@ add_effects <- function(
       assertthat::assert_that(all(b$action %in% action_ids), msg = "Unknown action id(s) in effects.")
       assertthat::assert_that(all(b$feature %in% feat_ids), msg = "Unknown feature id(s) in effects.")
 
+      .validate_effect_keys(
+        b,
+        keys = c("pu", "action", "feature"),
+        context = "Explicit effects"
+      )
+
       tmp <- dplyr::inner_join(
         b,
         da[, c("pu", "action"), drop = FALSE],
@@ -741,6 +886,12 @@ add_effects <- function(
 
         if (!("benefit" %in% names(tmp))) tmp$benefit <- 0
         if (!("loss" %in% names(tmp))) tmp$loss <- 0
+
+        .validate_effect_values(
+          tmp,
+          columns = c("benefit", "loss"),
+          context = "Explicit benefit/loss effects"
+        )
 
         tmp <- .validate_split_effects(
           tmp,
@@ -790,6 +941,22 @@ add_effects <- function(
             call. = FALSE
           )
         }
+
+        signed_column <- if (has_after) {
+          "after"
+        } else if (has_delta) {
+          "delta"
+        } else if (has_effect) {
+          "effect"
+        } else {
+          "benefit"
+        }
+
+        .validate_effect_values(
+          tmp,
+          columns = signed_column,
+          context = "Signed effects"
+        )
 
         base_amount <- .baseline_amount(tmp$pu, tmp$feature)
 
@@ -845,8 +1012,17 @@ add_effects <- function(
         tmp$delta <- as.numeric(tmp$delta)
         tmp$amount_after <- as.numeric(tmp$amount_after)
 
-        tmp$delta[is.na(tmp$delta)] <- 0
-        tmp$amount_after[is.na(tmp$amount_after)] <- 0
+        if (
+          anyNA(tmp$delta) ||
+          anyNA(tmp$amount_after) ||
+          any(!is.finite(tmp$delta)) ||
+          any(!is.finite(tmp$amount_after))
+        ) {
+          stop(
+            "Computed effect values must contain only finite, non-missing values.",
+            call. = FALSE
+          )
+        }
 
         if (length(tmp$delta) != nrow(tmp)) {
           stop(
@@ -878,7 +1054,7 @@ add_effects <- function(
     )
   }
 
-  # ---- aggregate duplicates
+  # ---- defensively aggregate internally generated duplicate rows
   if (nrow(base) > 0) {
     base <- stats::aggregate(
       cbind(benefit, loss) ~ pu + action + feature,
@@ -915,11 +1091,21 @@ add_effects <- function(
   base$benefit <- as.numeric(base$benefit)
   base$loss <- as.numeric(base$loss)
 
-  base$amount_after[is.na(base$amount_after)] <- 0
-  base$benefit[is.na(base$benefit)] <- 0
-  base$loss[is.na(base$loss)] <- 0
+  if (
+    anyNA(base$amount_after) ||
+    anyNA(base$benefit) ||
+    anyNA(base$loss) ||
+    any(!is.finite(base$amount_after)) ||
+    any(!is.finite(base$benefit)) ||
+    any(!is.finite(base$loss))
+  ) {
+    stop(
+      "Validated effects must contain only finite, non-missing values.",
+      call. = FALSE
+    )
+  }
 
-  if (any(base$amount_after < 0, na.rm = TRUE)) {
+  if (any(base$amount_after < 0)) {
     stop(
       "Some after-action feature amounts are negative. Check effects, losses, or multipliers.",
       call. = FALSE

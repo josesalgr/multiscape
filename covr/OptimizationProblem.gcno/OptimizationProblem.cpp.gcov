@@ -1,0 +1,133 @@
+        -:    0:Source:OptimizationProblem.cpp
+        -:    0:Graph:./OptimizationProblem.gcno
+        -:    0:Data:./OptimizationProblem.gcda
+        -:    0:Runs:22
+        -:    1:#include "OptimizationProblem.h"
+        -:    2:
+        -:    3:// [[Rcpp::export]]
+     3846:    4:SEXP rcpp_new_optimization_problem(std::size_t nrow = 1000000,
+        -:    5:                                   std::size_t ncol = 1000000,
+        -:    6:                                   std::size_t ncell= 100000) {
+        -:    7:  //
+     3846:    8:  OptimizationProblem* x = new OptimizationProblem(nrow, ncol, ncell);
+        -:    9:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::XPtr<OptimizationProblem>(x,
+     3846:   10:                                                                        true);
+     7692:   11:  return(op);
+     3846:   12:}
+        -:   13:
+        -:   14:
+        -:   15:static inline Rcpp::DataFrame registry_to_df(const OptimizationProblem* op) {
+        -:   16:  const std::size_t n = op->_registry.size();
+        -:   17:
+        -:   18:  Rcpp::NumericVector id(n);
+        -:   19:  Rcpp::CharacterVector kind(n), name(n), tag(n);
+        -:   20:  Rcpp::NumericVector start1(n), end1(n); // 1-based inclusive-ish friendly
+        -:   21:
+        -:   22:  for (std::size_t i = 0; i < n; ++i) {
+        -:   23:    const auto& b = op->_registry[i];
+        -:   24:    id[i]    = (double)b.id;
+        -:   25:    kind[i]  = b.kind;
+        -:   26:    name[i]  = b.name;
+        -:   27:    tag[i]   = b.tag;
+        -:   28:
+        -:   29:    // internally [start,end) 0-based
+        -:   30:    // expose as [start+1, end] (end is inclusive-friendly)
+        -:   31:    start1[i] = (b.end > b.start) ? (double)(b.start + 1) : NA_REAL;
+        -:   32:    end1[i]   = (b.end > b.start) ? (double)(b.end)       : NA_REAL;
+        -:   33:  }
+        -:   34:
+        -:   35:  return Rcpp::DataFrame::create(
+        -:   36:    Rcpp::Named("id") = id,
+        -:   37:    Rcpp::Named("kind") = kind,
+        -:   38:    Rcpp::Named("name") = name,
+        -:   39:    Rcpp::Named("start") = start1,
+        -:   40:    Rcpp::Named("end") = end1,
+        -:   41:    Rcpp::Named("tag") = tag,
+        -:   42:    Rcpp::_["stringsAsFactors"] = false
+        -:   43:  );
+        -:   44:}
+        -:   45:
+        -:   46:
+        -:   47:// [[Rcpp::export]]
+    11088:   48:Rcpp::List rcpp_optimization_problem_as_list(SEXP x) {
+        -:   49:
+        -:   50:  Rcpp::XPtr<OptimizationProblem> op =
+    11088:   51:    Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   52:
+        -:   53:  // --- defensive consistency checks
+    11088:   54:  if (op->_lb.size() != op->_obj.size())
+    #####:   55:    Rcpp::stop("Inconsistent model: lb.size() != obj.size().");
+    11088:   56:  if (op->_ub.size() != op->_obj.size())
+    #####:   57:    Rcpp::stop("Inconsistent model: ub.size() != obj.size().");
+    11088:   58:  if (op->_vtype.size() != op->_obj.size())
+    #####:   59:    Rcpp::stop("Inconsistent model: vtype.size() != obj.size().");
+        -:   60:
+    11088:   61:  if (op->_sense.size() != op->_rhs.size())
+    #####:   62:    Rcpp::stop("Inconsistent model: sense.size() != rhs.size().");
+    11088:   63:  if (op->_name.size() != op->_rhs.size())
+    #####:   64:    Rcpp::stop("Inconsistent model: name.size() != rhs.size().");
+        -:   65:
+        -:   66:  // bounds (tal cual lo tenías)
+        -:   67:  Rcpp::List bounds = Rcpp::List::create(
+    44352:   68:    Rcpp::Named("lower") = Rcpp::List::create(
+    33264:   69:      Rcpp::Named("ind") = Rcpp::seq(1, (double)op->_obj.size()),
+    33264:   70:      Rcpp::Named("val") = op->_lb
+    11088:   71:    ),
+    44352:   72:    Rcpp::Named("upper") = Rcpp::List::create(
+    33264:   73:      Rcpp::Named("ind") = Rcpp::seq(1, (double)op->_obj.size()),
+    33264:   74:      Rcpp::Named("val") = op->_ub
+    11088:   75:    )
+    11088:   76:  );
+        -:   77:
+        -:   78:  return Rcpp::List::create(
+    33264:   79:    Rcpp::Named("modelsense") = op->_modelsense,
+    33264:   80:    Rcpp::Named("A_i") = op->_A_i,
+    33264:   81:    Rcpp::Named("A_j") = op->_A_j,
+    33264:   82:    Rcpp::Named("A_x") = op->_A_x,
+    33264:   83:    Rcpp::Named("obj") = op->_obj,
+    22176:   84:    Rcpp::Named("bounds") = bounds,
+    33264:   85:    Rcpp::Named("rhs") = op->_rhs,
+    33264:   86:    Rcpp::Named("sense") = op->_sense,
+    33264:   87:    Rcpp::Named("vtype") = op->_vtype,
+    33264:   88:    Rcpp::Named("name") = op->_name,
+    33264:   89:    Rcpp::Named("yvar") = op->_id_pow_variables,
+    33264:   90:    Rcpp::Named("xvar") = op->_id_variables,
+    33264:   91:    Rcpp::Named("boundary_size") = op->_boundary_size,
+    33264:   92:    Rcpp::Named("n_pu") = op->_n_pu,
+    33264:   93:    Rcpp::Named("n_x") = op->_n_x,
+    33264:   94:    Rcpp::Named("n_z") = op->_n_z,
+    33264:   95:    Rcpp::Named("n_y_pu") = op->_n_y_pu,
+    33264:   96:    Rcpp::Named("n_y_action") = op->_n_y_action,
+    33264:   97:    Rcpp::Named("n_y_intervention") = op->_n_y_intervention,
+    33264:   98:    Rcpp::Named("n_u_intervention") = op->_n_u_intervention,
+    33264:   99:    Rcpp::Named("w_offset") = op->_w_offset,
+    33264:  100:    Rcpp::Named("x_offset") = op->_x_offset,
+    33264:  101:    Rcpp::Named("z_offset") = op->_z_offset,
+    33264:  102:    Rcpp::Named("y_pu_offset") = op->_y_pu_offset,
+    33264:  103:    Rcpp::Named("y_action_offset") = op->_y_action_offset,
+    33264:  104:    Rcpp::Named("u_intervention_offset") = op->_u_intervention_offset,
+    33264:  105:    Rcpp::Named("y_intervention_offset") = op->_y_intervention_offset,
+    44352:  106:    Rcpp::Named("registry") = op->registry_as_df()
+    22176:  107:  );
+    11088:  108:}
+        -:  109:
+        -:  110:
+        -:  111:// [[Rcpp::export]]
+    #####:  112:std::size_t rcpp_get_optimization_problem_ncol(SEXP x) {
+    #####:  113:  return(Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x)->ncol());
+        -:  114:}
+        -:  115:
+        -:  116:// [[Rcpp::export]]
+    #####:  117:std::size_t rcpp_get_optimization_problem_nrow(SEXP x) {
+    #####:  118:  return(Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x)->nrow());
+        -:  119:}
+        -:  120:
+        -:  121:// [[Rcpp::export]]
+    #####:  122:std::size_t rcpp_get_optimization_problem_ncell(SEXP x) {
+    #####:  123:  return(Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x)->ncell());
+        -:  124:}
+        -:  125:
+        -:  126:// [[Rcpp::export]]
+    #####:  127:Rcpp::List rcpp_get_optimization_problem_A(SEXP x) {
+    #####:  128:  return(Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x)->A());
+        -:  129:}

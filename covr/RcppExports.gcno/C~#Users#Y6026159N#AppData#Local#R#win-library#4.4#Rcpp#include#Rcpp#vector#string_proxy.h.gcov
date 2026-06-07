@@ -1,0 +1,270 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/string_proxy.h
+        -:    0:Graph:./RcppExports.gcno
+        -:    0:Data:./RcppExports.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// string_proxy.h: Rcpp R/C++ interface class library --
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2018 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__vector__string_proxy_h
+        -:   23:#define Rcpp__vector__string_proxy_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:namespace internal{
+        -:   27:
+        -:   28:	template<int RTYPE, template <class> class StoragePolicy>
+        -:   29:	class string_proxy {
+        -:   30:	public:
+        -:   31:
+        -:   32:		typedef typename ::Rcpp::Vector<RTYPE, StoragePolicy> VECTOR ;
+        -:   33:		typedef const char* iterator ;
+        -:   34:		typedef const char& reference ;
+        -:   35:
+        -:   36:		string_proxy() : parent(0), index(-1){};
+        -:   37:
+        -:   38:		/**
+        -:   39:		 * Creates a proxy
+        -:   40:		 *
+        -:   41:		 * @param v reference to the associated character vector
+        -:   42:		 * @param index index
+        -:   43:		 */
+    #####:   44:		string_proxy( VECTOR& v, R_xlen_t index_ ) : parent(&v), index(index_){}
+        -:   45:
+    #####:   46:		string_proxy( const string_proxy& other ) :
+    #####:   47:			parent(other.parent), index(other.index)
+    #####:   48:		{} ;
+        -:   49:
+        -:   50:		/**
+        -:   51:		 * lhs use. Assign the value of the referred element to
+        -:   52:		 * the current content of the element referred by the
+        -:   53:		 * rhs proxy
+        -:   54:		 *
+        -:   55:		 * @param rhs another proxy, possibly from another vector
+        -:   56:		 */
+        -:   57:		string_proxy& operator=( const string_proxy<RTYPE, StoragePolicy>& other) {
+        -:   58:		    set( other.get() ) ;
+        -:   59:		    return *this ;
+        -:   60:		}
+        -:   61:
+        -:   62:		template <template <class> class StoragePolicy2>
+        -:   63:		string_proxy& operator=( const string_proxy<RTYPE, StoragePolicy2>& other) {
+        -:   64:		    set( other.get() ) ;
+        -:   65:		    return *this ;
+        -:   66:		}
+        -:   67:
+        -:   68:		template <template <class> class StoragePolicy2>
+        -:   69:		string_proxy& operator=( const const_string_proxy<RTYPE, StoragePolicy2>& other) ;
+        -:   70:
+        -:   71:		string_proxy& operator=( const String& s) ;
+        -:   72:
+        -:   73:		/**
+        -:   74:		 * lhs use. Assigns the value of the referred element
+        -:   75:		 * of the character vector
+        -:   76:		 *
+        -:   77:		 * @param rhs new content for the element referred by this proxy
+        -:   78:		 */
+        -:   79:		template <typename T>
+    #####:   80:		string_proxy& operator=(const std::basic_string<T>& rhs){
+    #####:   81:			set( rhs ) ;
+    #####:   82:			return *this ;
+        -:   83:		}
+        -:   84:
+        -:   85:		string_proxy& operator=(const char* rhs){
+        -:   86:			set( Rf_mkChar( rhs ) ) ;
+        -:   87:			return *this ;
+        -:   88:		}
+        -:   89:
+        -:   90:		string_proxy& operator=(const wchar_t* rhs){
+        -:   91:			set( internal::make_charsexp( rhs ) ) ;
+        -:   92:			return *this ;
+        -:   93:		}
+        -:   94:
+        -:   95:
+        -:   96:		string_proxy& operator=(SEXP rhs){
+        -:   97:			// TODO: check this is a CHARSXP
+        -:   98:			set( rhs ) ;
+        -:   99:			return *this ;
+        -:  100:		}
+        -:  101:
+        -:  102:		void import( const string_proxy& other){
+        -:  103:			parent = other.parent ;
+        -:  104:			index  = other.index ;
+        -:  105:		}
+        -:  106:
+        -:  107:        /**
+        -:  108:         * lhs use. Adds the content of the rhs proxy to the
+        -:  109:         * element this proxy refers to.
+        -:  110:         */
+        -:  111:        template <typename T>
+        -:  112:        string_proxy& operator+=(const T& rhs) ;
+        -:  113:
+        -:  114:		/**
+        -:  115:		 * rhs use. Retrieves the current value of the
+        -:  116:		 * element this proxy refers to.
+        -:  117:		 */
+        -:  118:		operator SEXP() const {
+        -:  119:			return get() ;
+        -:  120:		}
+        -:  121:
+        -:  122:		/**
+        -:  123:		 * rhs use. Retrieves the current value of the
+        -:  124:		 * element this proxy refers to and convert it to a
+        -:  125:		 * C string
+        -:  126:		 */
+        -:  127:		 operator /* const */ char*() const {
+        -:  128:		 	 return const_cast<char*>( CHAR(get()) );
+        -:  129:		 }
+        -:  130:
+        -:  131:		 // operator std::wstring() const {
+        -:  132:		 //     const char* st = CHAR(get()) ;
+        -:  133:		 //     return std::wstring( st, st+strlen(st) ) ;
+        -:  134:		 // }
+        -:  135:
+        -:  136:		/**
+        -:  137:		 * Prints the element this proxy refers to to an
+        -:  138:		 * output stream
+        -:  139:		 */
+        -:  140:		template <int RT>
+        -:  141:		friend std::ostream& operator<<(std::ostream& os, const string_proxy<RT>& proxy);
+        -:  142:
+        -:  143:		template <int RT>
+        -:  144:		friend std::string operator+( const std::string& x, const string_proxy<RT>& proxy);
+        -:  145:
+        -:  146:		void swap( string_proxy& other ){
+        -:  147:			Shield<SEXP> tmp( STRING_ELT(*parent, index)) ;
+        -:  148:			SET_STRING_ELT( *parent, index, STRING_ELT( *(other.parent), other.index) ) ;
+        -:  149:			SET_STRING_ELT( *(other.parent), other.index, tmp ) ;
+        -:  150:		}
+        -:  151:
+        -:  152:		VECTOR* parent;
+        -:  153:		R_xlen_t index ;
+    #####:  154:		inline void move( R_xlen_t n ){ index += n ;}
+        -:  155:
+        -:  156:		inline SEXP get() const {
+        -:  157:			return STRING_ELT( *parent, index ) ;
+        -:  158:		}
+        -:  159:		template <typename T>
+    #####:  160:		inline void set( const T& x ){
+    #####:  161:			set( internal::make_charsexp(x) ) ;
+    #####:  162:		}
+    #####:  163:		inline void set(SEXP x){
+    #####:  164:			SET_STRING_ELT( *parent, index, x ) ;
+    #####:  165:		}
+        -:  166:
+        -:  167:		inline iterator begin() const { return CHAR( STRING_ELT( *parent, index ) ) ; }
+        -:  168:		inline iterator end() const { return begin() + size() ; }
+        -:  169:		inline R_xlen_t size() const { return strlen( begin() ) ; }
+        -:  170:		inline bool empty() const { return *begin() == '\0' ; }
+        -:  171:		inline reference operator[]( R_xlen_t n ){ return *( begin() + n ) ; }
+        -:  172:
+        -:  173:		template <typename UnaryOperator>
+        -:  174:		void transform( UnaryOperator op ){
+        -:  175:			buffer = begin() ;
+        -:  176:			std::transform( buffer.begin(), buffer.end(), buffer.begin(), op ) ;
+        -:  177:			set( buffer ) ;
+        -:  178:		}
+        -:  179:
+        -:  180:		template <typename OutputIterator, typename UnaryOperator>
+        -:  181:		void apply( OutputIterator target, UnaryOperator op){
+        -:  182:			std::transform( begin(), end(), target, op ) ;
+        -:  183:		}
+        -:  184:
+        -:  185:		template <typename UnaryOperator>
+        -:  186:		void apply( UnaryOperator op){
+        -:  187:			std::for_each( begin(), end(), op );
+        -:  188:		}
+        -:  189:
+        -:  190:		bool operator==( const char* other) const {
+        -:  191:			return strcmp( begin(), other ) == 0 ;
+        -:  192:		}
+        -:  193:		bool operator!=( const char* other) const {
+        -:  194:			return strcmp( begin(), other ) != 0 ;
+        -:  195:		}
+        -:  196:
+        -:  197:		template<template <class> class SP>
+        -:  198:		bool operator==( const string_proxy<STRSXP, SP>& other) const {
+        -:  199:			return strcmp( begin(), other.begin() ) == 0 ;
+        -:  200:		}
+        -:  201:
+        -:  202:		template<template <class> class SP>
+        -:  203:		bool operator!=( const string_proxy<STRSXP,SP>& other) const {
+        -:  204:			return strcmp( begin(), other.begin() ) != 0 ;
+        -:  205:		}
+        -:  206:
+        -:  207:        bool operator==( SEXP other ) const {
+        -:  208:            return get() == other;
+        -:  209:        }
+        -:  210:
+        -:  211:        bool operator!=( SEXP other ) const {
+        -:  212:            return get() != other;
+        -:  213:        }
+        -:  214:
+        -:  215:	private:
+        -:  216:		static std::string buffer ;
+        -:  217:
+        -:  218:	} ;
+        -:  219:
+        -:  220:	template <int RT>
+        -:  221:	bool operator<( const string_proxy<RT>& lhs, const string_proxy<RT>& rhs) {
+        -:  222:		return strcmp(
+        -:  223:			const_cast<char *>(lhs.begin() ),
+        -:  224:			const_cast<char *>(rhs.begin())
+        -:  225:			) < 0 ;
+        -:  226:	}
+        -:  227:
+        -:  228:	template <int RT>
+        -:  229:	bool operator>( const string_proxy<RT>& lhs, const string_proxy<RT>& rhs) {
+        -:  230:		return strcmp(
+        -:  231:			const_cast<char *>(lhs.begin() ),
+        -:  232:			const_cast<char *>(rhs.begin())
+        -:  233:			) > 0 ;
+        -:  234:	}
+        -:  235:
+        -:  236:	template <int RT>
+        -:  237:	bool operator>=( const string_proxy<RT>& lhs, const string_proxy<RT>& rhs) {
+        -:  238:		return strcmp(
+        -:  239:			const_cast<char *>(lhs.begin() ),
+        -:  240:			const_cast<char *>(rhs.begin())
+        -:  241:			) >= 0 ;
+        -:  242:	}
+        -:  243:
+        -:  244:	template <int RT>
+        -:  245:	bool operator<=( const string_proxy<RT>& lhs, const string_proxy<RT>& rhs) {
+        -:  246:		return strcmp(
+        -:  247:			const_cast<char *>(lhs.begin() ),
+        -:  248:			const_cast<char *>(rhs.begin())
+        -:  249:			) <= 0 ;
+        -:  250:	}
+        -:  251:
+        -:  252:	template<int RTYPE, template <class> class StoragePolicy> std::string string_proxy<RTYPE, StoragePolicy>::buffer ;
+        -:  253:
+        -:  254:	inline std::ostream& operator<<(std::ostream& os, const string_proxy<STRSXP>& proxy) {
+        -:  255:	    os << static_cast<const char*>(proxy) ;
+        -:  256:	    return os;
+        -:  257:	}
+        -:  258:
+        -:  259:	inline std::string operator+( const std::string& x, const string_proxy<STRSXP>& y ){
+        -:  260:		return x + static_cast<const char*>(y) ;
+        -:  261:	}
+        -:  262:
+        -:  263:}
+        -:  264:}
+        -:  265:
+        -:  266:#endif

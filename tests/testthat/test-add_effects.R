@@ -282,3 +282,157 @@ test_that("after multipliers store amount_after for neutral conservation actions
   expect_equal(p2$data$dist_effects$benefit, 0)
   expect_equal(p2$data$dist_effects$loss, 0)
 })
+
+
+
+test_that("add_effects accepts after multipliers by action and feature", {
+  d <- make_round4_base_data()
+  p <- make_round4_problem(with_actions = TRUE)
+
+  effects <- data.frame(
+    action = rep(d$actions$id, each = 2),
+    feature = rep(d$features$id, times = 2),
+    multiplier = c(
+      1.0, 1.0,
+      1.5, 1.5
+    )
+  )
+
+  out <- multiscape::add_effects(
+    p,
+    effects = effects,
+    effect_type = "after"
+  )
+
+  expect_s3_class(out, "Problem")
+})
+
+
+test_that("add_effects accepts explicit pu-action-feature delta rows", {
+  p <- make_round4_problem(with_actions = TRUE)
+
+  effects <- data.frame(
+    pu = c(1L, 2L),
+    action = c("restoration", "restoration"),
+    feature = c(1L, 2L),
+    delta = c(1, -0.5)
+  )
+
+  out <- multiscape::add_effects(
+    p,
+    effects = effects,
+    effect_type = "delta"
+  )
+
+  expect_s3_class(out, "Problem")
+})
+
+
+test_that("add_effects rejects duplicate keys", {
+  p <- make_round4_problem(with_actions = TRUE)
+
+  duplicated <- data.frame(
+    action = c("restoration", "restoration"),
+    feature = c(1L, 1L),
+    multiplier = c(1.5, 1.5)
+  )
+
+  expect_error(
+    multiscape::add_effects(
+      p,
+      effects = duplicated,
+      effect_type = "after"
+    ),
+    "duplicated combination"
+  )
+})
+
+
+test_that("add_effects rejects non-finite values", {
+  p <- make_round4_problem(with_actions = TRUE)
+
+  non_finite <- data.frame(
+    action = "restoration",
+    feature = 1L,
+    multiplier = Inf
+  )
+
+  expect_error(
+    multiscape::add_effects(
+      p,
+      effects = non_finite,
+      effect_type = "after"
+    ),
+    "finite"
+  )
+})
+
+
+test_that("add_effects rejects unknown actions, features, and planning units", {
+  p <- make_round4_problem(with_actions = TRUE)
+
+  expect_error(
+    multiscape::add_effects(
+      p,
+      effects = data.frame(
+        action = "unknown",
+        feature = 1L,
+        multiplier = 1.5
+      ),
+      effect_type = "after"
+    )
+  )
+
+  expect_error(
+    multiscape::add_effects(
+      p,
+      effects = data.frame(
+        action = "restoration",
+        feature = 999L,
+        multiplier = 1.5
+      ),
+      effect_type = "after"
+    )
+  )
+
+  expect_error(
+    multiscape::add_effects(
+      p,
+      effects = data.frame(
+        pu = 999L,
+        action = "restoration",
+        feature = 1L,
+        delta = 1
+      ),
+      effect_type = "delta"
+    )
+  )
+})
+
+
+test_that("add_benefits and add_losses use benefit and loss columns", {
+  p <- make_round4_problem(with_actions = TRUE)
+
+  b <- multiscape::add_benefits(
+    p,
+    benefits = data.frame(
+      pu = 1L,
+      action = "restoration",
+      feature = 1L,
+      benefit = 2
+    )
+  )
+
+  l <- multiscape::add_losses(
+    p,
+    losses = data.frame(
+      pu = 1L,
+      action = "restoration",
+      feature = 1L,
+      loss = 0.5
+    )
+  )
+
+  expect_s3_class(b, "Problem")
+  expect_s3_class(l, "Problem")
+})

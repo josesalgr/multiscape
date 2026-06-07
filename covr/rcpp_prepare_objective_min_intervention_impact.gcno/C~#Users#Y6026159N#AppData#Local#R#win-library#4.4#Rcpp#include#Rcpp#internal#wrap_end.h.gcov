@@ -1,0 +1,48 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/internal/wrap_end.h
+        -:    0:Graph:./rcpp_prepare_objective_min_intervention_impact.gcno
+        -:    0:Data:./rcpp_prepare_objective_min_intervention_impact.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+        -:    2://
+        -:    3:// wrap_end.h: R/C++ interface class library
+        -:    4://
+        -:    5:// Copyright (C) 2012 - 2013 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp_internal_wrap_end_h
+        -:   23:#define Rcpp_internal_wrap_end_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:    template <typename T>
+      52*:   28:    inline SEXP wrap(const T& object){
+        -:   29:        RCPP_DEBUG_1( "inline SEXP wrap<%s>(const T& object)", DEMANGLE(T) )
+      52*:   30:    	  return internal::wrap_dispatch( object, typename ::Rcpp::traits::wrap_type_traits<T>::wrap_category() ) ;
+        -:   31:    }
+        -:   32:
+        -:   33:    template <typename T>
+        -:   34:    inline SEXP module_wrap_dispatch( const T& obj, Rcpp::traits::normal_wrap_tag ){
+        -:   35:        return wrap( obj ) ;
+        -:   36:    }
+        -:   37:    template <typename T>
+        -:   38:    inline SEXP module_wrap_dispatch( const T& obj, Rcpp::traits::pointer_wrap_tag ) {
+        -:   39:        return wrap( object< typename traits::un_pointer<T>::type >( obj ) ) ;
+        -:   40:    }
+        -:   41:}
+        -:   42:
+        -:   43:
+        -:   44:#endif

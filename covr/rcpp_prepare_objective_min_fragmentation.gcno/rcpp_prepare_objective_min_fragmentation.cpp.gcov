@@ -1,0 +1,228 @@
+        -:    0:Source:rcpp_prepare_objective_min_fragmentation.cpp
+        -:    0:Graph:./rcpp_prepare_objective_min_fragmentation.gcno
+        -:    0:Data:./rcpp_prepare_objective_min_fragmentation.gcda
+        -:    0:Runs:22
+        -:    1:// rcpp_prepare_fragmentation_pu.cpp
+        -:    2:#include "Package.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:#include <string>
+        -:    6:#include <vector>
+        -:    7:#include <unordered_map>
+        -:    8:#include <cmath>
+        -:    9:#include <algorithm>
+        -:   10:#include <cstdint>
+        -:   11:
+        -:   12:// helper: undirected key (i<j), i/j 1-based
+     2800:   13:static inline std::uint64_t edge_key_undirected(int i, int j) {
+     2800:   14:  return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(i)) << 32) |
+     2800:   15:    static_cast<std::uint32_t>(j);
+        -:   16:}
+        -:   17:
+        -:   18:// [[Rcpp::export]]
+      700:   19:Rcpp::List rcpp_prepare_objective_min_fragmentation(
+        -:   20:    SEXP x,
+        -:   21:    Rcpp::DataFrame relation_data,    // internal_pu1, internal_pu2, weight (may include both directions and diagonal)
+        -:   22:    std::string block_name = "fragmentation_pu",
+        -:   23:    std::string tag = ""
+        -:   24:) {
+      700:   25:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   26:
+      700:   27:  if (op->ncol_used() == 0) {
+    #####:   28:    Rcpp::stop("Model has zero variables. Build base variables first.");
+        -:   29:  }
+        -:   30:
+      700:   31:  const int n_pu = op->_n_pu;
+     700*:   32:  if (n_pu <= 0) Rcpp::stop("No planning units in model (op->_n_pu <= 0).");
+        -:   33:
+     700*:   34:  if (op->_w_offset < 0) Rcpp::stop("op->_w_offset not initialized.");
+      700:   35:  if ((std::size_t)op->_w_offset + (std::size_t)n_pu > op->ncol_used()) {
+    #####:   36:    Rcpp::stop("w block out of bounds: check op->_w_offset/op->_n_pu vs number of variables.");
+        -:   37:  }
+        -:   38:
+     2800:   39:  for (auto nm : {"internal_pu1", "internal_pu2", "weight"}) {
+     2100:   40:    if (!relation_data.containsElementNamed(nm)) {
+    #####:   41:      Rcpp::stop(std::string("relation_data must contain column '") + nm + "'.");
+        -:   42:    }
+        -:   43:  }
+        -:   44:
+      700:   45:  const int m_in = relation_data.nrows();
+     700*:   46:  if (m_in <= 0) Rcpp::stop("relation_data has 0 rows.");
+        -:   47:
+     1400:   48:  Rcpp::IntegerVector ip1 = relation_data["internal_pu1"]; // 1..n_pu
+     1400:   49:  Rcpp::IntegerVector ip2 = relation_data["internal_pu2"]; // 1..n_pu
+     1400:   50:  Rcpp::NumericVector wgt = relation_data["weight"];
+        -:   51:
+        -:   52:  // ------------------------------------------------------------------
+        -:   53:  // Canonicalize OFF-DIAGONAL edges for y creation:
+        -:   54:  //  - ignore self (i==j): diagonal handled elsewhere (e.g., in objective as self/exposed)
+        -:   55:  //  - collapse symmetric duplicates -> unique undirected edges with max(weight)
+        -:   56:  //  - enforce deterministic ordering (sorted by key)
+        -:   57:  // ------------------------------------------------------------------
+      700:   58:  std::unordered_map<std::uint64_t, double> edge_w;
+      700:   59:  edge_w.reserve(static_cast<std::size_t>(m_in) * 2);
+        -:   60:
+      700:   61:  int n_self_rows = 0;
+        -:   62:
+     6188:   63:  for (int r = 0; r < m_in; ++r) {
+     5488:   64:    const int i1 = ip1[r];
+     5488:   65:    const int j1 = ip2[r];
+        -:   66:
+    8176*:   67:    if (i1 == NA_INTEGER || j1 == NA_INTEGER) continue;
+     5488:   68:    if (i1 < 1 || i1 > n_pu || j1 < 1 || j1 > n_pu) {
+    #####:   69:      Rcpp::stop("relation_data internal_pu1/internal_pu2 out of range (must be 1..n_pu).");
+        -:   70:    }
+        -:   71:
+     5488:   72:    const double we = (double)wgt[r];
+    5488*:   73:    if (Rcpp::NumericVector::is_na(we) || !std::isfinite(we)) {
+    #####:   74:      Rcpp::stop("relation_data weight must be finite.");
+        -:   75:    }
+        -:   76:
+     5488:   77:    if (i1 == j1) {
+     2688:   78:      ++n_self_rows;
+     2688:   79:      continue; // diagonal not used for y creation; may be negative
+        -:   80:    }
+        -:   81:
+     2800:   82:    if (we < 0.0) {
+    #####:   83:      Rcpp::stop("relation_data off-diagonal weights must be >= 0.");
+        -:   84:    }
+        -:   85:
+     2800:   86:    int a = i1, b = j1;
+    2800*:   87:    if (a > b) std::swap(a, b);
+     2800:   88:    const std::uint64_t k = edge_key_undirected(a, b);
+        -:   89:
+     2800:   90:    auto it = edge_w.find(k);
+     2800:   91:    if (it == edge_w.end()) edge_w.emplace(k, we);
+    #####:   92:    else it->second = std::max(it->second, we);
+        -:   93:  }
+        -:   94:
+      700:   95:  const int k_edges = static_cast<int>(edge_w.size());
+      700:   96:  if (k_edges <= 0) {
+    #####:   97:    Rcpp::stop("No usable non-self edges found to prepare fragmentation y variables.");
+        -:   98:  }
+        -:   99:
+        -:  100:  // ------------------------------------------------------------------
+        -:  101:  // Idempotence: if already prepared, just check k_edges matches
+        -:  102:  // ------------------------------------------------------------------
+      700:  103:  if (op->_n_y_pu > 0) {
+      364:  104:    if (op->_n_y_pu != k_edges) {
+    #####:  105:      Rcpp::stop(
+        -:  106:        "PU-fragmentation auxiliaries already exist, but canonical edge count differs. "
+    #####:  107:        "Existing _n_y_pu=" + std::to_string(op->_n_y_pu) +
+    #####:  108:          ", new k_edges=" + std::to_string(k_edges) + "."
+        -:  109:      );
+        -:  110:    }
+        -:  111:    return Rcpp::List::create(
+     1092:  112:      Rcpp::Named("ok") = true,
+     1092:  113:      Rcpp::Named("already_prepared") = true,
+     1092:  114:      Rcpp::Named("y_offset") = op->_y_pu_offset,
+     1092:  115:      Rcpp::Named("n_y") = op->_n_y_pu,
+     1092:  116:      Rcpp::Named("k_edges") = k_edges
+      364:  117:    );
+        -:  118:  }
+        -:  119:
+        -:  120:  // Sort edges deterministically by key so add() can replicate order exactly
+      336:  121:  std::vector<std::uint64_t> keys;
+      336:  122:  keys.reserve(edge_w.size());
+     1680:  123:  for (const auto& kv : edge_w) keys.push_back(kv.first);
+      336:  124:  std::sort(keys.begin(), keys.end());
+        -:  125:
+      336:  126:  std::vector<int> e_i; e_i.reserve(k_edges);
+      336:  127:  std::vector<int> e_j; e_j.reserve(k_edges);
+        -:  128:
+     1680:  129:  for (auto key : keys) {
+     1344:  130:    const int a = static_cast<int>(key >> 32);
+     1344:  131:    const int b = static_cast<int>(key & 0xFFFFFFFFu);
+     1344:  132:    e_i.push_back(a);
+     1344:  133:    e_j.push_back(b);
+        -:  134:  }
+        -:  135:
+        -:  136:  // ------------------------------------------------------------------
+        -:  137:  // 1) Create y variables: one per UNIQUE undirected off-diagonal edge
+        -:  138:  //    IMPORTANT: y_ij is an AND auxiliary (0..1 continuous is fine)
+        -:  139:  // ------------------------------------------------------------------
+      336:  140:  const int y0 = (int)op->ncol_used();
+      336:  141:  op->_y_pu_offset = y0;
+      336:  142:  op->_n_y_pu      = k_edges;
+        -:  143:
+      336:  144:  op->_obj.reserve(op->_obj.size() + (std::size_t)k_edges);
+      336:  145:  op->_vtype.reserve(op->_vtype.size() + (std::size_t)k_edges);
+      336:  146:  op->_lb.reserve(op->_lb.size() + (std::size_t)k_edges);
+      336:  147:  op->_ub.reserve(op->_ub.size() + (std::size_t)k_edges);
+        -:  148:
+     1680:  149:  for (int e = 0; e < k_edges; ++e) {
+     1344:  150:    op->_obj.push_back(0.0);
+     2688:  151:    op->_vtype.push_back("C");  // AND auxiliary: continuous [0,1] is enough
+     1344:  152:    op->_lb.push_back(0.0);
+     1344:  153:    op->_ub.push_back(1.0);
+        -:  154:  }
+        -:  155:
+      336:  156:  std::string full_tag = tag;
+     336*:  157:  if (!full_tag.empty()) full_tag += ";";
+        -:  158:  full_tag +=
+        -:  159:    "kind=prepare"
+        -:  160:    ";component=fragmentation_pu"
+        -:  161:    ";y_semantics=and"
+      672:  162:    ";m_in=" + std::to_string(m_in) +
+     1344:  163:      ";k_edges=" + std::to_string(k_edges) +
+     1344:  164:      ";n_self_rows=" + std::to_string(n_self_rows) +
+     1344:  165:      ";y_offset=" + std::to_string(y0) +
+        -:  166:      ";vtype=C"
+      336:  167:      ";objective_touched=FALSE";
+        -:  168:
+      672:  169:  const std::size_t y_block_id = op->register_variable_block(
+      336:  170:    block_name + "::y_pu",
+        -:  171:    (std::size_t)y0,
+      336:  172:    (std::size_t)(y0 + k_edges),
+        -:  173:    full_tag
+        -:  174:  );
+        -:  175:
+        -:  176:  // ------------------------------------------------------------------
+        -:  177:  // 2) Add constraints (3 per edge): AND linearization
+        -:  178:  //    y_ij <= w_i
+        -:  179:  //    y_ij <= w_j
+        -:  180:  //    y_ij >= w_i + w_j - 1
+        -:  181:  // ------------------------------------------------------------------
+      336:  182:  const std::size_t cblock = op->beginConstraintBlock(block_name + "::constraints", full_tag);
+        -:  183:
+      336:  184:  int n_constraints_added = 0;
+        -:  185:
+     1680:  186:  for (int e = 0; e < k_edges; ++e) {
+     1344:  187:    const int i1 = e_i[e];
+     1344:  188:    const int j1 = e_j[e];
+        -:  189:
+     1344:  190:    const int i0 = i1 - 1;
+     1344:  191:    const int j0 = j1 - 1;
+        -:  192:
+     1344:  193:    const int y_col = y0 + e;
+     1344:  194:    const int wi    = op->_w_offset + i0;
+     1344:  195:    const int wj    = op->_w_offset + j0;
+        -:  196:
+        -:  197:    // y - w_i <= 0
+    10752:  198:    op->addRow({ y_col, wi }, { 1.0, -1.0 }, "<=", 0.0, "y_le_wi");
+     1344:  199:    ++n_constraints_added;
+        -:  200:
+        -:  201:    // y - w_j <= 0
+    10752:  202:    op->addRow({ y_col, wj }, { 1.0, -1.0 }, "<=", 0.0, "y_le_wj");
+     1344:  203:    ++n_constraints_added;
+        -:  204:
+        -:  205:    // y - w_i - w_j >= -1
+    10752:  206:    op->addRow({ y_col, wi, wj }, { 1.0, -1.0, -1.0 }, ">=", -1.0, "y_ge_wi_plus_wj_minus1");
+     1344:  207:    ++n_constraints_added;
+        -:  208:  }
+        -:  209:
+     1008:  210:  const std::size_t cons_block_id = op->endConstraintBlock(cblock, /*drop_if_empty=*/true);
+        -:  211:
+        -:  212:  return Rcpp::List::create(
+     1008:  213:    Rcpp::Named("ok") = true,
+     1008:  214:    Rcpp::Named("already_prepared") = false,
+     1008:  215:    Rcpp::Named("y_block_id") = (double)y_block_id,
+     1008:  216:    Rcpp::Named("constraints_block_id") = (double)cons_block_id,
+     1008:  217:    Rcpp::Named("y_offset") = op->_y_pu_offset,
+     1008:  218:    Rcpp::Named("n_y") = op->_n_y_pu,
+      672:  219:    Rcpp::Named("k_edges") = k_edges,
+      672:  220:    Rcpp::Named("m_in") = m_in,
+      672:  221:    Rcpp::Named("n_constraints_added") = n_constraints_added,
+      672:  222:    Rcpp::Named("tag") = full_tag
+      336:  223:  );
+      700:  224:}

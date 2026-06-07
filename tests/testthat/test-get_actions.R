@@ -44,7 +44,12 @@ test_that("get_actions returns actions for SolutionSet run", {
     multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "frag"),
-      weights = c(1, 1)
+      runs = multiscape::run_manual(
+        data.frame(
+          weight_cost = 1,
+          weight_frag = 1
+        )
+      )
     ) |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 

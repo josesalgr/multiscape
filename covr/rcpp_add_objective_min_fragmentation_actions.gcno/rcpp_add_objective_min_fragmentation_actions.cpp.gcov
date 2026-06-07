@@ -1,0 +1,325 @@
+        -:    0:Source:rcpp_add_objective_min_fragmentation_actions.cpp
+        -:    0:Graph:./rcpp_add_objective_min_fragmentation_actions.gcno
+        -:    0:Data:./rcpp_add_objective_min_fragmentation_actions.gcda
+        -:    0:Runs:22
+        -:    1:// rcpp_add_objective_min_fragmentation_actions_by_action.cpp
+        -:    2:#include "Package.h"
+        -:    3:#include "OptimizationProblem.h"
+        -:    4:
+        -:    5:#include <unordered_map>
+        -:    6:#include <vector>
+        -:    7:#include <string>
+        -:    8:#include <cmath>
+        -:    9:#include <algorithm>
+        -:   10:#include <cstdint>
+        -:   11:
+        -:   12:// key (ipu, iact)
+      144:   13:static inline long long key2(int a, int b) {
+      144:   14:  return ( (static_cast<long long>(a) << 32) ^ static_cast<unsigned int>(b) );
+        -:   15:}
+        -:   16:
+        -:   17:// undirected key (i<j), 1-based
+       36:   18:static inline std::uint64_t edge_key_undirected(int i, int j) {
+       36:   19:  return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(i)) << 32) |
+       36:   20:    static_cast<std::uint32_t>(j);
+        -:   21:}
+        -:   22:
+        -:   23:// [[Rcpp::export]]
+       12:   24:Rcpp::List rcpp_add_objective_min_fragmentation_actions(
+        -:   25:    SEXP x,
+        -:   26:    Rcpp::DataFrame dist_actions_data,   // model-ready: internal_row, internal_pu, internal_action
+        -:   27:    Rcpp::DataFrame relation_data,       // internal_pu1, internal_pu2, weight (diag allowed)
+        -:   28:    Rcpp::Nullable<Rcpp::IntegerVector> actions_to_use = R_NilValue,
+        -:   29:    Rcpp::Nullable<Rcpp::NumericVector> action_weights = R_NilValue,
+        -:   30:    double weight = 1.0,
+        -:   31:    double weight_multiplier = 1.0,
+        -:   32:    std::string block_name = "objective_add_min_fragmentation_actions_by_action",
+        -:   33:    std::string tag = ""
+        -:   34:) {
+       12:   35:  Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
+        -:   36:
+       12:   37:  if (op->ncol_used() == 0) {
+    #####:   38:    Rcpp::stop("Model has zero variables. Build base variables first.");
+        -:   39:  }
+        -:   40:
+      12*:   41:  if (!std::isfinite(weight) || weight < 0.0) {
+    #####:   42:    Rcpp::stop("weight must be finite and >= 0.");
+        -:   43:  }
+      12*:   44:  if (!std::isfinite(weight_multiplier) || weight_multiplier < 0.0) {
+    #####:   45:    Rcpp::stop("weight_multiplier must be finite and >= 0.");
+        -:   46:  }
+        -:   47:
+       12:   48:  if (weight == 0.0) {
+        -:   49:    return Rcpp::List::create(
+    #####:   50:      Rcpp::Named("ok") = true,
+    #####:   51:      Rcpp::Named("skipped") = true,
+    #####:   52:      Rcpp::Named("reason") = "weight==0"
+    #####:   53:    );
+        -:   54:  }
+        -:   55:
+       12:   56:  const int n_pu = op->_n_pu;
+       12:   57:  const int n_x  = op->_n_x;
+        -:   58:
+      12*:   59:  if (n_pu <= 0) Rcpp::stop("No planning units in model (op->_n_pu <= 0).");
+      12*:   60:  if (n_x  <= 0) Rcpp::stop("This objective requires action variables, but op->_n_x <= 0.");
+      12*:   61:  if (op->_x_offset < 0) Rcpp::stop("op->_x_offset not initialized.");
+        -:   62:
+        -:   63:  // must have been prepared (global y_action block exists)
+      12*:   64:  if (op->_n_y_action <= 0 || op->_y_action_offset < 0) {
+    #####:   65:    Rcpp::stop(
+        -:   66:      "Action-fragmentation auxiliaries do not exist (missing y_action block). "
+        -:   67:      "Call rcpp_prepare_fragmentation_actions_by_action() first."
+        -:   68:    );
+        -:   69:  }
+        -:   70:
+        -:   71:  // checks: relation_data
+       48:   72:  for (auto nm : {"internal_pu1", "internal_pu2", "weight"}) {
+       36:   73:    if (!relation_data.containsElementNamed(nm)) {
+    #####:   74:      Rcpp::stop(std::string("relation_data must contain column '") + nm + "'.");
+        -:   75:    }
+        -:   76:  }
+        -:   77:  // checks: dist_actions_data
+       48:   78:  for (auto nm : {"internal_row", "internal_pu", "internal_action"}) {
+       36:   79:    if (!dist_actions_data.containsElementNamed(nm)) {
+    #####:   80:      Rcpp::stop(std::string("dist_actions_data must contain column '") + nm + "'.");
+        -:   81:    }
+        -:   82:  }
+        -:   83:
+        -:   84:  // relation arrays
+       24:   85:  Rcpp::IntegerVector ip1 = relation_data["internal_pu1"];
+       24:   86:  Rcpp::IntegerVector ip2 = relation_data["internal_pu2"];
+       24:   87:  Rcpp::NumericVector  wgt = relation_data["weight"];
+       12:   88:  const int m = relation_data.nrows();
+      12*:   89:  if (m <= 0) Rcpp::stop("relation_data has 0 rows.");
+        -:   90:
+        -:   91:  // dist_actions (model-ready)
+       24:   92:  Rcpp::IntegerVector dar = dist_actions_data["internal_row"];     // 1..n_x
+       24:   93:  Rcpp::IntegerVector dap = dist_actions_data["internal_pu"];      // 1..n_pu
+       24:   94:  Rcpp::IntegerVector daa = dist_actions_data["internal_action"];  // 1..n_actions
+       12:   95:  const int da_n = dist_actions_data.nrows();
+       12:   96:  if (da_n != n_x) {
+    #####:   97:    Rcpp::stop("dist_actions_data.nrows() must equal op->_n_x (model-ready dist_actions expected).");
+        -:   98:  }
+        -:   99:
+        -:  100:  // infer global n_actions
+       12:  101:  int n_actions = 0;
+      108:  102:  for (int r = 0; r < da_n; ++r) {
+       96:  103:    const int a = daa[r];
+      96*:  104:    if (a == NA_INTEGER) continue;
+       96:  105:    if (a > n_actions) n_actions = a;
+        -:  106:  }
+      12*:  107:  if (n_actions <= 0) Rcpp::stop("Could not infer number of actions (max internal_action <= 0).");
+        -:  108:
+        -:  109:  // choose actions list A (sorted unique)
+       12:  110:  std::vector<int> A;
+       12:  111:  if (actions_to_use.isNotNull()) {
+       12:  112:    Rcpp::IntegerVector tmp(actions_to_use);
+      12*:  113:    if (tmp.size() == 0) Rcpp::stop("actions_to_use provided but empty.");
+       12:  114:    A.reserve((std::size_t)tmp.size());
+       24:  115:    for (int k = 0; k < tmp.size(); ++k) {
+       12:  116:      const int a = tmp[k];
+       12:  117:      if (a < 1 || a > n_actions) {
+    #####:  118:        Rcpp::stop("actions_to_use contains invalid internal_action id.");
+        -:  119:      }
+       12:  120:      A.push_back(a);
+        -:  121:    }
+       12:  122:    std::sort(A.begin(), A.end());
+       12:  123:    A.erase(std::unique(A.begin(), A.end()), A.end());
+       12:  124:  } else {
+    #####:  125:    A.reserve((std::size_t)n_actions);
+    #####:  126:    for (int a = 1; a <= n_actions; ++a) A.push_back(a);
+        -:  127:  }
+       12:  128:  const int nA = (int)A.size();
+      12*:  129:  if (nA <= 0) Rcpp::stop("No actions selected for objective add.");
+        -:  130:
+        -:  131:  // action weights vector wA (1-based), default = 1 for all global actions
+       12:  132:  std::vector<double> wA((std::size_t)n_actions + 1, 1.0);
+       12:  133:  if (action_weights.isNotNull()) {
+       12:  134:    Rcpp::NumericVector aw(action_weights);
+        -:  135:
+       12:  136:    if ((int)aw.size() == n_actions) {
+       36:  137:      for (int a = 1; a <= n_actions; ++a) {
+       24:  138:        const double v = aw[a - 1];
+      24*:  139:        if (!R_finite(v) || v < 0.0) Rcpp::stop("action_weights must be finite and >= 0.");
+       24:  140:        wA[(std::size_t)a] = v;
+        -:  141:      }
+    #####:  142:    } else if ((int)aw.size() == nA) {
+    #####:  143:      for (int k = 0; k < nA; ++k) {
+    #####:  144:        const double v = aw[k];
+    #####:  145:        if (!R_finite(v) || v < 0.0) Rcpp::stop("action_weights must be finite and >= 0.");
+    #####:  146:        wA[(std::size_t)A[(std::size_t)k]] = v;
+        -:  147:      }
+        -:  148:    } else {
+    #####:  149:      Rcpp::stop("action_weights length must be either n_actions or length(actions_to_use).");
+        -:  150:    }
+       12:  151:  }
+        -:  152:
+        -:  153:  // canonicalize: self_w (diag) + unique undirected edges (sorted by key)
+       12:  154:  std::vector<double> self_w(n_pu + 1, 0.0);
+       12:  155:  std::unordered_map<std::uint64_t, double> edge_w;
+       12:  156:  edge_w.reserve((std::size_t)m * 2);
+        -:  157:
+       12:  158:  int n_diag_rows = 0;
+        -:  159:
+       48:  160:  for (int r = 0; r < m; ++r) {
+       36:  161:    const int i1 = ip1[r];
+       36:  162:    const int j1 = ip2[r];
+      36*:  163:    if (i1 == NA_INTEGER || j1 == NA_INTEGER) continue;
+       36:  164:    if (i1 < 1 || i1 > n_pu || j1 < 1 || j1 > n_pu) {
+    #####:  165:      Rcpp::stop("relation_data internal_pu1/internal_pu2 out of range (1..n_pu).");
+        -:  166:    }
+        -:  167:
+       36:  168:    const double we = (double)wgt[r];
+      36*:  169:    if (Rcpp::NumericVector::is_na(we) || !std::isfinite(we) || we < 0.0) {
+    #####:  170:      Rcpp::stop("relation_data weight must be finite and >= 0.");
+        -:  171:    }
+        -:  172:
+      36*:  173:    if (i1 == j1) {
+    #####:  174:      self_w[i1] += we;
+    #####:  175:      ++n_diag_rows;
+    #####:  176:      continue;
+        -:  177:    }
+        -:  178:
+       36:  179:    int a = i1, b = j1;
+      36*:  180:    if (a > b) std::swap(a, b);
+       36:  181:    const std::uint64_t k = edge_key_undirected(a, b);
+        -:  182:
+       36:  183:    auto it = edge_w.find(k);
+       36:  184:    if (it == edge_w.end()) edge_w.emplace(k, we);
+    #####:  185:    else it->second = std::max(it->second, we);
+        -:  186:  }
+        -:  187:
+       12:  188:  const int k_edges = (int)edge_w.size();
+       12:  189:  if (k_edges <= 0) {
+    #####:  190:    Rcpp::stop("No usable off-diagonal edges found for action fragmentation objective add.");
+        -:  191:  }
+        -:  192:
+        -:  193:  // IMPORTANT:
+        -:  194:  // y_action is now assumed to be prepared as a GLOBAL block:
+        -:  195:  //   all canonical edges x all global actions
+       12:  196:  const int mA_expected = k_edges * n_actions;
+       12:  197:  if (mA_expected != op->_n_y_action) {
+    #####:  198:    Rcpp::stop(
+        -:  199:      "Prepared global y_action size does not match expected size from canonicalization. "
+    #####:  200:      "Existing _n_y_action=" + std::to_string(op->_n_y_action) +
+    #####:  201:        ", expected k_edges*n_actions=" + std::to_string(mA_expected) +
+    #####:  202:        " (k_edges=" + std::to_string(k_edges) +
+    #####:  203:        ", n_actions=" + std::to_string(n_actions) + ")."
+        -:  204:    );
+        -:  205:  }
+        -:  206:
+        -:  207:  // sorted edges
+       12:  208:  std::vector<std::pair<std::uint64_t, double>> edges;
+       12:  209:  edges.reserve(edge_w.size());
+       48:  210:  for (const auto& kv : edge_w) edges.push_back(kv);
+       12:  211:  std::sort(edges.begin(), edges.end(),
+       24:  212:            [](const auto& a, const auto& b){ return a.first < b.first; });
+        -:  213:
+        -:  214:  // incident shared per PU
+       12:  215:  std::vector<double> incident_w(n_pu + 1, 0.0);
+       48:  216:  for (const auto& kv : edges) {
+       36:  217:    const std::uint64_t key = kv.first;
+       36:  218:    const double we = kv.second;
+       36:  219:    const int a = static_cast<int>(key >> 32);
+       36:  220:    const int b = static_cast<int>(key & 0xFFFFFFFFu);
+       36:  221:    incident_w[a] += we;
+       36:  222:    incident_w[b] += we;
+        -:  223:  }
+        -:  224:
+        -:  225:  // sparse map (ipu, act) -> x col
+       12:  226:  std::unordered_map<long long, int> xcol;
+       12:  227:  xcol.reserve((std::size_t)da_n * 2);
+        -:  228:
+      108:  229:  for (int r = 0; r < da_n; ++r) {
+       96:  230:    const int row1 = dar[r];
+       96:  231:    const int ipu  = dap[r];
+       96:  232:    const int act  = daa[r];
+      96*:  233:    if (row1 == NA_INTEGER || ipu == NA_INTEGER || act == NA_INTEGER) continue;
+        -:  234:
+       96:  235:    const int col_x = op->_x_offset + (row1 - 1);
+       96:  236:    xcol[key2(ipu, act)] = col_x;
+        -:  237:  }
+        -:  238:
+        -:  239:  // 1) add linear term on x_{i,a}
+       12:  240:  double sum_linear_added = 0.0;
+        -:  241:
+       24:  242:  for (int kk = 0; kk < nA; ++kk) {
+       12:  243:    const int act = A[(std::size_t)kk];
+       12:  244:    const double aw = wA[(std::size_t)act];
+      12*:  245:    if (aw == 0.0) continue;
+        -:  246:
+       60:  247:    for (int i = 1; i <= n_pu; ++i) {
+       48:  248:      auto itx = xcol.find(key2(i, act));
+      48*:  249:      if (itx == xcol.end()) continue;
+        -:  250:
+       48:  251:      const double coef = weight * weight_multiplier * aw * (incident_w[i] + self_w[i]);
+       48:  252:      if (coef != 0.0) {
+       48:  253:        op->_obj[(std::size_t)itx->second] += coef;
+       48:  254:        sum_linear_added += coef;
+        -:  255:      }
+        -:  256:    }
+        -:  257:  }
+        -:  258:
+        -:  259:  // 2) add edge term on global y_action block
+        -:  260:  // GLOBAL prepare order assumed:
+        -:  261:  //   b_index = e * n_actions + (act - 1)
+       12:  262:  const int b0 = op->_y_action_offset;
+       12:  263:  double sum_edge_added = 0.0;
+        -:  264:
+       48:  265:  for (int e = 0; e < k_edges; ++e) {
+       36:  266:    const double we = edges[(std::size_t)e].second;
+        -:  267:
+       72:  268:    for (int kk = 0; kk < nA; ++kk) {
+       36:  269:      const int act = A[(std::size_t)kk];
+       36:  270:      const double aw = wA[(std::size_t)act];
+      36*:  271:      if (aw == 0.0) continue;
+        -:  272:
+       36:  273:      const int act0 = act - 1; // global 0-based action slot
+       36:  274:      const int bcol = b0 + (e * n_actions + act0);
+       36:  275:      const double coef = weight * weight_multiplier * (-2.0 * we * aw);
+        -:  276:
+       36:  277:      if (coef != 0.0) {
+       36:  278:        op->_obj[(std::size_t)bcol] += coef;
+       36:  279:        sum_edge_added += coef;
+        -:  280:      }
+        -:  281:    }
+        -:  282:  }
+        -:  283:
+       12:  284:  std::string full_tag = tag;
+      12*:  285:  if (!full_tag.empty()) full_tag += ";";
+        -:  286:  full_tag +=
+        -:  287:    "kind=objective_add"
+        -:  288:    ";component=min_fragmentation_actions_by_action"
+        -:  289:    ";form=perimeter"
+       24:  290:    ";weight=" + std::to_string(weight) +
+       48:  291:      ";multiplier=" + std::to_string(weight_multiplier) +
+       48:  292:      ";k_edges=" + std::to_string(k_edges) +
+       48:  293:      ";n_actions_global=" + std::to_string(n_actions) +
+       48:  294:      ";n_actions_used=" + std::to_string(nA) +
+       48:  295:      ";n_diag_rows=" + std::to_string(n_diag_rows) +
+       48:  296:      ";sum_edge_added=" + std::to_string(sum_edge_added) +
+       48:  297:      ";sum_linear_added=" + std::to_string(sum_linear_added) +
+        -:  298:      ";additive=TRUE"
+       12:  299:      ";y_action_layout=global_edges_x_all_actions";
+        -:  300:
+       12:  301:  const std::size_t bid = op->register_objective_block(
+        -:  302:    block_name,
+        -:  303:    (std::size_t)0,
+        -:  304:    op->ncol_used(),
+        -:  305:    full_tag
+        -:  306:  );
+        -:  307:
+        -:  308:  return Rcpp::List::create(
+       36:  309:    Rcpp::Named("ok") = true,
+       36:  310:    Rcpp::Named("block_id") = (double)bid,
+       24:  311:    Rcpp::Named("block_name") = block_name,
+       24:  312:    Rcpp::Named("tag") = full_tag,
+       36:  313:    Rcpp::Named("y_offset") = op->_y_action_offset,
+       36:  314:    Rcpp::Named("n_y") = op->_n_y_action,
+       24:  315:    Rcpp::Named("k_edges") = k_edges,
+       24:  316:    Rcpp::Named("n_actions_global") = n_actions,
+       24:  317:    Rcpp::Named("n_actions_used") = nA,
+       24:  318:    Rcpp::Named("sum_edge_added") = sum_edge_added,
+       24:  319:    Rcpp::Named("sum_linear_added") = sum_linear_added
+       12:  320:  );
+       12:  321:}

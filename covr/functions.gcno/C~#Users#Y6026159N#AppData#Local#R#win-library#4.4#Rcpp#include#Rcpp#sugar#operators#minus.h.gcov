@@ -1,0 +1,457 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/sugar/operators/minus.h
+        -:    0:Graph:./functions.gcno
+        -:    0:Data:./functions.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+        -:    2://
+        -:    3:// minus.h: Rcpp R/C++ interface class library -- operator-
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2011 Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__sugar__minus_h
+        -:   23:#define Rcpp__sugar__minus_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:namespace sugar{
+        -:   27:
+        -:   28:	template <int RTYPE, bool LHS_NA, typename LHS_T, bool RHS_NA, typename RHS_T >
+        -:   29:	class Minus_Vector_Vector :
+        -:   30:	    public Rcpp::VectorBase<RTYPE,true, Minus_Vector_Vector<RTYPE,LHS_NA,LHS_T,RHS_NA,RHS_T> > {
+        -:   31:	public:
+        -:   32:		typedef typename Rcpp::VectorBase<RTYPE,LHS_NA,LHS_T> LHS_TYPE ;
+        -:   33:		typedef typename Rcpp::VectorBase<RTYPE,RHS_NA,RHS_T> RHS_TYPE ;
+        -:   34:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:   35:		typedef typename Rcpp::traits::Extractor< RTYPE, LHS_NA, LHS_T>::type LHS_EXT ;
+        -:   36:		typedef typename Rcpp::traits::Extractor< RTYPE, RHS_NA, RHS_T>::type RHS_EXT ;
+        -:   37:
+        -:   38:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:   39:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:   40:
+        -:   41:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:   42:			STORAGE x = lhs[i] ;
+        -:   43:			if( Rcpp::traits::is_na<RTYPE>( x ) ) return x ;
+        -:   44:			STORAGE y = rhs[i] ;
+        -:   45:			return Rcpp::traits::is_na<RTYPE>( y ) ? y : ( x - y ) ;
+        -:   46:		}
+        -:   47:
+        -:   48:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:   49:
+        -:   50:	private:
+        -:   51:		const LHS_EXT& lhs ;
+        -:   52:		const RHS_EXT& rhs ;
+        -:   53:	} ;
+        -:   54:	// RTYPE = REALSXP
+        -:   55:	template <bool LHS_NA, typename LHS_T, bool RHS_NA, typename RHS_T >
+        -:   56:	class Minus_Vector_Vector<REALSXP,LHS_NA,LHS_T,RHS_NA,RHS_T> :
+        -:   57:	    public Rcpp::VectorBase<REALSXP,true, Minus_Vector_Vector<REALSXP,LHS_NA,LHS_T,RHS_NA,RHS_T> > {
+        -:   58:	public:
+        -:   59:		typedef typename Rcpp::VectorBase<REALSXP,LHS_NA,LHS_T> LHS_TYPE ;
+        -:   60:		typedef typename Rcpp::VectorBase<REALSXP,RHS_NA,RHS_T> RHS_TYPE ;
+        -:   61:		typedef typename Rcpp::traits::Extractor<REALSXP, LHS_NA, LHS_T>::type LHS_EXT ;
+        -:   62:		typedef typename Rcpp::traits::Extractor<REALSXP, RHS_NA, RHS_T>::type RHS_EXT ;
+        -:   63:
+        -:   64:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:   65:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:   66:
+        -:   67:		inline double operator[]( R_xlen_t i ) const {
+        -:   68:		    return lhs[i] - rhs[i] ;
+        -:   69:		}
+        -:   70:
+        -:   71:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:   72:
+        -:   73:	private:
+        -:   74:		const LHS_EXT& lhs ;
+        -:   75:		const RHS_EXT& rhs ;
+        -:   76:	} ;
+        -:   77:
+        -:   78:
+        -:   79:	template <int RTYPE, typename LHS_T, bool RHS_NA, typename RHS_T >
+        -:   80:	class Minus_Vector_Vector<RTYPE,false,LHS_T,RHS_NA,RHS_T> : public Rcpp::VectorBase<RTYPE,true, Minus_Vector_Vector<RTYPE,false,LHS_T,RHS_NA,RHS_T> > {
+        -:   81:	public:
+        -:   82:		typedef typename Rcpp::VectorBase<RTYPE,false,LHS_T> LHS_TYPE ;
+        -:   83:		typedef typename Rcpp::VectorBase<RTYPE,RHS_NA,RHS_T> RHS_TYPE ;
+        -:   84:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:   85:		typedef typename Rcpp::traits::Extractor<RTYPE, false, LHS_T>::type LHS_EXT ;
+        -:   86:		typedef typename Rcpp::traits::Extractor<RTYPE, RHS_NA, RHS_T>::type RHS_EXT ;
+        -:   87:
+        -:   88:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:   89:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:   90:
+        -:   91:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:   92:			STORAGE y = rhs[i] ;
+        -:   93:			if( Rcpp::traits::is_na<RTYPE>( y ) ) return y ;
+        -:   94:			return lhs[i] - y ;
+        -:   95:		}
+        -:   96:
+        -:   97:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:   98:
+        -:   99:	private:
+        -:  100:		const LHS_EXT& lhs ;
+        -:  101:		const RHS_EXT& rhs ;
+        -:  102:	} ;
+        -:  103:	// RTYPE = REALSXP
+        -:  104:	template <typename LHS_T, bool RHS_NA, typename RHS_T >
+        -:  105:	class Minus_Vector_Vector<REALSXP,false,LHS_T,RHS_NA,RHS_T> :
+        -:  106:	    public Rcpp::VectorBase<REALSXP,true, Minus_Vector_Vector<REALSXP,false,LHS_T,RHS_NA,RHS_T> > {
+        -:  107:	public:
+        -:  108:		typedef typename Rcpp::VectorBase<REALSXP,false,LHS_T> LHS_TYPE ;
+        -:  109:		typedef typename Rcpp::VectorBase<REALSXP,RHS_NA,RHS_T> RHS_TYPE ;
+        -:  110:		typedef typename Rcpp::traits::Extractor<REALSXP, false, LHS_T>::type LHS_EXT ;
+        -:  111:		typedef typename Rcpp::traits::Extractor<REALSXP, RHS_NA, RHS_T>::type RHS_EXT ;
+        -:  112:
+        -:  113:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:  114:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:  115:
+        -:  116:		inline double operator[]( R_xlen_t i ) const {
+        -:  117:			return lhs[i] - rhs[i] ;
+        -:  118:		}
+        -:  119:
+        -:  120:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  121:
+        -:  122:	private:
+        -:  123:		const LHS_EXT& lhs ;
+        -:  124:		const RHS_EXT& rhs ;
+        -:  125:	} ;
+        -:  126:
+        -:  127:
+        -:  128:	template <int RTYPE, bool LHS_NA, typename LHS_T, typename RHS_T >
+        -:  129:	class Minus_Vector_Vector<RTYPE,LHS_NA,LHS_T,false,RHS_T> : public Rcpp::VectorBase<RTYPE,true, Minus_Vector_Vector<RTYPE,LHS_NA,LHS_T,false,RHS_T> > {
+        -:  130:	public:
+        -:  131:		typedef typename Rcpp::VectorBase<RTYPE,LHS_NA,LHS_T> LHS_TYPE ;
+        -:  132:		typedef typename Rcpp::VectorBase<RTYPE,false,RHS_T> RHS_TYPE ;
+        -:  133:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  134:		typedef typename Rcpp::traits::Extractor<RTYPE, LHS_NA, LHS_T>::type LHS_EXT ;
+        -:  135:		typedef typename Rcpp::traits::Extractor<RTYPE, false, RHS_T>::type RHS_EXT ;
+        -:  136:
+        -:  137:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:  138:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:  139:
+        -:  140:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:  141:			STORAGE x = lhs[i] ;
+        -:  142:			if( Rcpp::traits::is_na<RTYPE>( x ) ) return x ;
+        -:  143:			return x - rhs[i] ;
+        -:  144:		}
+        -:  145:
+        -:  146:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  147:
+        -:  148:	private:
+        -:  149:		const LHS_EXT& lhs ;
+        -:  150:		const RHS_EXT& rhs ;
+        -:  151:	} ;
+        -:  152:	// RTYPE = REALSXP
+        -:  153:	template <bool LHS_NA, typename LHS_T, typename RHS_T >
+        -:  154:	class Minus_Vector_Vector<REALSXP,LHS_NA,LHS_T,false,RHS_T> :
+        -:  155:	    public Rcpp::VectorBase<REALSXP,true, Minus_Vector_Vector<REALSXP,LHS_NA,LHS_T,false,RHS_T> > {
+        -:  156:	public:
+        -:  157:		typedef typename Rcpp::VectorBase<REALSXP,LHS_NA,LHS_T> LHS_TYPE ;
+        -:  158:		typedef typename Rcpp::VectorBase<REALSXP,false,RHS_T> RHS_TYPE ;
+        -:  159:		typedef typename Rcpp::traits::Extractor<REALSXP, LHS_NA, LHS_T>::type LHS_EXT ;
+        -:  160:		typedef typename Rcpp::traits::Extractor<REALSXP, false, RHS_T>::type RHS_EXT ;
+        -:  161:
+        -:  162:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:  163:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:  164:
+        -:  165:		inline double operator[]( R_xlen_t i ) const {
+        -:  166:			return lhs[i] - rhs[i] ;
+        -:  167:		}
+        -:  168:
+        -:  169:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  170:
+        -:  171:	private:
+        -:  172:		const LHS_EXT& lhs ;
+        -:  173:		const RHS_EXT& rhs ;
+        -:  174:	} ;
+        -:  175:
+        -:  176:
+        -:  177:	template <int RTYPE, typename LHS_T, typename RHS_T >
+        -:  178:	class Minus_Vector_Vector<RTYPE,false,LHS_T,false,RHS_T> :
+        -:  179:	    public Rcpp::VectorBase<RTYPE,false, Minus_Vector_Vector<RTYPE,false,LHS_T,false,RHS_T> > {
+        -:  180:	public:
+        -:  181:		typedef typename Rcpp::VectorBase<RTYPE,false,LHS_T> LHS_TYPE ;
+        -:  182:		typedef typename Rcpp::VectorBase<RTYPE,false,RHS_T> RHS_TYPE ;
+        -:  183:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  184:		typedef typename Rcpp::traits::Extractor<RTYPE, false, LHS_T>::type LHS_EXT ;
+        -:  185:		typedef typename Rcpp::traits::Extractor<RTYPE, false, RHS_T>::type RHS_EXT ;
+        -:  186:
+        -:  187:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:  188:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:  189:
+        -:  190:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:  191:			return lhs[i] - rhs[i] ;
+        -:  192:		}
+        -:  193:
+        -:  194:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  195:
+        -:  196:	private:
+        -:  197:		const LHS_EXT& lhs ;
+        -:  198:		const RHS_EXT& rhs ;
+        -:  199:	} ;
+        -:  200:	template <typename LHS_T, typename RHS_T >
+        -:  201:	class Minus_Vector_Vector<REALSXP,false,LHS_T,false,RHS_T> :
+        -:  202:	    public Rcpp::VectorBase<REALSXP,false, Minus_Vector_Vector<REALSXP,false,LHS_T,false,RHS_T> > {
+        -:  203:	public:
+        -:  204:		typedef typename Rcpp::VectorBase<REALSXP,false,LHS_T> LHS_TYPE ;
+        -:  205:		typedef typename Rcpp::VectorBase<REALSXP,false,RHS_T> RHS_TYPE ;
+        -:  206:		typedef typename Rcpp::traits::Extractor<REALSXP, false, LHS_T>::type LHS_EXT ;
+        -:  207:		typedef typename Rcpp::traits::Extractor<REALSXP, false, RHS_T>::type RHS_EXT ;
+        -:  208:
+        -:  209:		Minus_Vector_Vector( const LHS_TYPE& lhs_, const RHS_TYPE& rhs_ ) :
+        -:  210:			lhs(lhs_.get_ref()), rhs(rhs_.get_ref()) {}
+        -:  211:
+        -:  212:		inline double operator[]( R_xlen_t i ) const {
+        -:  213:			return lhs[i] - rhs[i] ;
+        -:  214:		}
+        -:  215:
+        -:  216:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  217:
+        -:  218:	private:
+        -:  219:		const LHS_EXT& lhs ;
+        -:  220:		const RHS_EXT& rhs ;
+        -:  221:	} ;
+        -:  222:
+        -:  223:
+        -:  224:
+        -:  225:
+        -:  226:
+        -:  227:	template <int RTYPE, bool NA, typename T>
+        -:  228:	class Minus_Vector_Primitive :
+        -:  229:	    public Rcpp::VectorBase<RTYPE,true, Minus_Vector_Primitive<RTYPE,NA,T> > {
+        -:  230:	public:
+        -:  231:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  232:		typedef typename Rcpp::VectorBase<RTYPE,NA,T> VEC_TYPE ;
+        -:  233:		typedef typename Rcpp::traits::Extractor<RTYPE,NA,T>::type VEC_EXT ;
+        -:  234:
+    #####:  235:		Minus_Vector_Primitive( const VEC_TYPE& lhs_, STORAGE rhs_ ) :
+    #####:  236:			lhs(lhs_.get_ref()), rhs(rhs_), rhs_na( Rcpp::traits::is_na<RTYPE>(rhs_) ) {}
+        -:  237:
+    #####:  238:		inline STORAGE operator[]( R_xlen_t i ) const {
+    #####:  239:			if( rhs_na ) return rhs ;
+    #####:  240:			STORAGE x = lhs[i] ;
+    #####:  241:			return Rcpp::traits::is_na<RTYPE>(x) ? x : (x - rhs) ;
+        -:  242:		}
+        -:  243:
+    #####:  244:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  245:
+        -:  246:	private:
+        -:  247:		const VEC_EXT& lhs ;
+        -:  248:		STORAGE rhs ;
+        -:  249:		bool rhs_na ;
+        -:  250:	} ;
+        -:  251:	template <bool NA, typename T>
+        -:  252:	class Minus_Vector_Primitive<REALSXP,NA,T> :
+        -:  253:	    public Rcpp::VectorBase<REALSXP,true, Minus_Vector_Primitive<REALSXP,NA,T> > {
+        -:  254:	public:
+        -:  255:		typedef typename Rcpp::VectorBase<REALSXP,NA,T> VEC_TYPE ;
+        -:  256:		typedef typename Rcpp::traits::Extractor<REALSXP,NA,T>::type VEC_EXT ;
+        -:  257:
+        -:  258:		Minus_Vector_Primitive( const VEC_TYPE& lhs_, double rhs_ ) :
+        -:  259:			lhs(lhs_.get_ref()), rhs(rhs_){}
+        -:  260:
+        -:  261:		inline double operator[]( R_xlen_t i ) const {
+        -:  262:			return lhs[i] - rhs ;
+        -:  263:		}
+        -:  264:
+        -:  265:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  266:
+        -:  267:	private:
+        -:  268:		const VEC_EXT& lhs ;
+        -:  269:		double rhs ;
+        -:  270:	} ;
+        -:  271:
+        -:  272:
+        -:  273:	template <int RTYPE, typename T>
+        -:  274:	class Minus_Vector_Primitive<RTYPE,false,T> :
+        -:  275:	    public Rcpp::VectorBase<RTYPE,true, Minus_Vector_Primitive<RTYPE,false,T> > {
+        -:  276:	public:
+        -:  277:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  278:		typedef typename Rcpp::VectorBase<RTYPE,false,T> VEC_TYPE ;
+        -:  279:		typedef typename Rcpp::traits::Extractor<RTYPE,false,T>::type VEC_EXT ;
+        -:  280:
+        -:  281:		Minus_Vector_Primitive( const VEC_TYPE& lhs_, STORAGE rhs_ ) :
+        -:  282:			lhs(lhs_.get_ref()), rhs(rhs_), rhs_na( Rcpp::traits::is_na<RTYPE>(rhs_) ) {}
+        -:  283:
+        -:  284:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:  285:			if( rhs_na ) return rhs ;
+        -:  286:			STORAGE x = lhs[i] ;
+        -:  287:			return Rcpp::traits::is_na<RTYPE>(x) ? x : (x - rhs) ;
+        -:  288:		}
+        -:  289:
+        -:  290:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  291:
+        -:  292:	private:
+        -:  293:		const VEC_EXT& lhs ;
+        -:  294:		STORAGE rhs ;
+        -:  295:		bool rhs_na ;
+        -:  296:	} ;
+        -:  297:	template <typename T>
+        -:  298:	class Minus_Vector_Primitive<REALSXP,false,T> :
+        -:  299:	    public Rcpp::VectorBase<REALSXP,true, Minus_Vector_Primitive<REALSXP,false,T> > {
+        -:  300:	public:
+        -:  301:		typedef typename Rcpp::VectorBase<REALSXP,false,T> VEC_TYPE ;
+        -:  302:		typedef typename Rcpp::traits::Extractor<REALSXP,false,T>::type VEC_EXT ;
+        -:  303:
+        -:  304:		Minus_Vector_Primitive( const VEC_TYPE& lhs_, double rhs_ ) :
+        -:  305:			lhs(lhs_.get_ref()), rhs(rhs_){}
+        -:  306:
+        -:  307:		inline double operator[]( R_xlen_t i ) const {
+        -:  308:			return lhs[i] - rhs ;
+        -:  309:		}
+        -:  310:
+        -:  311:		inline R_xlen_t size() const { return lhs.size() ; }
+        -:  312:
+        -:  313:	private:
+        -:  314:		const VEC_EXT& lhs ;
+        -:  315:		double rhs ;
+        -:  316:	} ;
+        -:  317:
+        -:  318:
+        -:  319:
+        -:  320:
+        -:  321:
+        -:  322:
+        -:  323:	template <int RTYPE, bool NA, typename T>
+        -:  324:	class Minus_Primitive_Vector :
+        -:  325:	    public Rcpp::VectorBase<RTYPE,true, Minus_Primitive_Vector<RTYPE,NA,T> > {
+        -:  326:	public:
+        -:  327:		typedef typename Rcpp::VectorBase<RTYPE,NA,T> VEC_TYPE ;
+        -:  328:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  329:		typedef typename Rcpp::traits::Extractor<RTYPE,NA,T>::type VEC_EXT ;
+        -:  330:
+        -:  331:		Minus_Primitive_Vector( STORAGE lhs_, const VEC_TYPE& rhs_ ) :
+        -:  332:			lhs(lhs_), rhs(rhs_.get_ref()), lhs_na( Rcpp::traits::is_na<RTYPE>(lhs_) ) {}
+        -:  333:
+        -:  334:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:  335:			if( lhs_na ) return lhs ;
+        -:  336:			return lhs - rhs[i] ;
+        -:  337:		}
+        -:  338:		inline R_xlen_t size() const { return rhs.size() ; }
+        -:  339:
+        -:  340:	private:
+        -:  341:		STORAGE lhs ;
+        -:  342:		const VEC_EXT& rhs ;
+        -:  343:		bool lhs_na ;
+        -:  344:	} ;
+        -:  345:	template <bool NA, typename T>
+        -:  346:	class Minus_Primitive_Vector<REALSXP,NA,T> :
+        -:  347:	    public Rcpp::VectorBase<REALSXP,true, Minus_Primitive_Vector<REALSXP,NA,T> > {
+        -:  348:	public:
+        -:  349:		typedef typename Rcpp::VectorBase<REALSXP,NA,T> VEC_TYPE ;
+        -:  350:		typedef typename Rcpp::traits::Extractor<REALSXP,NA,T>::type VEC_EXT ;
+        -:  351:
+        -:  352:		Minus_Primitive_Vector( double lhs_, const VEC_TYPE& rhs_ ) :
+        -:  353:			lhs(lhs_), rhs(rhs_.get_ref()){}
+        -:  354:
+        -:  355:		inline double operator[]( R_xlen_t i ) const {
+        -:  356:			return lhs - rhs[i] ;
+        -:  357:		}
+        -:  358:		inline R_xlen_t size() const { return rhs.size() ; }
+        -:  359:
+        -:  360:	private:
+        -:  361:		double lhs ;
+        -:  362:		const VEC_EXT& rhs ;
+        -:  363:	} ;
+        -:  364:
+        -:  365:
+        -:  366:
+        -:  367:	template <int RTYPE, typename T>
+        -:  368:	class Minus_Primitive_Vector<RTYPE,false,T> :
+        -:  369:	    public Rcpp::VectorBase<RTYPE,true, Minus_Primitive_Vector<RTYPE,false,T> > {
+        -:  370:	public:
+        -:  371:		typedef typename Rcpp::VectorBase<RTYPE,false,T> VEC_TYPE ;
+        -:  372:		typedef typename traits::storage_type<RTYPE>::type STORAGE ;
+        -:  373:		typedef typename Rcpp::traits::Extractor<REALSXP,false,T>::type VEC_EXT ;
+        -:  374:
+        -:  375:		Minus_Primitive_Vector( STORAGE lhs_, const VEC_TYPE& rhs_ ) :
+        -:  376:			lhs(lhs_), rhs(rhs_.get_ref()), lhs_na( Rcpp::traits::is_na<RTYPE>(lhs_) ) {}
+        -:  377:
+        -:  378:		inline STORAGE operator[]( R_xlen_t i ) const {
+        -:  379:			if( lhs_na ) return lhs ;
+        -:  380:		    return lhs - rhs[i] ;
+        -:  381:		}
+        -:  382:
+        -:  383:		inline R_xlen_t size() const { return rhs.size() ; }
+        -:  384:
+        -:  385:	private:
+        -:  386:		STORAGE lhs ;
+        -:  387:		const VEC_EXT& rhs ;
+        -:  388:		bool lhs_na ;
+        -:  389:
+        -:  390:	} ;
+        -:  391:	template <typename T>
+        -:  392:	class Minus_Primitive_Vector<REALSXP,false,T> :
+        -:  393:	    public Rcpp::VectorBase<REALSXP,true, Minus_Primitive_Vector<REALSXP,false,T> > {
+        -:  394:	public:
+        -:  395:		typedef typename Rcpp::VectorBase<REALSXP,false,T> VEC_TYPE ;
+        -:  396:		typedef typename Rcpp::traits::Extractor<REALSXP,false,T>::type VEC_EXT ;
+        -:  397:
+        -:  398:		Minus_Primitive_Vector( double lhs_, const VEC_TYPE& rhs_ ) :
+        -:  399:			lhs(lhs_), rhs(rhs_.get_ref()){}
+        -:  400:
+        -:  401:		inline double operator[]( R_xlen_t i ) const {
+        -:  402:			return lhs - rhs[i] ;
+        -:  403:		}
+        -:  404:
+        -:  405:		inline R_xlen_t size() const { return rhs.size() ; }
+        -:  406:
+        -:  407:	private:
+        -:  408:		double lhs ;
+        -:  409:		const VEC_EXT& rhs ;
+        -:  410:	} ;
+        -:  411:
+        -:  412:
+        -:  413:}
+        -:  414:
+        -:  415:template <int RTYPE,bool NA, typename T, typename U>
+        -:  416:inline typename traits::enable_if<traits::is_convertible<typename traits::remove_const_and_reference<U>::type, typename traits::storage_type<RTYPE>::type>::value, sugar::Minus_Vector_Primitive< RTYPE , NA, T > >::type
+    #####:  417:operator-(
+        -:  418:	const VectorBase<RTYPE,NA,T>& lhs,
+        -:  419:	const U &rhs
+        -:  420:) {
+    #####:  421:	return sugar::Minus_Vector_Primitive<RTYPE,NA,T>( lhs, rhs ) ;
+        -:  422:}
+        -:  423:
+        -:  424:
+        -:  425:template <int RTYPE,bool NA, typename T, typename U>
+        -:  426:inline typename traits::enable_if<traits::is_convertible<typename traits::remove_const_and_reference<U>::type, typename traits::storage_type<RTYPE>::type>::value, sugar::Minus_Primitive_Vector< RTYPE , NA,T> >::type
+        -:  427:operator-(
+        -:  428:	const U &lhs,
+        -:  429:	const VectorBase<RTYPE,NA,T>& rhs
+        -:  430:) {
+        -:  431:	return sugar::Minus_Primitive_Vector<RTYPE,NA,T>( lhs, rhs ) ;
+        -:  432:}
+        -:  433:
+        -:  434:template <int RTYPE,bool LHS_NA, typename LHS_T, bool RHS_NA, typename RHS_T>
+        -:  435:inline sugar::Minus_Vector_Vector<
+        -:  436:	RTYPE ,
+        -:  437:	LHS_NA, LHS_T,
+        -:  438:	RHS_NA, RHS_T
+        -:  439:	>
+        -:  440:operator-(
+        -:  441:	const VectorBase<RTYPE,LHS_NA,LHS_T>& lhs,
+        -:  442:	const VectorBase<RTYPE,RHS_NA,RHS_T>& rhs
+        -:  443:) {
+        -:  444:	return sugar::Minus_Vector_Vector<
+        -:  445:		RTYPE,
+        -:  446:		LHS_NA,LHS_T,
+        -:  447:		RHS_NA,RHS_T
+        -:  448:		>( lhs, rhs ) ;
+        -:  449:}
+        -:  450:
+        -:  451:}
+        -:  452:
+        -:  453:#endif

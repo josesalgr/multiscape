@@ -1,0 +1,1350 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/vector/Vector.h
+        -:    0:Graph:./rcpp_add_linking_z_le_w.gcno
+        -:    0:Data:./rcpp_add_linking_z_le_w.gcda
+        -:    0:Runs:22
+        -:    1:// Vector.h: Rcpp R/C++ interface class library -- vectors
+        -:    2://
+        -:    3:// Copyright (C) 2010 - 2026  Dirk Eddelbuettel and Romain Francois
+        -:    4://
+        -:    5:// This file is part of Rcpp.
+        -:    6://
+        -:    7:// Rcpp is free software: you can redistribute it and/or modify it
+        -:    8:// under the terms of the GNU General Public License as published by
+        -:    9:// the Free Software Foundation, either version 2 of the License, or
+        -:   10:// (at your option) any later version.
+        -:   11://
+        -:   12:// Rcpp is distributed in the hope that it will be useful, but
+        -:   13:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   14:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   15:// GNU General Public License for more details.
+        -:   16://
+        -:   17:// You should have received a copy of the GNU General Public License
+        -:   18:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   19:
+        -:   20:#ifndef Rcpp__vector__Vector_h
+        -:   21:#define Rcpp__vector__Vector_h
+        -:   22:
+        -:   23:#include <Rcpp/vector/Subsetter.h>
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:template <int RTYPE, template <class> class StoragePolicy = PreserveStorage >
+        -:   28:class Vector :
+        -:   29:    public StoragePolicy< Vector<RTYPE,StoragePolicy> >,
+        -:   30:    public SlotProxyPolicy< Vector<RTYPE,StoragePolicy> >,
+        -:   31:    public AttributeProxyPolicy< Vector<RTYPE,StoragePolicy> >,
+        -:   32:    public NamesProxyPolicy< Vector<RTYPE, StoragePolicy> >,
+        -:   33:    public RObjectMethods< Vector<RTYPE, StoragePolicy> >,
+        -:   34:    public VectorBase< RTYPE, true, Vector<RTYPE,StoragePolicy> >
+        -:   35:{
+        -:   36:public:
+        -:   37:
+        -:   38:    typedef StoragePolicy<Vector> Storage ;
+        -:   39:
+        -:   40:    typename traits::r_vector_cache_type<RTYPE, StoragePolicy>::type cache ;
+        -:   41:    typedef typename traits::r_vector_proxy<RTYPE, StoragePolicy>::type Proxy ;
+        -:   42:    typedef typename traits::r_vector_const_proxy<RTYPE, StoragePolicy>::type const_Proxy ;
+        -:   43:    typedef typename traits::r_vector_name_proxy<RTYPE, StoragePolicy>::type NameProxy ;
+        -:   44:    typedef typename traits::r_vector_proxy<RTYPE, StoragePolicy>::type value_type ;
+        -:   45:    typedef typename traits::r_vector_iterator<RTYPE, StoragePolicy>::type iterator ;
+        -:   46:    typedef typename traits::r_vector_const_iterator<RTYPE, StoragePolicy>::type const_iterator ;
+        -:   47:    typedef typename traits::init_type<RTYPE>::type init_type ;
+        -:   48:    typedef typename traits::r_vector_element_converter<RTYPE>::type converter_type ;
+        -:   49:    typedef typename traits::storage_type<RTYPE>::type stored_type ;
+        -:   50:
+        -:   51:    /**
+        -:   52:     * Default constructor. Creates a vector of the appropriate type
+        -:   53:     * and 0 length
+        -:   54:     */
+        -:   55:    Vector() {
+        -:   56:      Storage::set__( Rf_allocVector(RTYPE, 0 ) );
+        -:   57:      init() ;
+        -:   58:    }
+        -:   59:
+        -:   60:    /**
+        -:   61:     * copy constructor. shallow copy of the SEXP
+        -:   62:     */
+    #####:   63:    Vector( const Vector& other){
+    #####:   64:        Storage::copy__(other) ;
+    #####:   65:    }
+        -:   66:
+        -:   67:    Vector& operator=(const Vector& rhs) {
+        -:   68:        return Storage::copy__(rhs) ;
+        -:   69:    }
+        -:   70:
+    #####:   71:    Vector( SEXP x ) {
+    #####:   72:        Rcpp::Shield<SEXP> safe(x);
+    #####:   73:        Storage::set__( r_cast<RTYPE>(safe) ) ;
+    #####:   74:    }
+        -:   75:
+        -:   76:    template <typename Proxy>
+        -:   77:    Vector( const GenericProxy<Proxy>& proxy ){
+        -:   78:        Rcpp::Shield<SEXP> safe(proxy.get());
+        -:   79:        Storage::set__( r_cast<RTYPE>(safe) ) ;
+        -:   80:    }
+        -:   81:
+        -:   82:    explicit Vector( const no_init_vector& obj) {
+        -:   83:        Storage::set__( Rf_allocVector( RTYPE, obj.get() ) ) ;
+        -:   84:    }
+        -:   85:
+        -:   86:    template<typename T>
+        -:   87:    Vector( const T& size, const stored_type& u,
+        -:   88:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:   89:        RCPP_DEBUG_2( "Vector<%d>( const T& size = %d, const stored_type& u )", RTYPE, size)
+        -:   90:        Storage::set__( Rf_allocVector( RTYPE, size) ) ;
+        -:   91:        fill( u ) ;
+        -:   92:    }
+        -:   93:
+        -:   94:    Vector( const int& size, const stored_type& u) {
+        -:   95:        RCPP_DEBUG_2( "Vector<%d>( const int& size = %d, const stored_type& u )", RTYPE, size)
+        -:   96:        Storage::set__( Rf_allocVector( RTYPE, size) ) ;
+        -:   97:        fill( u ) ;
+        -:   98:    }
+        -:   99:
+        -:  100:    // constructor for CharacterVector()
+        -:  101:    Vector( const std::string& st ){
+        -:  102:        RCPP_DEBUG_2( "Vector<%d>( const std::string& = %s )", RTYPE, st.c_str() )
+        -:  103:        Storage::set__( internal::vector_from_string<RTYPE>(st) ) ;
+        -:  104:    }
+        -:  105:
+        -:  106:    // constructor for CharacterVector()
+        -:  107:    Vector( const char* st ) {
+        -:  108:        RCPP_DEBUG_2( "Vector<%d>( const char* = %s )", RTYPE, st )
+        -:  109:        Storage::set__(internal::vector_from_string<RTYPE>(st) ) ;
+        -:  110:    }
+        -:  111:
+        -:  112:    template<typename T>
+        -:  113:    Vector( const T& siz, stored_type (*gen)(void),
+        -:  114:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  115:        RCPP_DEBUG_2( "Vector<%d>( const int& siz = %s, stored_type (*gen)(void) )", RTYPE, siz )
+        -:  116:        Storage::set__( Rf_allocVector( RTYPE, siz) ) ;
+        -:  117:        std::generate( begin(), end(), gen );
+        -:  118:    }
+        -:  119:
+        -:  120:    // Add template class T and then restict T to arithmetic.
+        -:  121:    template <typename T>
+    #####:  122:    Vector(T size,
+    #####:  123:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+    #####:  124:        Storage::set__( Rf_allocVector( RTYPE, size) ) ;
+    #####:  125:        init() ;
+    #####:  126:    }
+        -:  127:
+        -:  128:    Vector( const int& size ) {
+        -:  129:        Storage::set__( Rf_allocVector( RTYPE, size) ) ;
+        -:  130:        init() ;
+        -:  131:    }
+        -:  132:
+        -:  133:    Vector( const Dimension& dims) {
+        -:  134:        Storage::set__( Rf_allocVector( RTYPE, dims.prod() ) ) ;
+        -:  135:        init() ;
+        -:  136:        if( dims.size() > 1 ){
+        -:  137:            AttributeProxyPolicy<Vector>::attr( "dim" ) = dims;
+        -:  138:        }
+        -:  139:    }
+        -:  140:
+        -:  141:    // Enable construction from bool for LogicalVectors
+        -:  142:    // SFINAE only work for template. Add template class T and then restict T to
+        -:  143:    // bool.
+        -:  144:    template <typename T>
+        -:  145:    Vector(T value,
+        -:  146:           typename Rcpp::traits::enable_if<traits::is_bool<T>::value && RTYPE == LGLSXP, void>::type* = 0) {
+        -:  147:        Storage::set__(Rf_allocVector(RTYPE, 1));
+        -:  148:        fill(value);
+        -:  149:    }
+        -:  150:
+        -:  151:    template <typename U>
+        -:  152:    Vector( const Dimension& dims, const U& u) {
+        -:  153:        RCPP_DEBUG_2( "Vector<%d>( const Dimension& (%d), const U& )", RTYPE, dims.size() )
+        -:  154:        Storage::set__( Rf_allocVector( RTYPE, dims.prod() ) ) ;
+        -:  155:        fill(u) ;
+        -:  156:        if( dims.size() > 1 ){
+        -:  157:            AttributeProxyPolicy<Vector>::attr( "dim" ) = dims;
+        -:  158:        }
+        -:  159:    }
+        -:  160:
+        -:  161:    template <bool NA, typename VEC>
+        -:  162:    Vector( const VectorBase<RTYPE,NA,VEC>& other ) {
+        -:  163:        RCPP_DEBUG_2( "Vector<%d>( const VectorBase<RTYPE,NA,VEC>& ) [VEC = %s]", RTYPE, DEMANGLE(VEC) )
+        -:  164:        import_sugar_expression( other, typename traits::same_type<Vector,VEC>::type() ) ;
+        -:  165:    }
+        -:  166:
+        -:  167:    template <typename T, typename U>
+        -:  168:    Vector( const T& size, const U& u,
+        -:  169:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  170:        RCPP_DEBUG_2( "Vector<%d>( const T& size, const U& u )", RTYPE, size )
+        -:  171:        Storage::set__( Rf_allocVector( RTYPE, size) ) ;
+        -:  172:        fill_or_generate( u ) ;
+        -:  173:    }
+        -:  174:
+        -:  175:    template <bool NA, typename T>
+        -:  176:    Vector( const sugar::SingleLogicalResult<NA,T>& obj ) {
+        -:  177:        Rcpp::Shield<SEXP> safe(const_cast<sugar::SingleLogicalResult<NA,T>&>(obj).get_sexp() );
+        -:  178:        Storage::set__( r_cast<RTYPE>(safe) ) ;
+        -:  179:        RCPP_DEBUG_2( "Vector<%d>( const sugar::SingleLogicalResult<NA,T>& ) [T = %s]", RTYPE, DEMANGLE(T) )
+        -:  180:    }
+        -:  181:
+        -:  182:    template <typename T, typename U1>
+        -:  183:    Vector( const T& siz, stored_type (*gen)(U1), const U1& u1,
+        -:  184:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  185:        Storage::set__( Rf_allocVector( RTYPE, siz) ) ;
+        -:  186:        RCPP_DEBUG_2( "const T& siz, stored_type (*gen)(U1), const U1& u1 )", RTYPE, siz )
+        -:  187:        iterator first = begin(), last = end() ;
+        -:  188:        while( first != last ) *first++ = gen(u1) ;
+        -:  189:    }
+        -:  190:
+        -:  191:    template <typename T, typename U1, typename U2>
+        -:  192:    Vector( const T& siz, stored_type (*gen)(U1,U2), const U1& u1, const U2& u2,
+        -:  193:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  194:        Storage::set__( Rf_allocVector( RTYPE, siz) ) ;
+        -:  195:        RCPP_DEBUG_2( "const T& siz, stored_type (*gen)(U1,U2), const U1& u1, const U2& u2)", RTYPE, siz )
+        -:  196:        iterator first = begin(), last = end() ;
+        -:  197:        while( first != last ) *first++ = gen(u1,u2) ;
+        -:  198:    }
+        -:  199:
+        -:  200:    template <typename T, typename U1, typename U2, typename U3>
+        -:  201:    Vector( const T& siz, stored_type (*gen)(U1,U2,U3), const U1& u1, const U2& u2, const U3& u3,
+        -:  202:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  203:        Storage::set__( Rf_allocVector( RTYPE, siz) ) ;
+        -:  204:        RCPP_DEBUG_2( "const T& siz, stored_type (*gen)(U1,U2,U3), const U1& u1, const U2& u2, const U3& u3)", RTYPE, siz )
+        -:  205:        iterator first = begin(), last = end() ;
+        -:  206:        while( first != last ) *first++ = gen(u1,u2,u3) ;
+        -:  207:    }
+        -:  208:
+        -:  209:    template <typename InputIterator>
+        -:  210:    Vector( InputIterator first, InputIterator last){
+        -:  211:        RCPP_DEBUG_1( "Vector<%d>( InputIterator first, InputIterator last", RTYPE )
+        -:  212:        Storage::set__( Rf_allocVector(RTYPE, std::distance(first, last) ) ) ;
+        -:  213:        std::copy( first, last, begin() ) ;
+        -:  214:    }
+        -:  215:
+        -:  216:    template <typename InputIterator, typename T>
+        -:  217:    Vector( InputIterator first, InputIterator last, T n,
+        -:  218:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0) {
+        -:  219:        Storage::set__(Rf_allocVector(RTYPE, n)) ;
+        -:  220:        RCPP_DEBUG_2( "Vector<%d>( InputIterator first, InputIterator last, T n = %d)", RTYPE, n )
+        -:  221:        std::copy( first, last, begin() ) ;
+        -:  222:    }
+        -:  223:
+        -:  224:    template <typename InputIterator, typename Func>
+        -:  225:    Vector( InputIterator first, InputIterator last, Func func) {
+        -:  226:        Storage::set__( Rf_allocVector( RTYPE, std::distance(first,last) ) );
+        -:  227:        RCPP_DEBUG_1( "Vector<%d>( InputIterator, InputIterator, Func )", RTYPE )
+        -:  228:        std::transform( first, last, begin(), func) ;
+        -:  229:    }
+        -:  230:
+        -:  231:    template <typename InputIterator, typename Func, typename T>
+        -:  232:    Vector( InputIterator first, InputIterator last, Func func, T n,
+        -:  233:        typename Rcpp::traits::enable_if<traits::is_arithmetic<T>::value, void>::type* = 0){
+        -:  234:        Storage::set__( Rf_allocVector( RTYPE, n ) );
+        -:  235:        RCPP_DEBUG_2( "Vector<%d>( InputIterator, InputIterator, Func, T n = %d )", RTYPE, n )
+        -:  236:        std::transform( first, last, begin(), func) ;
+        -:  237:    }
+        -:  238:
+        -:  239:    Vector( std::initializer_list<init_type> list ) {
+        -:  240:        assign( list.begin() , list.end() ) ;
+        -:  241:    }
+        -:  242:
+        -:  243:    template <typename T>
+        -:  244:    Vector& operator=( const T& x) {
+        -:  245:        assign_object( x, typename traits::is_sugar_expression<T>::type() ) ;
+        -:  246:        return *this ;
+        -:  247:    }
+        -:  248:
+        -:  249:    static inline stored_type get_na() {
+        -:  250:        return traits::get_na<RTYPE>();
+        -:  251:    }
+        -:  252:    static inline bool is_na( stored_type x){
+        -:  253:        return traits::is_na<RTYPE>(x);
+        -:  254:    }
+        -:  255:
+        -:  256:    #ifdef RCPP_COMMA_INITIALIZATION
+        -:  257:    internal::ListInitialization<iterator,init_type> operator=( init_type x){
+        -:  258:        iterator start = begin() ; *start = x;
+        -:  259:        return internal::ListInitialization<iterator,init_type>( start + 1 ) ; ;
+        -:  260:    }
+        -:  261:    #endif
+        -:  262:
+        -:  263:    /**
+        -:  264:     * the length of the vector, uses Rf_xlength
+        -:  265:     */
+        -:  266:    inline R_xlen_t length() const {
+        -:  267:        return ::Rf_xlength( Storage::get__() ) ;
+        -:  268:    }
+        -:  269:
+        -:  270:    /**
+        -:  271:     * alias of length
+        -:  272:     */
+    #####:  273:    inline R_xlen_t size() const {
+    #####:  274:        return ::Rf_xlength( Storage::get__() ) ;
+        -:  275:    }
+------------------
+_ZNK4Rcpp6VectorILi19ENS_15PreserveStorageEE4sizeEv:
+    #####:  273:    inline R_xlen_t size() const {
+    #####:  274:        return ::Rf_xlength( Storage::get__() ) ;
+        -:  275:    }
+------------------
+_ZNK4Rcpp6VectorILi13ENS_15PreserveStorageEE4sizeEv:
+    #####:  273:    inline R_xlen_t size() const {
+    #####:  274:        return ::Rf_xlength( Storage::get__() ) ;
+        -:  275:    }
+------------------
+        -:  276:
+        -:  277:    /**
+        -:  278:     * offset based on the dimensions of this vector
+        -:  279:     */
+        -:  280:    R_xlen_t offset(const int& i, const int& j) const {
+        -:  281:        if( !::Rf_isMatrix(Storage::get__()) ) throw not_a_matrix() ;
+        -:  282:
+        -:  283:        /* we need to extract the dimensions */
+        -:  284:        const int* dim = dims() ;
+        -:  285:        const int nrow = dim[0] ;
+        -:  286:        const int ncol = dim[1] ;
+        -:  287:        if(i < 0|| i >= nrow || j < 0 || j >= ncol )  {
+        -:  288:            const char* fmt = "Location index is out of bounds: "
+        -:  289:                              "[row index=%i; row extent=%i; "
+        -:  290:                              "column index=%i; column extent=%i].";
+        -:  291:            throw index_out_of_bounds(fmt, i, nrow, j, ncol);
+        -:  292:        }
+        -:  293:        return i + static_cast<R_xlen_t>(nrow)*j ;
+        -:  294:    }
+        -:  295:
+        -:  296:    /**
+        -:  297:     * one dimensional offset doing bounds checking to ensure
+        -:  298:     * it is valid
+        -:  299:     */
+        -:  300:    R_xlen_t offset(const R_xlen_t& i) const {											// #nocov start
+        -:  301:        if(i < 0 || i >= ::Rf_xlength(Storage::get__()) ) {
+        -:  302:            const char* fmt = "Index out of bounds: [index=%i; extent=%i].";
+        -:  303:            throw index_out_of_bounds(fmt, i, ::Rf_xlength(Storage::get__()) ) ;
+        -:  304:        }
+        -:  305:        return i ;																		// #nocov end
+        -:  306:    }
+        -:  307:
+    #####:  308:    R_xlen_t offset(const std::string& name) const {
+    #####:  309:        SEXP names = RCPP_GET_NAMES( Storage::get__() ) ;
+    #####:  310:        if( Rf_isNull(names) ) {
+    #####:  311:            throw index_out_of_bounds("Object was created without names.");
+        -:  312:        }
+        -:  313:
+    #####:  314:        R_xlen_t n=size() ;
+    #####:  315:        for( R_xlen_t i=0; i<n; ++i){
+    #####:  316:            if( ! name.compare( CHAR(STRING_ELT(names, i)) ) ){
+    #####:  317:                return i ;
+        -:  318:            }
+        -:  319:        }
+        -:  320:
+    #####:  321:        const char* fmt = "Index out of bounds: [index='%s'].";
+    #####:  322:        throw index_out_of_bounds(fmt, name);
+        -:  323:        return -1 ; /* -Wall */
+        -:  324:    }
+        -:  325:
+        -:  326:    template <typename U>
+        -:  327:    void fill( const U& u){
+        -:  328:        fill__dispatch( typename traits::is_trivial<RTYPE>::type(), u ) ;
+        -:  329:    }
+        -:  330:
+    #####:  331:    inline iterator begin() { return cache.get() ; }
+        -:  332:    inline iterator end() { return cache.get() + size(); }
+        -:  333:    inline const_iterator begin() const{ return cache.get_const() ; }
+        -:  334:    inline const_iterator end() const{ return cache.get_const() + size() ; }
+        -:  335:    inline const_iterator cbegin() const{ return cache.get_const() ; }
+        -:  336:    inline const_iterator cend() const{ return cache.get_const() + size() ; }
+        -:  337:
+    #####:  338:    inline Proxy operator[]( R_xlen_t i ){ return cache.ref(i) ; }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEEixEx:
+    #####:  338:    inline Proxy operator[]( R_xlen_t i ){ return cache.ref(i) ; }
+------------------
+_ZN4Rcpp6VectorILi13ENS_15PreserveStorageEEixEx:
+    #####:  338:    inline Proxy operator[]( R_xlen_t i ){ return cache.ref(i) ; }
+------------------
+        -:  339:    inline const_Proxy operator[]( R_xlen_t i ) const { return cache.ref(i) ; }
+        -:  340:
+        -:  341:    inline Proxy operator()( const size_t& i) {
+        -:  342:        return cache.ref( offset(i) ) ;
+        -:  343:    }
+        -:  344:    inline const_Proxy operator()( const size_t& i) const {
+        -:  345:        return cache.ref( offset(i) ) ;
+        -:  346:    }
+        -:  347:
+        -:  348:    inline Proxy at( const size_t& i) {												// #nocov start
+        -:  349:       return cache.ref( offset(i) ) ;
+        -:  350:    }
+        -:  351:    inline const_Proxy at( const size_t& i) const {
+        -:  352:       return cache.ref( offset(i) ) ;
+        -:  353:    }																				// #nocov end
+        -:  354:
+        -:  355:    inline Proxy operator()( const size_t& i, const size_t& j) {
+        -:  356:        return cache.ref( offset(i,j) ) ;
+        -:  357:    }
+        -:  358:    inline const_Proxy operator()( const size_t& i, const size_t& j) const {
+        -:  359:        return cache.ref( offset(i,j) ) ;
+        -:  360:    }
+        -:  361:
+    #####:  362:    inline NameProxy operator[]( const std::string& name ){
+    #####:  363:        return NameProxy( *this, name ) ;
+        -:  364:    }
+        -:  365:    inline NameProxy operator()( const std::string& name ){
+        -:  366:        return NameProxy( *this, name ) ;
+        -:  367:    }
+        -:  368:
+        -:  369:    inline NameProxy operator[]( const std::string& name ) const {
+        -:  370:        return NameProxy( const_cast<Vector&>(*this), name ) ;
+        -:  371:    }
+        -:  372:    inline NameProxy operator()( const std::string& name ) const {
+        -:  373:        return NameProxy( const_cast<Vector&>(*this), name ) ;
+        -:  374:    }
+        -:  375:
+        -:  376:    inline operator RObject() const {
+        -:  377:        return RObject( Storage::get__() );
+        -:  378:    }
+        -:  379:
+        -:  380:    // sugar subsetting requires dispatch on VectorBase
+        -:  381:    template <int RHS_RTYPE, bool RHS_NA, typename RHS_T>
+        -:  382:    SubsetProxy<RTYPE, StoragePolicy, RHS_RTYPE, RHS_NA, RHS_T>
+        -:  383:    operator[](const VectorBase<RHS_RTYPE, RHS_NA, RHS_T>& rhs) {
+        -:  384:        return SubsetProxy<RTYPE, StoragePolicy, RHS_RTYPE, RHS_NA, RHS_T>(
+        -:  385:            *this,
+        -:  386:            rhs
+        -:  387:        );
+        -:  388:    }
+        -:  389:
+        -:  390:    template <int RHS_RTYPE, bool RHS_NA, typename RHS_T>
+        -:  391:    const SubsetProxy<RTYPE, StoragePolicy, RHS_RTYPE, RHS_NA, RHS_T>
+        -:  392:    operator[](const VectorBase<RHS_RTYPE, RHS_NA, RHS_T>& rhs) const {
+        -:  393:        return SubsetProxy<RTYPE, StoragePolicy, RHS_RTYPE, RHS_NA, RHS_T>(
+        -:  394:            const_cast< Vector<RTYPE, StoragePolicy>& >(*this),
+        -:  395:            rhs
+        -:  396:        );
+        -:  397:    }
+        -:  398:
+        -:  399:    Vector& sort(bool decreasing = false) {
+        -:  400:        // sort() does not apply to List, RawVector or ExpressionVector.
+        -:  401:        //
+        -:  402:        // The function below does nothing for qualified Vector types,
+        -:  403:        // and is undefined for other types. Hence there will be a
+        -:  404:        // compiler error when sorting List, RawVector or ExpressionVector.
+        -:  405:        internal::Sort_is_not_allowed_for_this_type<RTYPE>::do_nothing();
+        -:  406:
+        -:  407:        typename traits::storage_type<RTYPE>::type* start = internal::r_vector_start<RTYPE>( Storage::get__() );
+        -:  408:
+        -:  409:        if (!decreasing) {
+        -:  410:            std::sort(
+        -:  411:                start,
+        -:  412:                start + size(),
+        -:  413:                internal::NAComparator<typename traits::storage_type<RTYPE>::type>()
+        -:  414:            );
+        -:  415:        } else {
+        -:  416:            std::sort(
+        -:  417:                start,
+        -:  418:                start + size(),
+        -:  419:                internal::NAComparatorGreater<typename traits::storage_type<RTYPE>::type>()
+        -:  420:            );
+        -:  421:        }
+        -:  422:
+        -:  423:        return *this;
+        -:  424:    }
+        -:  425:
+        -:  426:    template <typename InputIterator>
+        -:  427:    void assign( InputIterator first, InputIterator last){
+        -:  428:        /* FIXME: we can do better than this r_cast to avoid
+        -:  429:           allocating an unnecessary temporary object
+        -:  430:        */
+        -:  431:        Shield<SEXP> wrapped(wrap(first, last));
+        -:  432:        Shield<SEXP> casted(r_cast<RTYPE>(wrapped));
+        -:  433:        Storage::set__(casted) ;
+        -:  434:    }
+        -:  435:
+        -:  436:    template <typename InputIterator>
+        -:  437:    static Vector import( InputIterator first, InputIterator last){
+        -:  438:        Vector v ;
+        -:  439:        v.assign( first , last ) ;
+        -:  440:        return v ;
+        -:  441:    }
+        -:  442:
+        -:  443:    template <typename InputIterator, typename F>
+        -:  444:    static Vector import_transform( InputIterator first, InputIterator last, F f){
+        -:  445:        return Vector( first, last, f) ;
+        -:  446:    }
+        -:  447:
+        -:  448:    template <typename T>
+        -:  449:    void push_back( const T& object){
+        -:  450:        push_back__impl( converter_type::get(object),
+        -:  451:                         typename traits::same_type<stored_type,SEXP>()
+        -:  452:                         ) ;
+        -:  453:    }
+        -:  454:
+        -:  455:    template <typename T>
+        -:  456:    void push_back( const T& object, const std::string& name ){
+        -:  457:        push_back_name__impl( converter_type::get(object), name,
+        -:  458:                              typename traits::same_type<stored_type,SEXP>()
+        -:  459:                              ) ;
+        -:  460:    }
+        -:  461:
+        -:  462:    template <typename T>
+        -:  463:    void push_front( const T& object){
+        -:  464:        push_front__impl( converter_type::get(object),
+        -:  465:                          typename traits::same_type<stored_type,SEXP>() ) ;
+        -:  466:    }
+        -:  467:
+        -:  468:    template <typename T>
+        -:  469:    void push_front( const T& object, const std::string& name){
+        -:  470:        push_front_name__impl( converter_type::get(object), name,
+        -:  471:                               typename traits::same_type<stored_type,SEXP>() ) ;
+        -:  472:    }
+        -:  473:
+        -:  474:
+        -:  475:    template <typename T>
+        -:  476:    iterator insert( iterator position, const T& object){
+        -:  477:        return insert__impl( position, converter_type::get(object),
+        -:  478:                             typename traits::same_type<stored_type,SEXP>()
+        -:  479:                             ) ;
+        -:  480:    }
+        -:  481:
+        -:  482:    template <typename T>
+        -:  483:    iterator insert( int position, const T& object){
+        -:  484:        return insert__impl( cache.get() + position, converter_type::get(object),
+        -:  485:                             typename traits::same_type<stored_type,SEXP>()
+        -:  486:                             );
+        -:  487:    }
+        -:  488:
+        -:  489:    iterator erase( int position){
+        -:  490:        return erase_single__impl( cache.get() + position) ;
+        -:  491:    }
+        -:  492:
+        -:  493:    iterator erase( iterator position){
+        -:  494:        return erase_single__impl( position ) ;
+        -:  495:    }
+        -:  496:
+        -:  497:    iterator erase( int first, int last){
+        -:  498:        iterator start = cache.get() ;
+        -:  499:        return erase_range__impl( start + first, start + last ) ;
+        -:  500:    }
+        -:  501:
+        -:  502:    iterator erase( iterator first, iterator last){
+        -:  503:        return erase_range__impl( first, last ) ;
+        -:  504:    }
+        -:  505:
+    #####:  506:    void update(SEXP){
+    #####:  507:        cache.update(*this) ;
+    #####:  508:    }
+------------------
+_ZN4Rcpp6VectorILi13ENS_15PreserveStorageEE6updateEP7SEXPREC:
+    #####:  506:    void update(SEXP){
+    #####:  507:        cache.update(*this) ;
+    #####:  508:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE6updateEP7SEXPREC:
+    #####:  506:    void update(SEXP){
+    #####:  507:        cache.update(*this) ;
+    #####:  508:    }
+------------------
+        -:  509:
+        -:  510:    template <typename U>
+    #####:  511:    static void replace_element( iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  512:        replace_element__dispatch( typename traits::is_named<U>::type(),
+        -:  513:                                   it, names, index, u ) ;
+    #####:  514:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE15replace_elementINS_6traits12named_objectINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEEEvNS_8internal14Proxy_IteratorINSD_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  511:    static void replace_element( iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  512:        replace_element__dispatch( typename traits::is_named<U>::type(),
+        -:  513:                                   it, names, index, u ) ;
+    #####:  514:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE15replace_elementINS_6traits12named_objectIdEEEEvNS_8internal14Proxy_IteratorINS7_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  511:    static void replace_element( iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  512:        replace_element__dispatch( typename traits::is_named<U>::type(),
+        -:  513:                                   it, names, index, u ) ;
+    #####:  514:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE15replace_elementINS_6traits12named_objectIiEEEEvNS_8internal14Proxy_IteratorINS7_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  511:    static void replace_element( iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  512:        replace_element__dispatch( typename traits::is_named<U>::type(),
+        -:  513:                                   it, names, index, u ) ;
+    #####:  514:    }
+------------------
+        -:  515:
+        -:  516:    template <typename U>
+        -:  517:    static void replace_element__dispatch( traits::false_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  518:        *it = converter_type::get(u);
+        -:  519:    }
+        -:  520:
+        -:  521:    template <typename U>
+    #####:  522:    static void replace_element__dispatch( traits::true_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  523:        replace_element__dispatch__isArgument( typename traits::same_type<U,Argument>(), it, names, index, u ) ;
+    #####:  524:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE25replace_element__dispatchINS_6traits12named_objectINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEEEvNS4_17integral_constantIbLb1EEENS_8internal14Proxy_IteratorINSF_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  522:    static void replace_element__dispatch( traits::true_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  523:        replace_element__dispatch__isArgument( typename traits::same_type<U,Argument>(), it, names, index, u ) ;
+    #####:  524:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE25replace_element__dispatchINS_6traits12named_objectIdEEEEvNS4_17integral_constantIbLb1EEENS_8internal14Proxy_IteratorINS9_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  522:    static void replace_element__dispatch( traits::true_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  523:        replace_element__dispatch__isArgument( typename traits::same_type<U,Argument>(), it, names, index, u ) ;
+    #####:  524:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE25replace_element__dispatchINS_6traits12named_objectIiEEEEvNS4_17integral_constantIbLb1EEENS_8internal14Proxy_IteratorINS9_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  522:    static void replace_element__dispatch( traits::true_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+    #####:  523:        replace_element__dispatch__isArgument( typename traits::same_type<U,Argument>(), it, names, index, u ) ;
+    #####:  524:    }
+------------------
+        -:  525:
+        -:  526:    template <typename U>
+    #####:  527:    static void replace_element__dispatch__isArgument( traits::false_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  528:        RCPP_DEBUG_2( "  Vector::replace_element__dispatch<%s>(true, index= %d) ", DEMANGLE(U), index ) ;
+        -:  529:
+    #####:  530:        *it = converter_type::get(u.object ) ;
+    #####:  531:        SET_STRING_ELT( names, index, ::Rf_mkChar( u.name.c_str() ) ) ;
+    #####:  532:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE37replace_element__dispatch__isArgumentINS_6traits12named_objectINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEEEvNS4_17integral_constantIbLb0EEENS_8internal14Proxy_IteratorINSF_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  527:    static void replace_element__dispatch__isArgument( traits::false_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  528:        RCPP_DEBUG_2( "  Vector::replace_element__dispatch<%s>(true, index= %d) ", DEMANGLE(U), index ) ;
+        -:  529:
+    #####:  530:        *it = converter_type::get(u.object ) ;
+    #####:  531:        SET_STRING_ELT( names, index, ::Rf_mkChar( u.name.c_str() ) ) ;
+    #####:  532:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE37replace_element__dispatch__isArgumentINS_6traits12named_objectIdEEEEvNS4_17integral_constantIbLb0EEENS_8internal14Proxy_IteratorINS9_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  527:    static void replace_element__dispatch__isArgument( traits::false_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  528:        RCPP_DEBUG_2( "  Vector::replace_element__dispatch<%s>(true, index= %d) ", DEMANGLE(U), index ) ;
+        -:  529:
+    #####:  530:        *it = converter_type::get(u.object ) ;
+    #####:  531:        SET_STRING_ELT( names, index, ::Rf_mkChar( u.name.c_str() ) ) ;
+    #####:  532:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE37replace_element__dispatch__isArgumentINS_6traits12named_objectIiEEEEvNS4_17integral_constantIbLb0EEENS_8internal14Proxy_IteratorINS9_13generic_proxyILi19ES1_EEEEP7SEXPRECxRKT_:
+    #####:  527:    static void replace_element__dispatch__isArgument( traits::false_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  528:        RCPP_DEBUG_2( "  Vector::replace_element__dispatch<%s>(true, index= %d) ", DEMANGLE(U), index ) ;
+        -:  529:
+    #####:  530:        *it = converter_type::get(u.object ) ;
+    #####:  531:        SET_STRING_ELT( names, index, ::Rf_mkChar( u.name.c_str() ) ) ;
+    #####:  532:    }
+------------------
+        -:  533:
+        -:  534:    template <typename U>
+        -:  535:    static void replace_element__dispatch__isArgument( traits::true_type, iterator it, SEXP names, R_xlen_t index, const U& u){
+        -:  536:        RCPP_DEBUG_2( "  Vector::replace_element__dispatch<%s>(true, index= %d) ", DEMANGLE(U), index ) ;
+        -:  537:
+        -:  538:        *it = R_MissingArg ;
+        -:  539:        SET_STRING_ELT( names, index, ::Rf_mkChar( u.name.c_str() ) ) ;
+        -:  540:    }
+        -:  541:
+        -:  542:    typedef internal::RangeIndexer<RTYPE,true,Vector> Indexer ;
+        -:  543:
+        -:  544:    inline Indexer operator[]( const Range& range ){
+        -:  545:        return Indexer( const_cast<Vector&>(*this), range );
+        -:  546:    }
+        -:  547:
+        -:  548:    template <typename EXPR_VEC>
+        -:  549:    Vector& operator+=( const VectorBase<RTYPE,true,EXPR_VEC>& rhs ) {
+        -:  550:          const EXPR_VEC& ref = rhs.get_ref() ;
+        -:  551:        iterator start = begin() ;
+        -:  552:        R_xlen_t n = size() ;
+        -:  553:        // TODO: maybe unroll this
+        -:  554:        stored_type tmp ;
+        -:  555:        for( R_xlen_t i=0; i<n; i++){
+        -:  556:            Proxy left = start[i] ;
+        -:  557:            if( ! traits::is_na<RTYPE>( left ) ){
+        -:  558:                tmp = ref[i] ;
+        -:  559:                left = traits::is_na<RTYPE>( tmp ) ? tmp : ( left + tmp ) ;
+        -:  560:            }
+        -:  561:        }
+        -:  562:        return *this ;
+        -:  563:    }
+        -:  564:
+        -:  565:    template <typename EXPR_VEC>
+        -:  566:    Vector& operator+=( const VectorBase<RTYPE,false,EXPR_VEC>& rhs ) {
+        -:  567:          const EXPR_VEC& ref = rhs.get_ref() ;
+        -:  568:        iterator start = begin() ;
+        -:  569:        R_xlen_t n = size() ;
+        -:  570:        stored_type tmp ;
+        -:  571:        for( R_xlen_t i=0; i<n; i++){
+        -:  572:            if( ! traits::is_na<RTYPE>(start[i]) ){
+        -:  573:                start[i] += ref[i] ;
+        -:  574:            }
+        -:  575:        }
+        -:  576:        return *this ;
+        -:  577:
+        -:  578:    }
+        -:  579:
+        -:  580:    /**
+        -:  581:     *  Does this vector have an element with the target name
+        -:  582:     */
+    #####:  583:    bool containsElementNamed( const char* target ) const {
+    #####:  584:          SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+    #####:  585:        if( Rf_isNull(names) ) return false ;
+    #####:  586:        R_xlen_t n = Rf_xlength(names) ;
+    #####:  587:        for( R_xlen_t i=0; i<n; i++){
+    #####:  588:            if( !strcmp( target, CHAR(STRING_ELT(names, i)) ) )
+    #####:  589:                return true ;
+        -:  590:        }
+    #####:  591:        return false ;
+        -:  592:    }
+        -:  593:
+        -:  594:    R_xlen_t findName(const std::string& name) const {
+        -:  595:        SEXP names = RCPP_GET_NAMES(Storage::get__());
+        -:  596:        if (Rf_isNull(names)) stop("'names' attribute is null");
+        -:  597:        R_xlen_t n = Rf_xlength(names);
+        -:  598:        for (R_xlen_t i=0; i < n; ++i) {
+        -:  599:            if (strcmp(name.c_str(), CHAR(STRING_ELT(names, i))) == 0) {
+        -:  600:                return i;
+        -:  601:            }
+        -:  602:        }
+        -:  603:        std::stringstream ss;
+        -:  604:        ss << "no name '" << name << "' found";
+        -:  605:        stop(ss.str());
+        -:  606:        return -1;
+        -:  607:    }
+        -:  608:
+        -:  609:protected:
+        -:  610:    inline int* dims() const {
+        -:  611:        if( !::Rf_isMatrix(Storage::get__()) ) throw not_a_matrix() ;
+        -:  612:        return INTEGER( ::Rf_getAttrib( Storage::get__(), R_DimSymbol ) ) ;
+        -:  613:    }
+    #####:  614:    void init(){
+        -:  615:        RCPP_DEBUG_2( "VECTOR<%d>::init( SEXP = <%p> )", RTYPE, Storage::get__() )
+    #####:  616:        internal::r_init_vector<RTYPE>(Storage::get__()) ;
+    #####:  617:    }
+        -:  618:
+        -:  619:private:
+        -:  620:
+        -:  621:    void push_back__impl(const stored_type& object, traits::true_type ) {
+        -:  622:        Shield<SEXP> object_sexp( object ) ;
+        -:  623:        R_xlen_t n = size() ;
+        -:  624:        Vector target( n + 1 ) ;
+        -:  625:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  626:        iterator target_it( target.begin() ) ;
+        -:  627:        iterator it(begin()) ;
+        -:  628:        iterator this_end(end());
+        -:  629:        if( Rf_isNull(names) ){
+        -:  630:            for( ; it < this_end; ++it, ++target_it ){
+        -:  631:                *target_it = *it ;												// #nocov start
+        -:  632:            }
+        -:  633:        } else {
+        -:  634:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1) ) ;
+        -:  635:            int i = 0 ;
+        -:  636:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  637:                *target_it = *it ;
+        -:  638:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  639:            }
+        -:  640:            SET_STRING_ELT( newnames, i, Rf_mkChar("") ) ;
+        -:  641:            target.attr("names") = newnames ;									// #nocov end
+        -:  642:        }
+        -:  643:        *target_it = object_sexp;
+        -:  644:        Storage::set__( target.get__() ) ;
+        -:  645:    }
+        -:  646:
+        -:  647:    void push_back__impl(const stored_type& object, traits::false_type ) {
+        -:  648:        R_xlen_t n = size() ;
+        -:  649:        Vector target( n + 1 ) ;
+        -:  650:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  651:        iterator target_it( target.begin() ) ;
+        -:  652:        iterator it(begin()) ;
+        -:  653:        iterator this_end(end());
+        -:  654:        if( Rf_isNull(names) ){
+        -:  655:            for( ; it < this_end; ++it, ++target_it ){
+        -:  656:                *target_it = *it ;
+        -:  657:            }
+        -:  658:        } else {
+        -:  659:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1) ) ;
+        -:  660:            int i = 0 ;
+        -:  661:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  662:                *target_it = *it ;
+        -:  663:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  664:            }
+        -:  665:            SET_STRING_ELT( newnames, i, Rf_mkChar("") ) ;
+        -:  666:            target.attr("names") = newnames ;
+        -:  667:        }
+        -:  668:        *target_it = object;
+        -:  669:        Storage::set__( target.get__() ) ;
+        -:  670:    }
+        -:  671:
+        -:  672:    void push_back_name__impl(const stored_type& object, const std::string& name, traits::true_type ) {
+        -:  673:        Shield<SEXP> object_sexp( object ) ;
+        -:  674:        R_xlen_t n = size() ;
+        -:  675:        Vector target( n + 1 ) ;
+        -:  676:        iterator target_it( target.begin() ) ;
+        -:  677:        iterator it(begin()) ;
+        -:  678:        iterator this_end(end());
+        -:  679:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  680:        Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n+1 ) ) ;
+        -:  681:        int i=0;
+        -:  682:        if( Rf_isNull(names) ){
+        -:  683:            for( ; it < this_end; ++it, ++target_it,i++ ){
+        -:  684:                *target_it = *it ;												// #nocov
+        -:  685:                SET_STRING_ELT( newnames, i , R_BlankString );					// #nocov
+        -:  686:            }
+        -:  687:        } else {
+        -:  688:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  689:                *target_it = *it ;
+        -:  690:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  691:            }
+        -:  692:        }
+        -:  693:        SET_STRING_ELT( newnames, i, Rf_mkChar( name.c_str() ) );
+        -:  694:        target.attr("names") = newnames ;
+        -:  695:
+        -:  696:        *target_it = object_sexp;
+        -:  697:        Storage::set__( target.get__() ) ;
+        -:  698:    }
+        -:  699:    void push_back_name__impl(const stored_type& object, const std::string& name, traits::false_type ) {
+        -:  700:        R_xlen_t n = size() ;
+        -:  701:        Vector target( n + 1 ) ;
+        -:  702:        iterator target_it( target.begin() ) ;
+        -:  703:        iterator it(begin()) ;
+        -:  704:        iterator this_end(end());
+        -:  705:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  706:        Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n+1 ) ) ;
+        -:  707:        int i=0;
+        -:  708:        if( Rf_isNull(names) ){
+        -:  709:            Shield<SEXP> dummy( Rf_mkChar("") );
+        -:  710:            for( ; it < this_end; ++it, ++target_it,i++ ){
+        -:  711:                *target_it = *it ;
+        -:  712:                SET_STRING_ELT( newnames, i , dummy );
+        -:  713:            }
+        -:  714:        } else {
+        -:  715:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  716:                *target_it = *it ;
+        -:  717:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  718:            }
+        -:  719:        }
+        -:  720:        SET_STRING_ELT( newnames, i, Rf_mkChar( name.c_str() ) );
+        -:  721:        target.attr("names") = newnames ;
+        -:  722:
+        -:  723:        *target_it = object;
+        -:  724:        Storage::set__( target.get__() ) ;
+        -:  725:    }
+        -:  726:
+        -:  727:    void push_front__impl(const stored_type& object, traits::true_type ) {
+        -:  728:            Shield<SEXP> object_sexp( object ) ;
+        -:  729:        R_xlen_t n = size() ;
+        -:  730:        Vector target( n+1);
+        -:  731:        iterator target_it(target.begin());
+        -:  732:        iterator it(begin());
+        -:  733:        iterator this_end(end());
+        -:  734:        *target_it = object_sexp ;
+        -:  735:        ++target_it ;
+        -:  736:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  737:        if( Rf_isNull(names) ){
+        -:  738:            for( ; it<this_end; ++it, ++target_it){
+        -:  739:                *target_it = *it ;
+        -:  740:            }
+        -:  741:        } else{
+        -:  742:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1) );
+        -:  743:            int i=1 ;
+        -:  744:            SET_STRING_ELT( newnames, 0, Rf_mkChar("") ) ;
+        -:  745:            for( ; it<this_end; ++it, ++target_it, i++){
+        -:  746:                *target_it = *it ;
+        -:  747:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i-1 ) ) ;
+        -:  748:            }
+        -:  749:            target.attr("names") = newnames ;
+        -:  750:        }
+        -:  751:        Storage::set__( target.get__() ) ;
+        -:  752:
+        -:  753:    }
+        -:  754:    void push_front__impl(const stored_type& object, traits::false_type ) {
+        -:  755:        R_xlen_t n = size() ;
+        -:  756:        Vector target( n+1);
+        -:  757:        iterator target_it(target.begin());
+        -:  758:        iterator it(begin());
+        -:  759:        iterator this_end(end());
+        -:  760:        *target_it = object ;
+        -:  761:        ++target_it ;
+        -:  762:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  763:        if( Rf_isNull(names) ){
+        -:  764:            for( ; it<this_end; ++it, ++target_it){
+        -:  765:                *target_it = *it ;
+        -:  766:            }
+        -:  767:        } else{
+        -:  768:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1) );
+        -:  769:            int i=1 ;
+        -:  770:            SET_STRING_ELT( newnames, 0, Rf_mkChar("") ) ;
+        -:  771:            for( ; it<this_end; ++it, ++target_it, i++){
+        -:  772:                *target_it = *it ;
+        -:  773:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i-1 ) ) ;
+        -:  774:            }
+        -:  775:            target.attr("names") = newnames ;
+        -:  776:        }
+        -:  777:        Storage::set__( target.get__() ) ;
+        -:  778:
+        -:  779:    }
+        -:  780:
+        -:  781:    void push_front_name__impl(const stored_type& object, const std::string& name, traits::true_type ) {
+        -:  782:        Shield<SEXP> object_sexp(object) ;
+        -:  783:        R_xlen_t n = size() ;
+        -:  784:        Vector target( n + 1 ) ;
+        -:  785:        iterator target_it( target.begin() ) ;
+        -:  786:        iterator it(begin()) ;
+        -:  787:        iterator this_end(end());
+        -:  788:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  789:        Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n+1 ) ) ;
+        -:  790:        int i=1;
+        -:  791:        SET_STRING_ELT( newnames, 0, Rf_mkChar( name.c_str() ) );
+        -:  792:        *target_it = object_sexp;
+        -:  793:        ++target_it ;
+        -:  794:
+        -:  795:        if( Rf_isNull(names) ){
+        -:  796:            for( ; it < this_end; ++it, ++target_it,i++ ){
+        -:  797:                *target_it = *it ;
+        -:  798:                SET_STRING_ELT( newnames, i , R_BlankString );
+        -:  799:            }
+        -:  800:        } else {
+        -:  801:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  802:                *target_it = *it ;
+        -:  803:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i-1 ) ) ;
+        -:  804:            }
+        -:  805:        }
+        -:  806:        target.attr("names") = newnames ;
+        -:  807:        Storage::set__( target.get__() ) ;
+        -:  808:
+        -:  809:    }
+        -:  810:    void push_front_name__impl(const stored_type& object, const std::string& name, traits::false_type ) {
+        -:  811:        R_xlen_t n = size() ;
+        -:  812:        Vector target( n + 1 ) ;
+        -:  813:        iterator target_it( target.begin() ) ;
+        -:  814:        iterator it(begin()) ;
+        -:  815:        iterator this_end(end());
+        -:  816:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  817:        Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n+1 ) ) ;
+        -:  818:        int i=1;
+        -:  819:        SET_STRING_ELT( newnames, 0, Rf_mkChar( name.c_str() ) );
+        -:  820:        *target_it = object;
+        -:  821:        ++target_it ;
+        -:  822:
+        -:  823:        if( Rf_isNull(names) ){
+        -:  824:            for( ; it < this_end; ++it, ++target_it,i++ ){
+        -:  825:                *target_it = *it ;
+        -:  826:                SET_STRING_ELT( newnames, i , R_BlankString );
+        -:  827:            }
+        -:  828:        } else {
+        -:  829:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  830:                *target_it = *it ;
+        -:  831:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i-1 ) ) ;
+        -:  832:            }
+        -:  833:        }
+        -:  834:        target.attr("names") = newnames ;
+        -:  835:
+        -:  836:        Storage::set__( target.get__() ) ;
+        -:  837:
+        -:  838:    }
+        -:  839:
+        -:  840:    iterator insert__impl( iterator position, const stored_type& object_, traits::true_type ) {
+        -:  841:        Shield<SEXP> object( object_ ) ;
+        -:  842:        R_xlen_t n = size() ;
+        -:  843:        Vector target( n+1 ) ;
+        -:  844:        iterator target_it = target.begin();
+        -:  845:        iterator it = begin() ;
+        -:  846:        iterator this_end = end() ;
+        -:  847:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  848:        iterator result ;
+        -:  849:        if( Rf_isNull(names) ){
+        -:  850:            for( ; it < position; ++it, ++target_it){
+        -:  851:                *target_it = *it ;
+        -:  852:            }
+        -:  853:            result = target_it;
+        -:  854:            *target_it = object ;
+        -:  855:            ++target_it ;
+        -:  856:            for( ; it < this_end; ++it, ++target_it ){
+        -:  857:                *target_it = *it ;
+        -:  858:            }
+        -:  859:        } else{
+        -:  860:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1 ) ) ;
+        -:  861:            int i=0;
+        -:  862:            for( ; it < position; ++it, ++target_it, i++){
+        -:  863:                *target_it = *it ;
+        -:  864:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  865:            }
+        -:  866:            result = target_it;
+        -:  867:            *target_it = object ;
+        -:  868:            SET_STRING_ELT( newnames, i, ::Rf_mkChar("") ) ;
+        -:  869:            i++ ;
+        -:  870:            ++target_it ;
+        -:  871:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  872:                *target_it = *it ;
+        -:  873:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i - 1) ) ;
+        -:  874:            }
+        -:  875:            target.attr( "names" ) = newnames ;
+        -:  876:        }
+        -:  877:        Storage::set__( target.get__() ) ;
+        -:  878:        return result ;
+        -:  879:    }
+        -:  880:
+        -:  881:    iterator insert__impl( iterator position, const stored_type& object, traits::false_type ) {
+        -:  882:        R_xlen_t n = size() ;
+        -:  883:        Vector target( n+1 ) ;
+        -:  884:        iterator target_it = target.begin();
+        -:  885:        iterator it = begin() ;
+        -:  886:        iterator this_end = end() ;
+        -:  887:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  888:        iterator result ;
+        -:  889:        if( Rf_isNull(names) ){
+        -:  890:            for( ; it < position; ++it, ++target_it){
+        -:  891:                *target_it = *it ;
+        -:  892:            }
+        -:  893:            result = target_it;
+        -:  894:            *target_it = object ;
+        -:  895:            ++target_it ;
+        -:  896:            for( ; it < this_end; ++it, ++target_it ){
+        -:  897:                *target_it = *it ;
+        -:  898:            }
+        -:  899:        } else{
+        -:  900:            Shield<SEXP> newnames( ::Rf_allocVector( STRSXP, n + 1 ) ) ;
+        -:  901:            int i=0;
+        -:  902:            for( ; it < position; ++it, ++target_it, i++){
+        -:  903:                *target_it = *it ;
+        -:  904:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) ) ;
+        -:  905:            }
+        -:  906:            result = target_it;
+        -:  907:            *target_it = object ;
+        -:  908:            SET_STRING_ELT( newnames, i, ::Rf_mkChar("") ) ;
+        -:  909:            i++ ;
+        -:  910:            ++target_it ;
+        -:  911:            for( ; it < this_end; ++it, ++target_it, i++ ){
+        -:  912:                *target_it = *it ;
+        -:  913:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i - 1) ) ;
+        -:  914:            }
+        -:  915:            target.attr( "names" ) = newnames ;
+        -:  916:        }
+        -:  917:        Storage::set__( target.get__() ) ;
+        -:  918:        return result ;
+        -:  919:    }
+        -:  920:
+        -:  921:    iterator erase_single__impl( iterator position ) {
+        -:  922:        if( position < begin() || position > end() ) {
+        -:  923:            R_xlen_t requested_loc;
+        -:  924:            R_xlen_t available_locs = std::distance(begin(), end());
+        -:  925:
+        -:  926:            if(position > end()){
+        -:  927:                requested_loc = std::distance(position, begin());
+        -:  928:            } else {
+        -:  929:                // This will be a negative number
+        -:  930:                requested_loc = std::distance(begin(), position);
+        -:  931:            }
+        -:  932:            const char* fmt = "Iterator index is out of bounds: "
+        -:  933:                              "[iterator index=%i; iterator extent=%i]";
+        -:  934:            throw index_out_of_bounds(fmt, requested_loc, available_locs ) ;
+        -:  935:        }
+        -:  936:
+        -:  937:        R_xlen_t n = size() ;
+        -:  938:
+        -:  939:        Vector target( n - 1 ) ;
+        -:  940:        iterator target_it(target.begin()) ;
+        -:  941:        iterator it(begin()) ;
+        -:  942:        iterator this_end(end()) ;
+        -:  943:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -:  944:        if( Rf_isNull(names) ){
+        -:  945:            int i=0;
+        -:  946:            for( ; it < position; ++it, ++target_it, i++){
+        -:  947:                *target_it = *it;
+        -:  948:            }
+        -:  949:            ++it ;
+        -:  950:            for( ; it < this_end ; ++it, ++target_it){
+        -:  951:                *target_it = *it;
+        -:  952:            }
+        -:  953:            Storage::set__( target.get__() ) ;
+        -:  954:            return begin()+i ;
+        -:  955:        } else {
+        -:  956:            Shield<SEXP> newnames(::Rf_allocVector( STRSXP, n-1 ));
+        -:  957:            int i= 0 ;
+        -:  958:            for( ; it < position; ++it, ++target_it,i++){
+        -:  959:                *target_it = *it;
+        -:  960:                SET_STRING_ELT( newnames, i , STRING_ELT(names,i) ) ;
+        -:  961:            }
+        -:  962:            int result=i ;
+        -:  963:            ++it ;
+        -:  964:            i++ ;
+        -:  965:            for( ; it < this_end ; ++it, ++target_it, i++){
+        -:  966:                *target_it = *it;
+        -:  967:                SET_STRING_ELT( newnames, i-1, STRING_ELT(names,i) ) ;
+        -:  968:            }
+        -:  969:            target.attr( "names" ) = newnames ;
+        -:  970:            Storage::set__( target.get__() ) ;
+        -:  971:            return begin()+result ;
+        -:  972:        }
+        -:  973:    }
+        -:  974:
+        -:  975:    iterator erase_range__impl( iterator first, iterator last ) {
+        -:  976:        if( first > last ) throw std::range_error("invalid range") ;
+        -:  977:        if( last > end() || first < begin() ) {
+        -:  978:            R_xlen_t requested_loc;
+        -:  979:            R_xlen_t available_locs = std::distance(begin(), end());
+        -:  980:            std::string iter_problem;
+        -:  981:
+        -:  982:            if(last > end()){
+        -:  983:                requested_loc = std::distance(last, begin());
+        -:  984:                iter_problem = "last";
+        -:  985:            } else {
+        -:  986:                // This will be a negative number
+        -:  987:                requested_loc = std::distance(begin(), first);
+        -:  988:                iter_problem = "first";
+        -:  989:            }
+        -:  990:            const char* fmt = "Iterator index is out of bounds: "
+        -:  991:                              "[iterator=%s; index=%i; extent=%i]";
+        -:  992:            throw index_out_of_bounds(fmt, iter_problem,
+        -:  993:                                      requested_loc, available_locs ) ;
+        -:  994:        }
+        -:  995:
+        -:  996:        iterator it = begin() ;
+        -:  997:        iterator this_end = end() ;
+        -:  998:        R_xlen_t nremoved = std::distance(first,last) ;
+        -:  999:        R_xlen_t target_size = size() - nremoved  ;
+        -: 1000:        Vector target( target_size ) ;
+        -: 1001:        iterator target_it = target.begin() ;
+        -: 1002:
+        -: 1003:        SEXP names = RCPP_GET_NAMES(Storage::get__()) ;
+        -: 1004:        int result = 0;
+        -: 1005:        if( Rf_isNull(names) ){
+        -: 1006:            int i=0;
+        -: 1007:            for( ; it < first; ++it, ++target_it, i++ ){
+        -: 1008:                *target_it = *it ;
+        -: 1009:            }
+        -: 1010:            result = i;
+        -: 1011:            for( it = last ; it < this_end; ++it, ++target_it ){
+        -: 1012:                *target_it = *it ;
+        -: 1013:            }
+        -: 1014:        } else{
+        -: 1015:            Shield<SEXP> newnames( ::Rf_allocVector(STRSXP, target_size) ) ;
+        -: 1016:            int i= 0 ;
+        -: 1017:            for( ; it < first; ++it, ++target_it, i++ ){
+        -: 1018:                *target_it = *it ;
+        -: 1019:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i ) );
+        -: 1020:            }
+        -: 1021:            result = i;
+        -: 1022:            for( it = last ; it < this_end; ++it, ++target_it, i++ ){
+        -: 1023:                *target_it = *it ;
+        -: 1024:                SET_STRING_ELT( newnames, i, STRING_ELT(names, i + nremoved ) );
+        -: 1025:            }
+        -: 1026:            target.attr("names" ) = newnames ;
+        -: 1027:        }
+        -: 1028:        Storage::set__( target.get__() ) ;
+        -: 1029:
+        -: 1030:        return begin() + result;
+        -: 1031:
+        -: 1032:    }
+        -: 1033:
+        -: 1034:    template <typename T>
+        -: 1035:    inline void assign_sugar_expression( const T& x ) {
+        -: 1036:        R_xlen_t n = size() ;
+        -: 1037:        if( n == x.size() ){
+        -: 1038:            // just copy the data
+        -: 1039:            import_expression<T>(x, n ) ;
+        -: 1040:        } else{
+        -: 1041:            // different size, so we change the memory
+        -: 1042:            Shield<SEXP> wrapped(wrap(x));
+        -: 1043:            Shield<SEXP> casted(r_cast<RTYPE>(wrapped));
+        -: 1044:            Storage::set__(casted);
+        -: 1045:        }
+        -: 1046:    }
+        -: 1047:
+        -: 1048:    // sugar
+        -: 1049:    template <typename T>
+        -: 1050:    inline void assign_object( const T& x, traits::true_type ) {
+        -: 1051:        assign_sugar_expression( x.get_ref() ) ;
+        -: 1052:    }
+        -: 1053:
+        -: 1054:    // anything else
+        -: 1055:    template <typename T>
+        -: 1056:    inline void assign_object( const T& x, traits::false_type ) {
+        -: 1057:        Shield<SEXP> wrapped(wrap(x));
+        -: 1058:        Shield<SEXP> casted(r_cast<RTYPE>(wrapped));
+        -: 1059:        Storage::set__(casted);
+        -: 1060:    }
+        -: 1061:
+        -: 1062:    // we are importing a real sugar expression, i.e. not a vector
+        -: 1063:    template <bool NA, typename VEC>
+        -: 1064:    inline void import_sugar_expression( const Rcpp::VectorBase<RTYPE,NA,VEC>& other, traits::false_type ) {
+        -: 1065:        RCPP_DEBUG_4( "Vector<%d>::import_sugar_expression( VectorBase<%d,%d,%s>, false_type )", RTYPE, NA, RTYPE, DEMANGLE(VEC) ) ;
+        -: 1066:        R_xlen_t n = other.size() ;
+        -: 1067:        Storage::set__( Rf_allocVector( RTYPE, n ) ) ;
+        -: 1068:        import_expression<VEC>( other.get_ref() , n ) ;
+        -: 1069:    }
+        -: 1070:
+        -: 1071:    // we are importing a sugar expression that actually is a vector
+        -: 1072:    template <bool NA, typename VEC>
+        -: 1073:    inline void import_sugar_expression( const Rcpp::VectorBase<RTYPE,NA,VEC>& other, traits::true_type ) {
+        -: 1074:        RCPP_DEBUG_4( "Vector<%d>::import_sugar_expression( VectorBase<%d,%d,%s>, true_type )", RTYPE, NA, RTYPE, DEMANGLE(VEC) ) ;
+        -: 1075:        Storage::set__( other.get_ref() ) ;
+        -: 1076:    }
+        -: 1077:
+        -: 1078:
+        -: 1079:    template <typename T>
+        -: 1080:    inline void import_expression( const T& other, R_xlen_t n ) {
+        -: 1081:        iterator start = begin() ;
+        -: 1082:        RCPP_LOOP_UNROLL(start,other)
+        -: 1083:    }
+        -: 1084:
+        -: 1085:    template <typename T>
+        -: 1086:    inline void fill_or_generate( const T& t) {
+        -: 1087:        fill_or_generate__impl( t, typename traits::is_generator<T>::type() ) ;
+        -: 1088:    }
+        -: 1089:
+        -: 1090:    template <typename T>
+        -: 1091:    inline void fill_or_generate__impl( const T& gen, traits::true_type) {
+        -: 1092:        iterator first = begin() ;
+        -: 1093:        iterator last = end() ;
+        -: 1094:        while( first != last ) *first++ = gen() ;
+        -: 1095:    }
+        -: 1096:
+        -: 1097:    template <typename T>
+        -: 1098:    inline void fill_or_generate__impl( const T& t, traits::false_type) {
+        -: 1099:        fill(t) ;
+        -: 1100:    }
+        -: 1101:
+        -: 1102:    template <typename U>
+        -: 1103:    void fill__dispatch( traits::false_type, const U& u){
+        -: 1104:        // when this is not trivial, this is SEXP
+        -: 1105:        Shield<SEXP> elem( converter_type::get( u ) );
+        -: 1106:        iterator it(begin());
+        -: 1107:        for( R_xlen_t i=0; i<size() ; i++, ++it){
+        -: 1108:            *it = ::Rf_duplicate( elem ) ;
+        -: 1109:        }
+        -: 1110:    }
+        -: 1111:
+        -: 1112:    template <typename U>
+        -: 1113:    void fill__dispatch( traits::true_type, const U& u){
+        -: 1114:        std::fill( begin(), end(), converter_type::get( u ) ) ;
+        -: 1115:    }
+        -: 1116:
+        -: 1117:public:
+        -: 1118:
+        -: 1119:    static Vector create(){
+        -: 1120:        return Vector( 0 ) ;
+        -: 1121:    }
+        -: 1122:
+        -: 1123:public:
+        -: 1124:    template <typename... T>
+    #####: 1125:    static Vector create(const T&... t){
+        -: 1126:        return create__dispatch( typename traits::integral_constant<bool,
+        -: 1127:                                 traits::is_any_named<T...>::value
+    #####: 1128:                                 >::type(), t... ) ;
+        -: 1129:    }
+        -: 1130:
+        -: 1131:private:
+        -: 1132:    template <typename... T>
+        -: 1133:    static Vector create__dispatch(traits::false_type, const T&... t){
+        -: 1134:        Vector res(sizeof...(T)) ;
+        -: 1135:        iterator it(res.begin());
+        -: 1136:        create_dispatch_impl(it, t...);
+        -: 1137:        return res;
+        -: 1138:    }
+        -: 1139:
+        -: 1140:    template <typename... T>
+    #####: 1141:    static Vector create__dispatch( traits::true_type, const T&... t) {
+    #####: 1142:        Vector res(sizeof...(T)) ;
+    #####: 1143:        Shield<SEXP> names(::Rf_allocVector(STRSXP, sizeof...(T)));
+    #####: 1144:        int index = 0;
+    #####: 1145:        iterator it(res.begin());
+    #####: 1146:        replace_element_impl(it, names, index, t...);
+    #####: 1147:        res.attr("names") = names;
+    #####: 1148:        return res;
+    #####: 1149:    }
+        -: 1150:
+        -: 1151:    template <typename T>
+        -: 1152:    static void create_dispatch_impl(iterator& it, const T& t) {
+        -: 1153:        *it = converter_type::get(t);
+        -: 1154:    }
+        -: 1155:
+        -: 1156:    template <typename T, typename... TArgs>
+        -: 1157:    static void create_dispatch_impl(iterator& it, const T& t, const TArgs&... args) {
+        -: 1158:        *it = converter_type::get(t);
+        -: 1159:        create_dispatch_impl(++it, args...);
+        -: 1160:    }
+        -: 1161:
+        -: 1162:    template <typename T>
+    #####: 1163:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t) {
+    #####: 1164:        replace_element(it, names, index, t);
+    #####: 1165:    }
+        -: 1166:
+        -: 1167:    template <typename T, typename... TArgs>
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE20replace_element_implINS_6traits12named_objectINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEJSC_EEEvRNS_8internal14Proxy_IteratorINSD_13generic_proxyILi19ES1_EEEERNS_6ShieldIP7SEXPRECEERiRKT_DpRKT0_:
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE20replace_element_implINS_6traits12named_objectIdEEJNS5_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESD_EEEvRNS_8internal14Proxy_IteratorINSE_13generic_proxyILi19ES1_EEEERNS_6ShieldIP7SEXPRECEERiRKT_DpRKT0_:
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE20replace_element_implINS_6traits12named_objectIdEEJS6_NS5_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESD_EEEvRNS_8internal14Proxy_IteratorINSE_13generic_proxyILi19ES1_EEEERNS_6ShieldIP7SEXPRECEERiRKT_DpRKT0_:
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE20replace_element_implINS_6traits12named_objectIdEEJS6_S6_NS5_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESD_EEEvRNS_8internal14Proxy_IteratorINSE_13generic_proxyILi19ES1_EEEERNS_6ShieldIP7SEXPRECEERiRKT_DpRKT0_:
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+_ZN4Rcpp6VectorILi19ENS_15PreserveStorageEE20replace_element_implINS_6traits12named_objectIiEEJNS5_IdEES7_S7_NS5_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESE_EEEvRNS_8internal14Proxy_IteratorINSF_13generic_proxyILi19ES1_EEEERNS_6ShieldIP7SEXPRECEERiRKT_DpRKT0_:
+    #####: 1168:    static void replace_element_impl(iterator& it, Shield<SEXP>& names, int& index, const T& t, const TArgs&... args) {
+    #####: 1169:        replace_element(it, names, index, t);
+    #####: 1170:        replace_element_impl(++it, names, ++index, args...);
+    #####: 1171:    }
+------------------
+        -: 1172:
+        -: 1173:public:
+        -: 1174:
+        -: 1175:    inline SEXP eval() const {
+        -: 1176:        return Rcpp_eval( Storage::get__(), R_GlobalEnv ) ;
+        -: 1177:    }
+        -: 1178:
+        -: 1179:    inline SEXP eval(SEXP env) const {
+        -: 1180:        return Rcpp_eval( Storage::get__(), env );
+        -: 1181:    }
+        -: 1182:
+        -: 1183:
+        -: 1184:} ; /* Vector */
+        -: 1185:
+        -: 1186:template <int RTYPE, template <class> class StoragePolicy >
+        -: 1187:inline std::ostream &operator<<(std::ostream & s, const Vector<RTYPE, StoragePolicy> & rhs) {
+        -: 1188:    typedef Vector<RTYPE, StoragePolicy> VECTOR;
+        -: 1189:
+        -: 1190:    typename VECTOR::iterator i = const_cast<VECTOR &>(rhs).begin();
+        -: 1191:    typename VECTOR::iterator iend = const_cast<VECTOR &>(rhs).end();
+        -: 1192:
+        -: 1193:    if (i != iend) {
+        -: 1194:        s << (*i);
+        -: 1195:        ++i;
+        -: 1196:
+        -: 1197:        for ( ; i != iend; ++i) {
+        -: 1198:            s << " " << (*i);
+        -: 1199:        }
+        -: 1200:    }
+        -: 1201:
+        -: 1202:    return s;
+        -: 1203:}
+        -: 1204:
+        -: 1205:template<template <class> class StoragePolicy >
+        -: 1206:inline std::ostream &operator<<(std::ostream & s, const Vector<STRSXP, StoragePolicy> & rhs) {
+        -: 1207:    typedef Vector<STRSXP, StoragePolicy> VECTOR;
+        -: 1208:
+        -: 1209:    typename VECTOR::iterator i = const_cast<VECTOR &>(rhs).begin();
+        -: 1210:    typename VECTOR::iterator iend = const_cast<VECTOR &>(rhs).end();
+        -: 1211:
+        -: 1212:    if (i != iend) {
+        -: 1213:        s << "\"" << (*i) << "\"";
+        -: 1214:        ++i;
+        -: 1215:
+        -: 1216:        for ( ; i != iend; ++i) {
+        -: 1217:            s << " \"" << (*i) << "\"";
+        -: 1218:        }
+        -: 1219:    }
+        -: 1220:
+        -: 1221:    return s;
+        -: 1222:}
+        -: 1223:
+        -: 1224:}
+        -: 1225:
+        -: 1226:#endif

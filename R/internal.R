@@ -235,7 +235,7 @@ available_to_solve <- function(package = ""){
 
   flowidx <- function(w, p) {nPlants * (w-1) + p}
 
-   # Build model
+  # Build model
   model <- list()
   model$modelname <- 'facility'
   model$modelsense <- 'min'
@@ -253,14 +253,14 @@ available_to_solve <- function(package = ""){
   # build production constraint matrix
   A1 <- Matrix::spMatrix(nPlants, nPlants, i = c(1:nPlants), j = (1:nPlants), x = -Capacity)
   A2 <- Matrix::spMatrix(nPlants, nPlants * nWarehouses,
-                 i = c(mapply(rep, 1:nPlants, nWarehouses)),
-                 j = mapply(flowidx,1:nWarehouses,c(mapply(rep,1:nPlants,nWarehouses))),
-                 x = rep(1, nWarehouses * nPlants))
+                         i = c(mapply(rep, 1:nPlants, nWarehouses)),
+                         j = mapply(flowidx,1:nWarehouses,c(mapply(rep,1:nPlants,nWarehouses))),
+                         x = rep(1, nWarehouses * nPlants))
   A3 <- Matrix::spMatrix(nWarehouses, nPlants)
   A4 <- Matrix::spMatrix(nWarehouses, nPlants * nWarehouses,
-                 i = c(mapply(rep, 1:nWarehouses, nPlants)),
-                 j = mapply(flowidx,c(mapply(rep,1:nWarehouses,nPlants)),1:nPlants),
-                 x = rep(1, nPlants * nWarehouses))
+                         i = c(mapply(rep, 1:nWarehouses, nPlants)),
+                         j = mapply(flowidx,c(mapply(rep,1:nWarehouses,nPlants)),1:nPlants),
+                         x = rep(1, nPlants * nWarehouses))
   model$A           <- rbind(cbind(A1, A2), cbind(A3, A4))
   model$rhs         <- c(rep(0, nPlants),   Demand)
   model$sense       <- c(rep('<=', nPlants), rep('==', nWarehouses))
@@ -328,15 +328,15 @@ available_to_solve <- function(package = ""){
     model$types <- model$vtype
 
     sol <- invisible(try(Rsymphony::Rsymphony_solve_LP(model$obj,
-                                             model$mat,
-                                             model$dir,
-                                             model$rhs,
-                                             model$bounds,
-                                             model$types,
-                                             model$max,
-                                             gap_limit = 100,
-                                             time_limit = 0.01),
-               silent = TRUE))
+                                                       model$mat,
+                                                       model$dir,
+                                                       model$rhs,
+                                                       model$bounds,
+                                                       model$types,
+                                                       model$max,
+                                                       gap_limit = 100,
+                                                       time_limit = 0.01),
+                         silent = TRUE))
 
   }
   if(inherits(sol, "try-error")){
@@ -2868,6 +2868,7 @@ available_to_solve <- function(package = ""){
     assertthat::noNA(dist_features$feature),
     assertthat::noNA(dist_features$amount),
     is.numeric(dist_features$amount),
+    all(is.finite(dist_features$amount)),
     all(dist_features$amount >= 0)
   )
 

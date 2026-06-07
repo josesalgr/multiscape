@@ -1,0 +1,44 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/api/meat/Vector.h
+        -:    0:Graph:./OptimizationProblem.gcno
+        -:    0:Data:./OptimizationProblem.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+        -:    2://
+        -:    3:// Vector.h: Rcpp R/C++ interface class library -- Vector meat
+        -:    4://
+        -:    5:// Copyright (C) 2012 - 2013    Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp_api_meat_Vector_h
+        -:   23:#define Rcpp_api_meat_Vector_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:    namespace internal {
+        -:   28:
+        -:   29:        template <typename T>
+    22176:   30:        inline SEXP wrap_range_sugar_expression( const T& object, Rcpp::traits::true_type) {
+        -:   31:            RCPP_DEBUG_1( "wrap_range_sugar_expression<%s>(., true  )", DEMANGLE(T) )
+    22176:   32:            const int RTYPE = T::r_type::value ;
+    22176:   33:            return Rcpp::Vector<RTYPE>(object) ;
+        -:   34:        }
+        -:   35:
+        -:   36:    }
+        -:   37:
+        -:   38:} // namespace Rcpp
+        -:   39:
+        -:   40:#endif

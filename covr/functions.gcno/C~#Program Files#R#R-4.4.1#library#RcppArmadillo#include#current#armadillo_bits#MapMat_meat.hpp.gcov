@@ -1,0 +1,1769 @@
+        -:    0:Source:C:/Program Files/R/R-4.4.1/library/RcppArmadillo/include/current/armadillo_bits/MapMat_meat.hpp
+        -:    0:Graph:./functions.gcno
+        -:    0:Data:./functions.gcda
+        -:    0:Runs:22
+        -:    1:// SPDX-License-Identifier: Apache-2.0
+        -:    2:// 
+        -:    3:// Copyright 2008-2016 Conrad Sanderson (https://conradsanderson.id.au)
+        -:    4:// Copyright 2008-2016 National ICT Australia (NICTA)
+        -:    5:// 
+        -:    6:// Licensed under the Apache License, Version 2.0 (the "License");
+        -:    7:// you may not use this file except in compliance with the License.
+        -:    8:// You may obtain a copy of the License at
+        -:    9:// https://www.apache.org/licenses/LICENSE-2.0
+        -:   10:// 
+        -:   11:// Unless required by applicable law or agreed to in writing, software
+        -:   12:// distributed under the License is distributed on an "AS IS" BASIS,
+        -:   13:// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        -:   14:// See the License for the specific language governing permissions and
+        -:   15:// limitations under the License.
+        -:   16:// ------------------------------------------------------------------------
+        -:   17:
+        -:   18:
+        -:   19://! \addtogroup MapMat
+        -:   20://! @{
+        -:   21:
+        -:   22:
+        -:   23:
+        -:   24:template<typename eT>
+        -:   25:inline
+    #####:   26:MapMat<eT>::~MapMat()
+        -:   27:  {
+        -:   28:  arma_debug_sigprint_this(this);
+        -:   29:  
+    #####:   30:  if(map_ptr)  { (*map_ptr).clear();  delete map_ptr; }
+        -:   31:  
+        -:   32:  // try to expose buggy user code that accesses deleted objects
+    #####:   33:  map_ptr = nullptr;
+        -:   34:  
+        -:   35:  arma_type_check(( is_supported_elem_type<eT>::value == false ));
+    #####:   36:  }
+        -:   37:
+        -:   38:
+        -:   39:
+        -:   40:template<typename eT>
+        -:   41:inline
+    #####:   42:MapMat<eT>::MapMat()
+    #####:   43:  : n_rows (0)
+    #####:   44:  , n_cols (0)
+    #####:   45:  , n_elem (0)
+    #####:   46:  , map_ptr(nullptr)
+        -:   47:  {
+        -:   48:  arma_debug_sigprint_this(this);
+        -:   49:  
+    #####:   50:  init_cold();
+    #####:   51:  }
+        -:   52:
+        -:   53:
+        -:   54:
+        -:   55:template<typename eT>
+        -:   56:inline
+        -:   57:MapMat<eT>::MapMat(const uword in_n_rows, const uword in_n_cols)
+        -:   58:  : n_rows (in_n_rows)
+        -:   59:  , n_cols (in_n_cols)
+        -:   60:  , n_elem (in_n_rows * in_n_cols)
+        -:   61:  , map_ptr(nullptr)
+        -:   62:  {
+        -:   63:  arma_debug_sigprint_this(this);
+        -:   64:  
+        -:   65:  init_cold();
+        -:   66:  }
+        -:   67:
+        -:   68:
+        -:   69:
+        -:   70:template<typename eT>
+        -:   71:inline
+        -:   72:MapMat<eT>::MapMat(const SizeMat& s)
+        -:   73:  : n_rows (s.n_rows)
+        -:   74:  , n_cols (s.n_cols)
+        -:   75:  , n_elem (s.n_rows * s.n_cols)
+        -:   76:  , map_ptr(nullptr)
+        -:   77:  {
+        -:   78:  arma_debug_sigprint_this(this);
+        -:   79:  
+        -:   80:  init_cold();
+        -:   81:  }
+        -:   82:
+        -:   83:
+        -:   84:
+        -:   85:template<typename eT>
+        -:   86:inline
+        -:   87:MapMat<eT>::MapMat(const MapMat<eT>& x)
+        -:   88:  : n_rows (0)
+        -:   89:  , n_cols (0)
+        -:   90:  , n_elem (0)
+        -:   91:  , map_ptr(nullptr)
+        -:   92:  {
+        -:   93:  arma_debug_sigprint_this(this);
+        -:   94:  
+        -:   95:  init_cold();
+        -:   96:  
+        -:   97:  (*this).operator=(x);
+        -:   98:  }
+        -:   99:
+        -:  100:
+        -:  101:
+        -:  102:template<typename eT>
+        -:  103:inline
+        -:  104:void
+        -:  105:MapMat<eT>::operator=(const MapMat<eT>& x)
+        -:  106:  {
+        -:  107:  arma_debug_sigprint();
+        -:  108:  
+        -:  109:  if(this == &x)
+        -:  110:    {
+        -:  111:    arma_debug_print("MapMat::operator=(): copy omitted");
+        -:  112:    
+        -:  113:    return;
+        -:  114:    }
+        -:  115:  
+        -:  116:  access::rw(n_rows) = x.n_rows;
+        -:  117:  access::rw(n_cols) = x.n_cols;
+        -:  118:  access::rw(n_elem) = x.n_elem;
+        -:  119:  
+        -:  120:  (*map_ptr) = *(x.map_ptr);
+        -:  121:  }
+        -:  122:
+        -:  123:
+        -:  124:
+        -:  125:template<typename eT>
+        -:  126:inline
+        -:  127:MapMat<eT>::MapMat(const SpMat<eT>& x)
+        -:  128:  : n_rows (0)
+        -:  129:  , n_cols (0)
+        -:  130:  , n_elem (0)
+        -:  131:  , map_ptr(nullptr)
+        -:  132:  {
+        -:  133:  arma_debug_sigprint_this(this);
+        -:  134:  
+        -:  135:  init_cold();
+        -:  136:  
+        -:  137:  (*this).operator=(x);
+        -:  138:  }
+        -:  139:
+        -:  140:
+        -:  141:
+        -:  142:template<typename eT>
+        -:  143:inline
+        -:  144:void
+    #####:  145:MapMat<eT>::operator=(const SpMat<eT>& x)
+        -:  146:  {
+        -:  147:  arma_debug_sigprint();
+        -:  148:  
+    #####:  149:  const uword x_n_rows = x.n_rows;
+    #####:  150:  const uword x_n_cols = x.n_cols;
+        -:  151:  
+    #####:  152:  (*this).zeros(x_n_rows, x_n_cols);
+        -:  153:  
+    #####:  154:  if(x.n_nonzero == 0)  { return; }
+        -:  155:  
+    #####:  156:  const    eT* x_values      = x.values;
+    #####:  157:  const uword* x_row_indices = x.row_indices;
+    #####:  158:  const uword* x_col_ptrs    = x.col_ptrs;
+        -:  159:  
+    #####:  160:  map_type& map_ref = (*map_ptr);
+        -:  161:  
+    #####:  162:  for(uword col = 0; col < x_n_cols; ++col)
+        -:  163:    {
+    #####:  164:    const uword start = x_col_ptrs[col    ];
+    #####:  165:    const uword end   = x_col_ptrs[col + 1];
+        -:  166:    
+    #####:  167:    for(uword i = start; i < end; ++i)
+        -:  168:      {
+    #####:  169:      const uword row = x_row_indices[i];
+    #####:  170:      const eT    val = x_values[i];
+        -:  171:      
+    #####:  172:      const uword index = (x_n_rows * col) + row;
+        -:  173:      
+    #####:  174:      map_ref.emplace_hint(map_ref.cend(), index, val);
+        -:  175:      }
+        -:  176:    }
+        -:  177:  }
+        -:  178:
+        -:  179:
+        -:  180:
+        -:  181:template<typename eT>
+        -:  182:inline
+        -:  183:MapMat<eT>::MapMat(MapMat<eT>&& x)
+        -:  184:  : n_rows (x.n_rows )
+        -:  185:  , n_cols (x.n_cols )
+        -:  186:  , n_elem (x.n_elem )
+        -:  187:  , map_ptr(x.map_ptr)
+        -:  188:  {
+        -:  189:  arma_debug_sigprint_this(this);
+        -:  190:  
+        -:  191:  access::rw(x.n_rows)  = 0;
+        -:  192:  access::rw(x.n_cols)  = 0;
+        -:  193:  access::rw(x.n_elem)  = 0;
+        -:  194:  access::rw(x.map_ptr) = nullptr;
+        -:  195:  }
+        -:  196:
+        -:  197:
+        -:  198:
+        -:  199:template<typename eT>
+        -:  200:inline
+        -:  201:void
+        -:  202:MapMat<eT>::operator=(MapMat<eT>&& x)
+        -:  203:  {
+        -:  204:  arma_debug_sigprint();
+        -:  205:  
+        -:  206:  if(this == &x)  { return; }
+        -:  207:  
+        -:  208:  reset();
+        -:  209:  
+        -:  210:  if(map_ptr)  { delete map_ptr; }
+        -:  211:  
+        -:  212:  access::rw(n_rows)  = x.n_rows;
+        -:  213:  access::rw(n_cols)  = x.n_cols;
+        -:  214:  access::rw(n_elem)  = x.n_elem;
+        -:  215:  access::rw(map_ptr) = x.map_ptr;
+        -:  216:  
+        -:  217:  access::rw(x.n_rows)  = 0;
+        -:  218:  access::rw(x.n_cols)  = 0;
+        -:  219:  access::rw(x.n_elem)  = 0;
+        -:  220:  access::rw(x.map_ptr) = nullptr;
+        -:  221:  }
+        -:  222:
+        -:  223:
+        -:  224:
+        -:  225:template<typename eT>
+        -:  226:inline
+        -:  227:void
+    #####:  228:MapMat<eT>::reset()
+        -:  229:  {
+        -:  230:  arma_debug_sigprint();
+        -:  231:  
+    #####:  232:  access::rw(n_rows) = 0;
+    #####:  233:  access::rw(n_cols) = 0;
+    #####:  234:  access::rw(n_elem) = 0;
+        -:  235:  
+    #####:  236:  if((*map_ptr).empty() == false)  { (*map_ptr).clear(); }
+    #####:  237:  }
+        -:  238:
+        -:  239:
+        -:  240:
+        -:  241:template<typename eT>
+        -:  242:inline
+        -:  243:void
+        -:  244:MapMat<eT>::set_size(const uword in_n_rows)
+        -:  245:  {
+        -:  246:  arma_debug_sigprint();
+        -:  247:  
+        -:  248:  init_warm(in_n_rows, 1);
+        -:  249:  }
+        -:  250:
+        -:  251:
+        -:  252:
+        -:  253:template<typename eT>
+        -:  254:inline
+        -:  255:void
+        -:  256:MapMat<eT>::set_size(const uword in_n_rows, const uword in_n_cols)
+        -:  257:  {
+        -:  258:  arma_debug_sigprint();
+        -:  259:  
+        -:  260:  init_warm(in_n_rows, in_n_cols);
+        -:  261:  }
+        -:  262:
+        -:  263:
+        -:  264:
+        -:  265:template<typename eT>
+        -:  266:inline
+        -:  267:void
+        -:  268:MapMat<eT>::set_size(const SizeMat& s)
+        -:  269:  {
+        -:  270:  arma_debug_sigprint();
+        -:  271:  
+        -:  272:  init_warm(s.n_rows, s.n_cols);
+        -:  273:  }
+        -:  274:
+        -:  275:
+        -:  276:
+        -:  277:template<typename eT>
+        -:  278:inline
+        -:  279:void
+        -:  280:MapMat<eT>::zeros()
+        -:  281:  {
+        -:  282:  arma_debug_sigprint();
+        -:  283:  
+        -:  284:  (*map_ptr).clear();
+        -:  285:  }
+        -:  286:
+        -:  287:
+        -:  288:
+        -:  289:template<typename eT>
+        -:  290:inline
+        -:  291:void
+        -:  292:MapMat<eT>::zeros(const uword in_n_rows)
+        -:  293:  {
+        -:  294:  arma_debug_sigprint();
+        -:  295:  
+        -:  296:  init_warm(in_n_rows, 1);
+        -:  297:  
+        -:  298:  (*map_ptr).clear();
+        -:  299:  }
+        -:  300:
+        -:  301:
+        -:  302:
+        -:  303:template<typename eT>
+        -:  304:inline
+        -:  305:void
+    #####:  306:MapMat<eT>::zeros(const uword in_n_rows, const uword in_n_cols)
+        -:  307:  {
+        -:  308:  arma_debug_sigprint();
+        -:  309:  
+    #####:  310:  init_warm(in_n_rows, in_n_cols);
+        -:  311:  
+    #####:  312:  (*map_ptr).clear();
+    #####:  313:  }
+        -:  314:
+        -:  315:
+        -:  316:
+        -:  317:template<typename eT>
+        -:  318:inline
+        -:  319:void
+        -:  320:MapMat<eT>::zeros(const SizeMat& s)
+        -:  321:  {
+        -:  322:  arma_debug_sigprint();
+        -:  323:  
+        -:  324:  init_warm(s.n_rows, s.n_cols);
+        -:  325:  
+        -:  326:  (*map_ptr).clear();
+        -:  327:  }
+        -:  328:
+        -:  329:
+        -:  330:
+        -:  331:template<typename eT>
+        -:  332:inline
+        -:  333:void
+        -:  334:MapMat<eT>::eye()
+        -:  335:  {
+        -:  336:  arma_debug_sigprint();
+        -:  337:  
+        -:  338:  (*this).eye(n_rows, n_cols);
+        -:  339:  }
+        -:  340:
+        -:  341:
+        -:  342:
+        -:  343:template<typename eT>
+        -:  344:inline
+        -:  345:void
+        -:  346:MapMat<eT>::eye(const uword in_n_rows, const uword in_n_cols)
+        -:  347:  {
+        -:  348:  arma_debug_sigprint();
+        -:  349:  
+        -:  350:  zeros(in_n_rows, in_n_cols);
+        -:  351:  
+        -:  352:  const uword N = (std::min)(in_n_rows, in_n_cols);
+        -:  353:  
+        -:  354:  map_type& map_ref = (*map_ptr);
+        -:  355:  
+        -:  356:  for(uword i=0; i<N; ++i)
+        -:  357:    {
+        -:  358:    const uword index = (in_n_rows * i) + i;
+        -:  359:    
+        -:  360:    map_ref.emplace_hint(map_ref.cend(), index, eT(1));
+        -:  361:    }
+        -:  362:  }
+        -:  363:
+        -:  364:
+        -:  365:
+        -:  366:template<typename eT>
+        -:  367:inline
+        -:  368:void
+        -:  369:MapMat<eT>::eye(const SizeMat& s)
+        -:  370:  {
+        -:  371:  arma_debug_sigprint();
+        -:  372:  
+        -:  373:  (*this).eye(s.n_rows, s.n_cols);
+        -:  374:  }
+        -:  375:
+        -:  376:
+        -:  377:
+        -:  378:template<typename eT>
+        -:  379:inline
+        -:  380:void
+        -:  381:MapMat<eT>::speye()
+        -:  382:  {
+        -:  383:  arma_debug_sigprint();
+        -:  384:  
+        -:  385:  (*this).eye();
+        -:  386:  }
+        -:  387:
+        -:  388:
+        -:  389:
+        -:  390:template<typename eT>
+        -:  391:inline
+        -:  392:void
+        -:  393:MapMat<eT>::speye(const uword in_n_rows, const uword in_n_cols)
+        -:  394:  {
+        -:  395:  arma_debug_sigprint();
+        -:  396:  
+        -:  397:  (*this).eye(in_n_rows, in_n_cols);
+        -:  398:  }
+        -:  399:
+        -:  400:
+        -:  401:
+        -:  402:template<typename eT>
+        -:  403:inline
+        -:  404:void
+        -:  405:MapMat<eT>::speye(const SizeMat& s)
+        -:  406:  {
+        -:  407:  arma_debug_sigprint();
+        -:  408:  
+        -:  409:  (*this).eye(s);
+        -:  410:  }
+        -:  411:
+        -:  412:
+        -:  413:
+        -:  414:template<typename eT>
+        -:  415:arma_inline
+        -:  416:MapMat_val<eT>
+        -:  417:MapMat<eT>::operator[](const uword index)
+        -:  418:  {
+        -:  419:  return MapMat_val<eT>(*this, index);
+        -:  420:  }
+        -:  421:
+        -:  422:
+        -:  423:
+        -:  424:template<typename eT>
+        -:  425:inline
+        -:  426:eT
+        -:  427:MapMat<eT>::operator[](const uword index) const
+        -:  428:  {
+        -:  429:  map_type& map_ref = (*map_ptr);
+        -:  430:  
+        -:  431:  typename map_type::const_iterator it     = map_ref.find(index);
+        -:  432:  typename map_type::const_iterator it_end = map_ref.end();
+        -:  433:  
+        -:  434:  return (it != it_end) ? eT((*it).second) : eT(0);
+        -:  435:  }
+        -:  436:
+        -:  437:
+        -:  438:
+        -:  439:template<typename eT>
+        -:  440:arma_inline
+        -:  441:MapMat_val<eT>
+        -:  442:MapMat<eT>::operator()(const uword index)
+        -:  443:  {
+        -:  444:  arma_conform_check_bounds( (index >= n_elem), "MapMat::operator(): index out of bounds" );
+        -:  445:  
+        -:  446:  return MapMat_val<eT>(*this, index);
+        -:  447:  }
+        -:  448:
+        -:  449:
+        -:  450:
+        -:  451:template<typename eT>
+        -:  452:inline
+        -:  453:eT
+        -:  454:MapMat<eT>::operator()(const uword index) const
+        -:  455:  {
+        -:  456:  arma_conform_check_bounds( (index >= n_elem), "MapMat::operator(): index out of bounds" );
+        -:  457:  
+        -:  458:  map_type& map_ref = (*map_ptr);
+        -:  459:  
+        -:  460:  typename map_type::const_iterator it     = map_ref.find(index);
+        -:  461:  typename map_type::const_iterator it_end = map_ref.end();
+        -:  462:  
+        -:  463:  return (it != it_end) ? eT((*it).second) : eT(0);
+        -:  464:  }
+        -:  465:
+        -:  466:
+        -:  467:
+        -:  468:template<typename eT>
+        -:  469:arma_inline
+        -:  470:MapMat_val<eT>
+        -:  471:MapMat<eT>::at(const uword in_row, const uword in_col)
+        -:  472:  {
+        -:  473:  const uword index = (n_rows * in_col) + in_row;
+        -:  474:  
+        -:  475:  return MapMat_val<eT>(*this, index);
+        -:  476:  }
+        -:  477:
+        -:  478:
+        -:  479:
+        -:  480:template<typename eT>
+        -:  481:inline
+        -:  482:eT
+    #####:  483:MapMat<eT>::at(const uword in_row, const uword in_col) const
+        -:  484:  {
+    #####:  485:  const uword index = (n_rows * in_col) + in_row;
+        -:  486:  
+    #####:  487:  map_type& map_ref = (*map_ptr);
+        -:  488:  
+    #####:  489:  typename map_type::const_iterator it     = map_ref.find(index);
+    #####:  490:  typename map_type::const_iterator it_end = map_ref.end();
+        -:  491:  
+    #####:  492:  return (it != it_end) ? eT((*it).second) : eT(0);
+        -:  493:  }
+        -:  494:
+        -:  495:
+        -:  496:
+        -:  497:template<typename eT>
+        -:  498:arma_inline
+        -:  499:MapMat_val<eT>
+        -:  500:MapMat<eT>::operator()(const uword in_row, const uword in_col)
+        -:  501:  {
+        -:  502:  arma_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols)), "MapMat::operator(): index out of bounds" );
+        -:  503:  
+        -:  504:  const uword index = (n_rows * in_col) + in_row;
+        -:  505:  
+        -:  506:  return MapMat_val<eT>(*this, index);
+        -:  507:  }
+        -:  508:
+        -:  509:
+        -:  510:
+        -:  511:template<typename eT>
+        -:  512:inline
+        -:  513:eT
+        -:  514:MapMat<eT>::operator()(const uword in_row, const uword in_col) const
+        -:  515:  {
+        -:  516:  arma_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols)), "MapMat::operator(): index out of bounds" );
+        -:  517:  
+        -:  518:  const uword index = (n_rows * in_col) + in_row;
+        -:  519:  
+        -:  520:  map_type& map_ref = (*map_ptr);
+        -:  521:  
+        -:  522:  typename map_type::const_iterator it     = map_ref.find(index);
+        -:  523:  typename map_type::const_iterator it_end = map_ref.end();
+        -:  524:  
+        -:  525:  return (it != it_end) ? eT((*it).second) : eT(0);
+        -:  526:  }
+        -:  527:
+        -:  528:
+        -:  529:
+        -:  530:template<typename eT>
+        -:  531:inline
+        -:  532:bool
+        -:  533:MapMat<eT>::is_empty() const
+        -:  534:  {
+        -:  535:  return (n_elem == 0);
+        -:  536:  }
+        -:  537:
+        -:  538:
+        -:  539:
+        -:  540:template<typename eT>
+        -:  541:inline
+        -:  542:bool
+        -:  543:MapMat<eT>::is_vec() const
+        -:  544:  {
+        -:  545:  return ( (n_rows == 1) || (n_cols == 1) );
+        -:  546:  }
+        -:  547:
+        -:  548:
+        -:  549:
+        -:  550:template<typename eT>
+        -:  551:inline
+        -:  552:bool
+        -:  553:MapMat<eT>::is_rowvec() const
+        -:  554:  {
+        -:  555:  return (n_rows == 1);
+        -:  556:  }
+        -:  557:
+        -:  558:
+        -:  559:
+        -:  560://! returns true if the object can be interpreted as a column vector
+        -:  561:template<typename eT>
+        -:  562:inline
+        -:  563:bool
+        -:  564:MapMat<eT>::is_colvec() const
+        -:  565:  {
+        -:  566:  return (n_cols == 1);
+        -:  567:  }
+        -:  568:
+        -:  569:
+        -:  570:
+        -:  571:template<typename eT>
+        -:  572:inline
+        -:  573:bool
+        -:  574:MapMat<eT>::is_square() const
+        -:  575:  {
+        -:  576:  return (n_rows == n_cols);
+        -:  577:  }
+        -:  578:
+        -:  579:
+        -:  580:
+        -:  581:// this function is for debugging purposes only
+        -:  582:template<typename eT>
+        -:  583:inline
+        -:  584:void
+        -:  585:MapMat<eT>::sprandu(const uword in_n_rows, const uword in_n_cols, const double density)
+        -:  586:  {
+        -:  587:  arma_debug_sigprint();
+        -:  588:  
+        -:  589:  zeros(in_n_rows, in_n_cols);
+        -:  590:  
+        -:  591:  const uword N = uword(density * double(n_elem));
+        -:  592:  
+        -:  593:  const Col<eT>    vals(N, fill::randu);
+        -:  594:  const Col<uword> indx = linspace< Col<uword> >(0, ((n_elem > 0) ? uword(n_elem-1) : uword(0)) , N);
+        -:  595:  
+        -:  596:  const eT*    vals_mem = vals.memptr();
+        -:  597:  const uword* indx_mem = indx.memptr();
+        -:  598:  
+        -:  599:  map_type& map_ref = (*map_ptr);
+        -:  600:  
+        -:  601:  for(uword i=0; i < N; ++i)
+        -:  602:    {
+        -:  603:    const uword index = indx_mem[i];
+        -:  604:    const eT    val   = vals_mem[i];
+        -:  605:    
+        -:  606:    map_ref.emplace_hint(map_ref.cend(), index, val);
+        -:  607:    }
+        -:  608:  }
+        -:  609:
+        -:  610:
+        -:  611:
+        -:  612:// this function is for debugging purposes only
+        -:  613:template<typename eT>
+        -:  614:inline
+        -:  615:void
+        -:  616:MapMat<eT>::print(const std::string& extra_text) const
+        -:  617:  {
+        -:  618:  arma_debug_sigprint();
+        -:  619:  
+        -:  620:  if(extra_text.length() != 0)
+        -:  621:    {
+        -:  622:    const std::streamsize orig_width = get_cout_stream().width();
+        -:  623:    
+        -:  624:    get_cout_stream() << extra_text << '\n';
+        -:  625:    
+        -:  626:    get_cout_stream().width(orig_width);
+        -:  627:    }
+        -:  628:  
+        -:  629:  map_type& map_ref = (*map_ptr);
+        -:  630:  
+        -:  631:  const uword n_nonzero = uword(map_ref.size());
+        -:  632:  
+        -:  633:  const double density = (n_elem > 0) ? ((double(n_nonzero) / double(n_elem))*double(100)) : double(0);
+        -:  634:  
+        -:  635:  get_cout_stream()
+        -:  636:    << "[matrix size: " << n_rows << 'x' << n_cols << "; n_nonzero: " << n_nonzero
+        -:  637:    << "; density: " << density << "%]\n\n";
+        -:  638:  
+        -:  639:  if(n_nonzero > 0)
+        -:  640:    {
+        -:  641:    typename map_type::const_iterator it = map_ref.begin();
+        -:  642:
+        -:  643:    for(uword i=0; i < n_nonzero; ++i)
+        -:  644:      {
+        -:  645:      const std::pair<uword, eT>& entry = (*it);
+        -:  646:      
+        -:  647:      const uword index = entry.first;
+        -:  648:      const eT    val   = entry.second;
+        -:  649:      
+        -:  650:      const uword row = index % n_rows;
+        -:  651:      const uword col = index / n_rows;
+        -:  652:      
+        -:  653:      get_cout_stream() << '(' << row << ", " << col << ") ";
+        -:  654:      get_cout_stream() << val << '\n';
+        -:  655:      
+        -:  656:      ++it;
+        -:  657:      }
+        -:  658:    }
+        -:  659:  
+        -:  660:  get_cout_stream().flush();
+        -:  661:  }
+        -:  662:
+        -:  663:
+        -:  664:
+        -:  665:template<typename eT>
+        -:  666:inline
+        -:  667:uword
+    #####:  668:MapMat<eT>::get_n_nonzero() const
+        -:  669:  {
+        -:  670:  arma_debug_sigprint();
+        -:  671:  
+    #####:  672:  return uword((*map_ptr).size());
+        -:  673:  }
+        -:  674:
+        -:  675:
+        -:  676:
+        -:  677:template<typename eT>
+        -:  678:inline
+        -:  679:void
+        -:  680:MapMat<eT>::get_locval_format(umat& locs, Col<eT>& vals) const
+        -:  681:  {
+        -:  682:  arma_debug_sigprint();
+        -:  683:  
+        -:  684:  map_type& map_ref = (*map_ptr);
+        -:  685:  
+        -:  686:  typename map_type::const_iterator it = map_ref.begin();
+        -:  687:  
+        -:  688:  const uword N = uword(map_ref.size());
+        -:  689:  
+        -:  690:  locs.set_size(2,N);
+        -:  691:  vals.set_size(N);
+        -:  692:  
+        -:  693:  eT* vals_mem = vals.memptr();
+        -:  694:  
+        -:  695:  for(uword i=0; i<N; ++i)
+        -:  696:    {
+        -:  697:    const std::pair<uword, eT>& entry = (*it);
+        -:  698:    
+        -:  699:    const uword index = entry.first;
+        -:  700:    const eT    val   = entry.second;
+        -:  701:    
+        -:  702:    const uword row = index % n_rows;
+        -:  703:    const uword col = index / n_rows;
+        -:  704:    
+        -:  705:    uword* locs_colptr = locs.colptr(i);
+        -:  706:    
+        -:  707:    locs_colptr[0] = row;
+        -:  708:    locs_colptr[1] = col;
+        -:  709:    
+        -:  710:    vals_mem[i] = val;
+        -:  711:    
+        -:  712:    ++it;
+        -:  713:    }
+        -:  714:  }
+        -:  715:
+        -:  716:
+        -:  717:
+        -:  718:template<typename eT>
+        -:  719:inline
+        -:  720:void
+    #####:  721:MapMat<eT>::init_cold()
+        -:  722:  {
+        -:  723:  arma_debug_sigprint();
+        -:  724:  
+        -:  725:  // ensure that n_elem can hold the result of (n_rows * n_cols)
+        -:  726:  
+        -:  727:  #if defined(ARMA_64BIT_WORD)
+    #####:  728:    const char* error_message = "MapMat(): requested size is too large";
+        -:  729:  #else
+        -:  730:    const char* error_message = "MapMat(): requested size is too large; suggest to enable ARMA_64BIT_WORD";
+        -:  731:  #endif
+        -:  732:  
+        -:  733:  arma_conform_check
+    #####:  734:    (
+        -:  735:      (
+    #####:  736:      ( (n_rows > ARMA_MAX_UHWORD) || (n_cols > ARMA_MAX_UHWORD) )
+    #####:  737:        ? ( (double(n_rows) * double(n_cols)) > double(ARMA_MAX_UWORD) )
+        -:  738:        : false
+        -:  739:      ),
+        -:  740:    error_message
+        -:  741:    );
+        -:  742:  
+    #####:  743:  map_ptr = new (std::nothrow) map_type;
+        -:  744:  
+    #####:  745:  arma_check_bad_alloc( (map_ptr == nullptr), "MapMat(): out of memory" );
+    #####:  746:  }
+        -:  747:
+        -:  748:
+        -:  749:
+        -:  750:template<typename eT>
+        -:  751:inline
+        -:  752:void
+    #####:  753:MapMat<eT>::init_warm(const uword in_n_rows, const uword in_n_cols)
+        -:  754:  {
+        -:  755:  arma_debug_sigprint();
+        -:  756:  
+    #####:  757:  if( (n_rows == in_n_rows) && (n_cols == in_n_cols))  { return; }
+        -:  758:  
+        -:  759:  // ensure that n_elem can hold the result of (n_rows * n_cols)
+        -:  760:  
+        -:  761:  #if defined(ARMA_64BIT_WORD)
+    #####:  762:    const char* error_message = "MapMat(): requested size is too large";
+        -:  763:  #else
+        -:  764:    const char* error_message = "MapMat(): requested size is too large; suggest to enable ARMA_64BIT_WORD";
+        -:  765:  #endif
+        -:  766:  
+        -:  767:  arma_conform_check
+    #####:  768:    (
+        -:  769:      (
+    #####:  770:      ( (in_n_rows > ARMA_MAX_UHWORD) || (in_n_cols > ARMA_MAX_UHWORD) )
+    #####:  771:        ? ( (double(in_n_rows) * double(in_n_cols)) > double(ARMA_MAX_UWORD) )
+        -:  772:        : false
+        -:  773:      ),
+        -:  774:    error_message
+        -:  775:    );
+        -:  776:  
+    #####:  777:  const uword new_n_elem = in_n_rows * in_n_cols;
+        -:  778:  
+    #####:  779:  access::rw(n_rows) = in_n_rows;
+    #####:  780:  access::rw(n_cols) = in_n_cols;
+    #####:  781:  access::rw(n_elem) = new_n_elem;
+        -:  782:  
+    #####:  783:  if(new_n_elem == 0)  { (*map_ptr).clear(); }
+        -:  784:  }
+        -:  785:
+        -:  786:
+        -:  787:
+        -:  788:template<typename eT>
+        -:  789:arma_inline
+        -:  790:void
+        -:  791:MapMat<eT>::set_val(const uword index, const eT& in_val)
+        -:  792:  {
+        -:  793:  arma_debug_sigprint();
+        -:  794:  
+    #####:  795:  if(in_val != eT(0))
+        -:  796:    {
+    #####:  797:    map_type& map_ref = (*map_ptr);
+        -:  798:    
+    #####:  799:    if( (map_ref.empty() == false) && (index > uword(map_ref.crbegin()->first)) )
+        -:  800:      {
+    #####:  801:      map_ref.emplace_hint(map_ref.cend(), index, in_val);
+        -:  802:      }
+        -:  803:    else
+        -:  804:      {
+    #####:  805:      map_ref.operator[](index) = in_val;
+        -:  806:      }
+        -:  807:    }
+        -:  808:  else
+        -:  809:    {
+    #####:  810:    (*this).erase_val(index);
+        -:  811:    }
+    #####:  812:  }
+        -:  813:
+        -:  814:
+        -:  815:
+        -:  816:template<typename eT>
+        -:  817:inline
+        -:  818:void
+    #####:  819:MapMat<eT>::erase_val(const uword index)
+        -:  820:  {
+        -:  821:  arma_debug_sigprint();
+        -:  822:  
+    #####:  823:  map_type& map_ref = (*map_ptr);
+        -:  824:  
+    #####:  825:  typename map_type::iterator it     = map_ref.find(index);
+    #####:  826:  typename map_type::iterator it_end = map_ref.end();
+        -:  827:  
+    #####:  828:  if(it != it_end)  { map_ref.erase(it); }
+    #####:  829:  }
+        -:  830:
+        -:  831:
+        -:  832:
+        -:  833:
+        -:  834:
+        -:  835:
+        -:  836:// MapMat_val
+        -:  837:
+        -:  838:
+        -:  839:
+        -:  840:template<typename eT>
+        -:  841:arma_inline
+        -:  842:MapMat_val<eT>::MapMat_val(MapMat<eT>& in_parent, const uword in_index)
+        -:  843:  : parent(in_parent)
+        -:  844:  , index (in_index )
+        -:  845:  {
+        -:  846:  arma_debug_sigprint();
+        -:  847:  }
+        -:  848:
+        -:  849:
+        -:  850:
+        -:  851:template<typename eT>
+        -:  852:arma_inline
+        -:  853:MapMat_val<eT>::operator eT() const
+        -:  854:  {
+        -:  855:  arma_debug_sigprint();
+        -:  856:  
+        -:  857:  const MapMat<eT>& const_parent = parent;
+        -:  858:  
+        -:  859:  return const_parent.operator[](index);
+        -:  860:  }
+        -:  861:
+        -:  862:
+        -:  863:
+        -:  864:template<typename eT>
+        -:  865:arma_inline
+        -:  866:typename get_pod_type<eT>::result
+        -:  867:MapMat_val<eT>::real() const
+        -:  868:  {
+        -:  869:  arma_debug_sigprint();
+        -:  870:  
+        -:  871:  typedef typename get_pod_type<eT>::result T;
+        -:  872:  
+        -:  873:  const MapMat<eT>& const_parent = parent;
+        -:  874:  
+        -:  875:  return T( access::tmp_real( const_parent.operator[](index) ) );
+        -:  876:  }
+        -:  877:
+        -:  878:
+        -:  879:
+        -:  880:template<typename eT>
+        -:  881:arma_inline
+        -:  882:typename get_pod_type<eT>::result
+        -:  883:MapMat_val<eT>::imag() const
+        -:  884:  {
+        -:  885:  arma_debug_sigprint();
+        -:  886:  
+        -:  887:  typedef typename get_pod_type<eT>::result T;
+        -:  888:  
+        -:  889:  const MapMat<eT>& const_parent = parent;
+        -:  890:  
+        -:  891:  return T( access::tmp_imag( const_parent.operator[](index) ) );
+        -:  892:  }
+        -:  893:
+        -:  894:
+        -:  895:
+        -:  896:template<typename eT>
+        -:  897:arma_inline
+        -:  898:void
+        -:  899:MapMat_val<eT>::operator=(const MapMat_val<eT>& x)
+        -:  900:  {
+        -:  901:  arma_debug_sigprint();
+        -:  902:  
+        -:  903:  const eT in_val = eT(x);
+        -:  904:  
+        -:  905:  parent.set_val(index, in_val);
+        -:  906:  }
+        -:  907:
+        -:  908:
+        -:  909:
+        -:  910:template<typename eT>
+        -:  911:arma_inline
+        -:  912:void
+        -:  913:MapMat_val<eT>::operator=(const eT in_val)
+        -:  914:  {
+        -:  915:  arma_debug_sigprint();
+        -:  916:  
+        -:  917:  parent.set_val(index, in_val);
+        -:  918:  }
+        -:  919:
+        -:  920:
+        -:  921:
+        -:  922:template<typename eT>
+        -:  923:arma_inline
+        -:  924:void
+        -:  925:MapMat_val<eT>::operator+=(const eT in_val)
+        -:  926:  {
+        -:  927:  arma_debug_sigprint();
+        -:  928:  
+        -:  929:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -:  930:  
+        -:  931:  if(in_val != eT(0))
+        -:  932:    {
+        -:  933:    eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -:  934:    
+        -:  935:    val += in_val;
+        -:  936:    
+        -:  937:    if(val == eT(0))  { map_ref.erase(index); }
+        -:  938:    }
+        -:  939:  }
+        -:  940:
+        -:  941:
+        -:  942:
+        -:  943:template<typename eT>
+        -:  944:arma_inline
+        -:  945:void
+        -:  946:MapMat_val<eT>::operator-=(const eT in_val)
+        -:  947:  {
+        -:  948:  arma_debug_sigprint();
+        -:  949:  
+        -:  950:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -:  951:  
+        -:  952:  if(in_val != eT(0))
+        -:  953:    {
+        -:  954:    eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -:  955:    
+        -:  956:    val -= in_val;
+        -:  957:    
+        -:  958:    if(val == eT(0))  { map_ref.erase(index); }
+        -:  959:    }
+        -:  960:  }
+        -:  961:
+        -:  962:
+        -:  963:
+        -:  964:template<typename eT>
+        -:  965:arma_inline
+        -:  966:void
+        -:  967:MapMat_val<eT>::operator*=(const eT in_val)
+        -:  968:  {
+        -:  969:  arma_debug_sigprint();
+        -:  970:  
+        -:  971:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -:  972:  
+        -:  973:  typename MapMat<eT>::map_type::iterator it     = map_ref.find(index);
+        -:  974:  typename MapMat<eT>::map_type::iterator it_end = map_ref.end();
+        -:  975:  
+        -:  976:  if(it != it_end)
+        -:  977:    {
+        -:  978:    eT& val = (*it).second;
+        -:  979:    
+        -:  980:    val *= in_val;
+        -:  981:    
+        -:  982:    if(val == eT(0))  { map_ref.erase(it); }
+        -:  983:    }
+        -:  984:  else
+        -:  985:    {
+        -:  986:    const eT val = eT(0) * in_val;  // in case in_val is inf or nan
+        -:  987:    
+        -:  988:    if(val != eT(0))  { parent.set_val(index, val); }
+        -:  989:    }
+        -:  990:  }
+        -:  991:
+        -:  992:
+        -:  993:
+        -:  994:template<typename eT>
+        -:  995:arma_inline
+        -:  996:void
+        -:  997:MapMat_val<eT>::operator/=(const eT in_val)
+        -:  998:  {
+        -:  999:  arma_debug_sigprint();
+        -: 1000:  
+        -: 1001:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -: 1002:  
+        -: 1003:  typename MapMat<eT>::map_type::iterator it     = map_ref.find(index);
+        -: 1004:  typename MapMat<eT>::map_type::iterator it_end = map_ref.end();
+        -: 1005:  
+        -: 1006:  if(it != it_end)
+        -: 1007:    {
+        -: 1008:    eT& val = (*it).second;
+        -: 1009:    
+        -: 1010:    val /= in_val;
+        -: 1011:    
+        -: 1012:    if(val == eT(0))  { map_ref.erase(it); }
+        -: 1013:    }
+        -: 1014:  else
+        -: 1015:    {
+        -: 1016:    const eT val = eT(0) / in_val;  // in case in_val is zero or nan
+        -: 1017:    
+        -: 1018:    if(val != eT(0))  { parent.set_val(index, val); }
+        -: 1019:    }
+        -: 1020:  }
+        -: 1021:
+        -: 1022:
+        -: 1023:
+        -: 1024:template<typename eT>
+        -: 1025:arma_inline
+        -: 1026:void
+        -: 1027:MapMat_val<eT>::operator++()
+        -: 1028:  {
+        -: 1029:  arma_debug_sigprint();
+        -: 1030:  
+        -: 1031:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -: 1032:  
+        -: 1033:  eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -: 1034:  
+        -: 1035:  val += eT(1);  // can't use ++,  as eT can be std::complex
+        -: 1036:  
+        -: 1037:  if(val == eT(0))  { map_ref.erase(index); }
+        -: 1038:  }
+        -: 1039:
+        -: 1040:
+        -: 1041:
+        -: 1042:template<typename eT>
+        -: 1043:arma_inline
+        -: 1044:void
+        -: 1045:MapMat_val<eT>::operator++(int)
+        -: 1046:  {
+        -: 1047:  arma_debug_sigprint();
+        -: 1048:  
+        -: 1049:  (*this).operator++();
+        -: 1050:  }
+        -: 1051:
+        -: 1052:
+        -: 1053:
+        -: 1054:template<typename eT>
+        -: 1055:arma_inline
+        -: 1056:void
+        -: 1057:MapMat_val<eT>::operator--()
+        -: 1058:  {
+        -: 1059:  arma_debug_sigprint();
+        -: 1060:  
+        -: 1061:  typename MapMat<eT>::map_type& map_ref = *(parent.map_ptr);
+        -: 1062:  
+        -: 1063:  eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -: 1064:  
+        -: 1065:  val -= eT(1);  // can't use --,  as eT can be std::complex
+        -: 1066:  
+        -: 1067:  if(val == eT(0))  { map_ref.erase(index); }
+        -: 1068:  }
+        -: 1069:
+        -: 1070:
+        -: 1071:
+        -: 1072:template<typename eT>
+        -: 1073:arma_inline
+        -: 1074:void
+        -: 1075:MapMat_val<eT>::operator--(int)
+        -: 1076:  {
+        -: 1077:  arma_debug_sigprint();
+        -: 1078:  
+        -: 1079:  (*this).operator--();
+        -: 1080:  }
+        -: 1081:
+        -: 1082:
+        -: 1083:
+        -: 1084:
+        -: 1085:
+        -: 1086:// SpMat_MapMat_val
+        -: 1087:
+        -: 1088:
+        -: 1089:
+        -: 1090:template<typename eT>
+        -: 1091:arma_inline
+    #####: 1092:SpMat_MapMat_val<eT>::SpMat_MapMat_val(SpMat<eT>& in_s_parent, MapMat<eT>& in_m_parent, const uword in_row, const uword in_col)
+    #####: 1093:  : s_parent(in_s_parent)
+    #####: 1094:  , m_parent(in_m_parent)
+    #####: 1095:  , row     (in_row     )
+    #####: 1096:  , col     (in_col     )
+        -: 1097:  {
+        -: 1098:  arma_debug_sigprint();
+    #####: 1099:  }
+        -: 1100:
+        -: 1101:
+        -: 1102:
+        -: 1103:template<typename eT>
+        -: 1104:inline
+    #####: 1105:SpMat_MapMat_val<eT>::operator eT() const
+        -: 1106:  {
+        -: 1107:  arma_debug_sigprint();
+        -: 1108:  
+    #####: 1109:  const SpMat<eT>& const_s_parent = s_parent;  // declare as const for clarity of intent
+        -: 1110:  
+    #####: 1111:  return const_s_parent.get_value(row,col);
+        -: 1112:  }
+        -: 1113:
+        -: 1114:
+        -: 1115:
+        -: 1116:template<typename eT>
+        -: 1117:inline
+        -: 1118:typename get_pod_type<eT>::result
+        -: 1119:SpMat_MapMat_val<eT>::real() const
+        -: 1120:  {
+        -: 1121:  arma_debug_sigprint();
+        -: 1122:  
+        -: 1123:  typedef typename get_pod_type<eT>::result T;
+        -: 1124:  
+        -: 1125:  const SpMat<eT>& const_s_parent = s_parent;  // declare as const for clarity of intent
+        -: 1126:  
+        -: 1127:  return T( access::tmp_real( const_s_parent.get_value(row,col) ) );
+        -: 1128:  }
+        -: 1129:
+        -: 1130:
+        -: 1131:
+        -: 1132:template<typename eT>
+        -: 1133:inline
+        -: 1134:typename get_pod_type<eT>::result
+        -: 1135:SpMat_MapMat_val<eT>::imag() const
+        -: 1136:  {
+        -: 1137:  arma_debug_sigprint();
+        -: 1138:  
+        -: 1139:  typedef typename get_pod_type<eT>::result T;
+        -: 1140:  
+        -: 1141:  const SpMat<eT>& const_s_parent = s_parent;  // declare as const for clarity of intent
+        -: 1142:  
+        -: 1143:  return T( access::tmp_imag( const_s_parent.get_value(row,col) ) );
+        -: 1144:  }
+        -: 1145:
+        -: 1146:
+        -: 1147:
+        -: 1148:template<typename eT>
+        -: 1149:inline
+        -: 1150:SpMat_MapMat_val<eT>&
+        -: 1151:SpMat_MapMat_val<eT>::operator=(const SpMat_MapMat_val<eT>& x)
+        -: 1152:  {
+        -: 1153:  arma_debug_sigprint();
+        -: 1154:  
+        -: 1155:  const eT in_val = eT(x);
+        -: 1156:  
+        -: 1157:  return (*this).operator=(in_val);
+        -: 1158:  }
+        -: 1159:
+        -: 1160:
+        -: 1161:
+        -: 1162:template<typename eT>
+        -: 1163:inline
+        -: 1164:SpMat_MapMat_val<eT>&
+    #####: 1165:SpMat_MapMat_val<eT>::operator=(const eT in_val)
+        -: 1166:  {
+        -: 1167:  arma_debug_sigprint();
+        -: 1168:  
+        -: 1169:  #if defined(ARMA_USE_OPENMP)
+        -: 1170:    {
+        -: 1171:    #pragma omp critical (arma_SpMat_cache)
+        -: 1172:      {
+        -: 1173:      (*this).set(in_val);
+        -: 1174:      }
+        -: 1175:    }
+        -: 1176:  #elif defined(ARMA_USE_STD_MUTEX)
+        -: 1177:    {
+    #####: 1178:    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
+        -: 1179:    
+    #####: 1180:    (*this).set(in_val);
+    #####: 1181:    }
+        -: 1182:  #else
+        -: 1183:    {
+        -: 1184:    (*this).set(in_val);
+        -: 1185:    }
+        -: 1186:  #endif
+        -: 1187:  
+    #####: 1188:  return *this;
+        -: 1189:  }
+        -: 1190:
+        -: 1191:
+        -: 1192:
+        -: 1193:template<typename eT>
+        -: 1194:inline
+        -: 1195:SpMat_MapMat_val<eT>&
+        -: 1196:SpMat_MapMat_val<eT>::operator+=(const eT in_val)
+        -: 1197:  {
+        -: 1198:  arma_debug_sigprint();
+        -: 1199:  
+        -: 1200:  if(in_val == eT(0))  { return *this; }
+        -: 1201:  
+        -: 1202:  #if defined(ARMA_USE_OPENMP)
+        -: 1203:    {
+        -: 1204:    #pragma omp critical (arma_SpMat_cache)
+        -: 1205:      {
+        -: 1206:      (*this).add(in_val);
+        -: 1207:      }
+        -: 1208:    }
+        -: 1209:  #elif defined(ARMA_USE_STD_MUTEX)
+        -: 1210:    {
+        -: 1211:    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
+        -: 1212:    
+        -: 1213:    (*this).add(in_val);
+        -: 1214:    }
+        -: 1215:  #else
+        -: 1216:    {
+        -: 1217:    (*this).add(in_val);
+        -: 1218:    }
+        -: 1219:  #endif
+        -: 1220:  
+        -: 1221:  return *this;
+        -: 1222:  }
+        -: 1223:
+        -: 1224:
+        -: 1225:
+        -: 1226:template<typename eT>
+        -: 1227:inline
+        -: 1228:SpMat_MapMat_val<eT>&
+        -: 1229:SpMat_MapMat_val<eT>::operator-=(const eT in_val)
+        -: 1230:  {
+        -: 1231:  arma_debug_sigprint();
+        -: 1232:  
+        -: 1233:  if(in_val == eT(0))  { return *this; }
+        -: 1234:  
+        -: 1235:  #if defined(ARMA_USE_OPENMP)
+        -: 1236:    {
+        -: 1237:    #pragma omp critical (arma_SpMat_cache)
+        -: 1238:      {
+        -: 1239:      (*this).sub(in_val);
+        -: 1240:      }
+        -: 1241:    }
+        -: 1242:  #elif defined(ARMA_USE_STD_MUTEX)
+        -: 1243:    {
+        -: 1244:    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
+        -: 1245:    
+        -: 1246:    (*this).sub(in_val);
+        -: 1247:    }
+        -: 1248:  #else
+        -: 1249:    {
+        -: 1250:    (*this).sub(in_val);
+        -: 1251:    }
+        -: 1252:  #endif
+        -: 1253:  
+        -: 1254:  return *this;
+        -: 1255:  }
+        -: 1256:
+        -: 1257:
+        -: 1258:
+        -: 1259:template<typename eT>
+        -: 1260:inline
+        -: 1261:SpMat_MapMat_val<eT>&
+        -: 1262:SpMat_MapMat_val<eT>::operator*=(const eT in_val)
+        -: 1263:  {
+        -: 1264:  arma_debug_sigprint();
+        -: 1265:  
+        -: 1266:  #if defined(ARMA_USE_OPENMP)
+        -: 1267:    {
+        -: 1268:    #pragma omp critical (arma_SpMat_cache)
+        -: 1269:      {
+        -: 1270:      (*this).mul(in_val);
+        -: 1271:      }
+        -: 1272:    }
+        -: 1273:  #elif defined(ARMA_USE_STD_MUTEX)
+        -: 1274:    {
+        -: 1275:    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
+        -: 1276:    
+        -: 1277:    (*this).mul(in_val);
+        -: 1278:    }
+        -: 1279:  #else
+        -: 1280:    {
+        -: 1281:    (*this).mul(in_val);
+        -: 1282:    }
+        -: 1283:  #endif
+        -: 1284:  
+        -: 1285:  return *this;
+        -: 1286:  }
+        -: 1287:
+        -: 1288:
+        -: 1289:
+        -: 1290:template<typename eT>
+        -: 1291:inline
+        -: 1292:SpMat_MapMat_val<eT>&
+        -: 1293:SpMat_MapMat_val<eT>::operator/=(const eT in_val)
+        -: 1294:  {
+        -: 1295:  arma_debug_sigprint();
+        -: 1296:  
+        -: 1297:  #if defined(ARMA_USE_OPENMP)
+        -: 1298:    {
+        -: 1299:    #pragma omp critical (arma_SpMat_cache)
+        -: 1300:      {
+        -: 1301:      (*this).div(in_val);
+        -: 1302:      }
+        -: 1303:    }
+        -: 1304:  #elif defined(ARMA_USE_STD_MUTEX)
+        -: 1305:    {
+        -: 1306:    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
+        -: 1307:    
+        -: 1308:    (*this).div(in_val);
+        -: 1309:    }
+        -: 1310:  #else
+        -: 1311:    {
+        -: 1312:    (*this).div(in_val);
+        -: 1313:    }
+        -: 1314:  #endif
+        -: 1315:  
+        -: 1316:  return *this;
+        -: 1317:  }
+        -: 1318:
+        -: 1319:
+        -: 1320:
+        -: 1321:template<typename eT>
+        -: 1322:inline
+        -: 1323:SpMat_MapMat_val<eT>&
+        -: 1324:SpMat_MapMat_val<eT>::operator++()
+        -: 1325:  {
+        -: 1326:  arma_debug_sigprint();
+        -: 1327:  
+        -: 1328:  return (*this).operator+=( eT(1) );
+        -: 1329:  }
+        -: 1330:
+        -: 1331:
+        -: 1332:
+        -: 1333:template<typename eT>
+        -: 1334:inline
+        -: 1335:eT
+        -: 1336:SpMat_MapMat_val<eT>::operator++(int)
+        -: 1337:  {
+        -: 1338:  arma_debug_sigprint();
+        -: 1339:  
+        -: 1340:  const eT old_val = eT(*this);
+        -: 1341:  
+        -: 1342:  (*this).operator+=( eT(1) );
+        -: 1343:  
+        -: 1344:  return old_val;
+        -: 1345:  }
+        -: 1346:
+        -: 1347:
+        -: 1348:
+        -: 1349:template<typename eT>
+        -: 1350:inline
+        -: 1351:SpMat_MapMat_val<eT>&
+        -: 1352:SpMat_MapMat_val<eT>::operator--()
+        -: 1353:  {
+        -: 1354:  arma_debug_sigprint();
+        -: 1355:  
+        -: 1356:  return (*this).operator-=( eT(1) );
+        -: 1357:  }
+        -: 1358:
+        -: 1359:
+        -: 1360:
+        -: 1361:template<typename eT>
+        -: 1362:inline
+        -: 1363:eT
+        -: 1364:SpMat_MapMat_val<eT>::operator--(int)
+        -: 1365:  {
+        -: 1366:  arma_debug_sigprint();
+        -: 1367:  
+        -: 1368:  const eT old_val = eT(*this);
+        -: 1369:  
+        -: 1370:  (*this).operator-=( eT(1) );
+        -: 1371:  
+        -: 1372:  return old_val;
+        -: 1373:  }
+        -: 1374:
+        -: 1375:
+        -: 1376:
+        -: 1377:template<typename eT>
+        -: 1378:inline
+        -: 1379:void
+    #####: 1380:SpMat_MapMat_val<eT>::set(const eT in_val)
+        -: 1381:  {
+        -: 1382:  arma_debug_sigprint();
+        -: 1383:  
+    #####: 1384:  const bool done = (s_parent.sync_state == 0) ? s_parent.try_set_value_csc(row, col, in_val) : false;
+        -: 1385:  
+    #####: 1386:  if(done == false)
+        -: 1387:    {
+    #####: 1388:    s_parent.sync_cache_simple();
+        -: 1389:    
+    #####: 1390:    const uword index = (m_parent.n_rows * col) + row;
+        -: 1391:    
+    #####: 1392:    m_parent.set_val(index, in_val);
+        -: 1393:    
+    #####: 1394:    s_parent.sync_state = 1;
+        -: 1395:    
+    #####: 1396:    access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1397:    }
+    #####: 1398:  }
+        -: 1399:
+        -: 1400:
+        -: 1401:
+        -: 1402:template<typename eT>
+        -: 1403:inline
+        -: 1404:void
+        -: 1405:SpMat_MapMat_val<eT>::add(const eT in_val)
+        -: 1406:  {
+        -: 1407:  arma_debug_sigprint();
+        -: 1408:  
+        -: 1409:  const bool done = (s_parent.sync_state == 0) ? s_parent.try_add_value_csc(row, col, in_val) : false;
+        -: 1410:    
+        -: 1411:  if(done == false)
+        -: 1412:    {
+        -: 1413:    s_parent.sync_cache_simple();
+        -: 1414:    
+        -: 1415:    const uword index = (m_parent.n_rows * col) + row;
+        -: 1416:    
+        -: 1417:    typename MapMat<eT>::map_type& map_ref = *(m_parent.map_ptr);
+        -: 1418:    
+        -: 1419:    eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -: 1420:    
+        -: 1421:    val += in_val;
+        -: 1422:    
+        -: 1423:    if(val == eT(0))  { map_ref.erase(index); }
+        -: 1424:    
+        -: 1425:    s_parent.sync_state = 1;
+        -: 1426:    
+        -: 1427:    access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1428:    }
+        -: 1429:  }
+        -: 1430:
+        -: 1431:
+        -: 1432:
+        -: 1433:template<typename eT>
+        -: 1434:inline
+        -: 1435:void
+        -: 1436:SpMat_MapMat_val<eT>::sub(const eT in_val)
+        -: 1437:  {
+        -: 1438:  arma_debug_sigprint();
+        -: 1439:  
+        -: 1440:  const bool done = (s_parent.sync_state == 0) ? s_parent.try_sub_value_csc(row, col, in_val) : false;
+        -: 1441:  
+        -: 1442:  if(done == false)
+        -: 1443:    {
+        -: 1444:    s_parent.sync_cache_simple();
+        -: 1445:    
+        -: 1446:    const uword index = (m_parent.n_rows * col) + row;
+        -: 1447:    
+        -: 1448:    typename MapMat<eT>::map_type& map_ref = *(m_parent.map_ptr);
+        -: 1449:    
+        -: 1450:    eT& val = map_ref.operator[](index);  // creates the element if it doesn't exist
+        -: 1451:    
+        -: 1452:    val -= in_val;
+        -: 1453:    
+        -: 1454:    if(val == eT(0))  { map_ref.erase(index); }
+        -: 1455:    
+        -: 1456:    s_parent.sync_state = 1;
+        -: 1457:    
+        -: 1458:    access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1459:    }
+        -: 1460:  }
+        -: 1461:
+        -: 1462:
+        -: 1463:
+        -: 1464:template<typename eT>
+        -: 1465:inline
+        -: 1466:void
+        -: 1467:SpMat_MapMat_val<eT>::mul(const eT in_val)
+        -: 1468:  {
+        -: 1469:  arma_debug_sigprint();
+        -: 1470:  
+        -: 1471:  const bool done = (s_parent.sync_state == 0) ? s_parent.try_mul_value_csc(row, col, in_val) : false;
+        -: 1472:  
+        -: 1473:  if(done == false)
+        -: 1474:    {
+        -: 1475:    s_parent.sync_cache_simple();
+        -: 1476:    
+        -: 1477:    const uword index = (m_parent.n_rows * col) + row;
+        -: 1478:    
+        -: 1479:    typename MapMat<eT>::map_type& map_ref = *(m_parent.map_ptr);
+        -: 1480:    
+        -: 1481:    typename MapMat<eT>::map_type::iterator it     = map_ref.find(index);
+        -: 1482:    typename MapMat<eT>::map_type::iterator it_end = map_ref.end();
+        -: 1483:    
+        -: 1484:    if(it != it_end)
+        -: 1485:      {
+        -: 1486:      eT& val = (*it).second;
+        -: 1487:      
+        -: 1488:      val *= in_val;
+        -: 1489:      
+        -: 1490:      if(val == eT(0))  { map_ref.erase(it); }
+        -: 1491:      
+        -: 1492:      s_parent.sync_state = 1;
+        -: 1493:      
+        -: 1494:      access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1495:      }
+        -: 1496:    else
+        -: 1497:      {
+        -: 1498:      const eT result = eT(0) * in_val;  // in case in_val is inf or nan
+        -: 1499:      
+        -: 1500:      if(result != eT(0))
+        -: 1501:        {
+        -: 1502:        m_parent.set_val(index, result);
+        -: 1503:        
+        -: 1504:        s_parent.sync_state = 1;
+        -: 1505:        
+        -: 1506:        access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1507:        }
+        -: 1508:      }
+        -: 1509:    }
+        -: 1510:  }
+        -: 1511:
+        -: 1512:
+        -: 1513:
+        -: 1514:template<typename eT>
+        -: 1515:inline
+        -: 1516:void
+        -: 1517:SpMat_MapMat_val<eT>::div(const eT in_val)
+        -: 1518:  {
+        -: 1519:  arma_debug_sigprint();
+        -: 1520:  
+        -: 1521:  const bool done = (s_parent.sync_state == 0) ? s_parent.try_div_value_csc(row, col, in_val) : false;
+        -: 1522:  
+        -: 1523:  if(done == false)
+        -: 1524:    {
+        -: 1525:    s_parent.sync_cache_simple();
+        -: 1526:    
+        -: 1527:    const uword index = (m_parent.n_rows * col) + row;
+        -: 1528:    
+        -: 1529:    typename MapMat<eT>::map_type& map_ref = *(m_parent.map_ptr);
+        -: 1530:    
+        -: 1531:    typename MapMat<eT>::map_type::iterator it     = map_ref.find(index);
+        -: 1532:    typename MapMat<eT>::map_type::iterator it_end = map_ref.end();
+        -: 1533:    
+        -: 1534:    if(it != it_end)
+        -: 1535:      {
+        -: 1536:      eT& val = (*it).second;
+        -: 1537:      
+        -: 1538:      val /= in_val;
+        -: 1539:      
+        -: 1540:      if(val == eT(0))  { map_ref.erase(it); }
+        -: 1541:      
+        -: 1542:      s_parent.sync_state = 1;
+        -: 1543:      
+        -: 1544:      access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1545:      }
+        -: 1546:    else
+        -: 1547:      {
+        -: 1548:      const eT result = eT(0) / in_val;  // in case in_val is zero or nan
+        -: 1549:      
+        -: 1550:      if(result != eT(0))
+        -: 1551:        {
+        -: 1552:        m_parent.set_val(index, result);
+        -: 1553:        
+        -: 1554:        s_parent.sync_state = 1;
+        -: 1555:        
+        -: 1556:        access::rw(s_parent.n_nonzero) = m_parent.get_n_nonzero();
+        -: 1557:        }
+        -: 1558:      }
+        -: 1559:    }
+        -: 1560:  }
+        -: 1561:
+        -: 1562:
+        -: 1563:
+        -: 1564:
+        -: 1565:// SpSubview_MapMat_val
+        -: 1566:
+        -: 1567:
+        -: 1568:
+        -: 1569:template<typename eT>
+        -: 1570:arma_inline
+        -: 1571:SpSubview_MapMat_val<eT>::SpSubview_MapMat_val(SpSubview<eT>& in_sv_parent, MapMat<eT>& in_m_parent, const uword in_row, const uword in_col)
+        -: 1572:  : SpMat_MapMat_val<eT>(access::rw(in_sv_parent.m), in_m_parent, in_row, in_col)
+        -: 1573:  , sv_parent(in_sv_parent)
+        -: 1574:  {
+        -: 1575:  arma_debug_sigprint();
+        -: 1576:  }
+        -: 1577:
+        -: 1578:
+        -: 1579:
+        -: 1580:template<typename eT>
+        -: 1581:inline
+        -: 1582:SpSubview_MapMat_val<eT>&
+        -: 1583:SpSubview_MapMat_val<eT>::operator=(const SpSubview_MapMat_val<eT>& x)
+        -: 1584:  {
+        -: 1585:  arma_debug_sigprint();
+        -: 1586:  
+        -: 1587:  const eT in_val = eT(x);
+        -: 1588:  
+        -: 1589:  return (*this).operator=(in_val);
+        -: 1590:  }
+        -: 1591:
+        -: 1592:
+        -: 1593:
+        -: 1594:template<typename eT>
+        -: 1595:inline
+        -: 1596:SpSubview_MapMat_val<eT>&
+        -: 1597:SpSubview_MapMat_val<eT>::operator=(const eT in_val)
+        -: 1598:  {
+        -: 1599:  arma_debug_sigprint();
+        -: 1600:  
+        -: 1601:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1602:  
+        -: 1603:  SpMat_MapMat_val<eT>::operator=(in_val);
+        -: 1604:  
+        -: 1605:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1606:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1607:  
+        -: 1608:  return *this;
+        -: 1609:  }
+        -: 1610:
+        -: 1611:
+        -: 1612:
+        -: 1613:template<typename eT>
+        -: 1614:inline
+        -: 1615:SpSubview_MapMat_val<eT>&
+        -: 1616:SpSubview_MapMat_val<eT>::operator+=(const eT in_val)
+        -: 1617:  {
+        -: 1618:  arma_debug_sigprint();
+        -: 1619:  
+        -: 1620:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1621:  
+        -: 1622:  SpMat_MapMat_val<eT>::operator+=(in_val);
+        -: 1623:  
+        -: 1624:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1625:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1626:  
+        -: 1627:  return *this;
+        -: 1628:  }
+        -: 1629:
+        -: 1630:
+        -: 1631:
+        -: 1632:template<typename eT>
+        -: 1633:inline
+        -: 1634:SpSubview_MapMat_val<eT>&
+        -: 1635:SpSubview_MapMat_val<eT>::operator-=(const eT in_val)
+        -: 1636:  {
+        -: 1637:  arma_debug_sigprint();
+        -: 1638:  
+        -: 1639:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1640:  
+        -: 1641:  SpMat_MapMat_val<eT>::operator-=(in_val);
+        -: 1642:  
+        -: 1643:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1644:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1645:  
+        -: 1646:  return *this;
+        -: 1647:  }
+        -: 1648:
+        -: 1649:
+        -: 1650:
+        -: 1651:template<typename eT>
+        -: 1652:inline
+        -: 1653:SpSubview_MapMat_val<eT>&
+        -: 1654:SpSubview_MapMat_val<eT>::operator*=(const eT in_val)
+        -: 1655:  {
+        -: 1656:  arma_debug_sigprint();
+        -: 1657:  
+        -: 1658:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1659:  
+        -: 1660:  SpMat_MapMat_val<eT>::operator*=(in_val);
+        -: 1661:  
+        -: 1662:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1663:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1664:  
+        -: 1665:  return *this;
+        -: 1666:  }
+        -: 1667:
+        -: 1668:
+        -: 1669:
+        -: 1670:template<typename eT>
+        -: 1671:inline
+        -: 1672:SpSubview_MapMat_val<eT>&
+        -: 1673:SpSubview_MapMat_val<eT>::operator/=(const eT in_val)
+        -: 1674:  {
+        -: 1675:  arma_debug_sigprint();
+        -: 1676:  
+        -: 1677:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1678:  
+        -: 1679:  SpMat_MapMat_val<eT>::operator/=(in_val);
+        -: 1680:  
+        -: 1681:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1682:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1683:  
+        -: 1684:  return *this;
+        -: 1685:  }
+        -: 1686:
+        -: 1687:
+        -: 1688:
+        -: 1689:template<typename eT>
+        -: 1690:inline
+        -: 1691:SpSubview_MapMat_val<eT>&
+        -: 1692:SpSubview_MapMat_val<eT>::operator++()
+        -: 1693:  {
+        -: 1694:  arma_debug_sigprint();
+        -: 1695:  
+        -: 1696:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1697:  
+        -: 1698:  SpMat_MapMat_val<eT>::operator++();
+        -: 1699:  
+        -: 1700:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1701:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1702:  
+        -: 1703:  return *this;
+        -: 1704:  }
+        -: 1705:
+        -: 1706:
+        -: 1707:
+        -: 1708:template<typename eT>
+        -: 1709:inline
+        -: 1710:eT
+        -: 1711:SpSubview_MapMat_val<eT>::operator++(int)
+        -: 1712:  {
+        -: 1713:  arma_debug_sigprint();
+        -: 1714:  
+        -: 1715:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1716:  
+        -: 1717:  const eT old_val = SpMat_MapMat_val<eT>::operator++(int(0));
+        -: 1718:  
+        -: 1719:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1720:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1721:  
+        -: 1722:  return old_val;
+        -: 1723:  }
+        -: 1724:
+        -: 1725:
+        -: 1726:
+        -: 1727:template<typename eT>
+        -: 1728:inline
+        -: 1729:SpSubview_MapMat_val<eT>&
+        -: 1730:SpSubview_MapMat_val<eT>::operator--()
+        -: 1731:  {
+        -: 1732:  arma_debug_sigprint();
+        -: 1733:  
+        -: 1734:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1735:  
+        -: 1736:  SpMat_MapMat_val<eT>::operator--();
+        -: 1737:  
+        -: 1738:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1739:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1740:  
+        -: 1741:  return *this;
+        -: 1742:  }
+        -: 1743:
+        -: 1744:
+        -: 1745:
+        -: 1746:template<typename eT>
+        -: 1747:inline
+        -: 1748:eT
+        -: 1749:SpSubview_MapMat_val<eT>::operator--(int)
+        -: 1750:  {
+        -: 1751:  arma_debug_sigprint();
+        -: 1752:  
+        -: 1753:  const uword old_n_nonzero = sv_parent.m.n_nonzero;
+        -: 1754:  
+        -: 1755:  const eT old_val = SpMat_MapMat_val<eT>::operator--(int(0));
+        -: 1756:  
+        -: 1757:  if(sv_parent.m.n_nonzero > old_n_nonzero)  { access::rw(sv_parent.n_nonzero)++; }
+        -: 1758:  if(sv_parent.m.n_nonzero < old_n_nonzero)  { access::rw(sv_parent.n_nonzero)--; }
+        -: 1759:  
+        -: 1760:  return old_val;
+        -: 1761:  }
+        -: 1762:
+        -: 1763:
+        -: 1764:
+        -: 1765://! @}

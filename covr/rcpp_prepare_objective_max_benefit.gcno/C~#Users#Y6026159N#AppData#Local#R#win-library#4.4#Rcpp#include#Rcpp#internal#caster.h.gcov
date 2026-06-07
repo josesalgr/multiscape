@@ -1,0 +1,71 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/internal/caster.h
+        -:    0:Graph:./rcpp_prepare_objective_max_benefit.gcno
+        -:    0:Data:./rcpp_prepare_objective_max_benefit.gcda
+        -:    0:Runs:22
+        -:    1:
+        -:    2:// caster.h: Rcpp R/C++ interface class library --
+        -:    3://
+        -:    4:// Copyright (C) 2010 - 2026 Dirk Eddelbuettel and Romain Francois
+        -:    5://
+        -:    6:// This file is part of Rcpp.
+        -:    7://
+        -:    8:// Rcpp is free software: you can redistribute it and/or modify it
+        -:    9:// under the terms of the GNU General Public License as published by
+        -:   10:// the Free Software Foundation, either version 2 of the License, or
+        -:   11:// (at your option) any later version.
+        -:   12://
+        -:   13:// Rcpp is distributed in the hope that it will be useful, but
+        -:   14:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   15:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   16:// GNU General Public License for more details.
+        -:   17://
+        -:   18:// You should have received a copy of the GNU General Public License
+        -:   19:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   20:
+        -:   21:#ifndef Rcpp__internal__caster__h
+        -:   22:#define Rcpp__internal__caster__h
+        -:   23:
+        -:   24:namespace Rcpp{
+        -:   25:namespace internal{
+        -:   26:
+    #####:   27:template <typename FROM, typename TO> TO caster(FROM from){ // #nocov start
+    #####:   28:	return static_cast<TO>(from) ;
+        -:   29:} 														    // #nocov end
+        -:   30:
+        -:   31:template <typename T>
+        -:   32:inline Rcomplex Rcomplex_caster( std::complex<T> from ){
+        -:   33:	Rcomplex cx ;
+        -:   34:	cx.r = (double)from.real() ;
+        -:   35:	cx.i = (double)from.imag() ;
+        -:   36:	return cx ;
+        -:   37:}
+        -:   38:
+        -:   39:template <>
+        -:   40:inline Rcomplex caster<std::complex<double>, Rcomplex>( std::complex<double> from){
+        -:   41:	return Rcomplex_caster(from) ;
+        -:   42:}
+        -:   43:template<>
+        -:   44:inline Rcomplex caster<std::complex<float>, Rcomplex>( std::complex<float> from){
+        -:   45:	return Rcomplex_caster(from) ;
+        -:   46:}
+        -:   47:
+        -:   48:template <typename T>
+        -:   49:inline std::complex<T> std_complex_caster( Rcomplex from ){
+        -:   50:	return std::complex<T>( static_cast<T>(from.r), static_cast<T>(from.i) ) ;
+        -:   51:}
+        -:   52:
+        -:   53:template <>
+        -:   54:inline std::complex<double> caster<Rcomplex,std::complex<double> >( Rcomplex from){
+        -:   55:	return std_complex_caster<double>(from);
+        -:   56:}
+        -:   57:
+        -:   58:template<>
+        -:   59:inline std::complex<float>  caster<Rcomplex,std::complex<float> >( Rcomplex from){
+        -:   60:	return std_complex_caster<float>(from) ;
+        -:   61:}
+        -:   62:
+        -:   63:
+        -:   64:}
+        -:   65:}
+        -:   66:
+        -:   67:#endif

@@ -1,0 +1,339 @@
+        -:    0:Source:C:/Program Files/R/R-4.4.1/library/RcppArmadillo/include/current/armadillo_bits/memory.hpp
+        -:    0:Graph:./functions.gcno
+        -:    0:Data:./functions.gcda
+        -:    0:Runs:22
+        -:    1:// SPDX-License-Identifier: Apache-2.0
+        -:    2:// 
+        -:    3:// Copyright 2008-2016 Conrad Sanderson (https://conradsanderson.id.au)
+        -:    4:// Copyright 2008-2016 National ICT Australia (NICTA)
+        -:    5:// 
+        -:    6:// Licensed under the Apache License, Version 2.0 (the "License");
+        -:    7:// you may not use this file except in compliance with the License.
+        -:    8:// You may obtain a copy of the License at
+        -:    9:// https://www.apache.org/licenses/LICENSE-2.0
+        -:   10:// 
+        -:   11:// Unless required by applicable law or agreed to in writing, software
+        -:   12:// distributed under the License is distributed on an "AS IS" BASIS,
+        -:   13:// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        -:   14:// See the License for the specific language governing permissions and
+        -:   15:// limitations under the License.
+        -:   16:// ------------------------------------------------------------------------
+        -:   17:
+        -:   18:
+        -:   19://! \addtogroup memory
+        -:   20://! @{
+        -:   21:
+        -:   22:
+        -:   23:struct memory
+        -:   24:  {
+        -:   25:  template<typename eT> arma_malloc inline static eT* acquire(const uword n_elem);
+        -:   26:  
+        -:   27:  template<typename eT> arma_inline static void release(eT* mem);
+        -:   28:  
+        -:   29:  template<typename eT> arma_inline static bool      is_aligned(const eT*  mem);
+        -:   30:  template<typename eT> arma_inline static void mark_as_aligned(      eT*& mem);
+        -:   31:  template<typename eT> arma_inline static void mark_as_aligned(const eT*& mem);
+        -:   32:  };
+        -:   33:
+        -:   34:
+        -:   35:
+        -:   36:template<typename eT>
+        -:   37:arma_malloc
+        -:   38:inline
+        -:   39:eT*
+    #####:   40:memory::acquire(const uword n_elem)
+        -:   41:  {
+    #####:   42:  if(n_elem == 0)  { return nullptr; }
+        -:   43:  
+        -:   44:  arma_conform_check
+    #####:   45:    (
+    #####:   46:    ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+        -:   47:    "arma::memory::acquire(): requested size is too large"
+        -:   48:    );
+        -:   49:  
+        -:   50:  eT* out_memptr;
+        -:   51:  
+        -:   52:  #if   defined(ARMA_ALIEN_MEM_ALLOC_FUNCTION)
+        -:   53:    {
+        -:   54:    out_memptr = (eT *) ARMA_ALIEN_MEM_ALLOC_FUNCTION(sizeof(eT)*n_elem);
+        -:   55:    }
+        -:   56:  #elif defined(ARMA_USE_TBB_ALLOC)
+        -:   57:    {
+        -:   58:    out_memptr = (eT *) scalable_malloc(sizeof(eT)*n_elem);
+        -:   59:    }
+        -:   60:  #elif defined(ARMA_USE_MKL_ALLOC)
+        -:   61:    {
+        -:   62:    out_memptr = (eT *) mkl_malloc( sizeof(eT)*n_elem, 32 );
+        -:   63:    }
+        -:   64:  #elif defined(ARMA_HAVE_POSIX_MEMALIGN)
+        -:   65:    {
+        -:   66:    eT* memptr = nullptr;
+        -:   67:    
+        -:   68:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   69:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   70:    
+        -:   71:    // TODO: investigate apparent memory leak when using alignment >= 64 (as shown on Fedora 28, glibc 2.27)
+        -:   72:    int status = posix_memalign((void **)&memptr, ( (alignment >= sizeof(void*)) ? alignment : sizeof(void*) ), n_bytes);
+        -:   73:    
+        -:   74:    out_memptr = (status == 0) ? memptr : nullptr;
+        -:   75:    }
+        -:   76:  #elif defined(_MSC_VER)
+        -:   77:    {
+        -:   78:    // Windoze is too primitive to handle C++17 std::aligned_alloc()
+        -:   79:    
+        -:   80:    //out_memptr = (eT *) malloc(sizeof(eT)*n_elem);
+        -:   81:    //out_memptr = (eT *) _aligned_malloc( sizeof(eT)*n_elem, 16 );  // lives in malloc.h
+        -:   82:    
+        -:   83:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   84:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   85:    
+        -:   86:    out_memptr = (eT *) _aligned_malloc( n_bytes, alignment );
+        -:   87:    }
+        -:   88:  #else
+        -:   89:    {
+        -:   90:    //return ( new(std::nothrow) eT[n_elem] );
+    #####:   91:    out_memptr = (eT *) std::malloc(sizeof(eT)*n_elem);
+        -:   92:    }
+        -:   93:  #endif
+        -:   94:  
+        -:   95:  // TODO: for mingw, use __mingw_aligned_malloc
+        -:   96:  
+    #####:   97:  arma_check_bad_alloc( (out_memptr == nullptr), "arma::memory::acquire(): out of memory" );
+        -:   98:  
+    #####:   99:  return out_memptr;
+        -:  100:  }
+------------------
+_ZN4arma6memory7acquireIdEEPT_y:
+    #####:   40:memory::acquire(const uword n_elem)
+        -:   41:  {
+    #####:   42:  if(n_elem == 0)  { return nullptr; }
+        -:   43:  
+        -:   44:  arma_conform_check
+    #####:   45:    (
+    #####:   46:    ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+        -:   47:    "arma::memory::acquire(): requested size is too large"
+        -:   48:    );
+        -:   49:  
+        -:   50:  eT* out_memptr;
+        -:   51:  
+        -:   52:  #if   defined(ARMA_ALIEN_MEM_ALLOC_FUNCTION)
+        -:   53:    {
+        -:   54:    out_memptr = (eT *) ARMA_ALIEN_MEM_ALLOC_FUNCTION(sizeof(eT)*n_elem);
+        -:   55:    }
+        -:   56:  #elif defined(ARMA_USE_TBB_ALLOC)
+        -:   57:    {
+        -:   58:    out_memptr = (eT *) scalable_malloc(sizeof(eT)*n_elem);
+        -:   59:    }
+        -:   60:  #elif defined(ARMA_USE_MKL_ALLOC)
+        -:   61:    {
+        -:   62:    out_memptr = (eT *) mkl_malloc( sizeof(eT)*n_elem, 32 );
+        -:   63:    }
+        -:   64:  #elif defined(ARMA_HAVE_POSIX_MEMALIGN)
+        -:   65:    {
+        -:   66:    eT* memptr = nullptr;
+        -:   67:    
+        -:   68:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   69:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   70:    
+        -:   71:    // TODO: investigate apparent memory leak when using alignment >= 64 (as shown on Fedora 28, glibc 2.27)
+        -:   72:    int status = posix_memalign((void **)&memptr, ( (alignment >= sizeof(void*)) ? alignment : sizeof(void*) ), n_bytes);
+        -:   73:    
+        -:   74:    out_memptr = (status == 0) ? memptr : nullptr;
+        -:   75:    }
+        -:   76:  #elif defined(_MSC_VER)
+        -:   77:    {
+        -:   78:    // Windoze is too primitive to handle C++17 std::aligned_alloc()
+        -:   79:    
+        -:   80:    //out_memptr = (eT *) malloc(sizeof(eT)*n_elem);
+        -:   81:    //out_memptr = (eT *) _aligned_malloc( sizeof(eT)*n_elem, 16 );  // lives in malloc.h
+        -:   82:    
+        -:   83:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   84:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   85:    
+        -:   86:    out_memptr = (eT *) _aligned_malloc( n_bytes, alignment );
+        -:   87:    }
+        -:   88:  #else
+        -:   89:    {
+        -:   90:    //return ( new(std::nothrow) eT[n_elem] );
+    #####:   91:    out_memptr = (eT *) std::malloc(sizeof(eT)*n_elem);
+        -:   92:    }
+        -:   93:  #endif
+        -:   94:  
+        -:   95:  // TODO: for mingw, use __mingw_aligned_malloc
+        -:   96:  
+    #####:   97:  arma_check_bad_alloc( (out_memptr == nullptr), "arma::memory::acquire(): out of memory" );
+        -:   98:  
+    #####:   99:  return out_memptr;
+        -:  100:  }
+------------------
+_ZN4arma6memory7acquireIyEEPT_y:
+    #####:   40:memory::acquire(const uword n_elem)
+        -:   41:  {
+    #####:   42:  if(n_elem == 0)  { return nullptr; }
+        -:   43:  
+        -:   44:  arma_conform_check
+    #####:   45:    (
+    #####:   46:    ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+        -:   47:    "arma::memory::acquire(): requested size is too large"
+        -:   48:    );
+        -:   49:  
+        -:   50:  eT* out_memptr;
+        -:   51:  
+        -:   52:  #if   defined(ARMA_ALIEN_MEM_ALLOC_FUNCTION)
+        -:   53:    {
+        -:   54:    out_memptr = (eT *) ARMA_ALIEN_MEM_ALLOC_FUNCTION(sizeof(eT)*n_elem);
+        -:   55:    }
+        -:   56:  #elif defined(ARMA_USE_TBB_ALLOC)
+        -:   57:    {
+        -:   58:    out_memptr = (eT *) scalable_malloc(sizeof(eT)*n_elem);
+        -:   59:    }
+        -:   60:  #elif defined(ARMA_USE_MKL_ALLOC)
+        -:   61:    {
+        -:   62:    out_memptr = (eT *) mkl_malloc( sizeof(eT)*n_elem, 32 );
+        -:   63:    }
+        -:   64:  #elif defined(ARMA_HAVE_POSIX_MEMALIGN)
+        -:   65:    {
+        -:   66:    eT* memptr = nullptr;
+        -:   67:    
+        -:   68:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   69:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   70:    
+        -:   71:    // TODO: investigate apparent memory leak when using alignment >= 64 (as shown on Fedora 28, glibc 2.27)
+        -:   72:    int status = posix_memalign((void **)&memptr, ( (alignment >= sizeof(void*)) ? alignment : sizeof(void*) ), n_bytes);
+        -:   73:    
+        -:   74:    out_memptr = (status == 0) ? memptr : nullptr;
+        -:   75:    }
+        -:   76:  #elif defined(_MSC_VER)
+        -:   77:    {
+        -:   78:    // Windoze is too primitive to handle C++17 std::aligned_alloc()
+        -:   79:    
+        -:   80:    //out_memptr = (eT *) malloc(sizeof(eT)*n_elem);
+        -:   81:    //out_memptr = (eT *) _aligned_malloc( sizeof(eT)*n_elem, 16 );  // lives in malloc.h
+        -:   82:    
+        -:   83:    const size_t n_bytes   = sizeof(eT)*size_t(n_elem);
+        -:   84:    const size_t alignment = (n_bytes >= size_t(1024)) ? size_t(32) : size_t(16);
+        -:   85:    
+        -:   86:    out_memptr = (eT *) _aligned_malloc( n_bytes, alignment );
+        -:   87:    }
+        -:   88:  #else
+        -:   89:    {
+        -:   90:    //return ( new(std::nothrow) eT[n_elem] );
+    #####:   91:    out_memptr = (eT *) std::malloc(sizeof(eT)*n_elem);
+        -:   92:    }
+        -:   93:  #endif
+        -:   94:  
+        -:   95:  // TODO: for mingw, use __mingw_aligned_malloc
+        -:   96:  
+    #####:   97:  arma_check_bad_alloc( (out_memptr == nullptr), "arma::memory::acquire(): out of memory" );
+        -:   98:  
+    #####:   99:  return out_memptr;
+        -:  100:  }
+------------------
+        -:  101:
+        -:  102:
+        -:  103:
+        -:  104:template<typename eT>
+        -:  105:arma_inline
+        -:  106:void
+        -:  107:memory::release(eT* mem)
+        -:  108:  {
+    #####:  109:  if(mem == nullptr)  { return; }
+        -:  110:  
+        -:  111:  #if   defined(ARMA_ALIEN_MEM_FREE_FUNCTION)
+        -:  112:    {
+        -:  113:    ARMA_ALIEN_MEM_FREE_FUNCTION( (void *)(mem) );
+        -:  114:    }
+        -:  115:  #elif defined(ARMA_USE_TBB_ALLOC)
+        -:  116:    {
+        -:  117:    scalable_free( (void *)(mem) );
+        -:  118:    }
+        -:  119:  #elif defined(ARMA_USE_MKL_ALLOC)
+        -:  120:    {
+        -:  121:    mkl_free( (void *)(mem) );
+        -:  122:    }
+        -:  123:  #elif defined(ARMA_HAVE_POSIX_MEMALIGN)
+        -:  124:    {
+        -:  125:    std::free( (void *)(mem) );
+        -:  126:    }
+        -:  127:  #elif defined(_MSC_VER)
+        -:  128:    {
+        -:  129:    //free( (void *)(mem) );
+        -:  130:    _aligned_free( (void *)(mem) );
+        -:  131:    }
+        -:  132:  #else
+        -:  133:    {
+        -:  134:    //delete [] mem;
+    #####:  135:    std::free( (void *)(mem) );
+        -:  136:    }
+        -:  137:  #endif
+        -:  138:  
+        -:  139:  // TODO: for mingw, use __mingw_aligned_free
+        -:  140:  }
+        -:  141:
+        -:  142:
+        -:  143:
+        -:  144:template<typename eT>
+        -:  145:arma_inline
+        -:  146:bool
+        -:  147:memory::is_aligned(const eT* mem)
+        -:  148:  {
+        -:  149:  #if (defined(ARMA_HAVE_GCC_ASSUME_ALIGNED) || defined(__cpp_lib_assume_aligned)) && !defined(ARMA_DONT_CHECK_ALIGNMENT)
+        -:  150:    {
+        -:  151:    return (sizeof(std::size_t) >= sizeof(eT*)) ? ((std::size_t(mem) & 0x0F) == 0) : false;
+        -:  152:    }
+        -:  153:  #else
+        -:  154:    {
+        -:  155:    arma_ignore(mem);
+        -:  156:    
+        -:  157:    return false;
+        -:  158:    }
+        -:  159:  #endif
+        -:  160:  }
+        -:  161:
+        -:  162:
+        -:  163:
+        -:  164:template<typename eT>
+        -:  165:arma_inline
+        -:  166:void
+        -:  167:memory::mark_as_aligned(eT*& mem)
+        -:  168:  {
+        -:  169:  #if defined(ARMA_HAVE_GCC_ASSUME_ALIGNED)
+        -:  170:    {
+        -:  171:    mem = (eT*)__builtin_assume_aligned(mem, 16);
+        -:  172:    }
+        -:  173:  #elif defined(__cpp_lib_assume_aligned)
+        -:  174:    {
+        -:  175:    mem = (eT*)std::assume_aligned<16>(mem);
+        -:  176:    }
+        -:  177:  #else
+        -:  178:    {
+        -:  179:    arma_ignore(mem);
+        -:  180:    }
+        -:  181:  #endif
+        -:  182:  }
+        -:  183:
+        -:  184:
+        -:  185:
+        -:  186:template<typename eT>
+        -:  187:arma_inline
+        -:  188:void
+        -:  189:memory::mark_as_aligned(const eT*& mem)
+        -:  190:  {
+        -:  191:  #if defined(ARMA_HAVE_GCC_ASSUME_ALIGNED)
+        -:  192:    {
+        -:  193:    mem = (const eT*)__builtin_assume_aligned(mem, 16);
+        -:  194:    }
+        -:  195:  #elif defined(__cpp_lib_assume_aligned)
+        -:  196:    {
+        -:  197:    mem = (const eT*)std::assume_aligned<16>(mem);
+        -:  198:    }
+        -:  199:  #else
+        -:  200:    {
+        -:  201:    arma_ignore(mem);
+        -:  202:    }
+        -:  203:  #endif
+        -:  204:  }
+        -:  205:
+        -:  206:
+        -:  207:
+        -:  208://! @}

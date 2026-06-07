@@ -1,0 +1,215 @@
+        -:    0:Source:C:/Program Files/R/R-4.4.1/library/BH/include/boost/system/detail/system_category_message_win32.hpp
+        -:    0:Graph:./rcpp_add_linking_z_le_w.gcno
+        -:    0:Data:./rcpp_add_linking_z_le_w.gcda
+        -:    0:Runs:22
+        -:    1:#ifndef BOOST_SYSTEM_DETAIL_SYSTEM_CATEGORY_MESSAGE_WIN32_HPP_INCLUDED
+        -:    2:#define BOOST_SYSTEM_DETAIL_SYSTEM_CATEGORY_MESSAGE_WIN32_HPP_INCLUDED
+        -:    3:
+        -:    4:// Copyright Beman Dawes 2002, 2006
+        -:    5:// Copyright (c) Microsoft Corporation 2014
+        -:    6:// Copyright 2018, 2020 Peter Dimov
+        -:    7://
+        -:    8:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    9:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:   10://
+        -:   11:// See library home page at http://www.boost.org/libs/system
+        -:   12:
+        -:   13:#include <boost/system/detail/snprintf.hpp>
+        -:   14:#include <boost/winapi/error_handling.hpp>
+        -:   15:#include <boost/winapi/character_code_conversion.hpp>
+        -:   16:#include <boost/winapi/local_memory.hpp>
+        -:   17:#include <boost/config.hpp>
+        -:   18:#include <cstdio>
+        -:   19:
+        -:   20://
+        -:   21:
+        -:   22:namespace boost
+        -:   23:{
+        -:   24:
+        -:   25:namespace system
+        -:   26:{
+        -:   27:
+        -:   28:namespace detail
+        -:   29:{
+        -:   30:
+    #####:   31:inline char const * unknown_message_win32( int ev, char * buffer, std::size_t len )
+        -:   32:{
+    #####:   33:    detail::snprintf( buffer, len, "Unknown error (%d)", ev );
+    #####:   34:    return buffer;
+        -:   35:}
+        -:   36:
+    #####:   37:inline boost::winapi::UINT_ message_cp_win32()
+        -:   38:{
+        -:   39:#if defined(BOOST_SYSTEM_USE_UTF8)
+        -:   40:
+        -:   41:    return boost::winapi::CP_UTF8_;
+        -:   42:
+        -:   43:#else
+        -:   44:
+    #####:   45:    return boost::winapi::CP_ACP_;
+        -:   46:
+        -:   47:#endif
+        -:   48:}
+        -:   49:
+    #####:   50:inline char const * system_category_message_win32( int ev, char * buffer, std::size_t len ) noexcept
+        -:   51:{
+    #####:   52:    if( len == 0 )
+        -:   53:    {
+    #####:   54:        return buffer;
+        -:   55:    }
+        -:   56:
+    #####:   57:    if( len == 1 )
+        -:   58:    {
+    #####:   59:        buffer[0] = 0;
+    #####:   60:        return buffer;
+        -:   61:    }
+        -:   62:
+    #####:   63:    boost::winapi::UINT_ const code_page = message_cp_win32();
+        -:   64:
+    #####:   65:    int r = 0;
+        -:   66:
+        -:   67:#if !defined(BOOST_NO_ANSI_APIS)
+        -:   68:
+    #####:   69:    if( code_page == boost::winapi::CP_ACP_ )
+        -:   70:    {
+        -:   71:        using namespace boost::winapi;
+        -:   72:
+    #####:   73:        DWORD_ retval = boost::winapi::FormatMessageA(
+        -:   74:            FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
+        -:   75:            NULL,
+        -:   76:            static_cast<DWORD_>(ev),
+    #####:   77:            MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
+        -:   78:            buffer,
+        -:   79:            static_cast<DWORD_>( len ),
+        -:   80:            NULL
+        -:   81:        );
+        -:   82:
+    #####:   83:        r = static_cast<int>( retval );
+        -:   84:    }
+        -:   85:    else
+        -:   86:
+        -:   87:#endif
+        -:   88:
+        -:   89:    {
+        -:   90:        using namespace boost::winapi;
+        -:   91:
+    #####:   92:        wchar_t * lpMsgBuf = 0;
+        -:   93:
+    #####:   94:        DWORD_ retval = boost::winapi::FormatMessageW(
+        -:   95:            FORMAT_MESSAGE_ALLOCATE_BUFFER_ | FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
+        -:   96:            NULL,
+        -:   97:            static_cast<DWORD_>(ev),
+    #####:   98:            MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
+        -:   99:            (LPWSTR_) &lpMsgBuf,
+        -:  100:            0,
+        -:  101:            NULL
+        -:  102:        );
+        -:  103:
+    #####:  104:        if( retval != 0 )
+        -:  105:        {
+    #####:  106:            r = boost::winapi::WideCharToMultiByte( code_page, 0, lpMsgBuf, -1, buffer, static_cast<int>( len ), NULL, NULL );
+    #####:  107:            boost::winapi::LocalFree( lpMsgBuf );
+    #####:  108:            if ( r != 0 ) --r; // exclude null terminator
+        -:  109:        }
+        -:  110:    }
+        -:  111:
+    #####:  112:    if( r == 0 )
+        -:  113:    {
+    #####:  114:        return unknown_message_win32( ev, buffer, len );
+        -:  115:    }
+        -:  116:
+    #####:  117:    while( r > 0 && ( buffer[ r-1 ] == '\n' || buffer[ r-1 ] == '\r' ) )
+        -:  118:    {
+    #####:  119:        buffer[ --r ] = 0;
+        -:  120:    }
+        -:  121:
+    #####:  122:    if( r > 0 && buffer[ r-1 ] == '.' )
+        -:  123:    {
+    #####:  124:        buffer[ --r ] = 0;
+        -:  125:    }
+        -:  126:
+    #####:  127:    return buffer;
+        -:  128:}
+        -:  129:
+        -:  130:struct local_free
+        -:  131:{
+        -:  132:    void * p_;
+        -:  133:
+    #####:  134:    ~local_free()
+        -:  135:    {
+    #####:  136:        boost::winapi::LocalFree( p_ );
+    #####:  137:    }
+        -:  138:};
+        -:  139:
+    #####:  140:inline std::string unknown_message_win32( int ev )
+        -:  141:{
+        -:  142:    char buffer[ 38 ];
+    #####:  143:    return unknown_message_win32( ev, buffer, sizeof( buffer ) );
+        -:  144:}
+        -:  145:
+    #####:  146:inline std::string system_category_message_win32( int ev )
+        -:  147:{
+        -:  148:    using namespace boost::winapi;
+        -:  149:
+    #####:  150:    wchar_t * lpMsgBuf = 0;
+        -:  151:
+    #####:  152:    DWORD_ retval = boost::winapi::FormatMessageW(
+        -:  153:        FORMAT_MESSAGE_ALLOCATE_BUFFER_ | FORMAT_MESSAGE_FROM_SYSTEM_ | FORMAT_MESSAGE_IGNORE_INSERTS_,
+        -:  154:        NULL,
+        -:  155:        static_cast<DWORD_>(ev),
+    #####:  156:        MAKELANGID_( LANG_NEUTRAL_, SUBLANG_DEFAULT_ ), // Default language
+        -:  157:        (LPWSTR_) &lpMsgBuf,
+        -:  158:        0,
+        -:  159:        NULL
+        -:  160:    );
+        -:  161:
+    #####:  162:    if( retval == 0 )
+        -:  163:    {
+    #####:  164:        return unknown_message_win32( ev );
+        -:  165:    }
+        -:  166:
+    #####:  167:    local_free lf_ = { lpMsgBuf };
+        -:  168:    (void)lf_;
+        -:  169:
+    #####:  170:    UINT_ const code_page = message_cp_win32();
+        -:  171:
+    #####:  172:    int r = boost::winapi::WideCharToMultiByte( code_page, 0, lpMsgBuf, -1, 0, 0, NULL, NULL );
+        -:  173:
+    #####:  174:    if( r == 0 )
+        -:  175:    {
+    #####:  176:        return unknown_message_win32( ev );
+        -:  177:    }
+        -:  178:
+    #####:  179:    std::string buffer( static_cast<std::size_t>(r), char() );
+        -:  180:
+    #####:  181:    r = boost::winapi::WideCharToMultiByte( code_page, 0, lpMsgBuf, -1, &buffer[0], r, NULL, NULL );
+        -:  182:
+    #####:  183:    if( r == 0 )
+        -:  184:    {
+    #####:  185:        return unknown_message_win32( ev );
+        -:  186:    }
+        -:  187:
+    #####:  188:    --r; // exclude null terminator
+        -:  189:
+    #####:  190:    while( r > 0 && ( buffer[ static_cast<std::size_t>(r)-1 ] == '\n' || buffer[ static_cast<std::size_t>(r)-1 ] == '\r' ) )
+        -:  191:    {
+    #####:  192:        --r;
+        -:  193:    }
+        -:  194:
+    #####:  195:    if( r > 0 && buffer[ static_cast<std::size_t>(r)-1 ] == '.' )
+        -:  196:    {
+    #####:  197:        --r;
+        -:  198:    }
+        -:  199:
+    #####:  200:    buffer.resize( r );
+        -:  201:
+    #####:  202:    return buffer;
+    #####:  203:}
+        -:  204:
+        -:  205:} // namespace detail
+        -:  206:
+        -:  207:} // namespace system
+        -:  208:
+        -:  209:} // namespace boost
+        -:  210:
+        -:  211:#endif // #ifndef BOOST_SYSTEM_DETAIL_SYSTEM_CATEGORY_MESSAGE_WIN32_HPP_INCLUDED

@@ -314,22 +314,69 @@ set_method_weighted_sum <- function(x,
   }
 
   # ---- aliases
-  if (!is.character(aliases) || length(aliases) < 2L || anyNA(aliases)) {
-    stop("`aliases` must be a character vector with at least two objective aliases.", call. = FALSE)
+  if (
+    !is.character(aliases) ||
+    length(aliases) < 2L ||
+    anyNA(aliases)
+  ) {
+    stop(
+      paste0(
+        "`aliases` must be a character vector with at least ",
+        "two objective aliases."
+      ),
+      call. = FALSE
+    )
   }
 
   aliases <- as.character(aliases)
 
   if (any(!nzchar(aliases))) {
-    stop("`aliases` must not contain empty strings.", call. = FALSE)
+    stop(
+      "`aliases` must not contain empty strings.",
+      call. = FALSE
+    )
   }
 
   if (anyDuplicated(aliases) != 0L) {
-    dups <- unique(aliases[duplicated(aliases)])
-    stop("`aliases` must not contain duplicates: ", paste(dups, collapse = ", "), call. = FALSE)
+    duplicates <- unique(
+      aliases[duplicated(aliases)]
+    )
+
+    stop(
+      "`aliases` must not contain duplicates: ",
+      paste(duplicates, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
   }
 
-  .pamo_get_objective_specs(x, aliases)
+  .pamo_get_objective_specs(
+    x,
+    aliases
+  )
+
+  # ---- flags
+  if (
+    !is.logical(normalize_weights) ||
+    length(normalize_weights) != 1L ||
+    is.na(normalize_weights)
+  ) {
+    stop(
+      "`normalize_weights` must be TRUE or FALSE.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    !is.logical(objective_scaling) ||
+    length(objective_scaling) != 1L ||
+    is.na(objective_scaling)
+  ) {
+    stop(
+      "`objective_scaling` must be TRUE or FALSE.",
+      call. = FALSE
+    )
+  }
 
   # ---- backwards compatibility: weights -> run_manual()
   if (!is.null(weights)) {
@@ -345,9 +392,16 @@ set_method_weighted_sum <- function(x,
       new = "runs = run_manual(data.frame(weight_<alias> = ...))"
     )
 
-    if (!is.numeric(weights) || length(weights) != length(aliases) || anyNA(weights)) {
+    if (
+      !is.numeric(weights) ||
+      length(weights) != length(aliases) ||
+      anyNA(weights)
+    ) {
       stop(
-        "`weights` must be a numeric vector, same length as `aliases`, without NA.",
+        paste0(
+          "`weights` must be a numeric vector with the same length ",
+          "as `aliases` and without missing values."
+        ),
         call. = FALSE
       )
     }
@@ -355,39 +409,72 @@ set_method_weighted_sum <- function(x,
     weights <- as.numeric(weights)
 
     if (any(!is.finite(weights))) {
-      stop("`weights` must be finite.", call. = FALSE)
+      stop(
+        "`weights` must contain only finite values.",
+        call. = FALSE
+      )
     }
 
-    weight_df <- data.frame(run_id = 1L, stringsAsFactors = FALSE)
-
-    for (i in seq_along(aliases)) {
-      weight_df[[paste0("weight_", aliases[i])]] <- weights[i]
+    if (any(weights < 0)) {
+      stop(
+        "`weights` must be non-negative.",
+        call. = FALSE
+      )
     }
+
+    if (sum(weights) <= 0) {
+      stop(
+        "`weights` must assign a positive total weight.",
+        call. = FALSE
+      )
+    }
+
+    if (
+      !isTRUE(normalize_weights) &&
+      abs(sum(weights) - 1) > sqrt(.Machine$double.eps)
+    ) {
+      stop(
+        paste0(
+          "When `normalize_weights = FALSE`, deprecated `weights` ",
+          "must sum to one."
+        ),
+        call. = FALSE
+      )
+    }
+
+    # Do not include run_id here. run_id is assigned when the design is
+    # resolved; it is not part of the user-supplied manual weight table.
+    weight_df <- stats::setNames(
+      as.data.frame(
+        as.list(weights),
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      ),
+      paste0("weight_", aliases)
+    )
 
     runs <- run_manual(weight_df)
   }
 
   if (is.null(runs)) {
     stop(
-      "`runs` must be supplied. Use `runs = run_grid(n = ...)` or `runs = run_manual(...)`.",
+      paste0(
+        "`runs` must be supplied. Use `runs = run_grid(n = ...)` ",
+        "or `runs = run_manual(...)`."
+      ),
       call. = FALSE
     )
   }
 
   .pamo_check_run_design(runs)
 
-  # ---- flags
-  if (!is.logical(normalize_weights) ||
-      length(normalize_weights) != 1L ||
-      is.na(normalize_weights)) {
-    stop("`normalize_weights` must be TRUE or FALSE.", call. = FALSE)
-  }
-
-  if (!is.logical(objective_scaling) ||
-      length(objective_scaling) != 1L ||
-      is.na(objective_scaling)) {
-    stop("`objective_scaling` must be TRUE or FALSE.", call. = FALSE)
-  }
+  # Validate manual columns only after the selected aliases and normalization
+  # behaviour are known.
+  .pamo_validate_manual_weight_design(
+    runs = runs,
+    aliases = aliases,
+    normalize_weights = normalize_weights
+  )
 
   # ---- control
   control <- .pamo_check_mo_control(control)
@@ -406,4 +493,163 @@ set_method_weighted_sum <- function(x,
   )
 
   x
+}
+
+
+
+#' Validate a manual weighted-sum design
+#'
+#' @param runs A \code{RunManual} object.
+#' @param aliases Character vector of objective aliases.
+#' @param normalize_weights Logical indicating whether rows will be normalized.
+#'
+#' @return Invisibly returns \code{TRUE}.
+#'
+#' @noRd
+.pamo_validate_manual_weight_design <- function(
+    runs,
+    aliases,
+    normalize_weights = TRUE
+) {
+  if (!.pamo_is_run_manual(runs)) {
+    return(invisible(TRUE))
+  }
+
+  if (
+    is.null(runs$values) ||
+    !inherits(runs$values, "data.frame") ||
+    nrow(runs$values) == 0L
+  ) {
+    stop(
+      "Invalid manual weighted-sum design: no run rows are available.",
+      call. = FALSE
+    )
+  }
+
+  required_columns <- paste0("weight_", aliases)
+
+  supplied_weight_columns <- grep(
+    "^weight_",
+    names(runs$values),
+    value = TRUE
+  )
+
+  missing_columns <- setdiff(
+    required_columns,
+    supplied_weight_columns
+  )
+
+  if (length(missing_columns) > 0L) {
+    stop(
+      "Manual weighted-sum design is missing required column(s): ",
+      paste(missing_columns, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  unknown_weight_columns <- setdiff(
+    supplied_weight_columns,
+    required_columns
+  )
+
+  if (length(unknown_weight_columns) > 0L) {
+    stop(
+      "Manual weighted-sum design contains unknown weight column(s): ",
+      paste(unknown_weight_columns, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  unsupported_columns <- setdiff(
+    names(runs$values),
+    required_columns
+  )
+
+  if (length(unsupported_columns) > 0L) {
+    stop(
+      "Manual weighted-sum design contains unsupported column(s): ",
+      paste(unsupported_columns, collapse = ", "),
+      ". Only columns named `weight_<alias>` are allowed.",
+      call. = FALSE
+    )
+  }
+
+  non_numeric <- required_columns[
+    !vapply(
+      runs$values[required_columns],
+      is.numeric,
+      logical(1)
+    )
+  ]
+
+  if (length(non_numeric) > 0L) {
+    stop(
+      "Manual weight column(s) must be numeric: ",
+      paste(non_numeric, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  weight_matrix <- as.matrix(
+    runs$values[, required_columns, drop = FALSE]
+  )
+
+  storage.mode(weight_matrix) <- "double"
+
+  if (anyNA(weight_matrix)) {
+    stop(
+      "Manual weight columns must not contain missing values.",
+      call. = FALSE
+    )
+  }
+
+  if (any(!is.finite(weight_matrix))) {
+    stop(
+      "Manual weights must contain only finite values.",
+      call. = FALSE
+    )
+  }
+
+  if (any(weight_matrix < 0)) {
+    stop(
+      "Manual weights must be non-negative.",
+      call. = FALSE
+    )
+  }
+
+  totals <- rowSums(weight_matrix)
+
+  if (any(totals <= 0)) {
+    bad_rows <- which(totals <= 0)
+
+    stop(
+      "Each manual weighted-sum run must assign a positive total weight. ",
+      "Invalid row(s): ",
+      paste(bad_rows, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (!isTRUE(normalize_weights)) {
+    tolerance <- sqrt(.Machine$double.eps)
+    bad_rows <- which(abs(totals - 1) > tolerance)
+
+    if (length(bad_rows) > 0L) {
+      stop(
+        paste0(
+          "When `normalize_weights = FALSE`, the weights in each manual ",
+          "run must sum to one. Invalid row(s): "
+        ),
+        paste(bad_rows, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+  }
+
+  invisible(TRUE)
 }

@@ -1,0 +1,189 @@
+        -:    0:Source:C:/Users/Y6026159N/AppData/Local/R/win-library/4.4/Rcpp/include/Rcpp/DataFrame.h
+        -:    0:Graph:./rcpp_add_linking_x_le_w.gcno
+        -:    0:Data:./rcpp_add_linking_x_le_w.gcda
+        -:    0:Runs:22
+        -:    1:// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+        -:    2://
+        -:    3:// DataFrame.h: Rcpp R/C++ interface class library -- data frames
+        -:    4://
+        -:    5:// Copyright (C) 2010 - 2025  Dirk Eddelbuettel and Romain Francois
+        -:    6://
+        -:    7:// This file is part of Rcpp.
+        -:    8://
+        -:    9:// Rcpp is free software: you can redistribute it and/or modify it
+        -:   10:// under the terms of the GNU General Public License as published by
+        -:   11:// the Free Software Foundation, either version 2 of the License, or
+        -:   12:// (at your option) any later version.
+        -:   13://
+        -:   14:// Rcpp is distributed in the hope that it will be useful, but
+        -:   15:// WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   16:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   17:// GNU General Public License for more details.
+        -:   18://
+        -:   19:// You should have received a copy of the GNU General Public License
+        -:   20:// along with Rcpp.  If not, see <http://www.gnu.org/licenses/>.
+        -:   21:
+        -:   22:#ifndef Rcpp__DataFrame_h
+        -:   23:#define Rcpp__DataFrame_h
+        -:   24:
+        -:   25:namespace Rcpp{
+        -:   26:
+        -:   27:    namespace internal{
+        -:   28:        inline SEXP empty_data_frame(){
+        -:   29:            Shield<SEXP> df( Rf_allocVector(VECSXP, 0) );
+        -:   30:            Rf_setAttrib(df, R_NamesSymbol, Rf_allocVector(STRSXP, 0));
+        -:   31:            Rf_setAttrib(df, R_RowNamesSymbol, Rf_allocVector(INTSXP, 0));
+        -:   32:            Rf_setAttrib(df, R_ClassSymbol, Rf_mkString("data.frame"));
+        -:   33:            return df;
+        -:   34:        }
+        -:   35:    }
+        -:   36:
+        -:   37:    template <template <class> class StoragePolicy>
+        -:   38:    class DataFrame_Impl : public Vector<VECSXP, StoragePolicy> {
+        -:   39:    public:
+        -:   40:        typedef Vector<VECSXP, StoragePolicy> Parent ;
+        -:   41:
+        -:   42:        DataFrame_Impl() : Parent( internal::empty_data_frame() ){}
+        -:   43:        DataFrame_Impl(SEXP x) : Parent(x) {
+        -:   44:            set__(x);
+        -:   45:        }
+        -:   46:        DataFrame_Impl( const DataFrame_Impl& other) : Parent() {
+        -:   47:            set__(other) ;
+        -:   48:        }
+        -:   49:
+        -:   50:        template <typename T>
+        -:   51:        DataFrame_Impl( const T& obj ) ;
+        -:   52:
+        -:   53:        DataFrame_Impl& operator=( DataFrame_Impl& other){
+        -:   54:            if (*this != other) set__(other);
+        -:   55:            return *this;
+        -:   56:        }
+        -:   57:
+        -:   58:        DataFrame_Impl& operator=( SEXP x){
+        -:   59:            set__(x) ;
+        -:   60:            return *this ;
+        -:   61:        }
+        -:   62:
+        -:   63:        // By definition, the number of rows in a data.frame is contained
+        -:   64:        // in its row.names attribute. Since R 3.5.0 this is returned as a
+        -:   65:        // compact sequence from which we can just take the (x)length
+        -:   66:        // But as this makes an allocation an even simpler check on length as
+        -:   67:        // discussed in #1430 is also possible and preferable. We also switch
+        -:   68:        // to returning R_xlen_t which as upcast from int is safe
+    #####:   69:        inline R_xlen_t nrow() const {
+    #####:   70:            Shield<SEXP> rn{Rf_getAttrib(Parent::get__(), R_RowNamesSymbol)};
+    #####:   71:            return Rf_xlength(rn);
+    #####:   72:        }
+        -:   73:
+        -:   74:        template <typename T>
+        -:   75:        void push_back( const T& object){
+        -:   76:            Parent::push_back(object);
+        -:   77:            set_type_after_push();
+        -:   78:        }
+        -:   79:
+        -:   80:        template <typename T>
+        -:   81:        void push_back( const T& object, const std::string& name ){
+        -:   82:            Parent::push_back(object, name);
+        -:   83:            set_type_after_push();
+        -:   84:        }
+        -:   85:
+        -:   86:        template <typename T>
+        -:   87:        void push_front( const T& object){
+        -:   88:            Parent::push_front(object);
+        -:   89:            set_type_after_push();
+        -:   90:        }
+        -:   91:
+        -:   92:        template <typename T>
+        -:   93:        void push_front( const T& object, const std::string& name){
+        -:   94:            Parent::push_front(object, name);
+        -:   95:            set_type_after_push();
+        -:   96:        }
+        -:   97:
+        -:   98:        // Offer multiple variants to accomodate both old interface here and signatures in other classes
+    #####:   99:        inline R_xlen_t nrows() const { return DataFrame_Impl::nrow(); }
+        -:  100:        inline R_xlen_t rows()  const { return DataFrame_Impl::nrow(); }
+        -:  101:
+        -:  102:        inline R_xlen_t ncol()  const { return DataFrame_Impl::length(); }
+        -:  103:        inline R_xlen_t cols()  const { return DataFrame_Impl::length(); }
+        -:  104:
+        -:  105:        static DataFrame_Impl create(){
+        -:  106:            return DataFrame_Impl() ;
+        -:  107:        }
+        -:  108:        template <typename... T>
+        -:  109:        static DataFrame_Impl create(const T&... args) {
+        -:  110:            return DataFrame_Impl::from_list(Parent::create(args...));
+        -:  111:        }
+        -:  112:
+        -:  113:    private:
+        -:  114:        void set__(SEXP x){
+        -:  115:            if( ::Rf_inherits( x, "data.frame" )){
+        -:  116:                Parent::set__( x ) ;
+        -:  117:            } else{
+        -:  118:                Shield<SEXP> y(internal::convert_using_rfunction( x, "as.data.frame" )) ;
+        -:  119:                Parent::set__( y ) ;
+        -:  120:            }
+        -:  121:        }
+        -:  122:
+        -:  123:        void set_type_after_push(){
+        -:  124:            R_xlen_t max_rows = 0;
+        -:  125:            bool invalid_column_size = false;
+        -:  126:            List::iterator it;
+        -:  127:            // Get the maximum number of rows
+        -:  128:            for (it = Parent::begin(); it != Parent::end(); ++it) {
+        -:  129:                if (Rf_xlength(*it) > max_rows) {
+        -:  130:                    max_rows = Rf_xlength(*it);
+        -:  131:                }
+        -:  132:            }
+        -:  133:            if (max_rows > 0) {
+        -:  134:                for (it = Parent::begin(); it != Parent::end(); ++it) {
+        -:  135:                    if (Rf_xlength(*it) == 0 || ( Rf_xlength(*it) > 1 && max_rows % Rf_xlength(*it) != 0 )) {
+        -:  136:                        // We have a column that is not an integer fraction of the largest
+        -:  137:                        invalid_column_size = true;
+        -:  138:                    }
+        -:  139:                }
+        -:  140:            }
+        -:  141:            if (invalid_column_size) {
+        -:  142:                warning("Column sizes are not equal in DataFrame::push_back, object degrading to List\n");
+        -:  143:            } else {
+        -:  144:                set__(Parent::get__());
+        -:  145:            }
+        -:  146:        }
+        -:  147:
+        -:  148:        static DataFrame_Impl from_list( Parent obj ){
+        -:  149:            bool use_default_strings_as_factors = true ;
+        -:  150:            bool strings_as_factors = true ;
+        -:  151:            int strings_as_factors_index = -1 ;
+        -:  152:            R_xlen_t n = obj.size() ;
+        -:  153:            CharacterVector names = obj.attr( "names" ) ;
+        -:  154:            if( !names.isNULL() ){
+        -:  155:                for( int i=0; i<n; i++){
+        -:  156:                    if( names[i] == "stringsAsFactors" ){
+        -:  157:                        strings_as_factors_index = i ;
+        -:  158:                        use_default_strings_as_factors = false ;
+        -:  159:                        if( !as<bool>(obj[i]) ) strings_as_factors = false ;
+        -:  160:                        break ;
+        -:  161:                    }
+        -:  162:                }
+        -:  163:            }
+        -:  164:            if( use_default_strings_as_factors )
+        -:  165:                return DataFrame_Impl(obj) ;
+        -:  166:            SEXP as_df_symb = Rf_install("as.data.frame");
+        -:  167:            SEXP strings_as_factors_symb = Rf_install("stringsAsFactors");
+        -:  168:
+        -:  169:            obj.erase(strings_as_factors_index) ;
+        -:  170:            names.erase(strings_as_factors_index) ;
+        -:  171:            obj.attr( "names") = names ;
+        -:  172:            Shield<SEXP> call( Rf_lang3(as_df_symb, obj, Rf_ScalarLogical(strings_as_factors) ) ) ;
+        -:  173:            SET_TAG( CDDR(call),  strings_as_factors_symb ) ;
+        -:  174:            Shield<SEXP> res(Rcpp_fast_eval(call, R_GlobalEnv));
+        -:  175:            DataFrame_Impl out( res ) ;
+        -:  176:            return out ;
+        -:  177:
+        -:  178:        }
+        -:  179:
+        -:  180:    } ;
+        -:  181:
+        -:  182:    typedef DataFrame_Impl<PreserveStorage> DataFrame ;
+        -:  183:}
+        -:  184:
+        -:  185:#endif
