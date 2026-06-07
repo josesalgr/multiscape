@@ -10,21 +10,122 @@ get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{format}{Character. Either \code{"long"} or \code{"wide"}.}
+\item{format}{Character. Output representation, either \code{"long"} or
+\code{"wide"}. Defaults to \code{"long"}.}
 
-\item{feasible_only}{Logical. If \code{TRUE}, use only feasible runs.}
+\item{feasible_only}{Logical. If \code{TRUE}, extract values only from runs
+whose status is interpreted as usable. Defaults to \code{FALSE}.}
 }
 \value{
 If \code{format = "long"}, a \code{data.frame} with columns
 \code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
 
-If \code{format = "wide"}, a \code{data.frame} with one row per run,
-columns \code{run_id} and \code{solution_id}, and one column per objective.
+If \code{format = "wide"}, a \code{data.frame} with \code{run_id},
+\code{solution_id}, and one column per objective.
 }
 \description{
-Extract objective values from a \code{\link{solutionset-class}} object
-returned by \code{\link{solve}}.
-
+Extract objective values from the runs stored in a
+\code{\link{solutionset-class}} object.
+}
+\details{
 Objective values are read from run-table columns named
-\code{value_<objective>}, where \code{<objective>} is the objective alias.
+\code{value_<objective>}, where \code{<objective>} is the registered
+objective alias.
+
+Runs without a stored solution may contain missing objective values. Use
+\code{feasible_only = TRUE}, or filter the \code{SolutionSet} beforehand,
+when only solved runs should be included.
+
+In long format, every run-objective combination occupies one row. In wide
+format, every run occupies one row and every objective occupies one column.
+}
+\examples{
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
+
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
+
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
+  ) |>
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 5,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+
+  # Long format
+  get_objectives(solutions)
+
+  # Wide format
+  get_objectives(
+    solutions,
+    format = "wide"
+  )
+
+  # Objective values from usable runs only
+  get_objectives(
+    solutions,
+    feasible_only = TRUE
+  )
+}
+
+}
+\seealso{
+\code{\link{get_runs}},
+\code{\link{get_objective_specs}},
+\code{\link{frontier_extremes}},
+\code{\link{frontier_distances}}
 }

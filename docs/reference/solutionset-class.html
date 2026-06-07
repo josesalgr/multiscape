@@ -97,8 +97,7 @@ scenarios.</p>
 <li><p>comparing alternative solutions produced by a multi-objective method;</p></li>
 <li><p>analysing trade-offs between objectives;</p></li>
 <li><p>filtering feasible, unique, or non-dominated solutions;</p></li>
-<li><p>computing distances to reference points such as utopia or nadir
-points;</p></li>
+<li><p>computing distances to observed ideal or nadir points;</p></li>
 <li><p>preparing plots and tables for reporting.</p></li>
 </ul><p><strong>Internal structure</strong></p>
 <p>A <code>SolutionSet</code> object separates information into several layers:</p>
@@ -193,14 +192,23 @@ Depending on the workflow, it may summarize:</p><ul><li><p>number of design rows
 <li><p>and other aggregate information about the set of runs.</p></li>
 </ul><p><strong>Printing</strong></p>
 <p>The <code><a href="print.html">print()</a></code> method provides a concise summary of the solution set.
-It reports:</p><ul><li><p>the optimization method name;</p></li>
-<li><p>the participating objective aliases;</p></li>
-<li><p>the number of design rows, runs, and stored solutions;</p></li>
-<li><p>run-level status summaries;</p></li>
-<li><p>runtime and gap ranges;</p></li>
-<li><p>and the names of design and objective-value columns when available.</p></li>
-</ul><p>This printed output is intended as a quick overview. Detailed inspection
-should use accessor functions or the run-level tables stored in the object.</p>
+It reports:</p><ul><li><p>the optimization method and participating objective aliases;</p></li>
+<li><p>the run-design type when this information is available;</p></li>
+<li><p>the number of design rows, attempted runs, stored solutions, and
+runs without a stored solution;</p></li>
+<li><p>run-level status, runtime, and optimality-gap summaries;</p></li>
+<li><p>the observed range of each objective across stored solutions;</p></li>
+<li><p>and any filtering, uniqueness, or append metadata already recorded
+in the object.</p></li>
+</ul><p>Printing does not calculate non-dominance, uniqueness, similarities,
+selection frequencies, or distances. These analyses are intentionally kept
+outside the print method so that printing remains fast and does not depend on
+optional packages.</p>
+<p>This printed output is intended as a quick overview. Detailed inspection
+should use public accessor and analysis functions such as
+<code><a href="get_runs.html">get_runs</a></code>, <code><a href="get_objectives.html">get_objectives</a></code>,
+<code><a href="solution_filter.html">solution_filter</a></code>, and
+<code><a href="frontier_distances.html">frontier_distances</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="fields">Fields<a class="anchor" aria-label="anchor" href="#fields"></a></h2>

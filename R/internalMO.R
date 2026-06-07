@@ -5442,3 +5442,162 @@ add_objective <- function(x, objective) {
 
   x
 }
+
+
+# -------------------------------------------------------------------------
+# Internal run-design helpers
+# -------------------------------------------------------------------------
+
+.pamo_is_run_design <- function(x) {
+  inherits(x, "RunDesign")
+}
+
+.pamo_is_run_grid <- function(x) {
+  inherits(x, "RunGrid")
+}
+
+.pamo_is_run_manual <- function(x) {
+  inherits(x, "RunManual")
+}
+
+.pamo_check_run_design <- function(runs) {
+  if (missing(runs) || is.null(runs)) {
+    stop(
+      "`runs` must be created with `run_grid()` or `run_manual()`.",
+      call. = FALSE
+    )
+  }
+
+  if (!.pamo_is_run_design(runs)) {
+    stop(
+      "`runs` must be created with `run_grid()` or `run_manual()`.",
+      call. = FALSE
+    )
+  }
+
+  if (.pamo_is_run_grid(runs)) {
+    if (
+      !identical(runs$type, "grid") ||
+      length(runs$n) != 1L ||
+      is.na(runs$n) ||
+      !is.finite(runs$n) ||
+      runs$n < 2L ||
+      runs$n != floor(runs$n) ||
+      !is.logical(runs$include_extremes) ||
+      length(runs$include_extremes) != 1L ||
+      is.na(runs$include_extremes)
+    ) {
+      stop(
+        "Invalid RunGrid object.",
+        call. = FALSE
+      )
+    }
+
+    return(invisible(TRUE))
+  }
+
+  if (.pamo_is_run_manual(runs)) {
+    if (
+      !identical(runs$type, "manual") ||
+      !inherits(runs$values, "data.frame") ||
+      nrow(runs$values) == 0L
+    ) {
+      stop(
+        "Invalid RunManual object.",
+        call. = FALSE
+      )
+    }
+
+    return(invisible(TRUE))
+  }
+
+  stop(
+    "Unsupported RunDesign subclass.",
+    call. = FALSE
+  )
+}
+
+
+#' Validate and resolve a multi-objective control object
+#'
+#' @param control A control object created with \code{mo_control()}, or
+#'   \code{NULL} to use the default settings.
+#'
+#' @return A validated object of class \code{MOControl}.
+#'
+#' @noRd
+.pamo_check_mo_control <- function(control = NULL) {
+
+  # NULL means: use the default multi-objective controls.
+  if (is.null(control)) {
+    return(mo_control())
+  }
+
+  if (!inherits(control, "MOControl")) {
+    stop(
+      "`control` must be NULL or created with `mo_control()`.",
+      call. = FALSE
+    )
+  }
+
+  required <- c(
+    "stop_on_infeasible",
+    "stop_on_no_solution",
+    "stop_on_error",
+    "slack_upper_bound"
+  )
+
+  missing_fields <- setdiff(required, names(control))
+
+  if (length(missing_fields) > 0L) {
+    stop(
+      "Invalid MOControl object. Missing field(s): ",
+      paste(missing_fields, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  logical_fields <- c(
+    "stop_on_infeasible",
+    "stop_on_no_solution",
+    "stop_on_error"
+  )
+
+  for (field in logical_fields) {
+    value <- control[[field]]
+
+    if (
+      !is.logical(value) ||
+      length(value) != 1L ||
+      is.na(value)
+    ) {
+      stop(
+        "Invalid MOControl object: `",
+        field,
+        "` must be TRUE or FALSE.",
+        call. = FALSE
+      )
+    }
+  }
+
+  slack_upper_bound <- control$slack_upper_bound
+
+  if (
+    !is.numeric(slack_upper_bound) ||
+    length(slack_upper_bound) != 1L ||
+    is.na(slack_upper_bound) ||
+    !is.finite(slack_upper_bound) ||
+    slack_upper_bound <= 0
+  ) {
+    stop(
+      paste0(
+        "Invalid MOControl object: `slack_upper_bound` must be ",
+        "a single positive finite number."
+      ),
+      call. = FALSE
+    )
+  }
+
+  control
+}

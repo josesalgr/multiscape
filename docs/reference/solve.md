@@ -238,19 +238,23 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> A multiscape solution set (<SolutionSet>)
 #> ├─method
 #> │├─name: `single`
-#> │└─objectives: 1 (cost)
+#> │├─objectives: 1 (cost)
+#> │└─run design: unspecified
 #> └─content
 #> │├─design rows: 1
-#> │├─runs: 1
-#> │└─solutions: 1
+#> │├─attempted runs: 1
+#> │├─stored solutions: 1
+#> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
 #> │├─runtime: 0
 #> │├─gap: 0
-#> │├─design cols: none
-#> │└─value cols: value_cost
-#> # ℹ Use `x$solution$runs`, `x$solution$design`, and `x$solution$solutions[[i]]`
-#> to inspect details.
+#> │├─design columns: none
+#> │└─objective columns: value_cost
+#> └─objective ranges
+#> │└─cost: 1
+#> # ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect
+#> results.
 
 # ------------------------------------------------------------
 # Minimal action-based example
@@ -290,19 +294,23 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> A multiscape solution set (<SolutionSet>)
 #> ├─method
 #> │├─name: `single`
-#> │└─objectives: 1 (cost)
+#> │├─objectives: 1 (cost)
+#> │└─run design: unspecified
 #> └─content
 #> │├─design rows: 1
-#> │├─runs: 1
-#> │└─solutions: 1
+#> │├─attempted runs: 1
+#> │├─stored solutions: 1
+#> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 0.01
+#> │├─runtime: 0.02
 #> │├─gap: 0
-#> │├─design cols: none
-#> │└─value cols: value_cost
-#> # ℹ Use `x$solution$runs`, `x$solution$design`, and `x$solution$solutions[[i]]`
-#> to inspect details.
+#> │├─design columns: none
+#> │└─objective columns: value_cost
+#> └─objective ranges
+#> │└─cost: 2
+#> # ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect
+#> results.
 
 # ------------------------------------------------------------
 # Minimal multi-objective example

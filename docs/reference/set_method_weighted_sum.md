@@ -19,7 +19,7 @@ set_method_weighted_sum(
   weights = NULL,
   normalize_weights = TRUE,
   objective_scaling = FALSE,
-  control = mo_control()
+  control = NULL
 )
 ```
 

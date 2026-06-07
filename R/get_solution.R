@@ -1,6 +1,5 @@
 #' @include internalMO.R
-
-
+#'
 #' @title Get planning-unit results from a solution set
 #'
 #' @description
@@ -43,39 +42,55 @@
 #'   \code{selected} indicator.
 #'
 #' @examples
-#' \donttest{
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
+#'
 #' if (requireNamespace("rcbc", quietly = TRUE)) {
-#'   pu_tbl <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
 #'   )
 #'
-#'   feat_tbl <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
+#'   solutions <- solve(problem)
+#'
+#'   # Planning-unit results for all stored runs
+#'   get_pu(solutions)
+#'
+#'   # Return only selected planning units
+#'   get_pu(
+#'     solutions,
+#'     only_selected = TRUE
 #'   )
 #'
-#'   dist_feat_tbl <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
+#'   # Extract one run using its run_id
+#'   run_ids <- get_runs(solutions)$run_id
+#'
+#'   get_pu(
+#'     solutions,
+#'     run = run_ids[1]
 #'   )
-#'
-#'   p <- create_problem(
-#'     pu = pu_tbl,
-#'     features = feat_tbl,
-#'     dist_features = dist_feat_tbl,
-#'     cost = "cost"
-#'   ) |>
-#'     add_constraint_targets_relative(0.2) |>
-#'     add_objective_min_cost() |>
-#'     set_solver_cbc(time_limit = 10)
-#'
-#'   solset <- solve(p)
-#'
-#'   get_pu(solset)
-#'   get_pu(solset, only_selected = TRUE)
-#' }
 #' }
 #'
 #' @seealso
@@ -87,7 +102,7 @@
 #' @export
 get_pu <- function(x, only_selected = FALSE, run = NULL) {
 
-  if (!inherits(x, c("SolutionSet", "Solution"))) {
+  if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
@@ -161,52 +176,79 @@ get_pu <- function(x, only_selected = FALSE, run = NULL) {
 #'   a \code{selected} indicator.
 #'
 #' @examples
-#' \donttest{
-#' if (requireNamespace("rcbc", quietly = TRUE)) {
-#'   pu_tbl <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
-#'   )
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
 #'
-#'   feat_tbl <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
-#'   )
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
 #'
-#'   dist_feat_tbl <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
-#'   )
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
 #'
-#'   actions_df <- data.frame(
-#'     id = c("conservation", "restoration"),
-#'     name = c("conservation", "restoration")
-#'   )
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
 #'
-#'   effects_df <- data.frame(
-#'     action = rep(c("conservation", "restoration"), each = 2),
-#'     feature = rep(feat_tbl$id, times = 2),
-#'     multiplier = c(1.0, 1.0, 1.5, 1.5)
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
 #'   )
+#' )
 #'
-#'   p <- create_problem(
-#'     pu = pu_tbl,
-#'     features = feat_tbl,
-#'     dist_features = dist_feat_tbl,
-#'     cost = "cost"
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
 #'   ) |>
-#'     add_actions(actions_df, cost = c(conservation = 0, restoration = 2)) |>
-#'     add_effects(effects_df, effect_type = "after") |>
-#'     add_constraint_targets_relative(0.2) |>
-#'     add_objective_min_cost() |>
-#'     set_solver_cbc(time_limit = 10)
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
 #'
-#'   solset <- solve(p)
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
 #'
-#'   get_actions(solset)
-#'   get_actions(solset, only_selected = TRUE)
-#' }
+#'   solutions <- solve(problem)
+#'
+#'   # All feasible planning-unit/action assignments
+#'   get_actions(solutions)
+#'
+#'   # Only selected action assignments
+#'   get_actions(
+#'     solutions,
+#'     only_selected = TRUE
+#'   )
+#'
+#'   # Action allocations for one run
+#'   run_ids <- get_runs(solutions)$run_id
+#'
+#'   get_actions(
+#'     solutions,
+#'     run = run_ids[1]
+#'   )
 #' }
 #'
 #' @seealso
@@ -218,7 +260,7 @@ get_pu <- function(x, only_selected = FALSE, run = NULL) {
 #' @export
 get_actions <- function(x, only_selected = FALSE, run = NULL) {
 
-  if (!inherits(x, c("SolutionSet", "Solution"))) {
+  if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
@@ -334,38 +376,49 @@ get_actions <- function(x, only_selected = FALSE, run = NULL) {
 #'   \code{selected_fraction_of_baseline}.
 #'
 #' @examples
-#' \donttest{
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
+#'
 #' if (requireNamespace("rcbc", quietly = TRUE)) {
-#'   pu_tbl <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
 #'   )
 #'
-#'   feat_tbl <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
+#'   solutions <- solve(problem)
+#'
+#'   # Feature outcomes for all stored runs
+#'   get_features(solutions)
+#'
+#'   # Feature outcomes for one run
+#'   run_ids <- get_runs(solutions)$run_id
+#'
+#'   get_features(
+#'     solutions,
+#'     run = run_ids[1]
 #'   )
-#'
-#'   dist_feat_tbl <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
-#'   )
-#'
-#'   p <- create_problem(
-#'     pu = pu_tbl,
-#'     features = feat_tbl,
-#'     dist_features = dist_feat_tbl,
-#'     cost = "cost"
-#'   ) |>
-#'     add_constraint_targets_relative(0.2) |>
-#'     add_objective_min_cost() |>
-#'     set_solver_cbc(time_limit = 10)
-#'
-#'   solset <- solve(p)
-#'
-#'   get_features(solset)
-#' }
 #' }
 #'
 #' @seealso
@@ -376,7 +429,7 @@ get_actions <- function(x, only_selected = FALSE, run = NULL) {
 #' @export
 get_features <- function(x, run = NULL) {
 
-  if (!inherits(x, c("SolutionSet", "Solution"))) {
+  if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
@@ -599,38 +652,49 @@ get_features <- function(x, run = NULL) {
 #'   \code{target}, \code{achieved}, \code{gap}, and \code{met}.
 #'
 #' @examples
-#' \donttest{
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
+#'
 #' if (requireNamespace("rcbc", quietly = TRUE)) {
-#'   pu_tbl <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
 #'   )
 #'
-#'   feat_tbl <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
+#'   solutions <- solve(problem)
+#'
+#'   # Target requirements and achieved amounts
+#'   get_targets(solutions)
+#'
+#'   # Target achievement for one run
+#'   run_ids <- get_runs(solutions)$run_id
+#'
+#'   get_targets(
+#'     solutions,
+#'     run = run_ids[1]
 #'   )
-#'
-#'   dist_feat_tbl <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
-#'   )
-#'
-#'   p <- create_problem(
-#'     pu = pu_tbl,
-#'     features = feat_tbl,
-#'     dist_features = dist_feat_tbl,
-#'     cost = "cost"
-#'   ) |>
-#'     add_constraint_targets_relative(0.2) |>
-#'     add_objective_min_cost() |>
-#'     set_solver_cbc(time_limit = 10)
-#'
-#'   solset <- solve(p)
-#'
-#'   get_targets(solset)
-#' }
 #' }
 #'
 #' @seealso
@@ -641,7 +705,7 @@ get_features <- function(x, run = NULL) {
 #' @export
 get_targets <- function(x, run = NULL) {
 
-  if (!inherits(x, c("SolutionSet", "Solution"))) {
+  if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
@@ -745,40 +809,56 @@ get_targets <- function(x, run = NULL) {
 #' @return A numeric vector with one value per internal model variable.
 #'
 #' @examples
-#' \donttest{
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
+#'
 #' if (requireNamespace("rcbc", quietly = TRUE)) {
-#'   pu_tbl <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
 #'   )
 #'
-#'   feat_tbl <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
-#'   )
+#'   solutions <- solve(problem)
 #'
-#'   dist_feat_tbl <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
-#'   )
+#'   # Extract the first stored raw solution vector
+#'   vector <- get_solution_vector(solutions)
+#'   vector
+#'   length(vector)
 #'
-#'   p <- create_problem(
-#'     pu = pu_tbl,
-#'     features = feat_tbl,
-#'     dist_features = dist_feat_tbl,
-#'     cost = "cost"
-#'   ) |>
-#'     add_constraint_targets_relative(0.2) |>
-#'     add_objective_min_cost() |>
-#'     set_solver_cbc(time_limit = 10)
+#'   # Extract a vector using its solution_id
+#'   runs <- get_runs(solutions)
+#'   solution_ids <- runs$solution_id[
+#'     !is.na(runs$solution_id)
+#'   ]
 #'
-#'   solset <- solve(p)
-#'
-#'   v <- get_solution_vector(solset)
-#'   v
-#'   length(v)
-#' }
+#'   if (length(solution_ids) > 0L) {
+#'     get_solution_vector(
+#'       solutions,
+#'       solution_id = solution_ids[1]
+#'     )
+#'   }
 #' }
 #'
 #' @seealso
@@ -790,7 +870,7 @@ get_targets <- function(x, run = NULL) {
 #' @export
 get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
 
-  if (!inherits(x, c("SolutionSet", "Solution"))) {
+  if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
@@ -808,14 +888,122 @@ get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
 #' Get run-level results from a solution set
 #'
 #' @description
-#' Extract the run-level summary table from a
-#' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
+#' Extract the run table from a \code{\link{solutionset-class}} object.
 #'
-#' @param x A \code{\link{solutionset-class}} object.
-#' @param feasible_only Logical. If \code{TRUE}, return only runs with solver
-#'   status interpreted as feasible or successful.
+#' @details
+#' A run represents an attempted optimization solve. Each run has a unique
+#' \code{run_id}, but only runs that produce a stored solution receive a
+#' \code{solution_id}.
 #'
-#' @return A \code{data.frame} with one row per run.
+#' Consequently, the number of runs may exceed the number of stored solutions.
+#' This commonly occurs when a multi-objective design contains infeasible,
+#' failed, or interrupted runs.
+#'
+#' The run table combines:
+#' \itemize{
+#'   \item run and solution identifiers;
+#'   \item solver status, runtime, gap, and messages;
+#'   \item multi-objective design parameters such as weights or epsilon levels;
+#'   \item objective values stored in columns named
+#'   \code{value_<objective>}.
+#' }
+#'
+#' If \code{feasible_only = TRUE}, runs with statuses \code{"optimal"},
+#' \code{"feasible"}, \code{"suboptimal"}, \code{"time_limit"}, or
+#' \code{"gap_limit"} are retained.
+#'
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
+#'
+#' @param feasible_only Logical. If \code{TRUE}, return only runs whose status
+#'   indicates that a usable solution may be available. Defaults to
+#'   \code{FALSE}.
+#'
+#' @return A \code{data.frame} with one row per attempted optimization run.
+#'
+#' @examples
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # All attempted runs
+#'   get_runs(solutions)
+#'
+#'   # Only runs with a usable solver status
+#'   get_runs(
+#'     solutions,
+#'     feasible_only = TRUE
+#'   )
+#' }
+#'
+#' @seealso
+#' \code{\link{get_objectives}},
+#' \code{\link{get_objective_specs}},
+#' \code{\link{solution_filter}},
+#' \code{\link{run_grid}},
+#' \code{\link{run_manual}}
 #'
 #' @export
 get_runs <- function(x, feasible_only = FALSE) {
@@ -863,23 +1051,124 @@ get_runs <- function(x, feasible_only = FALSE) {
 #' Get objective values from a solution set
 #'
 #' @description
-#' Extract objective values from a \code{\link{solutionset-class}} object
-#' returned by \code{\link{solve}}.
+#' Extract objective values from the runs stored in a
+#' \code{\link{solutionset-class}} object.
 #'
+#' @details
 #' Objective values are read from run-table columns named
-#' \code{value_<objective>}, where \code{<objective>} is the objective alias.
+#' \code{value_<objective>}, where \code{<objective>} is the registered
+#' objective alias.
+#'
+#' Runs without a stored solution may contain missing objective values. Use
+#' \code{feasible_only = TRUE}, or filter the \code{SolutionSet} beforehand,
+#' when only solved runs should be included.
+#'
+#' In long format, every run-objective combination occupies one row. In wide
+#' format, every run occupies one row and every objective occupies one column.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param format Character. Either \code{"long"} or \code{"wide"}.
-#' @param feasible_only Logical. If \code{TRUE}, use only feasible runs.
 #'
-#' @return
-#' If \code{format = "long"}, a \code{data.frame} with columns
-#' \code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
+#' @param format Character. Output representation, either \code{"long"} or
+#'   \code{"wide"}. Defaults to \code{"long"}.
 #'
-#' If \code{format = "wide"}, a \code{data.frame} with one row per run,
-#' columns \code{run_id} and \code{solution_id}, and one column per objective.
+#' @param feasible_only Logical. If \code{TRUE}, extract values only from runs
+#'   whose status is interpreted as usable. Defaults to \code{FALSE}.
+#'
+#' @return If \code{format = "long"}, a \code{data.frame} with columns
+#'   \code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
+#'
+#' If \code{format = "wide"}, a \code{data.frame} with \code{run_id},
+#' \code{solution_id}, and one column per objective.
+#'
+#' @examples
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Long format
+#'   get_objectives(solutions)
+#'
+#'   # Wide format
+#'   get_objectives(
+#'     solutions,
+#'     format = "wide"
+#'   )
+#'
+#'   # Objective values from usable runs only
+#'   get_objectives(
+#'     solutions,
+#'     feasible_only = TRUE
+#'   )
+#' }
+#'
+#' @seealso
+#' \code{\link{get_runs}},
+#' \code{\link{get_objective_specs}},
+#' \code{\link{frontier_extremes}},
+#' \code{\link{frontier_distances}}
 #'
 #' @export
 get_objectives <- function(x,
@@ -941,16 +1230,106 @@ get_objectives <- function(x,
 #' Get objective specifications from a solution set
 #'
 #' @description
-#' Extract objective aliases, model types, objective ids, optimization senses,
-#' and objective arguments from a \code{\link{solutionset-class}} object.
+#' Extract the definitions of the objectives registered in the original
+#' planning problem associated with a \code{\link{solutionset-class}} object.
 #'
-#' Objective specifications are read from the original \code{Problem} object
-#' stored in the \code{SolutionSet}.
+#' @details
+#' Objective specifications are read from
+#' \code{x$problem$data$objectives}. They describe how each objective was
+#' registered, independently of the multi-objective method later used to solve
+#' the problem.
+#'
+#' The returned optimization sense is used by frontier and dominance functions
+#' to place objectives in a common minimization space.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
 #'
-#' @return A \code{data.frame} with one row per registered objective.
+#' @return A \code{data.frame} with one row per registered objective and the
+#'   columns:
+#' \itemize{
+#'   \item \code{objective}: user-defined objective alias;
+#'   \item \code{objective_id}: internal objective type;
+#'   \item \code{model_type}: internal model formulation;
+#'   \item \code{sense}: optimization direction, \code{"min"} or \code{"max"};
+#'   \item \code{created_at}: objective registration timestamp.
+#' }
+#'
+#' @examples
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   get_objective_specs(solutions)
+#' }
+#'
+#' @seealso
+#' \code{\link{get_runs}},
+#' \code{\link{get_objectives}},
+#' \code{\link{frontier_extremes}},
+#' \code{\link{solution_filter}}
 #'
 #' @export
 get_objective_specs <- function(x) {

@@ -29,7 +29,7 @@ set_method_augmecon(
   lexicographic = TRUE,
   lexicographic_tol = 1e-09,
   augmentation = 0.001,
-  control = mo_control()
+  control = NULL
 )
 ```
 

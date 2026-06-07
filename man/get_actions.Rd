@@ -51,52 +51,79 @@ This function is intended for user-facing inspection of action allocations.
 For the raw model variable vector, use \code{\link{get_solution_vector}}.
 }
 \examples{
-\donttest{
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  pu_tbl <- data.frame(
-    id = 1:4,
-    cost = c(1, 2, 3, 4)
-  )
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
 
-  feat_tbl <- data.frame(
-    id = 1:2,
-    name = c("feature_1", "feature_2")
-  )
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
 
-  dist_feat_tbl <- data.frame(
-    pu = c(1, 1, 2, 3, 4),
-    feature = c(1, 2, 2, 1, 2),
-    amount = c(5, 2, 3, 4, 1)
-  )
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
 
-  actions_df <- data.frame(
-    id = c("conservation", "restoration"),
-    name = c("conservation", "restoration")
-  )
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
 
-  effects_df <- data.frame(
-    action = rep(c("conservation", "restoration"), each = 2),
-    feature = rep(feat_tbl$id, times = 2),
-    multiplier = c(1.0, 1.0, 1.5, 1.5)
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
   )
+)
 
-  p <- create_problem(
-    pu = pu_tbl,
-    features = feat_tbl,
-    dist_features = dist_feat_tbl,
-    cost = "cost"
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
   ) |>
-    add_actions(actions_df, cost = c(conservation = 0, restoration = 2)) |>
-    add_effects(effects_df, effect_type = "after") |>
-    add_constraint_targets_relative(0.2) |>
-    add_objective_min_cost() |>
-    set_solver_cbc(time_limit = 10)
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost")
 
-  solset <- solve(p)
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
 
-  get_actions(solset)
-  get_actions(solset, only_selected = TRUE)
-}
+  solutions <- solve(problem)
+
+  # All feasible planning-unit/action assignments
+  get_actions(solutions)
+
+  # Only selected action assignments
+  get_actions(
+    solutions,
+    only_selected = TRUE
+  )
+
+  # Action allocations for one run
+  run_ids <- get_runs(solutions)$run_id
+
+  get_actions(
+    solutions,
+    run = run_ids[1]
+  )
 }
 
 }

@@ -48,8 +48,7 @@ NULL
 #'   \item comparing alternative solutions produced by a multi-objective method;
 #'   \item analysing trade-offs between objectives;
 #'   \item filtering feasible, unique, or non-dominated solutions;
-#'   \item computing distances to reference points such as utopia or nadir
-#'   points;
+#'   \item computing distances to observed ideal or nadir points;
 #'   \item preparing plots and tables for reporting.
 #' }
 #'
@@ -156,16 +155,26 @@ NULL
 #' The \code{print()} method provides a concise summary of the solution set.
 #' It reports:
 #' \itemize{
-#'   \item the optimization method name;
-#'   \item the participating objective aliases;
-#'   \item the number of design rows, runs, and stored solutions;
-#'   \item run-level status summaries;
-#'   \item runtime and gap ranges;
-#'   \item and the names of design and objective-value columns when available.
+#'   \item the optimization method and participating objective aliases;
+#'   \item the run-design type when this information is available;
+#'   \item the number of design rows, attempted runs, stored solutions, and
+#'   runs without a stored solution;
+#'   \item run-level status, runtime, and optimality-gap summaries;
+#'   \item the observed range of each objective across stored solutions;
+#'   \item and any filtering, uniqueness, or append metadata already recorded
+#'   in the object.
 #' }
 #'
+#' Printing does not calculate non-dominance, uniqueness, similarities,
+#' selection frequencies, or distances. These analyses are intentionally kept
+#' outside the print method so that printing remains fast and does not depend on
+#' optional packages.
+#'
 #' This printed output is intended as a quick overview. Detailed inspection
-#' should use accessor functions or the run-level tables stored in the object.
+#' should use public accessor and analysis functions such as
+#' \code{\link{get_runs}}, \code{\link{get_objectives}},
+#' \code{\link{solution_filter}}, and
+#' \code{\link{frontier_distances}}.
 #'
 #' @section Fields:
 #' \describe{
@@ -237,28 +246,6 @@ NULL
   aliases[!is.na(aliases) & nzchar(aliases)]
 }
 
-.pa_solutionset_preview_runs <- function(runs, max_show = 6L) {
-  if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L) {
-    return(NULL)
-  }
-
-  val_cols <- grep("^value_", names(runs), value = TRUE)
-
-  if (length(val_cols) == 0L) {
-    return(NULL)
-  }
-
-  rr <- runs[1, , drop = FALSE]
-
-  txt <- paste0(
-    sub("^value_", "", val_cols),
-    ": ",
-    vapply(rr[val_cols], .pa_num_text, character(1)),
-    collapse = ", "
-  )
-
-  txt
-}
 
 .pa_solutionset_status_summary <- function(runs) {
   if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L || !("status" %in% names(runs))) {
@@ -283,6 +270,83 @@ NULL
   paste0(round(min(x), digits), "..", round(max(x), digits))
 }
 
+
+.pa_solutionset_solution_counts <- function(runs, solutions = NULL) {
+  n_runs <- if (inherits(runs, "data.frame")) nrow(runs) else 0L
+
+  if (inherits(runs, "data.frame") && "solution_id" %in% names(runs)) {
+    has_solution <- !is.na(runs$solution_id) & nzchar(runs$solution_id)
+    return(list(stored = sum(has_solution), missing = sum(!has_solution)))
+  }
+
+  n_solutions <- if (is.list(solutions)) length(solutions) else 0L
+  list(stored = n_solutions, missing = max(0L, n_runs - n_solutions))
+}
+
+.pa_solutionset_objective_ranges <- function(runs, digits = 3) {
+  if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L) {
+    return(character(0))
+  }
+  value_cols <- grep("^value_", names(runs), value = TRUE)
+  if (length(value_cols) == 0L) return(character(0))
+
+  unname(vapply(value_cols, function(nm) {
+    values <- suppressWarnings(as.numeric(runs[[nm]]))
+    values <- values[is.finite(values) & !is.na(values)]
+    objective <- sub("^value_", "", nm)
+    if (length(values) == 0L) return(paste0(objective, ": none"))
+    paste0(objective, ": ", .pa_solutionset_range_text(values, digits = digits))
+  }, character(1)))
+}
+
+.pa_solutionset_run_design_summary <- function(method, design = NULL) {
+  if (is.null(method) || !is.list(method)) method <- list()
+
+  spec <- method$runs %||% method$run_design %||% method$design %||% NULL
+
+  if (inherits(spec, "RunGrid")) {
+    return(list(
+      type = "grid",
+      detail = paste0(
+        "n = ", spec$n %||% "?",
+        ", extremes = ", if (isTRUE(spec$include_extremes)) "yes" else "no"
+      )
+    ))
+  }
+
+  if (inherits(spec, "RunManual")) {
+    n <- if (!is.null(spec$values) && inherits(spec$values, "data.frame")) nrow(spec$values) else NA_integer_
+    return(list(type = "manual", detail = if (is.finite(n)) paste0(n, " requested runs") else NULL))
+  }
+
+  type <- as.character(method$run_design_type %||% method$runs_type %||% method$design_type %||% "")[1]
+  if (!is.na(type) && nzchar(type)) return(list(type = type, detail = NULL))
+
+  if (inherits(design, "data.frame") && nrow(design) > 0L) {
+    design_cols <- grep("^(weight_|eps_)", names(design), value = TRUE)
+    if (any(grepl("^weight_", design_cols))) return(list(type = "weighted grid/manual", detail = NULL))
+    if (any(grepl("^eps_", design_cols))) return(list(type = "epsilon grid/manual", detail = NULL))
+  }
+
+  list(type = "unspecified", detail = NULL)
+}
+
+.pa_solutionset_processing_summary <- function(meta) {
+  if (is.null(meta) || !is.list(meta)) return(character(0))
+  out <- character(0)
+  if (isTRUE(meta$filtered)) out <- c(out, "filtered: yes")
+  if (isTRUE(meta$nondominated_only) || isTRUE(meta$nondominated)) out <- c(out, "non-dominated only: yes")
+
+  unique_by <- meta$unique_by %||% meta$uniqueness$by %||% NULL
+  if (!is.null(unique_by) && length(unique_by) > 0L) out <- c(out, paste0("unique by: ", as.character(unique_by)[1]))
+
+  n_sources <- meta$n_sources %||% meta$appended_sources %||% NULL
+  if (!is.null(n_sources) && length(n_sources) == 1L && is.finite(as.numeric(n_sources))) {
+    out <- c(out, paste0("combined sources: ", as.integer(n_sources)))
+  }
+  out
+}
+
 .pa_solutionset_run_columns <- function(runs) {
   if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L) {
     return(list(design = character(0), values = character(0), core = character(0)))
@@ -301,55 +365,7 @@ NULL
   )
 }
 
-.pa_solutionset_preview_table <- function(runs, max_rows = 6L, digits = 3) {
-  if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L) {
-    return(NULL)
-  }
 
-  cols <- .pa_solutionset_run_columns(runs)
-  keep <- c(cols$core, cols$design, cols$values)
-  keep <- unique(keep[keep %in% names(runs)])
-
-  if (length(keep) == 0L) return(NULL)
-
-  out <- runs[seq_len(min(nrow(runs), max_rows)), keep, drop = FALSE]
-
-  for (nm in names(out)) {
-    if (is.numeric(out[[nm]])) {
-      out[[nm]] <- round(out[[nm]], digits)
-    }
-  }
-
-  out
-}
-
-.pa_solutionset_best_run <- function(runs, method = NULL) {
-  if (is.null(runs) || !inherits(runs, "data.frame") || nrow(runs) == 0L) {
-    return(NULL)
-  }
-
-  ok <- rep(TRUE, nrow(runs))
-  if ("status" %in% names(runs)) {
-    ok <- runs$status %in% c("optimal", "time_limit_feasible", "solution_limit")
-    ok[is.na(ok)] <- FALSE
-  }
-
-  rr <- runs[ok, , drop = FALSE]
-  if (nrow(rr) == 0L) return(NULL)
-
-  mname <- .pa_solutionset_method_label(method)
-
-  if (identical(mname, "weighted")) {
-    val_cols <- grep("^value_", names(rr), value = TRUE)
-    if (length(val_cols) > 0L) {
-      idx <- 1L
-      out <- rr[idx, , drop = FALSE]
-      return(out)
-    }
-  }
-
-  rr[1, , drop = FALSE]
-}
 
 #' @export
 SolutionSet <- pproto(
@@ -375,7 +391,10 @@ SolutionSet <- pproto(
 
     n_design <- if (inherits(design, "data.frame")) nrow(design) else 0L
     n_runs <- if (inherits(runs, "data.frame")) nrow(runs) else 0L
-    n_solutions <- length(sols)
+
+    counts <- .pa_solutionset_solution_counts(runs, sols)
+    n_solutions <- counts$stored
+    n_without_solution <- counts$missing
 
     alias_txt <- if (length(aliases) == 0L) {
       "none"
@@ -384,61 +403,75 @@ SolutionSet <- pproto(
     }
 
     status_txt <- .pa_solutionset_status_summary(runs)
-
-    runtime_txt <- if (!is.null(runs) && "runtime" %in% names(runs)) {
+    runtime_txt <- if (inherits(runs, "data.frame") && "runtime" %in% names(runs)) {
       .pa_solutionset_range_text(runs$runtime, digits = 3)
-    } else {
-      "none"
-    }
-
-    gap_txt <- if (!is.null(runs) && "gap" %in% names(runs)) {
+    } else "none"
+    gap_txt <- if (inherits(runs, "data.frame") && "gap" %in% names(runs)) {
       .pa_solutionset_range_text(runs$gap, digits = 4)
-    } else {
-      "none"
-    }
+    } else "none"
 
     run_cols <- .pa_solutionset_run_columns(runs)
     design_txt <- if (length(run_cols$design) == 0L) "none" else paste(run_cols$design, collapse = ", ")
-    value_txt  <- if (length(run_cols$values) == 0L) "none" else paste(run_cols$values, collapse = ", ")
+    value_txt <- if (length(run_cols$values) == 0L) "none" else paste(run_cols$values, collapse = ", ")
+
+    run_design <- .pa_solutionset_run_design_summary(self$method, design)
+    objective_ranges <- .pa_solutionset_objective_ranges(runs, digits = 3)
+    processing <- .pa_solutionset_processing_summary(self$meta)
 
     cli::cli_text("A multiscape solution set ({.cls SolutionSet})")
 
-    # ---- METHOD
     cli::cli_text("{ch$j}{ch$b}{.h method}", .envir = environment())
-    cli::cli_text(
-      "{ch$v}{ch$j}{ch$b}name:            {.code {method_name}}",
-      .envir = environment()
-    )
-    cli::cli_text(
-      "{ch$v}{ch$l}{ch$b}objectives:      {length(aliases)} ({alias_txt})",
-      .envir = environment()
-    )
+    cli::cli_text("{ch$v}{ch$j}{ch$b}name:              {.code {method_name}}", .envir = environment())
+    cli::cli_text("{ch$v}{ch$j}{ch$b}objectives:        {length(aliases)} ({alias_txt})", .envir = environment())
+    cli::cli_text("{ch$v}{ch$l}{ch$b}run design:        {run_design$type}", .envir = environment())
 
-    # ---- CONTENT
+    if (!is.null(run_design$detail) && nzchar(run_design$detail)) {
+      cli::cli_text("{ch$v} {ch$l}{ch$b}design detail:     {run_design$detail}", .envir = environment())
+    }
+
     cli::cli_text("{ch$l}{ch$b}{.h content}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}design rows:     {n_design}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}runs:            {n_runs}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$l}{ch$b}solutions:       {n_solutions}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}design rows:       {n_design}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}attempted runs:    {n_runs}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}stored solutions:  {n_solutions}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$l}{ch$b}without solution:  {n_without_solution}", .envir = environment())
 
-    # ---- RUN SUMMARY
     cli::cli_text("{ch$l}{ch$b}{.h run summary}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}statuses:        {status_txt}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}runtime:         {runtime_txt}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}gap:             {gap_txt}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$j}{ch$b}design cols:     {design_txt}", .envir = environment())
-    cli::cli_text(" {ch$v}{ch$l}{ch$b}value cols:      {value_txt}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}statuses:          {status_txt}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}runtime:           {runtime_txt}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}gap:               {gap_txt}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$j}{ch$b}design columns:    {design_txt}", .envir = environment())
+    cli::cli_text(" {ch$v}{ch$l}{ch$b}objective columns: {value_txt}", .envir = environment())
+
+    if (length(objective_ranges) > 0L) {
+      cli::cli_text("{ch$l}{ch$b}{.h objective ranges}", .envir = environment())
+      for (i in seq_along(objective_ranges)) {
+        branch <- if (i < length(objective_ranges)) ch$j else ch$l
+        cli::cli_text(" {ch$v}{branch}{ch$b}{objective_ranges[[i]]}", .envir = environment())
+      }
+    }
+
+    if (length(processing) > 0L) {
+      cli::cli_text("{ch$l}{ch$b}{.h processing}", .envir = environment())
+      for (i in seq_along(processing)) {
+        branch <- if (i < length(processing)) ch$j else ch$l
+        cli::cli_text(" {ch$v}{branch}{ch$b}{processing[[i]]}", .envir = environment())
+      }
+    }
 
     info_sym <- cli::symbol$info
     if (is.function(info_sym)) info_sym <- info_sym()
-    cli::cli_text(
-      cli::col_grey(
-        paste0(
-          "# ", info_sym,
-          " Use {.code x$solution$runs}, {.code x$solution$design}, ",
-          "and {.code x$solution$solutions[[i]]} to inspect details."
-        )
-      )
-    )
+
+    cli::cli_text(cli::col_grey(paste0(
+      "# ", info_sym,
+      " Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect results."
+    )))
+
+    if (length(aliases) > 1L && n_solutions > 1L) {
+      cli::cli_text(cli::col_grey(paste0(
+        "# ", info_sym,
+        " Use solution_filter(), frontier_extremes(), and frontier_distances() for multi-objective analysis."
+      )))
+    }
 
     cli::cli_end(div_id)
     invisible(TRUE)
@@ -449,8 +482,14 @@ SolutionSet <- pproto(
   repr = function(self) {
     method_name <- .pa_solutionset_method_label(self$method)
     runs <- self$solution$runs %||% NULL
+    sols <- self$solution$solutions %||% list()
     n_runs <- if (inherits(runs, "data.frame")) nrow(runs) else 0L
-    paste0("<SolutionSet> method=", method_name, ", runs=", n_runs)
+    counts <- .pa_solutionset_solution_counts(runs, sols)
+    paste0(
+      "<SolutionSet> method=", method_name,
+      ", runs=", n_runs,
+      ", solutions=", counts$stored
+    )
   },
 
   getMethod = function(self) self$method,
@@ -461,27 +500,27 @@ SolutionSet <- pproto(
 
 
 
-#' Wrap a single Solution into a one-run SolutionSet
+#' Wrap a single-run result into a SolutionSet
 #'
 #' @description
 #' Internal helper used by solve.Problem() so that solve() always returns a
 #' SolutionSet object, even for single-objective problems.
 #'
-#' The individual Solution object is preserved in
-#' x$solution$solutions, while the SolutionSet stores a one-row design
-#' table and a one-row runs table.
+#' The internal run-level result is stored in
+#' \code{x$solution$solutions}, while the \code{SolutionSet} receives a
+#' one-row design table and a one-row run table.
 #'
 #' @noRd
 .pa_as_single_solution_set <- function(sol,
                                        problem = NULL,
                                        name = "solset") {
   if (!inherits(sol, "Solution")) {
-    stop("`sol` must be a Solution object.", call. = FALSE)
+    stop("`sol` must be a valid internal single-run result.", call. = FALSE)
   }
 
   problem <- problem %||% sol$problem %||% NULL
 
-  # Assign stable run metadata to the contained Solution.
+  # Assign stable metadata to the contained run-level result.
   sol$meta <- sol$meta %||% list()
   sol$meta$run_id <- 1L
 

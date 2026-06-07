@@ -151,38 +151,126 @@ nadir point.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Distance to the observed ideal point
-frontier_distances(ss)
-
-# Distances to both observed ideal and nadir points
-frontier_distances(
-  ss,
-  reference = c("ideal", "nadir")
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
 )
 
-# Use only a subset of objectives
-frontier_distances(
-  ss,
-  objectives = c("cost", "frag")
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
 )
 
-# Use Chebyshev distance
-frontier_distances(
-  ss,
-  metric = "chebyshev"
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
 )
 
-# Calculate distances only over non-dominated solutions
-ss_nd <- solution_filter(ss, nondominated = TRUE)
-d <- frontier_distances(
-  ss_nd,
-  reference = c("ideal", "nadir")
+actions <- data.frame(
+  id = c("conservation", "restoration")
 )
 
-# Inspect the observed reference points and ranges
-attr(d, "ideal")
-attr(d, "nadir")
-attr(d, "ranges")
-} # }
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
+  ) |>
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 5,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+
+  # Normalized Euclidean distance to the observed ideal point
+  frontier_distances(solutions)
+
+  # Distances to both observed ideal and nadir points
+  distances <- frontier_distances(
+    solutions,
+    reference = c("ideal", "nadir")
+  )
+
+  # Use only selected objectives
+  frontier_distances(
+    solutions,
+    objectives = c("cost", "benefit")
+  )
+
+  # Use Manhattan distance
+  frontier_distances(
+    solutions,
+    metric = "manhattan"
+  )
+
+  # Use Chebyshev distance
+  frontier_distances(
+    solutions,
+    metric = "chebyshev"
+  )
+
+  # Inspect observed reference points and objective ranges
+  attr(distances, "ideal")
+  attr(distances, "nadir")
+  attr(distances, "ranges")
+
+  # Calculate distances only over non-dominated solutions
+  if (requireNamespace("moocore", quietly = TRUE)) {
+    nondominated_solutions <- solution_filter(
+      solutions,
+      feasible_only = TRUE,
+      nondominated = TRUE
+    )
+
+    frontier_distances(
+      nondominated_solutions,
+      reference = c("ideal", "nadir")
+    )
+  }
+}
+#>   run_id solution_id cost benefit norm_cost norm_benefit distance_to_ideal
+#> 1      1          s1    2     0.0    0.0000   1.00000000         1.0000000
+#> 2      2          s2    3     3.5    0.0625   0.53333333         0.5369830
+#> 3      4          s4   12     7.0    0.6250   0.06666667         0.6285455
+#> 4      5          s5   18     7.5    1.0000   0.00000000         1.0000000
+#>   rank_to_ideal distance_to_nadir rank_from_nadir
+#> 1             3          1.000000               3
+#> 2             1          1.047227               1
+#> 3             2          1.005851               2
+#> 4             3          1.000000               3
 ```

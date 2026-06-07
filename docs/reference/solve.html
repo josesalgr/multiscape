@@ -233,19 +233,23 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape solution set (<span style="color: #5F87AF; font-weight: bold;">&lt;SolutionSet&gt;</span>)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">method</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─name: <span style="color: #5F875F;">`single`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objectives: 1 (cost)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: 1 (cost)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─run design: unspecified</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">content</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design rows: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runs: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─solutions: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─attempted runs: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─stored solutions: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─without solution: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─statuses: optimal: 1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─gap: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design cols: none</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─value cols: value_cost</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$solution$runs`</span>, <span style="color: #5F875F;">`x$solution$design`</span>, and <span style="color: #5F875F;">`x$solution$solutions[[i]]`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> to inspect details.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design columns: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objective columns: value_cost</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">objective ranges</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─cost: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">results.</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># ------------------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Minimal action-based example</span></span></span>
@@ -285,19 +289,23 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape solution set (<span style="color: #5F87AF; font-weight: bold;">&lt;SolutionSet&gt;</span>)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">method</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─name: <span style="color: #5F875F;">`single`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objectives: 1 (cost)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: 1 (cost)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─run design: unspecified</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">content</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design rows: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runs: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─solutions: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─attempted runs: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─stored solutions: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─without solution: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─statuses: optimal: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0.01</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0.02</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─gap: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design cols: none</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─value cols: value_cost</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$solution$runs`</span>, <span style="color: #5F875F;">`x$solution$design`</span>, and <span style="color: #5F875F;">`x$solution$solutions[[i]]`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> to inspect details.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design columns: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objective columns: value_cost</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">objective ranges</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─cost: 2</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">results.</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># ------------------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Minimal multi-objective example</span></span></span>

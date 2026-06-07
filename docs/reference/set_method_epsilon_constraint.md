@@ -26,7 +26,7 @@ set_method_epsilon_constraint(
   include_extremes = NULL,
   lexicographic = TRUE,
   lexicographic_tol = 1e-08,
-  control = mo_control()
+  control = NULL
 )
 ```
 

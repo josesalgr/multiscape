@@ -52,8 +52,7 @@ Typical use cases include:
 
 - filtering feasible, unique, or non-dominated solutions;
 
-- computing distances to reference points such as utopia or nadir
-  points;
+- computing distances to observed ideal or nadir points;
 
 - preparing plots and tables for reporting.
 
@@ -185,21 +184,32 @@ The
 [`print()`](https://josesalgr.github.io/multiscape/reference/print.md)
 method provides a concise summary of the solution set. It reports:
 
-- the optimization method name;
+- the optimization method and participating objective aliases;
 
-- the participating objective aliases;
+- the run-design type when this information is available;
 
-- the number of design rows, runs, and stored solutions;
+- the number of design rows, attempted runs, stored solutions, and runs
+  without a stored solution;
 
-- run-level status summaries;
+- run-level status, runtime, and optimality-gap summaries;
 
-- runtime and gap ranges;
+- the observed range of each objective across stored solutions;
 
-- and the names of design and objective-value columns when available.
+- and any filtering, uniqueness, or append metadata already recorded in
+  the object.
+
+Printing does not calculate non-dominance, uniqueness, similarities,
+selection frequencies, or distances. These analyses are intentionally
+kept outside the print method so that printing remains fast and does not
+depend on optional packages.
 
 This printed output is intended as a quick overview. Detailed inspection
-should use accessor functions or the run-level tables stored in the
-object.
+should use public accessor and analysis functions such as
+[`get_runs`](https://josesalgr.github.io/multiscape/reference/get_runs.md),
+[`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
+[`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md),
+and
+[`frontier_distances`](https://josesalgr.github.io/multiscape/reference/frontier_distances.md).
 
 ## Fields
 

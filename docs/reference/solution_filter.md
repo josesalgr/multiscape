@@ -127,28 +127,120 @@ Non-dominated filtering requires the moocore package.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Keep only feasible or solved runs
-ss_feasible <- solution_filter(ss, feasible_only = TRUE)
-
-# Keep selected solution ids
-ss_subset <- solution_filter(ss, solution_id = c("s1", "s3"))
-
-# Keep selected run ids
-ss_runs <- solution_filter(ss, run_id = c(2, 4))
-
-# Keep only optimal runs
-ss_optimal <- solution_filter(ss, status = "optimal")
-
-# Keep only non-dominated solutions
-ss_nd <- solution_filter(ss, feasible_only = TRUE, nondominated = TRUE)
-
-# Keep non-dominated solutions using only selected objectives
-ss_nd_cf <- solution_filter(
-  ss,
-  feasible_only = TRUE,
-  nondominated = TRUE,
-  objectives = c("cost", "frag")
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
 )
-} # }
+
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
+
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
+  ) |>
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 5,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+  runs <- get_runs(solutions)
+
+  # Keep only runs with a usable solver status
+  feasible_solutions <- solution_filter(
+    solutions,
+    feasible_only = TRUE
+  )
+
+  # Keep selected runs
+  selected_runs <- solution_filter(
+    solutions,
+    run_id = runs$run_id[1:2]
+  )
+
+  # Keep one stored solution
+  solution_ids <- runs$solution_id[
+    !is.na(runs$solution_id)
+  ]
+
+  if (length(solution_ids) > 0L) {
+    selected_solution <- solution_filter(
+      solutions,
+      solution_id = solution_ids[1]
+    )
+  }
+
+  # Keep only optimal runs
+  if ("optimal" %in% tolower(runs$status)) {
+    optimal_solutions <- solution_filter(
+      solutions,
+      status = "optimal"
+    )
+  }
+
+  # Keep only non-dominated solutions
+  if (requireNamespace("moocore", quietly = TRUE)) {
+    nondominated_solutions <- solution_filter(
+      solutions,
+      feasible_only = TRUE,
+      nondominated = TRUE
+    )
+
+    # Evaluate dominance using selected objectives
+    nondominated_subset <- solution_filter(
+      solutions,
+      feasible_only = TRUE,
+      nondominated = TRUE,
+      objectives = c("cost", "benefit")
+    )
+  }
+}
 ```

@@ -88,14 +88,112 @@ rather than by `solution_append()`.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-ss_weighted <- solve(problem_weighted)
-ss_epsilon <- solve(problem_epsilon)
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
 
-ss_all <- solution_append(ss_weighted, ss_epsilon)
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
 
-get_runs(ss_all)
-get_objectives(ss_all)
-plot_tradeoff(ss_all)
-} # }
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
+
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+make_problem <- function() {
+  create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(
+      actions = actions,
+      cost = c(
+        conservation = 1,
+        restoration = 2
+      )
+    ) |>
+    add_effects(
+      effects = effects,
+      effect_type = "after"
+    ) |>
+    add_constraint_targets_relative(0.05) |>
+    add_objective_min_cost(alias = "cost") |>
+    add_objective_max_benefit(alias = "benefit")
+}
+
+weighted_problem <- make_problem() |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 4,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+epsilon_problem <- make_problem() |>
+  set_method_epsilon_constraint(
+    primary = "cost",
+    runs = run_grid(
+      n = 4,
+      include_extremes = TRUE
+    )
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  weighted_problem <- set_solver_cbc(
+    weighted_problem,
+    verbose = FALSE
+  )
+
+  epsilon_problem <- set_solver_cbc(
+    epsilon_problem,
+    verbose = FALSE
+  )
+
+  weighted_solutions <- solve(weighted_problem)
+  epsilon_solutions <- solve(epsilon_problem)
+
+  combined_solutions <- solution_append(
+    weighted_solutions,
+    epsilon_solutions
+  )
+
+  # Inspect the combined run history
+  get_runs(combined_solutions)
+
+  # Inspect objective values from both methods
+  get_objectives(
+    combined_solutions,
+    format = "wide"
+  )
+
+  # The original objects remain unchanged
+  get_runs(weighted_solutions)
+  get_runs(epsilon_solutions)
+}
+#>   run_id solution_id  status runtime gap message value_benefit value_cost
+#> 1      1          s1 optimal    0.00   0                   0.0          2
+#> 2      2          s2 optimal    0.01   0                   3.5          3
+#> 3      3          s3 optimal    0.00   0                   5.0          7
+#> 4      4          s4 optimal    0.00   0                   7.5         18
 ```

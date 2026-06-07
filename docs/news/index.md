@@ -20,9 +20,9 @@
 - Updated `SolutionSet` printing and documentation to reflect the
   distinction between run attempts and stored solutions.
 
-### Simple conservation-planning workflow
+### Base conservation-planning workflow
 
-- Added automatic support for simple conservation-planning problems when
+- Added automatic support for base conservation-planning problems when
   no explicit actions or effects are supplied.
 - Problems without explicit actions are now interpreted as binary
   conservation decisions, where each planning unit can be conserved or
@@ -31,12 +31,6 @@
   contributions based on the feature amounts stored in `dist_features`.
 - The implicit conservation model uses `amount_after` to represent the
   feature amount obtained when a planning unit is conserved.
-- Enabled target constraints and benefit objectives to work directly
-  with the implicit conservation model.
-- Added validation and clearer error messages for missing or zero
-  feature contributions.
-- Improved compatibility of implicit conservation problems with cost,
-  benefit, fragmentation, and multi-objective workflows.
 
 ### Multi-objective run design and controls
 
@@ -163,8 +157,6 @@
 - Added long-format and matrix-format similarity outputs.
 - Added internal helpers to construct consistent long-format and
   matrix-format selection representations.
-- Clarified the distinction between selection frequency and formal
-  irreplaceability.
 
 ### Documentation and website
 

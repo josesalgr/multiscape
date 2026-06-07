@@ -76,29 +76,121 @@
 #' @return A filtered \code{\link{solutionset-class}} object.
 #'
 #' @examples
-#' \dontrun{
-#' # Keep only feasible or solved runs
-#' ss_feasible <- solution_filter(ss, feasible_only = TRUE)
-#'
-#' # Keep selected solution ids
-#' ss_subset <- solution_filter(ss, solution_id = c("s1", "s3"))
-#'
-#' # Keep selected run ids
-#' ss_runs <- solution_filter(ss, run_id = c(2, 4))
-#'
-#' # Keep only optimal runs
-#' ss_optimal <- solution_filter(ss, status = "optimal")
-#'
-#' # Keep only non-dominated solutions
-#' ss_nd <- solution_filter(ss, feasible_only = TRUE, nondominated = TRUE)
-#'
-#' # Keep non-dominated solutions using only selected objectives
-#' ss_nd_cf <- solution_filter(
-#'   ss,
-#'   feasible_only = TRUE,
-#'   nondominated = TRUE,
-#'   objectives = c("cost", "frag")
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'   runs <- get_runs(solutions)
+#'
+#'   # Keep only runs with a usable solver status
+#'   feasible_solutions <- solution_filter(
+#'     solutions,
+#'     feasible_only = TRUE
+#'   )
+#'
+#'   # Keep selected runs
+#'   selected_runs <- solution_filter(
+#'     solutions,
+#'     run_id = runs$run_id[1:2]
+#'   )
+#'
+#'   # Keep one stored solution
+#'   solution_ids <- runs$solution_id[
+#'     !is.na(runs$solution_id)
+#'   ]
+#'
+#'   if (length(solution_ids) > 0L) {
+#'     selected_solution <- solution_filter(
+#'       solutions,
+#'       solution_id = solution_ids[1]
+#'     )
+#'   }
+#'
+#'   # Keep only optimal runs
+#'   if ("optimal" %in% tolower(runs$status)) {
+#'     optimal_solutions <- solution_filter(
+#'       solutions,
+#'       status = "optimal"
+#'     )
+#'   }
+#'
+#'   # Keep only non-dominated solutions
+#'   if (requireNamespace("moocore", quietly = TRUE)) {
+#'     nondominated_solutions <- solution_filter(
+#'       solutions,
+#'       feasible_only = TRUE,
+#'       nondominated = TRUE
+#'     )
+#'
+#'     # Evaluate dominance using selected objectives
+#'     nondominated_subset <- solution_filter(
+#'       solutions,
+#'       feasible_only = TRUE,
+#'       nondominated = TRUE,
+#'       objectives = c("cost", "benefit")
+#'     )
+#'   }
 #' }
 #'
 #' @seealso
@@ -536,15 +628,108 @@ solution_filter <- function(x,
 #'   stored solutions from both input objects.
 #'
 #' @examples
-#' \dontrun{
-#' ss_weighted <- solve(problem_weighted)
-#' ss_epsilon <- solve(problem_epsilon)
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
 #'
-#' ss_all <- solution_append(ss_weighted, ss_epsilon)
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
 #'
-#' get_runs(ss_all)
-#' get_objectives(ss_all)
-#' plot_tradeoff(ss_all)
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' make_problem <- function() {
+#'   create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_actions(
+#'       actions = actions,
+#'       cost = c(
+#'         conservation = 1,
+#'         restoration = 2
+#'       )
+#'     ) |>
+#'     add_effects(
+#'       effects = effects,
+#'       effect_type = "after"
+#'     ) |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     add_objective_max_benefit(alias = "benefit")
+#' }
+#'
+#' weighted_problem <- make_problem() |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 4,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' epsilon_problem <- make_problem() |>
+#'   set_method_epsilon_constraint(
+#'     primary = "cost",
+#'     runs = run_grid(
+#'       n = 4,
+#'       include_extremes = TRUE
+#'     )
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   weighted_problem <- set_solver_cbc(
+#'     weighted_problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   epsilon_problem <- set_solver_cbc(
+#'     epsilon_problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   weighted_solutions <- solve(weighted_problem)
+#'   epsilon_solutions <- solve(epsilon_problem)
+#'
+#'   combined_solutions <- solution_append(
+#'     weighted_solutions,
+#'     epsilon_solutions
+#'   )
+#'
+#'   # Inspect the combined run history
+#'   get_runs(combined_solutions)
+#'
+#'   # Inspect objective values from both methods
+#'   get_objectives(
+#'     combined_solutions,
+#'     format = "wide"
+#'   )
+#'
+#'   # The original objects remain unchanged
+#'   get_runs(weighted_solutions)
+#'   get_runs(epsilon_solutions)
 #' }
 #'
 #' @seealso
@@ -1200,39 +1385,114 @@ solution_append <- function(x, y) {
 #'   with any runs that did not produce a stored solution.
 #'
 #' @examples
-#' \dontrun{
-#' # Keep one representative for each distinct decision vector
-#' ss_unique <- solution_unique(ss)
-#'
-#' # Keep one representative for each distinct objective point
-#' ss_unique_obj <- solution_unique(
-#'   ss,
-#'   by = "objectives"
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
 #'
-#' # Compare only selected objectives
-#' ss_unique_cf <- solution_unique(
-#'   ss,
-#'   by = "objectives",
-#'   objectives = c("cost", "frag")
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
 #' )
 #'
-#' # Keep the last representative from each duplicate group
-#' ss_unique_last <- solution_unique(
-#'   ss,
-#'   by = "decisions",
-#'   keep = "last"
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
 #' )
 #'
-#' # Typical multi-objective cleaning workflow
-#' ss_clean <- ss |>
-#'   solution_filter(
-#'     feasible_only = TRUE,
-#'     nondominated = TRUE
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
 #'   ) |>
-#'   solution_unique(
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 7,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Keep one representative for each distinct decision vector
+#'   unique_decisions <- solution_unique(
+#'     solutions,
 #'     by = "decisions"
 #'   )
+#'
+#'   # Keep one representative for each distinct objective point
+#'   unique_objectives <- solution_unique(
+#'     solutions,
+#'     by = "objectives"
+#'   )
+#'
+#'   # Compare only selected objectives
+#'   unique_cost_benefit <- solution_unique(
+#'     solutions,
+#'     by = "objectives",
+#'     objectives = c("cost", "benefit")
+#'   )
+#'
+#'   # Keep the last representative of each duplicate group
+#'   unique_last <- solution_unique(
+#'     solutions,
+#'     by = "decisions",
+#'     keep = "last"
+#'   )
+#'
+#'   # Compare the number of stored solutions
+#'   sum(!is.na(get_runs(solutions)$solution_id))
+#'   sum(!is.na(get_runs(unique_decisions)$solution_id))
+#'   sum(!is.na(get_runs(unique_objectives)$solution_id))
+#'
+#'   # Typical cleaning workflow
+#'   if (requireNamespace("moocore", quietly = TRUE)) {
+#'     clean_solutions <- solutions |>
+#'       solution_filter(
+#'         feasible_only = TRUE,
+#'         nondominated = TRUE
+#'       ) |>
+#'       solution_unique(
+#'         by = "decisions"
+#'       )
+#'   }
 #' }
 #'
 #' @seealso
@@ -1259,9 +1519,9 @@ solution_unique <- function(
   by <- match.arg(by)
   keep <- match.arg(keep)
 
-  tolerance <- as.numeric(tolerance)[1]
-
   if (
+    !is.numeric(tolerance) ||
+    length(tolerance) != 1L ||
     is.na(tolerance) ||
     !is.finite(tolerance) ||
     tolerance < 0
@@ -1271,6 +1531,8 @@ solution_unique <- function(
       call. = FALSE
     )
   }
+
+  tolerance <- as.numeric(tolerance)
 
   runs <- x$solution$runs %||% NULL
 

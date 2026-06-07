@@ -138,5 +138,5 @@ if (requireNamespace("sf", quietly = TRUE) &&
 
   plot_spatial_pu(solset)
 }
-
+#> Error: x must be a SolutionSet object returned by solve().
 ```

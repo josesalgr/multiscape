@@ -59,18 +59,86 @@ If several solutions have the same extreme value for an objective, the
 behaviour is controlled by \code{ties}.
 }
 \examples{
-\dontrun{
-frontier_extremes(ss)
-
-frontier_extremes(
-  ss,
-  objectives = c("cost", "benefit")
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
 )
 
-frontier_extremes(
-  ss,
-  ties = "first"
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
 )
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
+
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
+  ) |>
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 5,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+
+  # Observed minimum and maximum for every objective
+  frontier_extremes(solutions)
+
+  # Inspect only selected objectives
+  frontier_extremes(
+    solutions,
+    objectives = c("cost", "benefit")
+  )
+
+  # Keep only the first solution when several solutions share an extreme
+  frontier_extremes(
+    solutions,
+    ties = "first"
+  )
 }
 
 }

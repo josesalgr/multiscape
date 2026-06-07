@@ -112,9 +112,9 @@ Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
 Define run designs and execution controls for multi-objective workflows.
 
 - [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
-  : Define an automatic run grid
+  : Define an automatic multi-objective run grid
 - [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
-  : Define a manual run design
+  : Define a manual multi-objective run design
 - [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
   : Control multi-objective method behavior
 

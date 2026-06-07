@@ -55,14 +55,11 @@
 <li>Updated <code>SolutionSet</code> printing and documentation to reflect the distinction between run attempts and stored solutions.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="simple-conservation-planning-workflow-1-1-0">Simple conservation-planning workflow<a class="anchor" aria-label="anchor" href="#simple-conservation-planning-workflow-1-1-0"></a></h3>
-<ul><li>Added automatic support for simple conservation-planning problems when no explicit actions or effects are supplied.</li>
+<h3 id="base-conservation-planning-workflow-1-1-0">Base conservation-planning workflow<a class="anchor" aria-label="anchor" href="#base-conservation-planning-workflow-1-1-0"></a></h3>
+<ul><li>Added automatic support for base conservation-planning problems when no explicit actions or effects are supplied.</li>
 <li>Problems without explicit actions are now interpreted as binary conservation decisions, where each planning unit can be conserved or not conserved.</li>
 <li>Added an implicit conservation action and internally generated feature contributions based on the feature amounts stored in <code>dist_features</code>.</li>
 <li>The implicit conservation model uses <code>amount_after</code> to represent the feature amount obtained when a planning unit is conserved.</li>
-<li>Enabled target constraints and benefit objectives to work directly with the implicit conservation model.</li>
-<li>Added validation and clearer error messages for missing or zero feature contributions.</li>
-<li>Improved compatibility of implicit conservation problems with cost, benefit, fragmentation, and multi-objective workflows.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="multi-objective-run-design-and-controls-1-1-0">Multi-objective run design and controls<a class="anchor" aria-label="anchor" href="#multi-objective-run-design-and-controls-1-1-0"></a></h3>
@@ -128,7 +125,6 @@
 <li>Added Hamming similarity for comparing complete binary assignment vectors, including shared non-selections.</li>
 <li>Added long-format and matrix-format similarity outputs.</li>
 <li>Added internal helpers to construct consistent long-format and matrix-format selection representations.</li>
-<li>Clarified the distinction between selection frequency and formal irreplaceability.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-and-website-1-1-0">Documentation and website<a class="anchor" aria-label="anchor" href="#documentation-and-website-1-1-0"></a></h3>

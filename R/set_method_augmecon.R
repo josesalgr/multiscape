@@ -1,3 +1,5 @@
+#' @include internalMO.R
+#'
 #' @title Set the AUGMECON multi-objective method
 #'
 #' @description
@@ -415,7 +417,7 @@ set_method_augmecon <- function(x,
                                 lexicographic = TRUE,
                                 lexicographic_tol = 1e-9,
                                 augmentation = 1e-3,
-                                control = mo_control()) {
+                                control = NULL) {
   stopifnot(inherits(x, "Problem"))
 
   if (exists(".pa_clone_data", mode = "function")) {
@@ -551,7 +553,7 @@ set_method_augmecon <- function(x,
   }
 
   # ---- control
-  .pamo_check_mo_control(control)
+  control <- .pamo_check_mo_control(control)
 
   x$data$method <- list(
     name = "augmecon",

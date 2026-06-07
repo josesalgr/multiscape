@@ -52,23 +52,98 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Frequency across all stored solutions
-#' freq <- selection_frequency(ss)
-#'
-#' # Frequency across non-dominated and structurally unique solutions
-#' ss_clean <- ss |>
-#'   solution_filter(nondominated = TRUE) |>
-#'   solution_unique(by = "decisions")
-#'
-#' freq_clean <- selection_frequency(ss_clean)
-#'
-#' # Planning-unit frequency for receiving any action
-#' pu_frequency <- aggregate(
-#'   frequency ~ pu,
-#'   data = freq_clean,
-#'   FUN = sum
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Frequency across all stored solutions
+#'   frequency <- selection_frequency(solutions)
+#'   frequency
+#'
+#'   # Restrict the analysis to non-dominated solutions
+#'   if (requireNamespace("moocore", quietly = TRUE)) {
+#'     nondominated_solutions <- solution_filter(
+#'       solutions,
+#'       feasible_only = TRUE,
+#'       nondominated = TRUE
+#'     )
+#'
+#'     selection_frequency(nondominated_solutions)
+#'   }
+#'
+#'   # Give each distinct decision configuration the same weight
+#'   unique_solutions <- solution_unique(
+#'     solutions,
+#'     by = "decisions"
+#'   )
+#'
+#'   unique_frequency <- selection_frequency(
+#'     unique_solutions
+#'   )
+#'
+#'   unique_frequency
 #' }
 #'
 #' @seealso
@@ -231,28 +306,105 @@ selection_frequency <- function(x) {
 #' The selected metric is stored in the \code{"metric"} attribute.
 #'
 #' @examples
-#' \dontrun{
-#' # Pairwise Jaccard similarity in long format
-#' sim <- selection_similarity(ss)
-#'
-#' # Similarity matrix
-#' sim_matrix <- selection_similarity(
-#'   ss,
-#'   format = "matrix"
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
 #'
-#' # Hamming similarity
-#' sim_hamming <- selection_similarity(
-#'   ss,
-#'   metric = "hamming"
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
 #' )
 #'
-#' # Compare only non-dominated and structurally unique solutions
-#' ss_clean <- ss |>
-#'   solution_filter(nondominated = TRUE) |>
-#'   solution_unique(by = "decisions")
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
 #'
-#' sim_clean <- selection_similarity(ss_clean)
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Pairwise Jaccard similarity in long format
+#'   jaccard_long <- selection_similarity(
+#'     solutions
+#'   )
+#'
+#'   jaccard_long
+#'
+#'   # Symmetric Jaccard similarity matrix
+#'   jaccard_matrix <- selection_similarity(
+#'     solutions,
+#'     format = "matrix"
+#'   )
+#'
+#'   jaccard_matrix
+#'
+#'   # Hamming similarity includes shared non-selections
+#'   hamming_long <- selection_similarity(
+#'     solutions,
+#'     metric = "hamming"
+#'   )
+#'
+#'   hamming_long
+#'
+#'   # Compare only structurally unique solutions
+#'   unique_solutions <- solution_unique(
+#'     solutions,
+#'     by = "decisions"
+#'   )
+#'
+#'   selection_similarity(
+#'     unique_solutions,
+#'     format = "matrix"
+#'   )
 #' }
 #'
 #' @seealso

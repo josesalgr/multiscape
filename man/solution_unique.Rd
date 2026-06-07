@@ -87,39 +87,114 @@ where \eqn{\epsilon} is specified by \code{tolerance}. This avoids treating
 insignificant floating-point differences as distinct objective points.
 }
 \examples{
-\dontrun{
-# Keep one representative for each distinct decision vector
-ss_unique <- solution_unique(ss)
-
-# Keep one representative for each distinct objective point
-ss_unique_obj <- solution_unique(
-  ss,
-  by = "objectives"
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
 )
 
-# Compare only selected objectives
-ss_unique_cf <- solution_unique(
-  ss,
-  by = "objectives",
-  objectives = c("cost", "frag")
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
 )
 
-# Keep the last representative from each duplicate group
-ss_unique_last <- solution_unique(
-  ss,
-  by = "decisions",
-  keep = "last"
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
 )
 
-# Typical multi-objective cleaning workflow
-ss_clean <- ss |>
-  solution_filter(
-    feasible_only = TRUE,
-    nondominated = TRUE
+actions <- data.frame(
+  id = c("conservation", "restoration")
+)
+
+effects <- data.frame(
+  action = rep(actions$id, each = 2),
+  feature = rep(features$id, times = 2),
+  multiplier = c(
+    1.0, 1.0,
+    1.5, 1.5
+  )
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    actions = actions,
+    cost = c(
+      conservation = 1,
+      restoration = 2
+    )
   ) |>
-  solution_unique(
+  add_effects(
+    effects = effects,
+    effect_type = "after"
+  ) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = run_grid(
+      n = 7,
+      include_extremes = TRUE
+    ),
+    normalize_weights = TRUE
+  )
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+
+  # Keep one representative for each distinct decision vector
+  unique_decisions <- solution_unique(
+    solutions,
     by = "decisions"
   )
+
+  # Keep one representative for each distinct objective point
+  unique_objectives <- solution_unique(
+    solutions,
+    by = "objectives"
+  )
+
+  # Compare only selected objectives
+  unique_cost_benefit <- solution_unique(
+    solutions,
+    by = "objectives",
+    objectives = c("cost", "benefit")
+  )
+
+  # Keep the last representative of each duplicate group
+  unique_last <- solution_unique(
+    solutions,
+    by = "decisions",
+    keep = "last"
+  )
+
+  # Compare the number of stored solutions
+  sum(!is.na(get_runs(solutions)$solution_id))
+  sum(!is.na(get_runs(unique_decisions)$solution_id))
+  sum(!is.na(get_runs(unique_objectives)$solution_id))
+
+  # Typical cleaning workflow
+  if (requireNamespace("moocore", quietly = TRUE)) {
+    clean_solutions <- solutions |>
+      solution_filter(
+        feasible_only = TRUE,
+        nondominated = TRUE
+      ) |>
+      solution_unique(
+        by = "decisions"
+      )
+  }
 }
 
 }

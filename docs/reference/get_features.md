@@ -109,46 +109,57 @@ which focuses on target achievement.
 ## Examples
 
 ``` r
-# \donttest{
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
+
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost")
+
 if (requireNamespace("rcbc", quietly = TRUE)) {
-  pu_tbl <- data.frame(
-    id = 1:4,
-    cost = c(1, 2, 3, 4)
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
   )
 
-  feat_tbl <- data.frame(
-    id = 1:2,
-    name = c("feature_1", "feature_2")
+  solutions <- solve(problem)
+
+  # Feature outcomes for all stored runs
+  get_features(solutions)
+
+  # Feature outcomes for one run
+  run_ids <- get_runs(solutions)$run_id
+
+  get_features(
+    solutions,
+    run = run_ids[1]
   )
-
-  dist_feat_tbl <- data.frame(
-    pu = c(1, 1, 2, 3, 4),
-    feature = c(1, 2, 2, 1, 2),
-    amount = c(5, 2, 3, 4, 1)
-  )
-
-  p <- create_problem(
-    pu = pu_tbl,
-    features = feat_tbl,
-    dist_features = dist_feat_tbl,
-    cost = "cost"
-  ) |>
-    add_constraint_targets_relative(0.2) |>
-    add_objective_min_cost() |>
-    set_solver_cbc(time_limit = 10)
-
-  solset <- solve(p)
-
-  get_features(solset)
 }
-#>   feature feature_name baseline_total selected_baseline selected_amount_after
-#> 1       1    feature_1              9                 5                     5
-#> 2       2    feature_2              6                 2                     2
-#>   selected_benefit selected_loss selected_net selected_fraction_of_baseline
-#> 1                0             0            0                     0.5555556
-#> 2                0             0            0                     0.3333333
-#>   solution_id
-#> 1          s1
-#> 2          s1
-# }
+#>   run_id feature feature_name baseline_total selected_baseline
+#> 1      1       1          sp1              9                 5
+#> 2      1       2          sp2              6                 2
+#>   selected_amount_after selected_benefit selected_loss selected_net
+#> 1                     5                0             0            0
+#> 2                     2                0             0            0
+#>   selected_fraction_of_baseline solution_id
+#> 1                     0.5555556          s1
+#> 2                     0.3333333          s1
 ```

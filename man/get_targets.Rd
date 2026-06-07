@@ -77,38 +77,49 @@ present, it typically represents:
 }
 }
 \examples{
-\donttest{
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
+
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost")
+
 if (requireNamespace("rcbc", quietly = TRUE)) {
-  pu_tbl <- data.frame(
-    id = 1:4,
-    cost = c(1, 2, 3, 4)
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
   )
 
-  feat_tbl <- data.frame(
-    id = 1:2,
-    name = c("feature_1", "feature_2")
+  solutions <- solve(problem)
+
+  # Target requirements and achieved amounts
+  get_targets(solutions)
+
+  # Target achievement for one run
+  run_ids <- get_runs(solutions)$run_id
+
+  get_targets(
+    solutions,
+    run = run_ids[1]
   )
-
-  dist_feat_tbl <- data.frame(
-    pu = c(1, 1, 2, 3, 4),
-    feature = c(1, 2, 2, 1, 2),
-    amount = c(5, 2, 3, 4, 1)
-  )
-
-  p <- create_problem(
-    pu = pu_tbl,
-    features = feat_tbl,
-    dist_features = dist_feat_tbl,
-    cost = "cost"
-  ) |>
-    add_constraint_targets_relative(0.2) |>
-    add_objective_min_cost() |>
-    set_solver_cbc(time_limit = 10)
-
-  solset <- solve(p)
-
-  get_targets(solset)
-}
 }
 
 }

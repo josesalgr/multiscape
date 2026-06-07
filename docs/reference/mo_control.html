@@ -5,7 +5,17 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Control multi-objective method behavior — mo_control"><meta name="description" content="Create a control object for multi-objective methods."><meta property="og:description" content="Create a control object for multi-objective methods."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Control multi-objective method behavior — mo_control"><meta name="description" content="Create a control object that determines how multi-objective workflows respond
+to infeasible runs, missing solution vectors, unexpected errors, and
+AUGMECON slack-variable bounds.
+The resulting object is supplied to the control argument of
+set_method_epsilon_constraint or
+set_method_augmecon."><meta property="og:description" content="Create a control object that determines how multi-objective workflows respond
+to infeasible runs, missing solution vectors, unexpected errors, and
+AUGMECON slack-variable bounds.
+The resulting object is supplied to the control argument of
+set_method_epsilon_constraint or
+set_method_augmecon."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -45,7 +55,12 @@
     </div>
 
     <div class="ref-description section level2">
-    <p>Create a control object for multi-objective methods.</p>
+    <p>Create a control object that determines how multi-objective workflows respond
+to infeasible runs, missing solution vectors, unexpected errors, and
+AUGMECON slack-variable bounds.</p>
+<p>The resulting object is supplied to the <code>control</code> argument of
+<code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code> or
+<code><a href="set_method_augmecon.html">set_method_augmecon</a></code>.</p>
     </div>
 
     <div class="section level2">
@@ -63,30 +78,234 @@
 
 
 <dl><dt id="arg-stop-on-infeasible">stop_on_infeasible<a class="anchor" aria-label="anchor" href="#arg-stop-on-infeasible"></a></dt>
-<dd><p>Logical. If TRUE, stop when a run is infeasible.
-If FALSE, keep the run in the SolutionSet with missing objective values.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, stop the complete
+multi-objective workflow when a run is reported as infeasible. If
+<code>FALSE</code>, retain the attempted run in the run table and continue with
+the remaining runs. Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-stop-on-no-solution">stop_on_no_solution<a class="anchor" aria-label="anchor" href="#arg-stop-on-no-solution"></a></dt>
-<dd><p>Logical. If TRUE, stop when the solver does not
-return a solution vector. If FALSE, keep the run in the SolutionSet with
-missing objective values.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, stop when a run does not
+return a usable solution vector. If <code>FALSE</code>, retain the attempted run
+without a stored <code>solution_id</code> and continue. Defaults to
+<code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-stop-on-error">stop_on_error<a class="anchor" aria-label="anchor" href="#arg-stop-on-error"></a></dt>
-<dd><p>Logical. If TRUE, stop on unexpected solver errors.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, stop on unexpected errors
+raised during model preparation, solving, or result processing. If
+<code>FALSE</code>, attempt to record the failed run and continue. Defaults to
+<code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-slack-upper-bound">slack_upper_bound<a class="anchor" aria-label="anchor" href="#arg-slack-upper-bound"></a></dt>
-<dd><p>Positive numeric value used as upper bound for
-AUGMECON slack variables.</p></dd>
+<dd><p>A single positive finite numeric value defining the
+upper bound of AUGMECON slack variables. This setting is ignored by other
+multi-objective methods. Defaults to <code>1e6</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>MOControl</code>.</p>
+    <p>An object of class <code>MOControl</code> containing the validated
+execution-control settings. The object is intended to be supplied to the
+<code>control</code> argument of a supported multi-objective method.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Multi-objective methods commonly solve a sequence of related optimization
+models. Some parameter combinations, particularly restrictive epsilon
+levels, may be infeasible or may fail to produce a usable solution.</p>
+<p><code>mo_control()</code> determines whether such events stop the entire
+multi-objective workflow or are recorded in the resulting
+<code><a href="solutionset-class.html">solutionset-class</a></code> object.</p>
+<p>A <code>SolutionSet</code> distinguishes between:</p>
+<ul><li><p>a <code>run_id</code>, which identifies every attempted optimization run;</p></li>
+<li><p>a <code>solution_id</code>, which is assigned only when a run produces a
+stored solution.</p></li>
+</ul><p>When a run is retained after an infeasibility or missing-solution event, its
+run-level metadata remains available through <code><a href="get_runs.html">get_runs</a></code>, but its
+<code>solution_id</code> and objective values will generally be missing.</p>
+<p><strong>Infeasible runs</strong></p>
+<p>If <code>stop_on_infeasible = FALSE</code>, an infeasible run is recorded and the
+workflow continues with the remaining run design. This is generally useful
+when exploring automatically generated epsilon grids because restrictive
+combinations of epsilon levels may be infeasible.</p>
+<p>If <code>stop_on_infeasible = TRUE</code>, the workflow stops when the first
+infeasible run is encountered.</p>
+<p><strong>Runs without a solution vector</strong></p>
+<p>A solver may terminate without returning a usable decision vector even when
+the outcome is not classified explicitly as infeasible.</p>
+<p>If <code>stop_on_no_solution = FALSE</code>, the attempted run is recorded without
+a stored solution and the remaining runs are attempted. If
+<code>stop_on_no_solution = TRUE</code>, the workflow stops immediately.</p>
+<p><strong>Unexpected errors</strong></p>
+<p>If <code>stop_on_error = TRUE</code>, unexpected errors raised while preparing,
+solving, or processing a run are propagated and stop the workflow. This is
+the recommended default because such errors may indicate an invalid model,
+unsupported solver behaviour, or an internal implementation problem.</p>
+<p>If <code>stop_on_error = FALSE</code>, the workflow attempts to record the failed
+run and continue. This option should be used cautiously because it may conceal
+modelling or implementation errors.</p>
+<p><strong>AUGMECON slack upper bound</strong></p>
+<p><code>slack_upper_bound</code> defines an explicit upper bound for slack variables
+introduced by the AUGMECON formulation. It is used only by
+<code><a href="set_method_augmecon.html">set_method_augmecon</a></code> and has no effect on weighted-sum or
+standard epsilon-constraint workflows.</p>
+<p>The value should be sufficiently large to avoid excluding valid solutions,
+but unnecessarily large bounds can weaken the mixed-integer formulation and
+reduce numerical performance. When possible, a problem-specific bound based
+on the ranges of the constrained objectives should be used.</p>
+<p>The default settings favour completing the requested run design while still
+stopping on unexpected errors:</p>
+<div class="sourceCode"><pre><code><span></span>
+<span><span class="va">stop_on_infeasible</span> <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">stop_on_no_solution</span> <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">stop_on_error</span> <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="va">slack_upper_bound</span> <span class="op">=</span> <span class="fl">1e6</span></span></code></pre></div>
+
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code>,
+<code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
+<code><a href="run_grid.html">run_grid</a></code>,
+<code><a href="run_manual.html">run_manual</a></code>,
+<code><a href="get_runs.html">get_runs</a></code>,
+<code><a href="solutionset-class.html">solutionset-class</a></code></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Default behaviour: continue after infeasible runs or runs without a</span></span></span>
+<span class="r-in"><span><span class="co"># solution, but stop on unexpected errors</span></span></span>
+<span class="r-in"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mo_control</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">control</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Stop as soon as an infeasible run or missing solution is encountered</span></span></span>
+<span class="r-in"><span><span class="va">strict_control</span> <span class="op">&lt;-</span> <span class="fu">mo_control</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  stop_on_infeasible <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  stop_on_no_solution <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">strict_control</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_no_solution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define a problem with explicit conservation and restoration actions</span></span></span>
+<span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
+<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span></span>
+<span class="r-in"><span>    <span class="fl">1.5</span>, <span class="fl">1.5</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
+<span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      conservation <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>      restoration <span class="op">=</span> <span class="fl">2</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    effects <span class="op">=</span> <span class="va">effects</span>,</span></span>
+<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    primary <span class="op">=</span> <span class="st">"cost"</span>,</span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span>      include_extremes <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span>,</span></span>
+<span class="r-in"><span>    control <span class="op">=</span> <span class="fu">mo_control</span><span class="op">(</span></span></span>
+<span class="r-in"><span>      stop_on_infeasible <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>      stop_on_no_solution <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>      stop_on_error <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rcbc"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="set_solver_cbc.html">set_solver_cbc</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">problem</span>,</span></span>
+<span class="r-in"><span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># All attempted runs, including runs without stored solutions</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Only runs with a usable solver status</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
+<span class="r-in"><span>    feasible_only <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id solution_id  status runtime gap message value_benefit value_cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1          s1 optimal    0.00   0                   0.0          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2          s2 optimal    0.00   0                   3.5          3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3          s3 optimal    0.02   0                   5.0          7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4          s4 optimal    0.00   0                   7.0         12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      5          s5 optimal    0.01   0                   7.5         18</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

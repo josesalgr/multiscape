@@ -51,18 +51,86 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' frontier_extremes(ss)
-#'
-#' frontier_extremes(
-#'   ss,
-#'   objectives = c("cost", "benefit")
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
 #'
-#' frontier_extremes(
-#'   ss,
-#'   ties = "first"
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
 #' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
+#' )
+#'
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Observed minimum and maximum for every objective
+#'   frontier_extremes(solutions)
+#'
+#'   # Inspect only selected objectives
+#'   frontier_extremes(
+#'     solutions,
+#'     objectives = c("cost", "benefit")
+#'   )
+#'
+#'   # Keep only the first solution when several solutions share an extreme
+#'   frontier_extremes(
+#'     solutions,
+#'     ties = "first"
+#'   )
 #' }
 #'
 #' @seealso
@@ -353,39 +421,117 @@ frontier_extremes <- function(x,
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Distance to the observed ideal point
-#' frontier_distances(ss)
-#'
-#' # Distances to both observed ideal and nadir points
-#' frontier_distances(
-#'   ss,
-#'   reference = c("ideal", "nadir")
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
 #' )
 #'
-#' # Use only a subset of objectives
-#' frontier_distances(
-#'   ss,
-#'   objectives = c("cost", "frag")
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
 #' )
 #'
-#' # Use Chebyshev distance
-#' frontier_distances(
-#'   ss,
-#'   metric = "chebyshev"
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
 #' )
 #'
-#' # Calculate distances only over non-dominated solutions
-#' ss_nd <- solution_filter(ss, nondominated = TRUE)
-#' d <- frontier_distances(
-#'   ss_nd,
-#'   reference = c("ideal", "nadir")
+#' actions <- data.frame(
+#'   id = c("conservation", "restoration")
 #' )
 #'
-#' # Inspect the observed reference points and ranges
-#' attr(d, "ideal")
-#' attr(d, "nadir")
-#' attr(d, "ranges")
+#' effects <- data.frame(
+#'   action = rep(actions$id, each = 2),
+#'   feature = rep(features$id, times = 2),
+#'   multiplier = c(
+#'     1.0, 1.0,
+#'     1.5, 1.5
+#'   )
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     actions = actions,
+#'     cost = c(
+#'       conservation = 1,
+#'       restoration = 2
+#'     )
+#'   ) |>
+#'   add_effects(
+#'     effects = effects,
+#'     effect_type = "after"
+#'   ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost") |>
+#'   add_objective_max_benefit(alias = "benefit") |>
+#'   set_method_weighted_sum(
+#'     aliases = c("cost", "benefit"),
+#'     runs = run_grid(
+#'       n = 5,
+#'       include_extremes = TRUE
+#'     ),
+#'     normalize_weights = TRUE
+#'   )
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   # Normalized Euclidean distance to the observed ideal point
+#'   frontier_distances(solutions)
+#'
+#'   # Distances to both observed ideal and nadir points
+#'   distances <- frontier_distances(
+#'     solutions,
+#'     reference = c("ideal", "nadir")
+#'   )
+#'
+#'   # Use only selected objectives
+#'   frontier_distances(
+#'     solutions,
+#'     objectives = c("cost", "benefit")
+#'   )
+#'
+#'   # Use Manhattan distance
+#'   frontier_distances(
+#'     solutions,
+#'     metric = "manhattan"
+#'   )
+#'
+#'   # Use Chebyshev distance
+#'   frontier_distances(
+#'     solutions,
+#'     metric = "chebyshev"
+#'   )
+#'
+#'   # Inspect observed reference points and objective ranges
+#'   attr(distances, "ideal")
+#'   attr(distances, "nadir")
+#'   attr(distances, "ranges")
+#'
+#'   # Calculate distances only over non-dominated solutions
+#'   if (requireNamespace("moocore", quietly = TRUE)) {
+#'     nondominated_solutions <- solution_filter(
+#'       solutions,
+#'       feasible_only = TRUE,
+#'       nondominated = TRUE
+#'     )
+#'
+#'     frontier_distances(
+#'       nondominated_solutions,
+#'       reference = c("ideal", "nadir")
+#'     )
+#'   }
 #' }
 #'
 #' @seealso

@@ -1,3 +1,5 @@
+#' @include internalMO.R
+#'
 #' @title Set the epsilon-constraint multi-objective method
 #'
 #' @description
@@ -359,7 +361,7 @@ set_method_epsilon_constraint <- function(x,
                                           include_extremes = NULL,
                                           lexicographic = TRUE,
                                           lexicographic_tol = 1e-8,
-                                          control = mo_control()) {
+                                          control = NULL) {
   stopifnot(inherits(x, "Problem"))
 
   if (exists(".pa_clone_data", mode = "function")) {
@@ -504,7 +506,7 @@ set_method_epsilon_constraint <- function(x,
   }
 
   # ---- control
-  .pamo_check_mo_control(control)
+  control <- .pamo_check_mo_control(control)
 
   x$data$method <- list(
     name = "epsilon_constraint",

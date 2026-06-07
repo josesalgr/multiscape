@@ -47,8 +47,7 @@ A \code{SolutionSet} is used to inspect and analyse the results returned by
 \item comparing alternative solutions produced by a multi-objective method;
 \item analysing trade-offs between objectives;
 \item filtering feasible, unique, or non-dominated solutions;
-\item computing distances to reference points such as utopia or nadir
-points;
+\item computing distances to observed ideal or nadir points;
 \item preparing plots and tables for reporting.
 }
 
@@ -155,16 +154,26 @@ Depending on the workflow, it may summarize:
 The \code{print()} method provides a concise summary of the solution set.
 It reports:
 \itemize{
-\item the optimization method name;
-\item the participating objective aliases;
-\item the number of design rows, runs, and stored solutions;
-\item run-level status summaries;
-\item runtime and gap ranges;
-\item and the names of design and objective-value columns when available.
+\item the optimization method and participating objective aliases;
+\item the run-design type when this information is available;
+\item the number of design rows, attempted runs, stored solutions, and
+runs without a stored solution;
+\item run-level status, runtime, and optimality-gap summaries;
+\item the observed range of each objective across stored solutions;
+\item and any filtering, uniqueness, or append metadata already recorded
+in the object.
 }
 
+Printing does not calculate non-dominance, uniqueness, similarities,
+selection frequencies, or distances. These analyses are intentionally kept
+outside the print method so that printing remains fast and does not depend on
+optional packages.
+
 This printed output is intended as a quick overview. Detailed inspection
-should use accessor functions or the run-level tables stored in the object.
+should use public accessor and analysis functions such as
+\code{\link{get_runs}}, \code{\link{get_objectives}},
+\code{\link{solution_filter}}, and
+\code{\link{frontier_distances}}.
 }
 \section{Fields}{
 

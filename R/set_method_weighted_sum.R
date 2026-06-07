@@ -1,3 +1,5 @@
+#' @include internalMO.R
+#'
 #' @title Set the weighted-sum multi-objective method
 #'
 #' @description
@@ -304,7 +306,7 @@ set_method_weighted_sum <- function(x,
                                     weights = NULL,
                                     normalize_weights = TRUE,
                                     objective_scaling = FALSE,
-                                    control = mo_control()) {
+                                    control = NULL) {
   stopifnot(inherits(x, "Problem"))
 
   if (exists(".pa_clone_data", mode = "function")) {
@@ -388,7 +390,7 @@ set_method_weighted_sum <- function(x,
   }
 
   # ---- control
-  .pamo_check_mo_control(control)
+  control <- .pamo_check_mo_control(control)
 
   x$data$method <- list(
     name = "weighted",
