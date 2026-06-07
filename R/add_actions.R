@@ -434,12 +434,16 @@ add_actions <- function(
     msg = "x must be created with create_problem()"
   )
 
+  x <- .pa_clone_data(x)
+
   if (is.null(x$data$pu$internal_id)) {
     x$data$pu$internal_id <- seq_len(nrow(x$data$pu))
   }
 
-  x <- .pa_clone_data(x)
-  x$data$pu$id <- .as_int_id(x$data$pu$id, "x$data$pu$id")
+  x$data$pu$id <- .as_int_id(
+    x$data$pu$id,
+    "x$data$pu$id"
+  )
 
   pu_ids <- x$data$pu$id
   pu_index <- stats::setNames(x$data$pu$internal_id, as.character(x$data$pu$id))
@@ -452,10 +456,31 @@ add_actions <- function(
     names(actions)[names(actions) == "action"] <- "id"
   }
 
-  assertthat::assert_that(assertthat::has_name(actions, "id"), assertthat::noNA(actions$id))
+  assertthat::assert_that(
+    assertthat::has_name(actions, "id"),
+    assertthat::noNA(actions$id)
+  )
+
   actions$id <- as.character(actions$id)
-  if (anyDuplicated(actions$id) != 0) {
-    stop("actions$id must be unique.", call. = FALSE)
+
+  if (any(!nzchar(actions$id))) {
+    stop(
+      "actions$id cannot contain empty strings.",
+      call. = FALSE
+    )
+  }
+
+  if (anyDuplicated(actions$id) != 0L) {
+    duplicates <- unique(
+      actions$id[duplicated(actions$id)]
+    )
+
+    stop(
+      "actions$id must be unique. Duplicated id(s): ",
+      paste(duplicates, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
   }
 
   if (!("name" %in% names(actions))) {
@@ -530,19 +555,110 @@ add_actions <- function(
 
   if (is.null(cost)) {
 
-    # keep default
+    # Keep the default cost of one for every feasible pair.
 
-  } else if (is.numeric(cost) && length(cost) == 1) {
+  } else if (
+    is.numeric(cost) &&
+    !is.null(names(cost))
+  ) {
+
+    cost_names <- names(cost)
+
+    if (
+      anyNA(cost_names) ||
+      any(!nzchar(cost_names))
+    ) {
+      stop(
+        "Named `cost` vectors must have non-empty action ids.",
+        call. = FALSE
+      )
+    }
+
+    if (anyDuplicated(cost_names) > 0L) {
+      duplicates <- unique(
+        cost_names[duplicated(cost_names)]
+      )
+
+      stop(
+        "Named `cost` vector contains duplicated action id(s): ",
+        paste(duplicates, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    unknown_actions <- setdiff(
+      cost_names,
+      action_ids
+    )
+
+    if (length(unknown_actions) > 0L) {
+      stop(
+        "cost contains unknown action id(s): ",
+        paste(unknown_actions, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    missing_actions <- setdiff(
+      action_ids,
+      cost_names
+    )
+
+    if (length(missing_actions) > 0L) {
+      stop(
+        "Named `cost` vector is missing action id(s): ",
+        paste(missing_actions, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    if (
+      anyNA(cost) ||
+      any(!is.finite(cost))
+    ) {
+      stop(
+        "Named `cost` vector must contain only finite, non-missing values.",
+        call. = FALSE
+      )
+    }
+
+    if (any(cost < 0)) {
+      stop(
+        "Action costs must be non-negative.",
+        call. = FALSE
+      )
+    }
+
+    dist_actions$cost <- as.numeric(
+      cost[dist_actions$action]
+    )
+
+  } else if (
+    is.numeric(cost) &&
+    length(cost) == 1L
+  ) {
+
+    if (
+      is.na(cost) ||
+      !is.finite(cost)
+    ) {
+      stop(
+        "`cost` must be a finite, non-missing number.",
+        call. = FALSE
+      )
+    }
+
+    if (cost < 0) {
+      stop(
+        "Action costs must be non-negative.",
+        call. = FALSE
+      )
+    }
 
     dist_actions$cost <- as.numeric(cost)
-
-  } else if (is.numeric(cost) && !is.null(names(cost))) {
-
-    if (!all(names(cost) %in% action_ids)) {
-      bad <- setdiff(names(cost), action_ids)
-      stop("cost contains unknown actions: ", paste(bad, collapse = ", "), call. = FALSE)
-    }
-    dist_actions$cost <- as.numeric(cost[dist_actions$action])
 
   } else if (inherits(cost, "data.frame")) {
 
@@ -550,53 +666,236 @@ add_actions <- function(
       names(cost)[names(cost) == "id"] <- "action"
     }
 
-    if (all(c("action", "cost") %in% names(cost)) && !("pu" %in% names(cost))) {
+    if (
+      all(c("action", "cost") %in% names(cost)) &&
+      !("pu" %in% names(cost))
+    ) {
 
       cost$action <- as.character(cost$action)
-      if (!all(cost$action %in% action_ids)) {
-        bad <- unique(cost$action[!cost$action %in% action_ids])
-        stop("cost contains unknown actions: ", paste(bad, collapse = ", "), call. = FALSE)
-      }
-      if (nrow(dplyr::distinct(cost[, c("action")])) != nrow(cost)) {
-        stop("cost (action,cost) must have unique action rows.", call. = FALSE)
+
+      if (
+        anyNA(cost$action) ||
+        any(!nzchar(cost$action))
+      ) {
+        stop(
+          "cost$action must contain non-empty action ids.",
+          call. = FALSE
+        )
       }
 
-      m <- match(dist_actions$action, cost$action)
+      if (!all(cost$action %in% action_ids)) {
+        bad <- unique(
+          cost$action[!cost$action %in% action_ids]
+        )
+
+        stop(
+          "cost contains unknown actions: ",
+          paste(bad, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+
+      if (
+        nrow(dplyr::distinct(cost[, "action", drop = FALSE])) !=
+        nrow(cost)
+      ) {
+        stop(
+          "cost (action, cost) must have unique action rows.",
+          call. = FALSE
+        )
+      }
+
+      missing_actions <- setdiff(
+        action_ids,
+        cost$action
+      )
+
+      if (length(missing_actions) > 0L) {
+        stop(
+          "cost data.frame is missing action id(s): ",
+          paste(missing_actions, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+
+      if (
+        !is.numeric(cost$cost) ||
+        anyNA(cost$cost) ||
+        any(!is.finite(cost$cost))
+      ) {
+        stop(
+          "cost$cost must contain only finite, non-missing numeric values.",
+          call. = FALSE
+        )
+      }
+
+      if (any(cost$cost < 0)) {
+        stop(
+          "Action costs must be non-negative.",
+          call. = FALSE
+        )
+      }
+
+      m <- match(
+        dist_actions$action,
+        cost$action
+      )
+
       dist_actions$cost <- cost$cost[m]
 
-    } else if (all(c("pu", "action", "cost") %in% names(cost))) {
+    } else if (
+      all(c("pu", "action", "cost") %in% names(cost))
+    ) {
 
-      cost$pu <- .as_int_id(cost$pu, "cost$pu")
+      cost$pu <- .as_int_id(
+        cost$pu,
+        "cost$pu"
+      )
       cost$action <- as.character(cost$action)
 
-      if (!all(cost$pu %in% pu_ids)) stop("cost contains unknown pu ids.", call. = FALSE)
-      if (!all(cost$action %in% action_ids)) stop("cost contains unknown actions.", call. = FALSE)
-
-      tmp <- cost[, c("pu", "action")]
-      if (nrow(dplyr::distinct(tmp)) != nrow(tmp)) {
-        stop("cost has duplicate (pu, action) rows.", call. = FALSE)
+      if (
+        anyNA(cost$action) ||
+        any(!nzchar(cost$action))
+      ) {
+        stop(
+          "cost$action must contain non-empty action ids.",
+          call. = FALSE
+        )
       }
 
-      key_da <- paste(dist_actions$pu, dist_actions$action)
-      key_c  <- paste(cost$pu, cost$action)
-      m <- match(key_da, key_c)
+      if (!all(cost$pu %in% pu_ids)) {
+        bad <- unique(
+          cost$pu[!cost$pu %in% pu_ids]
+        )
+
+        stop(
+          "cost contains unknown pu id(s): ",
+          paste(bad, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+
+      if (!all(cost$action %in% action_ids)) {
+        bad <- unique(
+          cost$action[!cost$action %in% action_ids]
+        )
+
+        stop(
+          "cost contains unknown action id(s): ",
+          paste(bad, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+
+      tmp <- cost[, c("pu", "action"), drop = FALSE]
+
+      if (
+        nrow(dplyr::distinct(tmp)) != nrow(tmp)
+      ) {
+        stop(
+          "cost has duplicate (pu, action) rows.",
+          call. = FALSE
+        )
+      }
+
+      if (
+        !is.numeric(cost$cost) ||
+        anyNA(cost$cost) ||
+        any(!is.finite(cost$cost))
+      ) {
+        stop(
+          "cost$cost must contain only finite, non-missing numeric values.",
+          call. = FALSE
+        )
+      }
+
+      if (any(cost$cost < 0)) {
+        stop(
+          "Action costs must be non-negative.",
+          call. = FALSE
+        )
+      }
+
+      key_da <- paste(
+        dist_actions$pu,
+        dist_actions$action,
+        sep = "||"
+      )
+      key_c <- paste(
+        cost$pu,
+        cost$action,
+        sep = "||"
+      )
+
+      unknown_pairs <- setdiff(
+        key_c,
+        key_da
+      )
+
+      if (length(unknown_pairs) > 0L) {
+        stop(
+          "cost contains (pu, action) pair(s) that are not feasible: ",
+          paste(unknown_pairs, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+
+      m <- match(
+        key_da,
+        key_c
+      )
       hit <- !is.na(m)
+
+      # Rows not explicitly supplied retain the default cost of one.
       dist_actions$cost[hit] <- cost$cost[m[hit]]
 
     } else {
-      stop("Unsupported cost data.frame format. Use (action,cost) or (pu,action,cost).", call. = FALSE)
+      stop(
+        paste0(
+          "Unsupported cost data.frame format. Use columns ",
+          "(action, cost) or (pu, action, cost)."
+        ),
+        call. = FALSE
+      )
     }
 
   } else {
-    stop("Unsupported type for 'cost'.", call. = FALSE)
+    stop(
+      "Unsupported type for `cost`.",
+      call. = FALSE
+    )
   }
 
-  assertthat::assert_that(is.numeric(dist_actions$cost))
-  if (any(!is.finite(dist_actions$cost) | is.na(dist_actions$cost))) {
-    stop("Some feasible (pu, action) pairs have missing/invalid costs after processing 'cost'.", call. = FALSE)
+  if (!is.numeric(dist_actions$cost)) {
+    stop(
+      "Internal error: processed action costs are not numeric.",
+      call. = FALSE
+    )
   }
-  if (any(dist_actions$cost < 0, na.rm = TRUE)) {
-    stop("Action costs must be non-negative.", call. = FALSE)
+
+  if (
+    anyNA(dist_actions$cost) ||
+    any(!is.finite(dist_actions$cost))
+  ) {
+    stop(
+      paste0(
+        "Some feasible (pu, action) pairs have missing or invalid ",
+        "costs after processing `cost`."
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (any(dist_actions$cost < 0)) {
+    stop(
+      "Action costs must be non-negative.",
+      call. = FALSE
+    )
   }
 
   # ---- initialize status as free

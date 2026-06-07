@@ -8,194 +8,82 @@ run_manual(x)
 }
 \arguments{
 \item{x}{A non-empty \code{data.frame} with one row per optimization run.
-Columns must use the naming conventions required by the selected
-multi-objective method, such as \code{weight_<alias>} or
-\code{eps_<alias>}.}
+Run-design columns must be named using the \code{weight_<alias>} or
+\code{eps_<alias>} convention.}
 }
 \value{
-An object of class \code{RunManual} and \code{RunDesign}. The object
-stores the supplied run table and is intended to be passed to the
-\code{runs} argument of a multi-objective method function.
+An object of class \code{RunManual} and \code{RunDesign} containing
+the validated run table.
 }
 \description{
 Create an explicit run-design specification in which each row defines one
 multi-objective optimization run.
 
-\code{run_manual()} is used when the exact objective weights or epsilon levels
-should be controlled by the user instead of being generated automatically
-with \code{\link{run_grid}}.
+\code{run_manual()} is used when exact objective weights or epsilon levels
+should be supplied by the user instead of being generated automatically with
+\code{\link{run_grid}}.
 }
 \details{
-The input must be a \code{data.frame} with one row per requested
-optimization run. The required columns depend on the multi-objective method
-in which the design is used.
+The input must be a non-empty \code{data.frame} with one row per requested
+optimization run.
 
-\strong{Weighted-sum designs}
-
-For \code{\link{set_method_weighted_sum}}, weight columns must follow the
-convention:
+Weighted-sum columns must follow the convention:
 
 \preformatted{
 weight_<alias>
 }
 
-where \code{<alias>} is the alias of a registered objective.
-
-For example, objectives with aliases \code{"cost"} and \code{"benefit"}
-require:
-
-\preformatted{
-weight_cost
-weight_benefit
-}
-
-Each row defines the weights used in one weighted-sum run. Whether weights
-must already sum to one depends on the normalization settings supplied to
-\code{\link{set_method_weighted_sum}}.
-
-\strong{Epsilon-constraint and AUGMECON designs}
-
-For \code{\link{set_method_epsilon_constraint}} and
-\code{\link{set_method_augmecon}}, epsilon columns must follow the
-convention:
+Epsilon-constraint and AUGMECON columns must follow the convention:
 
 \preformatted{
 eps_<alias>
 }
 
-where \code{<alias>} identifies a constrained secondary objective.
+A manual design must contain at least one column beginning with
+\code{weight_} or \code{eps_}. Mixing both column families in the same
+design is not allowed.
 
-The primary objective is optimized directly and therefore normally does not
-require an epsilon column. Each row defines one combination of epsilon
-bounds for the secondary objectives.
+All run-design columns must be numeric, finite, and free of missing values.
+Weight columns must contain non-negative values, and each weighted-sum row
+must assign a strictly positive total weight.
 
-Column names are matched against the registered objective aliases when the
-run design is resolved by the corresponding \code{set_method_*()} function.
-Therefore, aliases containing spaces or other non-syntactic characters
-should be avoided when manual run tables are expected to be used.
+This function performs method-independent structural validation.
+Method-specific validation is performed later by the corresponding
+\code{set_method_*()} function. This includes checking:
 
-\code{run_manual()} performs only structural validation of the supplied object.
-Method-specific validation—including required columns, unknown aliases,
-missing values, weight validity, and epsilon compatibility—is performed when
-the design is attached to a multi-objective method or resolved before
-solving.
-
-Additional columns should not be used unless they are explicitly supported
-by the selected method. The order of rows is preserved and corresponds to
-the requested run order.
-
-Manual designs are useful when:
 \itemize{
-\item exact preference weights are known;
-\item policy-relevant epsilon thresholds must be evaluated;
-\item irregular regions of the frontier require denser sampling;
-\item runs must reproduce a previously published experimental design;
-\item a small number of selected trade-off scenarios is preferred over a
-regular automatic grid.
+\item that all required objective aliases are represented;
+\item that no unknown objective columns are supplied;
+\item that epsilon columns correspond only to secondary objectives;
+\item and that the supplied design is compatible with the selected method.
 }
+
+Therefore, an object may be structurally valid for \code{run_manual()} but
+rejected later by \code{\link{set_method_weighted_sum}},
+\code{\link{set_method_epsilon_constraint}}, or
+\code{\link{set_method_augmecon}}.
 }
 \examples{
-# Create an explicit weighted-sum design
 weighted_runs <- run_manual(
   data.frame(
-    weight_cost = c(1.0, 0.75, 0.50, 0.25, 0.0),
-    weight_benefit = c(0.0, 0.25, 0.50, 0.75, 1.0)
+    weight_cost = c(1.0, 0.5, 0.0),
+    weight_benefit = c(0.0, 0.5, 1.0)
   )
 )
 
-weighted_runs
-
-# Create an explicit epsilon-constraint design
 epsilon_runs <- run_manual(
   data.frame(
     eps_benefit = c(2, 4, 6, 8)
   )
 )
 
+weighted_runs
 epsilon_runs
-
-# Use a manual design in a weighted-sum workflow
-pu <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration")
-)
-
-effects <- data.frame(
-  action = rep(actions$id, each = 2),
-  feature = rep(features$id, times = 2),
-  multiplier = c(
-    1.0, 1.0,
-    1.5, 1.5
-  )
-)
-
-problem <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
-  cost = "cost"
-) |>
-  add_actions(
-    actions = actions,
-    cost = c(
-      conservation = 1,
-      restoration = 2
-    )
-  ) |>
-  add_effects(
-    effects = effects,
-    effect_type = "after"
-  ) |>
-  add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit") |>
-  set_method_weighted_sum(
-    aliases = c("cost", "benefit"),
-    runs = run_manual(
-      data.frame(
-        weight_cost = c(1.0, 0.5, 0.0),
-        weight_benefit = c(0.0, 0.5, 1.0)
-      )
-    ),
-    normalize_weights = TRUE
-  )
-
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  problem <- set_solver_cbc(
-    problem,
-    verbose = FALSE
-  )
-
-  solutions <- solve(problem)
-
-  # Inspect the requested manual design and resulting objective values
-  get_runs(solutions)
-  get_objectives(
-    solutions,
-    format = "wide"
-  )
-}
 
 }
 \seealso{
 \code{\link{run_grid}},
 \code{\link{set_method_weighted_sum}},
 \code{\link{set_method_epsilon_constraint}},
-\code{\link{set_method_augmecon}},
-\code{\link{get_runs}}
+\code{\link{set_method_augmecon}}
 }

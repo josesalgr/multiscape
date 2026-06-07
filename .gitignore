@@ -15,3 +15,5 @@ src/*.a
 src/*.obj
 src/*.lib
 .positai
+src/*.gcno
+src/*.gcda
