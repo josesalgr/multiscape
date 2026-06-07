@@ -269,5 +269,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> 2      2          s2 optimal    0.00   0                   3.5          3
 #> 3      3          s3 optimal    0.02   0                   5.0          7
 #> 4      4          s4 optimal    0.00   0                   7.0         12
-#> 5      5          s5 optimal    0.01   0                   7.5         18
+#> 5      5          s5 optimal    0.00   0                   7.5         18
 ```

@@ -122,6 +122,6 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_objective_specs(solutions)
 }
 #>   objective objective_id       model_type sense                 created_at
-#> 1   benefit  max_benefit maximizeBenefits   max 2026-06-07 14:41:06.546347
-#> 2      cost     min_cost    minimizeCosts   min 2026-06-07 14:41:06.545646
+#> 1   benefit  max_benefit maximizeBenefits   max 2026-06-07 15:15:52.719597
+#> 2      cost     min_cost    minimizeCosts   min 2026-06-07 15:15:52.719179
 ```

@@ -193,7 +193,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 }
 #>   run_id solution_id  status runtime gap message value_benefit value_cost
 #> 1      1          s1 optimal    0.00   0                   0.0          2
-#> 2      2          s2 optimal    0.01   0                   3.5          3
+#> 2      2          s2 optimal    0.02   0                   3.5          3
 #> 3      3          s3 optimal    0.00   0                   5.0          7
 #> 4      4          s4 optimal    0.00   0                   7.5         18
 ```

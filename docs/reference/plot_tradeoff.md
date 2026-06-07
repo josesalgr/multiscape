@@ -138,29 +138,75 @@ ggrepel package is available, repelled labels are used.
 ## Examples
 
 ``` r
-if (requireNamespace("ggplot2", quietly = TRUE)) {
-  solset <- structure(
-    list(
-      solution = list(
-        runs = data.frame(
-          run_id = 1:5,
-          status = rep("optimal", 5),
-          runtime = c(1.2, 1.1, 1.4, 1.3, 1.5),
-          gap = c(0, 0, 0, 0, 0),
-          value_cost = c(10, 12, 14, 16, 18),
-          value_benefit = c(5, 7, 8, 9, 10),
-          value_loss = c(4, 3, 3, 2, 2)
-        )
-      )
-    ),
-    class = "SolutionSet"
+if (
+  requireNamespace("ggplot2", quietly = TRUE) &&
+  requireNamespace("rcbc", quietly = TRUE)
+) {
+  pu <- data.frame(
+    id = 1:4,
+    cost = c(1, 2, 3, 4)
   )
 
-  plot_tradeoff(solset)
-  plot_tradeoff(solset, objectives = c("cost", "benefit"))
-  plot_tradeoff(solset, color_by = "loss", label_runs = TRUE)
+  features <- data.frame(
+    id = 1:2,
+    name = c("sp1", "sp2")
+  )
+
+  dist_features <- data.frame(
+    pu = c(1, 1, 2, 3, 4),
+    feature = c(1, 2, 2, 1, 2),
+    amount = c(5, 2, 3, 4, 1)
+  )
+
+  actions <- data.frame(
+    id = c("conservation", "restoration")
+  )
+
+  effects <- data.frame(
+    action = rep(actions$id, each = 2),
+    feature = rep(features$id, times = 2),
+    multiplier = c(
+      1.0, 1.0,
+      1.5, 1.5
+    )
+  )
+
+  problem <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(
+      actions = actions,
+      cost = c(
+        conservation = 1,
+        restoration = 2
+      )
+    ) |>
+    add_effects(
+      effects = effects,
+      effect_type = "after"
+    ) |>
+    add_constraint_targets_relative(0.05) |>
+    add_objective_min_cost(alias = "cost") |>
+    add_objective_max_benefit(alias = "benefit") |>
+    set_method_weighted_sum(
+      aliases = c("cost", "benefit"),
+      runs = run_grid(
+        n = 3,
+        include_extremes = TRUE
+      ),
+      normalize_weights = TRUE
+    ) |>
+    set_solver_cbc(verbose = FALSE)
+
+  solutions <- solve(problem)
+
+  plot_tradeoff(
+    solutions,
+    objectives = c("cost", "benefit")
+  )
 }
-
-
 
 ```

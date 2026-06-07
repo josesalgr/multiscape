@@ -77,8 +77,9 @@ Plot feature values in space from a \code{\link{solutionset-class}} object
 returned by \code{\link{solve}}.
 
 This function combines baseline feature amounts from the associated
-\code{Problem} object with positive effects induced by selected actions to
-produce planning-unit-level feature maps.
+\code{Problem} object with positive effects induced by the actions selected
+in each stored run to produce planning-unit-level feature maps. Selected
+actions are obtained through \code{\link{get_actions}}.
 }
 \details{
 For each planning unit \eqn{i} and feature \eqn{f}, the plotted quantities
@@ -114,70 +115,77 @@ faceting is done by run.
 Planning-unit geometry must be available in the associated problem object.
 }
 \examples{
-if (requireNamespace("sf", quietly = TRUE) &&
-    requireNamespace("ggplot2", quietly = TRUE)) {
+if (
+  requireNamespace("sf", quietly = TRUE) &&
+  requireNamespace("ggplot2", quietly = TRUE) &&
+  requireNamespace("rcbc", quietly = TRUE)
+) {
   data("sim_pu_sf", package = "multiscape")
 
-  n <- min(6, nrow(sim_pu_sf))
-  ids <- sim_pu_sf$id[seq_len(n)]
+  pu <- sim_pu_sf[
+    seq_len(min(4L, nrow(sim_pu_sf))),
+  ]
 
-  features_df <- data.frame(
-    id = c(1, 2),
+  pu$id <- seq_len(nrow(pu))
+  pu$cost <- seq_len(nrow(pu))
+
+  features <- data.frame(
+    id = 1:2,
     name = c("feature_1", "feature_2")
   )
 
-  dist_features_df <- data.frame(
-    pu = rep(ids, times = 2),
-    feature = rep(c(1, 2), each = n),
-    amount = c(seq_len(n), rev(seq_len(n)))
-  )
-
-  dist_effects_df <- data.frame(
-    pu = ids,
-    action = "conservation",
-    feature = rep(c(1, 2), length.out = n),
-    benefit = rep(1, n)
-  )
-
-  actions_df <- data.frame(
-    id = "conservation",
-    name = "conservation"
-  )
-
-  problem <- structure(
-    list(
-      data = list(
-        pu_sf = sim_pu_sf,
-        features = features_df,
-        dist_features = dist_features_df,
-        dist_effects = dist_effects_df,
-        actions = actions_df
-      )
-    ),
-    class = "Problem"
-  )
-
-  run_result <- list(
-    problem = problem,
-    summary = list(
-      actions = data.frame(
-        pu = ids,
-        action = "conservation",
-        selected = 1L
-      )
+  dist_features <- data.frame(
+    pu = rep(pu$id, each = 2),
+    feature = rep(features$id, times = nrow(pu)),
+    amount = c(
+      4, 1,
+      3, 2,
+      2, 3,
+      1, 4
     )
   )
 
-  solset <- structure(
-    list(
-      solution = list(
-        solutions = list(run_result)
-      )
-    ),
-    class = "SolutionSet"
+  actions <- data.frame(
+    id = c("conservation", "restoration")
   )
 
-  plot_spatial_features(solset, features = "feature_1", value = "final")
+  effects <- data.frame(
+    action = rep(actions$id, each = 2),
+    feature = rep(features$id, times = 2),
+    multiplier = c(
+      1.0, 1.0,
+      1.5, 1.5
+    )
+  )
+
+  problem <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(
+      actions = actions,
+      cost = c(
+        conservation = 1,
+        restoration = 2
+      )
+    ) |>
+    add_effects(
+      effects = effects,
+      effect_type = "after"
+    ) |>
+    add_constraint_targets_relative(0.25) |>
+    add_objective_min_cost(alias = "cost") |>
+    set_solver_cbc(verbose = FALSE)
+
+  solutions <- solve(problem)
+
+  plot_spatial_features(
+    solutions,
+    features = "feature_1",
+    value = "final"
+  )
 }
 
 }

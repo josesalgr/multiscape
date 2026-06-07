@@ -6,8 +6,9 @@ object returned by
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 This function maps the selected planning unit–action pairs returned by
-the stored action summary onto the planning-unit geometry stored in the
-associated `Problem` object.
+[`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
+onto the planning-unit geometry stored in the associated `Problem`
+object.
 
 ## Usage
 
@@ -141,48 +142,68 @@ object.
 ## Examples
 
 ``` r
-if (requireNamespace("sf", quietly = TRUE) &&
-    requireNamespace("ggplot2", quietly = TRUE)) {
+if (
+  requireNamespace("sf", quietly = TRUE) &&
+  requireNamespace("ggplot2", quietly = TRUE) &&
+  requireNamespace("rcbc", quietly = TRUE)
+) {
   data("sim_pu_sf", package = "multiscape")
 
-  actions_df <- data.frame(
-    id = c("conservation", "restoration"),
-    name = c("conservation", "restoration")
+  pu <- sim_pu_sf[
+    seq_len(min(4L, nrow(sim_pu_sf))),
+  ]
+
+  pu$id <- seq_len(nrow(pu))
+  pu$cost <- seq_len(nrow(pu))
+
+  features <- data.frame(
+    id = 1L,
+    name = "feature_1"
   )
 
-  problem <- structure(
-    list(
-      data = list(
-        pu_sf = sim_pu_sf,
-        actions = actions_df
+  dist_features <- data.frame(
+    pu = pu$id,
+    feature = 1L,
+    amount = rep(1, nrow(pu))
+  )
+
+  actions <- data.frame(
+    id = c("conservation", "restoration")
+  )
+
+  effects <- data.frame(
+    action = actions$id,
+    feature = 1L,
+    multiplier = c(1.0, 1.5)
+  )
+
+  problem <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(
+      actions = actions,
+      cost = c(
+        conservation = 1,
+        restoration = 2
       )
-    ),
-    class = "Problem"
+    ) |>
+    add_effects(
+      effects = effects,
+      effect_type = "after"
+    ) |>
+    add_constraint_targets_relative(0.25) |>
+    add_objective_min_cost(alias = "cost") |>
+    set_solver_cbc(verbose = FALSE)
+
+  solutions <- solve(problem)
+
+  plot_spatial_actions(
+    solutions,
+    layout = "single"
   )
-
-  ids <- sim_pu_sf$id[seq_len(min(6, nrow(sim_pu_sf)))]
-
-  run_result <- list(
-    problem = problem,
-    summary = list(
-      actions = data.frame(
-        pu = c(ids[1:3], ids[4:6]),
-        action = c(rep("conservation", 3), rep("restoration", 3)),
-        selected = 1L
-      )
-    )
-  )
-
-  solset <- structure(
-    list(
-      solution = list(
-        solutions = list(run_result)
-      )
-    ),
-    class = "SolutionSet"
-  )
-
-  plot_spatial_actions(solset, layout = "facet")
 }
 
 ```

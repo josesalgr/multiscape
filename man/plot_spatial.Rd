@@ -96,42 +96,47 @@ plotting functions provide a cleaner and more explicit user interface for
 each spatial output type.
 }
 \examples{
-if (requireNamespace("sf", quietly = TRUE) &&
-    requireNamespace("ggplot2", quietly = TRUE)) {
+if (
+  requireNamespace("sf", quietly = TRUE) &&
+  requireNamespace("ggplot2", quietly = TRUE) &&
+  requireNamespace("rcbc", quietly = TRUE)
+) {
   data("sim_pu_sf", package = "multiscape")
 
-  problem <- structure(
-    list(
-      data = list(
-        pu_sf = sim_pu_sf
-      )
-    ),
-    class = "Problem"
+  pu <- sim_pu_sf[
+    seq_len(min(4L, nrow(sim_pu_sf))),
+  ]
+
+  pu$id <- seq_len(nrow(pu))
+  pu$cost <- seq_len(nrow(pu))
+
+  features <- data.frame(
+    id = 1L,
+    name = "feature_1"
   )
 
-  run_result <- structure(
-    list(
-      problem = problem,
-      summary = list(
-        pu = data.frame(
-          id = sim_pu_sf$id,
-          selected = as.integer(seq_len(nrow(sim_pu_sf)) \%\% 2 == 1)
-        )
-      )
-    ),
-    class = "Solution"
+  dist_features <- data.frame(
+    pu = pu$id,
+    feature = 1L,
+    amount = rep(1, nrow(pu))
   )
 
-  solset <- structure(
-    list(
-      solution = list(
-        solutions = list(run_result)
-      )
-    ),
-    class = "SolutionSet"
-  )
+  problem <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features,
+    cost = "cost"
+  ) |>
+    add_constraint_targets_relative(0.25) |>
+    add_objective_min_cost(alias = "cost") |>
+    set_solver_cbc(verbose = FALSE)
 
-  plot_spatial(solset, what = "pu")
+  solutions <- solve(problem)
+
+  plot_spatial(
+    solutions,
+    what = "pu"
+  )
 }
 
 }

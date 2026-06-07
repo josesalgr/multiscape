@@ -5,115 +5,157 @@ NULL
 # Internal helpers
 # -------------------------------------------------------------------
 
-.pa_plot_spatial_resolve_solutions <- function(x, runs = NULL) {
-  # Backward-compatible internal path. Users should pass SolutionSet objects.
-  if (inherits(x, "Solution")) {
-    if (!is.null(runs)) {
-      runs <- as.integer(runs)
-      if (length(runs) != 1L || is.na(runs[1]) || runs[1] != 1L) {
-        stop("For this single-run object, `runs` must be NULL or 1.", call. = FALSE)
-      }
-    }
-    solutions <- list(x)
-    names(solutions) <- "1"
-    return(solutions)
+.pa_plot_spatial_resolve_runs <- function(x, runs = NULL) {
+  if (!inherits(x, "SolutionSet")) {
+    stop(
+      "x must be a SolutionSet object returned by solve().",
+      call. = FALSE
+    )
   }
 
-  if (inherits(x, "SolutionSet")) {
-    all_solutions <- x$solution$solutions %||% NULL
-    if (is.null(all_solutions) || !is.list(all_solutions) || length(all_solutions) == 0L) {
-      stop("SolutionSet has no stored run-level results.", call. = FALSE)
-    }
+  runs_tbl <- x$solution$runs %||% NULL
 
-    if (is.null(names(all_solutions)) || any(!nzchar(names(all_solutions)))) {
-      ids <- vapply(seq_along(all_solutions), function(i) {
-        as.character(all_solutions[[i]]$meta$solution_id %||% paste0("s", i))[1]
-      }, character(1))
-      names(all_solutions) <- ids
-    }
-
-    runs_tbl <- x$solution$runs %||% NULL
-
-    if (is.null(runs)) {
-      # Default to the first stored solution, not necessarily run_id = 1.
-      solutions <- all_solutions[1]
-      rid <- solutions[[1]]$meta$run_id %||% NA_integer_
-      names(solutions) <- as.character(rid)
-      return(solutions)
-    }
-
-    runs <- as.integer(runs)
-    if (any(!is.finite(runs)) || any(is.na(runs)) || any(runs < 1L)) {
-      stop("`runs` must contain positive integer run ids.", call. = FALSE)
-    }
-    runs <- unique(runs)
-
-    if (is.null(runs_tbl) ||
-        !inherits(runs_tbl, "data.frame") ||
-        !all(c("run_id", "solution_id") %in% names(runs_tbl))) {
-      stop(
-        "Cannot resolve `runs` because the SolutionSet run table does not contain ",
-        "both 'run_id' and 'solution_id'.",
-        call. = FALSE
-      )
-    }
-
-    idx <- match(runs, runs_tbl$run_id)
-    if (anyNA(idx)) {
-      bad <- runs[is.na(idx)]
-      stop("Unknown run id(s): ", paste(bad, collapse = ", "), ".", call. = FALSE)
-    }
-
-    solution_ids <- runs_tbl$solution_id[idx]
-    missing <- is.na(solution_ids) | !nzchar(solution_ids)
-    if (any(missing)) {
-      bad_runs <- runs[missing]
-      status_msg <- ""
-      if ("status" %in% names(runs_tbl)) {
-        status_msg <- paste0(
-          " Status: ",
-          paste(paste0(bad_runs, "=", runs_tbl$status[idx][missing]), collapse = ", "),
-          "."
-        )
-      }
-      stop(
-        "No stored solution is available for run id(s): ",
-        paste(bad_runs, collapse = ", "), ".",
-        status_msg,
-        call. = FALSE
-      )
-    }
-
-    bad_sid <- setdiff(solution_ids, names(all_solutions))
-    if (length(bad_sid) > 0L) {
-      stop(
-        "Some run ids point to missing stored solution ids: ",
-        paste(bad_sid, collapse = ", "), ".",
-        call. = FALSE
-      )
-    }
-
-    solutions <- all_solutions[solution_ids]
-    names(solutions) <- as.character(runs)
-    return(solutions)
+  if (
+    is.null(runs_tbl) ||
+    !inherits(runs_tbl, "data.frame") ||
+    nrow(runs_tbl) == 0L
+  ) {
+    stop(
+      "No run table found in x$solution$runs.",
+      call. = FALSE
+    )
   }
 
-  stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
+  if (!all(c("run_id", "solution_id") %in% names(runs_tbl))) {
+    stop(
+      paste0(
+        "The run table must contain both 'run_id' and 'solution_id'. ",
+        "Recreate the SolutionSet using the current version of multiscape."
+      ),
+      call. = FALSE
+    )
+  }
+
+  available <- runs_tbl[
+    !is.na(runs_tbl$solution_id) &
+      nzchar(runs_tbl$solution_id),
+    ,
+    drop = FALSE
+  ]
+
+  if (nrow(available) == 0L) {
+    stop(
+      "No stored solutions are available for plotting.",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(runs)) {
+    return(as.integer(available$run_id[1L]))
+  }
+
+  if (
+    !is.numeric(runs) &&
+    !is.integer(runs)
+  ) {
+    stop(
+      "`runs` must contain positive integer run ids.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    anyNA(runs) ||
+    any(!is.finite(runs)) ||
+    any(runs < 1) ||
+    any(runs != floor(runs))
+  ) {
+    stop(
+      "`runs` must contain positive integer run ids.",
+      call. = FALSE
+    )
+  }
+
+  runs <- unique(as.integer(runs))
+
+  unknown <- setdiff(runs, runs_tbl$run_id)
+
+  if (length(unknown) > 0L) {
+    stop(
+      "Unknown run id(s): ",
+      paste(unknown, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  idx <- match(runs, runs_tbl$run_id)
+  solution_ids <- runs_tbl$solution_id[idx]
+  missing <- is.na(solution_ids) | !nzchar(solution_ids)
+
+  if (any(missing)) {
+    bad_runs <- runs[missing]
+    status_msg <- ""
+
+    if ("status" %in% names(runs_tbl)) {
+      status_msg <- paste0(
+        " Status: ",
+        paste(
+          paste0(
+            bad_runs,
+            "=",
+            as.character(runs_tbl$status[idx][missing])
+          ),
+          collapse = ", "
+        ),
+        "."
+      )
+    }
+
+    stop(
+      "No stored solution is available for run id(s): ",
+      paste(bad_runs, collapse = ", "),
+      ".",
+      status_msg,
+      call. = FALSE
+    )
+  }
+
+  runs
 }
 
-.pa_plot_spatial_get_geometry <- function(solutions) {
-  sol0 <- solutions[[1]]
-  pr <- sol0$problem %||% NULL
+
+.pa_plot_spatial_get_geometry <- function(x) {
+  if (!inherits(x, "SolutionSet")) {
+    stop(
+      "x must be a SolutionSet object returned by solve().",
+      call. = FALSE
+    )
+  }
+
+  pr <- x$problem %||% NULL
+
   if (is.null(pr) || !inherits(pr, "Problem")) {
-    stop("Stored run-level result does not contain a valid problem object.", call. = FALSE)
+    stop(
+      "SolutionSet does not contain a valid associated Problem object.",
+      call. = FALSE
+    )
   }
 
   pu_sf <- pr$data$pu_sf %||% NULL
+
   if (is.null(pu_sf) || !inherits(pu_sf, "sf")) {
-    stop("No PU geometry found in the associated problem object.", call. = FALSE)
+    stop(
+      "No planning-unit geometry was found in the associated Problem object.",
+      call. = FALSE
+    )
   }
+
   if (!("id" %in% names(pu_sf))) {
-    stop("PU geometry must contain an 'id' column.", call. = FALSE)
+    stop(
+      "Planning-unit geometry must contain an 'id' column.",
+      call. = FALSE
+    )
   }
 
   pu_sf$id <- as.integer(pu_sf$id)
@@ -192,42 +234,47 @@ NULL
 #' @return Invisibly returns a \code{ggplot} object.
 #'
 #' @examples
-#' if (requireNamespace("sf", quietly = TRUE) &&
-#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (
+#'   requireNamespace("sf", quietly = TRUE) &&
+#'   requireNamespace("ggplot2", quietly = TRUE) &&
+#'   requireNamespace("rcbc", quietly = TRUE)
+#' ) {
 #'   data("sim_pu_sf", package = "multiscape")
 #'
-#'   problem <- structure(
-#'     list(
-#'       data = list(
-#'         pu_sf = sim_pu_sf
-#'       )
-#'     ),
-#'     class = "Problem"
+#'   pu <- sim_pu_sf[
+#'     seq_len(min(4L, nrow(sim_pu_sf))),
+#'   ]
+#'
+#'   pu$id <- seq_len(nrow(pu))
+#'   pu$cost <- seq_len(nrow(pu))
+#'
+#'   features <- data.frame(
+#'     id = 1L,
+#'     name = "feature_1"
 #'   )
 #'
-#'   run_result <- structure(
-#'     list(
-#'       problem = problem,
-#'       summary = list(
-#'         pu = data.frame(
-#'           id = sim_pu_sf$id,
-#'           selected = as.integer(seq_len(nrow(sim_pu_sf)) %% 2 == 1)
-#'         )
-#'       )
-#'     ),
-#'     class = "Solution"
+#'   dist_features <- data.frame(
+#'     pu = pu$id,
+#'     feature = 1L,
+#'     amount = rep(1, nrow(pu))
 #'   )
 #'
-#'   solset <- structure(
-#'     list(
-#'       solution = list(
-#'         solutions = list(run_result)
-#'       )
-#'     ),
-#'     class = "SolutionSet"
-#'   )
+#'   problem <- create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_constraint_targets_relative(0.25) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     set_solver_cbc(verbose = FALSE)
 #'
-#'   plot_spatial(solset, what = "pu")
+#'   solutions <- solve(problem)
+#'
+#'   plot_spatial(
+#'     solutions,
+#'     what = "pu"
+#'   )
 #' }
 #'
 #' @seealso
@@ -354,42 +401,44 @@ plot_spatial <- function(
 #' @return Invisibly returns a \code{ggplot} object.
 #'
 #' @examples
-#' if (requireNamespace("sf", quietly = TRUE) &&
-#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (
+#'   requireNamespace("sf", quietly = TRUE) &&
+#'   requireNamespace("ggplot2", quietly = TRUE) &&
+#'   requireNamespace("rcbc", quietly = TRUE)
+#' ) {
 #'   data("sim_pu_sf", package = "multiscape")
 #'
-#'   problem <- structure(
-#'     list(
-#'       data = list(
-#'         pu_sf = sim_pu_sf
-#'       )
-#'     ),
-#'     class = "Problem"
+#'   pu <- sim_pu_sf[
+#'     seq_len(min(4L, nrow(sim_pu_sf))),
+#'   ]
+#'
+#'   pu$id <- seq_len(nrow(pu))
+#'   pu$cost <- seq_len(nrow(pu))
+#'
+#'   features <- data.frame(
+#'     id = 1L,
+#'     name = "feature_1"
 #'   )
 #'
-#'   run_result <- structure(
-#'     list(
-#'       problem = problem,
-#'       summary = list(
-#'         pu = data.frame(
-#'           id = sim_pu_sf$id,
-#'           selected = as.integer(seq_len(nrow(sim_pu_sf)) %% 2 == 1)
-#'         )
-#'       )
-#'     ),
-#'     class = "Solution"
+#'   dist_features <- data.frame(
+#'     pu = pu$id,
+#'     feature = 1L,
+#'     amount = rep(1, nrow(pu))
 #'   )
 #'
-#'   solset <- structure(
-#'     list(
-#'       solution = list(
-#'         solutions = list(run_result)
-#'       )
-#'     ),
-#'     class = "SolutionSet"
-#'   )
+#'   problem <- create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_constraint_targets_relative(0.25) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     set_solver_cbc(verbose = FALSE)
 #'
-#'   plot_spatial_pu(solset)
+#'   solutions <- solve(problem)
+#'
+#'   plot_spatial_pu(solutions)
 #' }
 #'
 #' @seealso
@@ -423,16 +472,20 @@ plot_spatial_pu <- function(
     selected_color <- NA
   }
 
-  solutions <- .pa_plot_spatial_resolve_solutions(x, runs = runs)
-  multi_runs <- length(solutions) > 1L
-  pu_sf_min <- .pa_plot_spatial_get_geometry(solutions)
+  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
+  multi_runs <- length(run_ids) > 1L
+  pu_sf_min <- .pa_plot_spatial_get_geometry(x)
 
-  pu_list <- vector("list", length(solutions))
-  for (i in seq_along(solutions)) {
-    sol_i <- solutions[[i]]
-    run_i <- as.integer(names(solutions)[i])
+  pu_list <- vector("list", length(run_ids))
 
-    pu_tbl <- get_pu(sol_i, only_selected = FALSE)
+  for (i in seq_along(run_ids)) {
+    run_i <- run_ids[i]
+
+    pu_tbl <- get_pu(
+      x,
+      only_selected = FALSE,
+      run = run_i
+    )
     if (!all(c("id", "selected") %in% names(pu_tbl))) {
       stop("PU summary must contain 'id' and 'selected'.", call. = FALSE)
     }
@@ -481,8 +534,8 @@ plot_spatial_pu <- function(
 #' Plot the spatial distribution of selected actions from a
 #' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 #'
-#' This function maps the selected planning unit--action pairs returned by the
-#' stored action summary onto the planning-unit geometry stored in the associated
+#' This function maps the selected planning unit--action pairs returned by
+#' \code{\link{get_actions}} onto the planning-unit geometry stored in the associated
 #' \code{Problem} object.
 #'
 #' @details
@@ -531,48 +584,68 @@ plot_spatial_pu <- function(
 #' @return Invisibly returns a \code{ggplot} object.
 #'
 #' @examples
-#' if (requireNamespace("sf", quietly = TRUE) &&
-#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (
+#'   requireNamespace("sf", quietly = TRUE) &&
+#'   requireNamespace("ggplot2", quietly = TRUE) &&
+#'   requireNamespace("rcbc", quietly = TRUE)
+#' ) {
 #'   data("sim_pu_sf", package = "multiscape")
 #'
-#'   actions_df <- data.frame(
-#'     id = c("conservation", "restoration"),
-#'     name = c("conservation", "restoration")
+#'   pu <- sim_pu_sf[
+#'     seq_len(min(4L, nrow(sim_pu_sf))),
+#'   ]
+#'
+#'   pu$id <- seq_len(nrow(pu))
+#'   pu$cost <- seq_len(nrow(pu))
+#'
+#'   features <- data.frame(
+#'     id = 1L,
+#'     name = "feature_1"
 #'   )
 #'
-#'   problem <- structure(
-#'     list(
-#'       data = list(
-#'         pu_sf = sim_pu_sf,
-#'         actions = actions_df
+#'   dist_features <- data.frame(
+#'     pu = pu$id,
+#'     feature = 1L,
+#'     amount = rep(1, nrow(pu))
+#'   )
+#'
+#'   actions <- data.frame(
+#'     id = c("conservation", "restoration")
+#'   )
+#'
+#'   effects <- data.frame(
+#'     action = actions$id,
+#'     feature = 1L,
+#'     multiplier = c(1.0, 1.5)
+#'   )
+#'
+#'   problem <- create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_actions(
+#'       actions = actions,
+#'       cost = c(
+#'         conservation = 1,
+#'         restoration = 2
 #'       )
-#'     ),
-#'     class = "Problem"
+#'     ) |>
+#'     add_effects(
+#'       effects = effects,
+#'       effect_type = "after"
+#'     ) |>
+#'     add_constraint_targets_relative(0.25) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     set_solver_cbc(verbose = FALSE)
+#'
+#'   solutions <- solve(problem)
+#'
+#'   plot_spatial_actions(
+#'     solutions,
+#'     layout = "single"
 #'   )
-#'
-#'   ids <- sim_pu_sf$id[seq_len(min(6, nrow(sim_pu_sf)))]
-#'
-#'   run_result <- list(
-#'     problem = problem,
-#'     summary = list(
-#'       actions = data.frame(
-#'         pu = c(ids[1:3], ids[4:6]),
-#'         action = c(rep("conservation", 3), rep("restoration", 3)),
-#'         selected = 1L
-#'       )
-#'     )
-#'   )
-#'
-#'   solset <- structure(
-#'     list(
-#'       solution = list(
-#'         solutions = list(run_result)
-#'       )
-#'     ),
-#'     class = "SolutionSet"
-#'   )
-#'
-#'   plot_spatial_actions(solset, layout = "facet")
 #' }
 #'
 #' @seealso
@@ -616,8 +689,8 @@ plot_spatial_actions <- function(
     selected_color <- NA
   }
 
-  solutions <- .pa_plot_spatial_resolve_solutions(x, runs = runs)
-  multi_runs <- length(solutions) > 1L
+  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
+  multi_runs <- length(run_ids) > 1L
 
   if (isTRUE(multi_runs) && identical(layout, "facet")) {
     stop(
@@ -627,14 +700,18 @@ plot_spatial_actions <- function(
     )
   }
 
-  pu_sf_min <- .pa_plot_spatial_get_geometry(solutions)
+  pu_sf_min <- .pa_plot_spatial_get_geometry(x)
 
-  act_list <- vector("list", length(solutions))
-  for (i in seq_along(solutions)) {
-    sol_i <- solutions[[i]]
-    run_i <- as.integer(names(solutions)[i])
+  act_list <- vector("list", length(run_ids))
 
-    act_tbl <- sol_i$summary$actions %||% NULL
+  for (i in seq_along(run_ids)) {
+    run_i <- run_ids[i]
+
+    act_tbl <- get_actions(
+      x,
+      only_selected = FALSE,
+      run = run_i
+    )
     if (is.null(act_tbl) || !inherits(act_tbl, "data.frame")) {
       stop("No actions summary found for the selected run.", call. = FALSE)
     }
@@ -649,7 +726,7 @@ plot_spatial_actions <- function(
     act_tbl$action <- as.character(act_tbl$action)
 
     if (!is.null(actions)) {
-      keep <- .pa_resolve_action_subset(sol_i$problem, subset = actions)
+      keep <- .pa_resolve_action_subset(x$problem, subset = actions)
       keep_ids <- as.character(keep$id)
       act_tbl <- act_tbl[act_tbl$action %in% keep_ids, , drop = FALSE]
     }
@@ -812,8 +889,9 @@ plot_spatial_actions <- function(
 #' returned by \code{\link{solve}}.
 #'
 #' This function combines baseline feature amounts from the associated
-#' \code{Problem} object with positive effects induced by selected actions to
-#' produce planning-unit-level feature maps.
+#' \code{Problem} object with positive effects induced by the actions selected
+#' in each stored run to produce planning-unit-level feature maps. Selected
+#' actions are obtained through \code{\link{get_actions}}.
 #'
 #' @details
 #' For each planning unit \eqn{i} and feature \eqn{f}, the plotted quantities
@@ -881,70 +959,77 @@ plot_spatial_actions <- function(
 #' @return Invisibly returns a \code{ggplot} object.
 #'
 #' @examples
-#' if (requireNamespace("sf", quietly = TRUE) &&
-#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (
+#'   requireNamespace("sf", quietly = TRUE) &&
+#'   requireNamespace("ggplot2", quietly = TRUE) &&
+#'   requireNamespace("rcbc", quietly = TRUE)
+#' ) {
 #'   data("sim_pu_sf", package = "multiscape")
 #'
-#'   n <- min(6, nrow(sim_pu_sf))
-#'   ids <- sim_pu_sf$id[seq_len(n)]
+#'   pu <- sim_pu_sf[
+#'     seq_len(min(4L, nrow(sim_pu_sf))),
+#'   ]
 #'
-#'   features_df <- data.frame(
-#'     id = c(1, 2),
+#'   pu$id <- seq_len(nrow(pu))
+#'   pu$cost <- seq_len(nrow(pu))
+#'
+#'   features <- data.frame(
+#'     id = 1:2,
 #'     name = c("feature_1", "feature_2")
 #'   )
 #'
-#'   dist_features_df <- data.frame(
-#'     pu = rep(ids, times = 2),
-#'     feature = rep(c(1, 2), each = n),
-#'     amount = c(seq_len(n), rev(seq_len(n)))
-#'   )
-#'
-#'   dist_effects_df <- data.frame(
-#'     pu = ids,
-#'     action = "conservation",
-#'     feature = rep(c(1, 2), length.out = n),
-#'     benefit = rep(1, n)
-#'   )
-#'
-#'   actions_df <- data.frame(
-#'     id = "conservation",
-#'     name = "conservation"
-#'   )
-#'
-#'   problem <- structure(
-#'     list(
-#'       data = list(
-#'         pu_sf = sim_pu_sf,
-#'         features = features_df,
-#'         dist_features = dist_features_df,
-#'         dist_effects = dist_effects_df,
-#'         actions = actions_df
-#'       )
-#'     ),
-#'     class = "Problem"
-#'   )
-#'
-#'   run_result <- list(
-#'     problem = problem,
-#'     summary = list(
-#'       actions = data.frame(
-#'         pu = ids,
-#'         action = "conservation",
-#'         selected = 1L
-#'       )
+#'   dist_features <- data.frame(
+#'     pu = rep(pu$id, each = 2),
+#'     feature = rep(features$id, times = nrow(pu)),
+#'     amount = c(
+#'       4, 1,
+#'       3, 2,
+#'       2, 3,
+#'       1, 4
 #'     )
 #'   )
 #'
-#'   solset <- structure(
-#'     list(
-#'       solution = list(
-#'         solutions = list(run_result)
-#'       )
-#'     ),
-#'     class = "SolutionSet"
+#'   actions <- data.frame(
+#'     id = c("conservation", "restoration")
 #'   )
 #'
-#'   plot_spatial_features(solset, features = "feature_1", value = "final")
+#'   effects <- data.frame(
+#'     action = rep(actions$id, each = 2),
+#'     feature = rep(features$id, times = 2),
+#'     multiplier = c(
+#'       1.0, 1.0,
+#'       1.5, 1.5
+#'     )
+#'   )
+#'
+#'   problem <- create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_actions(
+#'       actions = actions,
+#'       cost = c(
+#'         conservation = 1,
+#'         restoration = 2
+#'       )
+#'     ) |>
+#'     add_effects(
+#'       effects = effects,
+#'       effect_type = "after"
+#'     ) |>
+#'     add_constraint_targets_relative(0.25) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     set_solver_cbc(verbose = FALSE)
+#'
+#'   solutions <- solve(problem)
+#'
+#'   plot_spatial_features(
+#'     solutions,
+#'     features = "feature_1",
+#'     value = "final"
+#'   )
 #' }
 #'
 #' @seealso
@@ -988,8 +1073,8 @@ plot_spatial_features <- function(
     selected_color <- NA
   }
 
-  solutions <- .pa_plot_spatial_resolve_solutions(x, runs = runs)
-  multi_runs <- length(solutions) > 1L
+  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
+  multi_runs <- length(run_ids) > 1L
 
   if (isTRUE(multi_runs)) {
     if (is.null(features) || length(features) != 1L) {
@@ -1000,8 +1085,8 @@ plot_spatial_features <- function(
     }
   }
 
-  pu_sf_min <- .pa_plot_spatial_get_geometry(solutions)
-  pr <- solutions[[1]]$problem
+  pu_sf_min <- .pa_plot_spatial_get_geometry(x)
+  pr <- x$problem
 
   distf <- pr$data$dist_features %||% NULL
   feats <- pr$data$features %||% NULL
@@ -1019,10 +1104,10 @@ plot_spatial_features <- function(
   feat_map <- feats[, intersect(c("id", "name"), names(feats)), drop = FALSE]
   if (!("name" %in% names(feat_map))) feat_map$name <- as.character(feat_map$id)
 
-  feature_frames <- vector("list", length(solutions))
-  for (i in seq_along(solutions)) {
-    sol_i <- solutions[[i]]
-    run_i <- as.integer(names(solutions)[i])
+  feature_frames <- vector("list", length(run_ids))
+
+  for (i in seq_along(run_ids)) {
+    run_i <- run_ids[i]
 
     base_tbl <- stats::aggregate(
       amount ~ pu + feature,
@@ -1031,8 +1116,8 @@ plot_spatial_features <- function(
     )
     names(base_tbl)[names(base_tbl) == "amount"] <- "baseline"
 
-    eff <- sol_i$problem$data$dist_effects_model %||%
-      sol_i$problem$data$dist_effects %||%
+    eff <- pr$data$dist_effects_model %||%
+      pr$data$dist_effects %||%
       NULL
 
     ben_tbl <- NULL
@@ -1041,7 +1126,14 @@ plot_spatial_features <- function(
         inherits(eff, "data.frame") &&
         all(c("pu", "feature", "action", "benefit") %in% names(eff))) {
 
-      act_sel <- sol_i$summary$actions %||% NULL
+      act_sel <- tryCatch(
+        get_actions(
+          x,
+          only_selected = FALSE,
+          run = run_i
+        ),
+        error = function(e) NULL
+      )
 
       if (!is.null(act_sel) &&
           inherits(act_sel, "data.frame") &&
@@ -1230,27 +1322,75 @@ plot_spatial_features <- function(
 #' @return Invisibly returns a \code{ggplot} object.
 #'
 #' @examples
-#' if (requireNamespace("ggplot2", quietly = TRUE)) {
-#'   solset <- structure(
-#'     list(
-#'       solution = list(
-#'         runs = data.frame(
-#'           run_id = 1:5,
-#'           status = rep("optimal", 5),
-#'           runtime = c(1.2, 1.1, 1.4, 1.3, 1.5),
-#'           gap = c(0, 0, 0, 0, 0),
-#'           value_cost = c(10, 12, 14, 16, 18),
-#'           value_benefit = c(5, 7, 8, 9, 10),
-#'           value_loss = c(4, 3, 3, 2, 2)
-#'         )
-#'       )
-#'     ),
-#'     class = "SolutionSet"
+#' if (
+#'   requireNamespace("ggplot2", quietly = TRUE) &&
+#'   requireNamespace("rcbc", quietly = TRUE)
+#' ) {
+#'   pu <- data.frame(
+#'     id = 1:4,
+#'     cost = c(1, 2, 3, 4)
 #'   )
 #'
-#'   plot_tradeoff(solset)
-#'   plot_tradeoff(solset, objectives = c("cost", "benefit"))
-#'   plot_tradeoff(solset, color_by = "loss", label_runs = TRUE)
+#'   features <- data.frame(
+#'     id = 1:2,
+#'     name = c("sp1", "sp2")
+#'   )
+#'
+#'   dist_features <- data.frame(
+#'     pu = c(1, 1, 2, 3, 4),
+#'     feature = c(1, 2, 2, 1, 2),
+#'     amount = c(5, 2, 3, 4, 1)
+#'   )
+#'
+#'   actions <- data.frame(
+#'     id = c("conservation", "restoration")
+#'   )
+#'
+#'   effects <- data.frame(
+#'     action = rep(actions$id, each = 2),
+#'     feature = rep(features$id, times = 2),
+#'     multiplier = c(
+#'       1.0, 1.0,
+#'       1.5, 1.5
+#'     )
+#'   )
+#'
+#'   problem <- create_problem(
+#'     pu = pu,
+#'     features = features,
+#'     dist_features = dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_actions(
+#'       actions = actions,
+#'       cost = c(
+#'         conservation = 1,
+#'         restoration = 2
+#'       )
+#'     ) |>
+#'     add_effects(
+#'       effects = effects,
+#'       effect_type = "after"
+#'     ) |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost") |>
+#'     add_objective_max_benefit(alias = "benefit") |>
+#'     set_method_weighted_sum(
+#'       aliases = c("cost", "benefit"),
+#'       runs = run_grid(
+#'         n = 3,
+#'         include_extremes = TRUE
+#'       ),
+#'       normalize_weights = TRUE
+#'     ) |>
+#'     set_solver_cbc(verbose = FALSE)
+#'
+#'   solutions <- solve(problem)
+#'
+#'   plot_tradeoff(
+#'     solutions,
+#'     objectives = c("cost", "benefit")
+#'   )
 #' }
 #'
 #' @seealso
