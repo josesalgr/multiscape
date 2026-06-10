@@ -4883,19 +4883,49 @@ NULL
       target
     }
 
-    actions_chr <- strsplit(
-      actions_txt,
-      "\\|"
-    )[[1]]
+    actions_txt <- as.character(actions_txt)[1]
 
-    action_subset <- .pa_resolve_action_subset(
-      x,
-      subset = actions_chr
+    use_all_actions <- (
+      length(actions_txt) == 0L ||
+        is.na(actions_txt) ||
+        !nzchar(trimws(actions_txt)) ||
+        identical(trimws(actions_txt), "NA")
     )
 
+    if (use_all_actions) {
+      da_actions <- da
+    } else {
+      actions_chr <- strsplit(
+        actions_txt,
+        "\\|"
+      )[[1]]
+
+      actions_chr <- trimws(actions_chr)
+      actions_chr <- actions_chr[
+        !is.na(actions_chr) &
+          nzchar(actions_chr) &
+          actions_chr != "NA"
+      ]
+
+      if (length(actions_chr) == 0L) {
+        da_actions <- da
+      } else {
+        action_subset <- .pa_resolve_action_subset(
+          x,
+          subset = actions_chr
+        )
+
+        da_actions <- da[
+          da$action %in% action_subset$id,
+          ,
+          drop = FALSE
+        ]
+      }
+    }
+
     matched <- merge(
-      da[
-        da$action %in% action_subset$id,
+      da_actions[
+        ,
         c("internal_pu", "internal_row"),
         drop = FALSE
       ],

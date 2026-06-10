@@ -53,6 +53,24 @@ add_constraint_group_area <- function(
     )
   }
 
+  if (
+    !is.logical(relative) ||
+    length(relative) != 1L ||
+    is.na(relative)
+  ) {
+    stop("`relative` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  if (
+    !is.numeric(tolerance) ||
+    length(tolerance) != 1L ||
+    is.na(tolerance) ||
+    !is.finite(tolerance) ||
+    tolerance < 0
+  ) {
+    stop("`tolerance` must be a single non-negative number.", call. = FALSE)
+  }
+
   x <- .pa_clone_data(x)
 
   selected_groups <- if (is.null(groups)) {
@@ -61,7 +79,9 @@ add_constraint_group_area <- function(
     groups
   }
 
-  unknown <- setdiff(selected_groups, x$data$groups$id)
+  selected_groups <- as.character(selected_groups)
+
+  unknown <- setdiff(selected_groups, as.character(x$data$groups$id))
 
   if (length(unknown) > 0L) {
     stop(
@@ -85,31 +105,59 @@ add_constraint_group_area <- function(
     )
   }
 
-  groups_txt <- .pa_subset_to_string(
-    selected_groups
-  )
+  if (length(target) == 1L) {
+    target_values <- rep(as.numeric(target), length(selected_groups))
+    names(target_values) <- selected_groups
+  } else {
+    if (is.null(names(target)) || any(!nzchar(names(target)))) {
+      stop(
+        "When `target` has length greater than one, it must be a named numeric vector.",
+        call. = FALSE
+      )
+    }
+
+    missing_targets <- setdiff(selected_groups, names(target))
+
+    if (length(missing_targets) > 0L) {
+      stop(
+        "`target` is missing values for group(s): ",
+        paste(missing_targets, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    target_values <- as.numeric(target[selected_groups])
+    names(target_values) <- selected_groups
+  }
 
   spec <- data.frame(
     type = "group_area",
+    group = selected_groups,
     sense = sense,
-    target = I(list(target)),
+    value = as.numeric(target_values),
     relative = isTRUE(relative),
     tolerance = as.numeric(tolerance),
-    groups = groups_txt,
     actions = actions_txt,
     name = if (is.null(name)) {
-      paste0("group_area_", sense)
+      paste0("group_area_", sense, "_", selected_groups)
     } else {
-      name
+      paste0(name, "_", selected_groups)
     },
     stringsAsFactors = FALSE
   )
 
   x$data$constraints <- x$data$constraints %||% list()
-  x$data$constraints$group_area <-
-    x$data$constraints$group_area %||% list()
 
-  x$data$constraints$group_area[[length(x$data$constraints$group_area) + 1L]] <- spec
+  if (is.null(x$data$constraints$group_area)) {
+    x$data$constraints$group_area <- spec
+  } else {
+    x$data$constraints$group_area <- rbind(
+      x$data$constraints$group_area,
+      spec
+    )
+    rownames(x$data$constraints$group_area) <- NULL
+  }
 
   if (!is.null(x$data$model_ptr)) {
     x$data$meta <- x$data$meta %||% list()
