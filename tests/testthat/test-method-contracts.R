@@ -101,19 +101,20 @@ test_that("weighted-sum validates aliases and manual weights", {
     )
   )
 
-  expect_error(
-    multiscape::set_method_weighted_sum(
-      p,
-      aliases = c("cost", "benefit"),
-      runs = multiscape::run_manual(
-        data.frame(
-          weight_cost = 2,
-          weight_benefit = 1
-        )
-      ),
-      normalize_weights = FALSE
-    )
+  out <- multiscape::set_method_weighted_sum(
+    p,
+    aliases = c("cost", "benefit"),
+    runs = multiscape::run_manual(
+      data.frame(
+        weight_cost = 2,
+        weight_benefit = 1
+      )
+    ),
+    normalize_weights = FALSE
   )
+
+  expect_s3_class(out, "Problem")
+  expect_false(out$data$method$normalize_weights)
 })
 
 
@@ -205,4 +206,24 @@ test_that("multi-objective methods reject invalid controls", {
       control = list()
     )
   )
+})
+
+
+test_that("weighted-sum can use raw manual weights", {
+  p <- make_round4_mo_problem()
+
+  out <- multiscape::set_method_weighted_sum(
+    p,
+    aliases = c("cost", "benefit"),
+    runs = multiscape::run_manual(
+      data.frame(
+        weight_cost = 2,
+        weight_benefit = 1
+      )
+    ),
+    normalize_weights = FALSE
+  )
+
+  expect_s3_class(out, "Problem")
+  expect_false(out$data$method$normalize_weights)
 })
