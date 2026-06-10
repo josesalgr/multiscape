@@ -634,22 +634,5 @@ set_method_weighted_sum <- function(x,
     )
   }
 
-  if (!isTRUE(normalize_weights)) {
-    tolerance <- sqrt(.Machine$double.eps)
-    bad_rows <- which(abs(totals - 1) > tolerance)
-
-    if (length(bad_rows) > 0L) {
-      stop(
-        paste0(
-          "When `normalize_weights = FALSE`, the weights in each manual ",
-          "run must sum to one. Invalid row(s): "
-        ),
-        paste(bad_rows, collapse = ", "),
-        ".",
-        call. = FALSE
-      )
-    }
-  }
-
   invisible(TRUE)
 }
