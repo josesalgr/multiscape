@@ -4926,8 +4926,6 @@ add_objective <- function(x, objective) {
   #   stop("Weighted runs cannot contain negative weights.", call. = FALSE)
   # }
 
-  W[abs(W) < tol] <- 0
-
   row_sum <- rowSums(W)
 
   # if (any(row_sum <= tol)) {
@@ -4936,14 +4934,6 @@ add_objective <- function(x, objective) {
 
   if (isTRUE(normalize_weights)) {
     W <- sweep(W, 1, row_sum, "/")
-  } else {
-    bad <- abs(row_sum - 1) > sqrt(tol)
-    if (any(bad)) {
-      # stop(
-      #   "Weights must sum to 1 in each run when `normalize_weights = FALSE`.",
-      #   call. = FALSE
-      # )
-    }
   }
 
   design[, weight_cols] <- W
