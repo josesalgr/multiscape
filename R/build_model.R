@@ -1379,6 +1379,10 @@
     x <- .pa_apply_budget_constraints_if_present(x)
   }
 
+  if (exists(".pa_apply_group_area_constraints_if_present", mode = "function")) {
+    x <- .pa_apply_group_area_constraints_if_present(x)
+  }
+
   x
 }
 

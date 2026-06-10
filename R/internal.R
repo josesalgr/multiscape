@@ -4774,6 +4774,136 @@ NULL
   x
 }
 
+.pa_apply_group_area_constraints_if_present <- function(x) {
+
+  stopifnot(inherits(x, "Problem"))
+
+  specs <- x$data$constraints$group_area %||% NULL
+
+  if (is.null(specs) || nrow(specs) == 0L) {
+    return(x)
+  }
+
+  if (is.null(x$data$model_ptr)) {
+    stop(
+      "Model pointer is missing while applying group-area constraints.",
+      call. = FALSE
+    )
+  }
+
+  dist_groups <- x$data$dist_groups
+
+  if (is.null(dist_groups) ||
+      !is.data.frame(dist_groups) ||
+      nrow(dist_groups) == 0L) {
+    stop(
+      "Group-distribution data are missing or empty.",
+      call. = FALSE
+    )
+  }
+
+  x <- .pa_refresh_model_snapshot(x)
+
+  model_list <- x$data$model_list
+  x0 <- as.integer(model_list$x_offset)
+
+  da <- x$data$dist_actions_model
+
+  for (k in seq_len(nrow(specs))) {
+
+    spec <- specs[k, , drop = FALSE]
+
+    group_id <- spec$group
+    target <- as.numeric(spec$value)
+    relative <- isTRUE(spec$relative)
+    actions_txt <- spec$actions
+
+    dg <- dist_groups[
+      dist_groups$group == group_id,
+      ,
+      drop = FALSE
+    ]
+
+    if (nrow(dg) == 0L) {
+      stop(
+        "No group-distribution rows were found for group `",
+        group_id,
+        "`.",
+        call. = FALSE
+      )
+    }
+
+    available_amount <- sum(dg$amount)
+
+    rhs <- if (relative) {
+      target * available_amount
+    } else {
+      target
+    }
+
+    actions_chr <- strsplit(
+      actions_txt,
+      "\\|"
+    )[[1]]
+
+    action_subset <- .pa_resolve_action_subset(
+      x,
+      subset = actions_chr
+    )
+
+    matched <- merge(
+      da[
+        da$action %in% action_subset$id,
+        c("internal_pu", "internal_row"),
+        drop = FALSE
+      ],
+      dg[
+        ,
+        c("internal_pu", "amount"),
+        drop = FALSE
+      ],
+      by = "internal_pu",
+      all = FALSE,
+      sort = FALSE
+    )
+
+    if (nrow(matched) == 0L) {
+      stop(
+        "No decision variables match group `",
+        group_id,
+        "` and the selected actions.",
+        call. = FALSE
+      )
+    }
+
+    var_index <- x0 +
+      as.integer(matched$internal_row) -
+      1L
+
+    coeff <- as.numeric(matched$amount)
+
+    cpp_sense <- switch(
+      spec$sense,
+      min = ">=",
+      max = "<=",
+      equal = "=="
+    )
+
+    x <- .pa_add_linear_constraint(
+      x = x,
+      var_index_0based = var_index,
+      coeff = coeff,
+      sense = cpp_sense,
+      rhs = rhs,
+      name = spec$name,
+      block_name = "group_area",
+      tag = as.character(group_id),
+      refresh_snapshot = FALSE
+    )
+  }
+
+  x
+}
 
 .pa_apply_budget_constraints_if_present <- function(x) {
   stopifnot(inherits(x, "Problem"))
