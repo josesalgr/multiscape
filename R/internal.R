@@ -4120,20 +4120,45 @@ NULL
 
     sense <- model$sense
     sense[sense == ">="] <- "G"
-    sense[sense == "=="] <- "E"
+    sense[sense %in% c("==", "=")] <- "E"
     sense[sense == "<="] <- "L"
+
+    # Avoid deprecated Matrix coercion inside Rcplex.
+    if (inherits(model$A, "sparseMatrix")) {
+      model$A <- methods::as(model$A, "CsparseMatrix")
+    }
 
     params <- list(
       trace = as.integer(verbose),
       epgap = gap_limit,
-      tilim = time_limit
+      tilim = time_limit,
+      threads = cores
     )
-    params <- utils::modifyList(params, solver_params_user)
 
-    if (any(solution_limit, output_file)) {
+    params <- utils::modifyList(
+      params,
+      solver_params_user
+    )
+
+    unsupported <- character(0)
+
+    if (isTRUE(solution_limit)) {
+      unsupported <- c(unsupported, "solution_limit")
+    }
+
+    if (isTRUE(output_file)) {
+      unsupported <- c(unsupported, "output_file")
+    }
+
+    if (length(unsupported) > 0L) {
       warning(
-        "Options not available with cplex solver via this interface: solution_limit, output_file",
-        call. = FALSE, immediate. = TRUE
+        paste0(
+          "Option(s) not available with the CPLEX solver through Rcplex: ",
+          paste(unsupported, collapse = ", "),
+          "."
+        ),
+        call. = FALSE,
+        immediate. = TRUE
       )
     }
 
@@ -4151,21 +4176,38 @@ NULL
       )
     })
 
-    runtime <- rt[[3]]
+    runtime <- unname(rt[["elapsed"]])
 
-    status_code <- dplyr::case_when(
-      sol_cplex$status %in% c(101L, 1L) ~ 0L,
-      sol_cplex$status %in% c(2L, 3L, 103L, 118L) ~ 1L,
-      sol_cplex$status == 107L ~ 2L,
-      sol_cplex$status == 108L ~ 3L,
-      sol_cplex$status == 232L ~ 4L,
-      TRUE ~ 999L
-    )
+    status_cplex <- as.integer(sol_cplex$status)[1]
+    status_raw <- as.character(status_cplex)
+
+    status_code <- if (status_cplex %in% c(1L, 101L, 102L)) {
+      0L
+    } else if (status_cplex %in% c(2L, 3L, 4L, 103L, 118L, 119L)) {
+      1L
+    } else if (status_cplex %in% c(107L, 111L, 113L, 131L)) {
+      2L
+    } else if (status_cplex %in% c(108L, 112L, 114L, 132L)) {
+      3L
+    } else if (status_cplex == 104L) {
+      4L
+    } else {
+      999L
+    }
 
     objval <- sol_cplex$obj %||% NA_real_
     solvec <- sol_cplex$xopt %||% numeric(0)
-    gap    <- 0
 
+    # Rcplex does not expose the final relative MIP gap directly.
+    # For strict optimality it is zero; for tolerance optimality,
+    # the accepted tolerance is the best available value.
+    gap <- if (status_cplex %in% c(1L, 101L)) {
+      0
+    } else if (status_cplex == 102L) {
+      gap_limit
+    } else {
+      NA_real_
+    }
   } else if (solver == "symphony") {
 
     if (isTRUE(output_file)) {
