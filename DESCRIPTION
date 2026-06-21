@@ -52,7 +52,8 @@ Imports:
     ggplot2,
     terra,
     ggrepel,
-    lifecycle
+    lifecycle,
+    moocore
 Suggests: 
     roxygen2,
     prioritizr,
@@ -72,8 +73,7 @@ Suggests:
     tibble,
     reshape2,
     rcbc,
-    gurobi,
-    moocore
+    gurobi
 LinkingTo:
   Rcpp, 
   RcppArmadillo (>= 0.10.1.0.0), 
