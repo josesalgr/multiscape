@@ -4,13 +4,13 @@
 \alias{get_targets}
 \title{Get target achievement summary from a solution set}
 \usage{
-get_targets(x, run = NULL)
+get_targets(x, solution = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{run}{Optional positive integer giving the run index to extract. If
+\item{solution}{Optional positive integer giving the solution index to extract. If
 \code{NULL}, all runs are returned when available.}
 }
 \value{
@@ -65,9 +65,9 @@ readability:
 \item \code{target_value} is returned as \code{target}.
 }
 
-If \code{run} is provided, only rows belonging to that run are returned. If
-the result contains a \code{run_id} column but only a single run is present and
-\code{run} was not requested explicitly, the \code{run_id} column is removed
+If \code{solution} is provided, only rows belonging to that solution are returned. If
+the result contains a \code{run_id} column but only a single solution is present and
+\code{solution} was not requested explicitly, the \code{solution_id} column is removed
 for convenience.
 
 The \code{gap} column is expected to be part of the stored summary. When
@@ -114,11 +114,11 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_targets(solutions)
 
   # Target achievement for one run
-  run_ids <- get_runs(solutions)$run_id
+  solution_ids <- get_runs(solutions)$solution_id
 
   get_targets(
     solutions,
-    run = run_ids[1]
+    solution = solution_ids[1]
   )
 }
 

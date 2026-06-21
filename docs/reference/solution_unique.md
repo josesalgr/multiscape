@@ -105,7 +105,7 @@ insignificant floating-point differences as distinct objective points.
 [`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md),
 [`solution_append`](https://josesalgr.github.io/multiscape/reference/solution_append.md),
 [`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
+`get_solution_vector`
 
 ## Examples
 
@@ -161,9 +161,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 7,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 7
     ),
     normalize_weights = TRUE
   )

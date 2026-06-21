@@ -275,7 +275,7 @@ NULL
   n_runs <- if (inherits(runs, "data.frame")) nrow(runs) else 0L
 
   if (inherits(runs, "data.frame") && "solution_id" %in% names(runs)) {
-    has_solution <- !is.na(runs$solution_id) & nzchar(runs$solution_id)
+    has_solution <- !is.na(runs$solution_id) & runs$solution_id >= 1L
     return(list(stored = sum(has_solution), missing = sum(!has_solution)))
   }
 

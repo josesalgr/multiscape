@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_objectives.R
 \name{add_objective_min_fragmentation_pu}
 \alias{add_objective_min_fragmentation_pu}
-\title{Add objective: minimize fragmentation}
+\title{Add objective: minimize planning-unit fragmentation}
 \usage{
 add_objective_min_fragmentation_pu(
   x,
@@ -28,125 +28,11 @@ multi-objective workflows.}
 An updated \code{Problem} object.
 }
 \description{
-Define an objective that minimizes planning-unit fragmentation over a stored
-spatial relation.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 
-This objective acts on the planning-unit selection pattern through the binary
-planning-unit variables \eqn{w_i}. It is therefore appropriate when spatial
-cohesion is to be encouraged at the level of the selected planning-unit set
-as a whole.
-}
-\details{
-Use this function when spatial cohesion should be encouraged at the level of
-the selected planning-unit set as a whole.
-
-Let \eqn{\mathcal{I}} denote the set of planning units and let
-\eqn{w_i \in \{0,1\}} indicate whether planning unit \eqn{i \in \mathcal{I}}
-is selected.
-
-Let the chosen spatial relation define a set of weighted pairs with weights
-\eqn{\omega_{ij} \ge 0}. These relation weights are interpreted by the model
-builder after scaling by \eqn{\lambda =} \code{weight_multiplier}.
-
-The internal preparation step constructs one auxiliary variable
-\eqn{y_{ij} \in [0,1]} for each unique non-diagonal undirected edge
-\eqn{(i,j)} with \eqn{i < j}. The intended semantics is:
-\deqn{
-y_{ij} = w_i \land w_j.
-}
-
-This is enforced by the standard linearization:
-\deqn{
-y_{ij} \le w_i,
-}
-\deqn{
-y_{ij} \le w_j,
-}
-\deqn{
-y_{ij} \ge w_i + w_j - 1.
-}
-
-Thus, \eqn{y_{ij}=1} if and only if both planning units \eqn{i} and
-\eqn{j} are selected, and \eqn{y_{ij}=0} otherwise.
-
-The exact objective coefficients are assembled later by the model builder
-from:
-\itemize{
-\item the planning-unit variables \eqn{w_i},
-\item the edge-conjunction variables \eqn{y_{ij}},
-\item the stored relation weights \eqn{\omega_{ij}},
-\item and the multiplier \eqn{\lambda}.
-}
-
-Conceptually, the resulting objective is a boundary- or relation-based
-compactness functional that penalizes exposed or weakly connected selected
-patterns while rewarding adjacency among selected planning units.
-
-In the common case where \code{relation_name = "boundary"} and the relation
-was built with \code{\link{add_spatial_boundary}}, the objective corresponds
-to a boundary-length-style fragmentation penalty.
-
-Setting \code{weight_multiplier = 0} removes the contribution of the spatial
-relation from the objective after scaling.
-
-This objective does not distinguish between different actions within the same
-planning unit. If action-specific spatial cohesion is required, use
-\code{\link{add_objective_min_fragmentation_action}} instead.
-}
-\examples{
-pu_tbl <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-feat_tbl <- data.frame(
-  id = 1:2,
-  name = c("feature_1", "feature_2")
-)
-
-dist_feat_tbl <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-actions_df <- data.frame(
-  id = c("conservation", "restoration"),
-  name = c("conservation", "restoration")
-)
-
-bound_df <- data.frame(
-  id1 = c(1, 1, 2, 1, 2, 3, 4),
-  id2 = c(1, 2, 2, 3, 4, 4, 4),
-  boundary = c(4, 1, 4, 1, 1, 1, 4)
-)
-
-p <- create_problem(
-  pu = pu_tbl,
-  features = feat_tbl,
-  dist_features = dist_feat_tbl,
-  cost = "cost"
-) |>
-  add_actions(actions_df, cost = c(conservation = 1, restoration = 2))
-
-p <- add_spatial_boundary(
-  x = p,
-  boundary = bound_df,
-  name = "boundary",
-  include_self = TRUE,
-  edge_factor = 1
-)
-
-p <- add_objective_min_fragmentation_pu(
-  p,
-  relation_name = "boundary"
-)
-
-p$data$model_args
-
+\code{add_objective_min_fragmentation_pu()} has been replaced by
+\code{\link{add_objective_min_fragmentation_planning_units}}.
 }
 \seealso{
-\code{\link{add_spatial_boundary}},
-\code{\link{add_spatial_relations}},
-\code{\link{add_objective_min_fragmentation_action}}
+\code{\link{add_objective_min_fragmentation_planning_units}}
 }

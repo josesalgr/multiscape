@@ -31,7 +31,7 @@ tables."><meta property="og:image" content="https://josesalgr.github.io/multisca
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,7 +148,7 @@ preserves traceability to the original run design.</p>
 <p>If <code>nondominated = TRUE</code>, the function further keeps only non-dominated
 solutions among the runs retained by the previous filters. Dominance is
 evaluated in objective space using the objective values stored in the run
-table. Objective senses are read from <code><a href="get_objective_specs.html">get_objective_specs</a></code>; any
+table. Objective senses are read from <code>get_objective_specs</code>; any
 maximization objective is internally multiplied by \(-1\) so that
 dominance can be evaluated in minimization space.</p>
 <p>Non-dominated filtering requires the <span class="pkg">moocore</span> package.</p>
@@ -159,7 +159,7 @@ dominance can be evaluated in minimization space.</p>
 <code><a href="solve.html">solve</a></code>,
 <code><a href="get_runs.html">get_runs</a></code>,
 <code><a href="get_objectives.html">get_objectives</a></code>,
-<code><a href="get_objective_specs.html">get_objective_specs</a></code>,
+<code>get_objective_specs</code>,
 <code><a href="get_pu.html">get_pu</a></code>,
 <code><a href="get_actions.html">get_actions</a></code></p></div>
     </div>
@@ -217,9 +217,8 @@ dominance can be evaluated in minimization space.</p>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>      include_extremes <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>

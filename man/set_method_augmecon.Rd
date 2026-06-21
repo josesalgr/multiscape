@@ -15,6 +15,7 @@ set_method_augmecon(
   lexicographic = TRUE,
   lexicographic_tol = 1e-09,
   augmentation = 0.001,
+  slack_upper_bound = 1e+06,
   control = NULL
 )
 }
@@ -28,22 +29,22 @@ that is, the objective optimized directly in the AUGMECON formulation.}
 the method. If \code{NULL}, all registered objective aliases are used. The
 value of \code{primary} must be included in \code{aliases}.}
 
-\item{runs}{A run design created with \code{\link{run_grid}} or
-\code{\link{run_manual}}. For AUGMECON, \code{run_grid()} requests
-automatic epsilon-level generation for secondary objectives, while
-\code{run_manual()} requires columns named \code{eps_<alias>} for each
-secondary objective.}
+\item{runs}{A run design created with \code{\link{set_runs_grid}} or
+\code{\link{set_runs_manual}}. For AUGMECON,
+\code{set_runs_grid()} requests automatic epsilon-level generation for
+secondary objectives, while \code{set_runs_manual()} requires columns named
+\code{eps_<alias>} for each secondary objective.}
 
 \item{grid}{Deprecated. Previous manual-grid argument. It must be a named
 list with one numeric vector per secondary objective. New code should use
-\code{runs = run_manual(...)} instead.}
+\code{runs = set_runs_manual(...)} instead.}
 
 \item{n_points}{Deprecated. Previous automatic-grid argument. New code should
-use \code{runs = run_grid(n = ...)} instead.}
+use \code{runs = set_runs_grid(n = ...)} instead.}
 
-\item{include_extremes}{Deprecated. Previous automatic-grid argument. New
-code should use \code{runs = run_grid(n = ..., include_extremes = ...)}
-instead.}
+\item{include_extremes}{Deprecated and ignored. Automatic run grids now
+always include boundary levels. New code should use
+\code{runs = set_runs_grid(n = ...)}.}
 
 \item{lexicographic}{Logical. If \code{TRUE}, use lexicographic anchoring
 when computing extreme points for automatic grid construction.}
@@ -56,10 +57,12 @@ lexicographic anchoring.}
 internally as \eqn{\rho / R_k}, where \eqn{R_k} is the payoff-table range
 of the corresponding secondary objective.}
 
-\item{control}{A control object created with \code{\link{mo_control}}. It
-controls how infeasible runs, runs without a solution, and unexpected
-errors are handled. It also stores technical AUGMECON settings such as
-\code{slack_upper_bound}.}
+\item{slack_upper_bound}{A single positive finite numeric value defining the
+upper bound of AUGMECON slack variables. Defaults to \code{1e6}.}
+
+\item{control}{A control object created with
+\code{\link{set_runs_control}}. It controls how infeasible runs, runs
+without a solution, and unexpected errors are handled.}
 }
 \value{
 The updated \code{Problem} object with the AUGMECON method
@@ -167,46 +170,48 @@ epsilon levels,
 \strong{Run designs}
 
 AUGMECON runs are specified through the \code{runs} argument. This argument
-must be created with either \code{\link{run_grid}} or
-\code{\link{run_manual}}.
+must be created with either \code{\link{set_runs_grid}} or
+\code{\link{set_runs_manual}}.
 
-\code{run_grid(n = ...)} requests automatic generation of epsilon levels for
-the secondary objectives during \code{\link{solve}}. In that case, the
-method first computes extreme points and payoff-table ranges for the
+\code{set_runs_grid(n = ...)} requests automatic generation of epsilon
+levels for the secondary objectives during \code{\link{solve}}. In that case,
+the method first computes extreme points and payoff-table ranges for the
 secondary objectives, and then generates \code{n} levels for each one.
 
-\code{run_manual()} allows users to provide explicit epsilon combinations.
-In manual AUGMECON runs, each row is one optimization run and columns must be
-named \code{eps_<alias>}, where \code{<alias>} is the alias of a secondary
-objective. For example, if \code{primary = "benefit"} and
+Boundary epsilon levels are always included in automatic grids. Therefore,
+the lower and upper bounds of the automatically derived epsilon ranges are
+part of the generated run design.
+
+\code{set_runs_manual()} allows users to provide explicit epsilon
+combinations. In manual AUGMECON runs, each row is one optimization run and
+columns must be named \code{eps_<alias>}, where \code{<alias>} is the alias of
+a secondary objective. For example, if \code{primary = "benefit"} and
 \code{aliases = c("benefit", "cost", "loss")}, the manual run table must
 contain columns \code{eps_cost} and \code{eps_loss}.
 
-In \code{run_manual()}, each row is used exactly as supplied. The function
-does not automatically create a Cartesian product of epsilon values. If a
-Cartesian product is desired, it should be created explicitly by the user,
-for example with \code{\link{expand.grid}}, and then passed to
-\code{run_manual()}.
+In \code{set_runs_manual()}, each row is used exactly as supplied. The
+function does not automatically create a Cartesian product of epsilon values.
+If a Cartesian product is desired, it should be created explicitly by the
+user, for example with \code{\link{expand.grid}}, and then passed to
+\code{set_runs_manual()}.
 
 The older arguments \code{grid}, \code{n_points}, and
-\code{include_extremes} are deprecated. They are still accepted for
-backwards compatibility and are internally converted to \code{run_grid()} or
-\code{run_manual()} designs.
+\code{include_extremes} are deprecated. They are still accepted for backwards
+compatibility and are internally converted to \code{set_runs_grid()} or
+\code{set_runs_manual()} designs. The deprecated \code{include_extremes}
+argument is ignored because automatic run grids now always include boundary
+levels.
 
 \strong{Automatic epsilon grids}
 
-When \code{runs = run_grid(n = ...)} is used, the epsilon design is not built
-immediately. Instead, it is constructed later during \code{\link{solve}}
-using extreme-point or payoff-table information.
+When \code{runs = set_runs_grid(n = ...)} is used, the epsilon design is not
+built immediately. Instead, it is constructed later during
+\code{\link{solve}} using extreme-point or payoff-table information.
 
-For each secondary objective, \code{run_grid()} generates a sequence of
+For each secondary objective, \code{set_runs_grid()} generates a sequence of
 epsilon levels. With multiple secondary objectives, the final AUGMECON design
 is the Cartesian product of these sequences. Therefore, the number of runs
 can grow quickly as the number of secondary objectives increases.
-
-If \code{include_extremes = TRUE} is supplied inside \code{run_grid()}, the
-automatic grid includes the extreme values of each secondary objective.
-Otherwise, only interior values are used.
 
 If \code{lexicographic = TRUE}, extreme points are computed using
 lexicographic anchoring, which can improve payoff-table quality when
@@ -229,7 +234,8 @@ data.frame(
 }
 
 This creates three runs, not a full Cartesian grid. To create all
-combinations, use \code{expand.grid()} before calling \code{run_manual()}.
+combinations, use \code{expand.grid()} before calling
+\code{set_runs_manual()}.
 
 \strong{Normalization and augmentation}
 
@@ -252,10 +258,10 @@ In this implementation, the user supplies \code{augmentation} as the base
 coefficient \eqn{\rho}, while the normalized slack coefficients are computed
 internally at solve time using the corresponding payoff-table ranges.
 
-\strong{Failure handling and technical controls}
+\strong{Failure handling}
 
-The \code{control} argument controls how failed runs and technical AUGMECON
-settings are handled. It must be created with \code{\link{mo_control}}.
+The \code{control} argument controls how failed runs are handled. It must be
+created with \code{\link{set_runs_control}}.
 
 Some epsilon combinations may define infeasible subproblems. By default,
 failed runs can be retained in the returned \code{SolutionSet} with missing
@@ -263,9 +269,15 @@ objective values, while feasible runs are preserved. Alternatively, users can
 request that the solve stops when an infeasible run, a run without a solution,
 or an unexpected error is encountered.
 
-The \code{control} object also stores technical AUGMECON settings such as
-\code{slack_upper_bound}, the positive upper bound imposed on explicit slack
-variables associated with secondary objectives.
+\strong{AUGMECON slack upper bound}
+
+\code{slack_upper_bound} defines an explicit upper bound for slack variables
+introduced by the AUGMECON formulation. The value should be sufficiently large
+to avoid excluding valid solutions, but unnecessarily large bounds can weaken
+the mixed-integer formulation and reduce numerical performance.
+
+When possible, a problem-specific bound based on the ranges of the constrained
+objectives should be used.
 
 \strong{Stored configuration}
 
@@ -279,6 +291,7 @@ This function stores the method definition in \code{x$data$method} with:
 \item \code{runs},
 \item lexicographic configuration,
 \item \code{augmentation},
+\item \code{slack_upper_bound},
 \item \code{control}.
 }
 
@@ -334,7 +347,7 @@ x1 <- set_method_augmecon(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost"),
-  runs = run_grid(n = 5, include_extremes = TRUE),
+  runs = set_runs_grid(n = 5),
   lexicographic = TRUE,
   augmentation = 1e-3
 )
@@ -350,7 +363,7 @@ x2 <- set_method_augmecon(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost"),
-  runs = run_manual(aug_runs),
+  runs = set_runs_manual(aug_runs),
   augmentation = 1e-3
 )
 
@@ -366,7 +379,7 @@ x3 <- set_method_augmecon(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost", "loss"),
-  runs = run_manual(aug_runs_3obj),
+  runs = set_runs_manual(aug_runs_3obj),
   augmentation = 1e-3
 )
 
@@ -383,7 +396,7 @@ x4 <- set_method_augmecon(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost", "loss"),
-  runs = run_manual(aug_cartesian),
+  runs = set_runs_manual(aug_cartesian),
   augmentation = 1e-3
 )
 
@@ -408,13 +421,13 @@ x6 <- set_method_augmecon(
   x,
   primary = "benefit",
   aliases = c("benefit", "cost"),
-  runs = run_manual(data.frame(eps_cost = c(4, 6, 8))),
+  runs = set_runs_manual(data.frame(eps_cost = c(4, 6, 8))),
   augmentation = 1e-3,
-  control = mo_control(
+  slack_upper_bound = 1e6,
+  control = set_runs_control(
     stop_on_infeasible = FALSE,
     stop_on_no_solution = FALSE,
-    stop_on_error = TRUE,
-    slack_upper_bound = 1e6
+    stop_on_error = TRUE
   )
 )
 
@@ -428,9 +441,9 @@ programming problems. \emph{Applied Mathematics and Computation}, 213(2),
 455--465.
 }
 \seealso{
-\code{\link{run_grid}},
-\code{\link{run_manual}},
-\code{\link{mo_control}},
+\code{\link{set_runs_grid}},
+\code{\link{set_runs_manual}},
+\code{\link{set_runs_control}},
 \code{\link{set_method_epsilon_constraint}},
 \code{\link{set_method_weighted_sum}},
 \code{\link{solve}}

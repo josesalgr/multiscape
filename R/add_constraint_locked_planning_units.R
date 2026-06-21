@@ -72,7 +72,7 @@ NULL
 #'
 #' \strong{Replacement behaviour}
 #'
-#' Each call to \code{add_constraint_locked_pu()} replaces any existing
+#' Each call to \code{add_constraint_locked_planning_units()} replaces any existing
 #' \code{locked_in} and \code{locked_out} columns in the planning-unit table. In
 #' other words, the function defines the complete current set of locked planning
 #' units; it does not merge new values with previous ones.
@@ -122,7 +122,7 @@ NULL
 #' )
 #'
 #' # 1) Lock by planning-unit ids
-#' p1 <- add_constraint_locked_pu(
+#' p1 <- add_constraint_locked_planning_units(
 #'   x = p,
 #'   locked_in = c(1, 3),
 #'   locked_out = c(5)
@@ -130,8 +130,8 @@ NULL
 #'
 #' p1$data$pu[, c("id", "locked_in", "locked_out")]
 #'
-#' # 2) Read lock information from raw PU data columns
-#' p2 <- add_constraint_locked_pu(
+#' # 2) Read lock information from raw planning-unit data columns
+#' p2 <- add_constraint_locked_planning_units(
 #'   x = p,
 #'   locked_in = "lock_col",
 #'   locked_out = "out_col"
@@ -140,7 +140,7 @@ NULL
 #' p2$data$pu[, c("id", "locked_in", "locked_out")]
 #'
 #' # 3) Use logical vectors
-#' p3 <- add_constraint_locked_pu(
+#' p3 <- add_constraint_locked_planning_units(
 #'   x = p,
 #'   locked_in = c(TRUE, FALSE, TRUE, FALSE, FALSE),
 #'   locked_out = c(FALSE, FALSE, FALSE, TRUE, FALSE)
@@ -151,10 +151,11 @@ NULL
 #' @seealso
 #' \code{\link{create_problem}},
 #' \code{\link{add_actions}},
-#' \code{\link{add_constraint_locked_actions}}
+#' \code{\link{add_constraint_locked_actions}},
+#' \code{\link{add_constraint_locked_pu}}
 #'
 #' @export
-add_constraint_locked_pu <- function(
+add_constraint_locked_planning_units <- function(
     x,
     locked_in = NULL,
     locked_out = NULL
@@ -249,11 +250,12 @@ add_constraint_locked_pu <- function(
       return(spec)
     }
 
-    # case 3: PU ids
+    # case 3: planning-unit ids
     ids <- suppressWarnings(as.integer(spec))
     if (length(ids) == 0L || all(is.na(ids))) {
       stop(
-        what, " must be NULL, a column name, a logical vector, or a vector of PU ids.",
+        what,
+        " must be NULL, a column name, a logical vector, or a vector of planning-unit ids.",
         call. = FALSE
       )
     }
@@ -262,7 +264,7 @@ add_constraint_locked_pu <- function(
     bad <- ids[!ids %in% pu_ids]
     if (length(bad) > 0L) {
       stop(
-        what, " contains PU ids not present in x$data$pu$id: ",
+        what, " contains planning-unit ids not present in x$data$pu$id: ",
         paste(bad, collapse = ", "),
         call. = FALSE
       )
@@ -293,4 +295,40 @@ add_constraint_locked_pu <- function(
   }
 
   x
+}
+
+
+#' @title Add locked planning units to a problem
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' \code{add_constraint_locked_pu()} has been replaced by
+#' \code{\link{add_constraint_locked_planning_units}}.
+#'
+#' @inheritParams add_constraint_locked_planning_units
+#'
+#' @return An updated \code{Problem} object in which the planning-unit table
+#'   contains logical columns \code{locked_in} and \code{locked_out}.
+#'
+#' @seealso
+#' \code{\link{add_constraint_locked_planning_units}}
+#'
+#' @export
+add_constraint_locked_pu <- function(
+    x,
+    locked_in = NULL,
+    locked_out = NULL
+) {
+  lifecycle::deprecate_warn(
+    "1.1.0",
+    "add_constraint_locked_pu()",
+    "add_constraint_locked_planning_units()"
+  )
+
+  add_constraint_locked_planning_units(
+    x = x,
+    locked_in = locked_in,
+    locked_out = locked_out
+  )
 }

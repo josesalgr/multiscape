@@ -114,7 +114,7 @@ test_that("locked actions are respected by the solver", {
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s <- multiscape::solve(p)
-  selected <- multiscape::get_actions(s, only_selected = TRUE)
+  selected <- multiscape::get_actions(s)
 
   expect_true(any(
     selected$pu == 1 & selected$action == "conservation"

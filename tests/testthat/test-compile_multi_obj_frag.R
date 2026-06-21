@@ -12,10 +12,10 @@ test_that("compile_model builds MO superset with boundary auxiliaries when fragm
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "frag"),
-      weights = c(1, 1)
+      runs = set_runs_manual(data.frame(weight_cost = 1, weight_frag = 1))
     )
 
   p2 <- multiscape::compile_model(p2)

@@ -14,7 +14,7 @@ test_that("single-objective solve returns a Solution and respects locked units",
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
     multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
     multiscape::add_constraint_targets_relative(0.5) |>
-    multiscape::add_constraint_locked_pu(locked_in = "locked_in", locked_out = "locked_out") |>
+    multiscape::add_constraint_locked_planning_units(locked_in = "locked_in", locked_out = "locked_out") |>
     multiscape::add_objective_min_cost(alias = "cost") |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
@@ -22,7 +22,8 @@ test_that("single-objective solve returns a Solution and respects locked units",
 
   expect_s3_class(s, "SolutionSet")
 
-  acts <- multiscape::get_actions(s, only_selected = TRUE)
+  acts <- multiscape::get_actions(s)
+  acts <- acts[acts$selected == 1L, , drop = FALSE]
   expect_true(any(acts$pu == 1))
   expect_false(any(acts$pu == 4))
 })

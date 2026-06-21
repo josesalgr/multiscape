@@ -58,9 +58,8 @@ make_explicit_mo_problem <- function(
     x <- multiscape::set_method_weighted_sum(
       x,
       aliases = c("cost", "benefit"),
-      runs = multiscape::run_grid(
-        n = n,
-        include_extremes = TRUE
+      runs = multiscape::set_runs_grid(
+        n = n
       ),
       normalize_weights = TRUE
     )
@@ -68,9 +67,8 @@ make_explicit_mo_problem <- function(
     x <- multiscape::set_method_epsilon_constraint(
       x,
       primary = "cost",
-      runs = multiscape::run_grid(
-        n = n,
-        include_extremes = TRUE
+      runs = multiscape::set_runs_grid(
+        n = n
       )
     )
   }

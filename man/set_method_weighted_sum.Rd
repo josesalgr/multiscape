@@ -9,7 +9,7 @@ set_method_weighted_sum(
   aliases,
   runs = NULL,
   weights = NULL,
-  normalize_weights = TRUE,
+  normalize_weights = NULL,
   objective_scaling = FALSE,
   control = NULL
 )
@@ -20,25 +20,29 @@ set_method_weighted_sum(
 \item{aliases}{Character vector of objective aliases to combine. Each alias
 must correspond to a previously registered atomic objective.}
 
-\item{runs}{A run design created with \code{\link{run_grid}} or
-\code{\link{run_manual}}. For weighted-sum methods, automatic grids define
-weight combinations, while manual runs must contain columns named
+\item{runs}{A run design created with \code{\link{set_runs_grid}} or
+\code{\link{set_runs_manual}}. For weighted-sum methods, automatic grids
+define weight combinations, while manual runs must contain columns named
 \code{weight_<alias>}.}
 
 \item{weights}{Deprecated. Numeric vector of weights, with the same length
 and order as \code{aliases}. This argument is kept for backwards
 compatibility and is internally converted to
-\code{runs = run_manual(...)}. New code should use \code{runs} instead.}
+\code{runs = set_runs_manual(...)}. New code should use \code{runs}
+instead.}
 
-\item{normalize_weights}{Logical. If \code{TRUE}, normalize the weights in
-each run to sum to one before solving.}
+\item{normalize_weights}{Logical or \code{NULL}. If \code{TRUE}, normalize
+the weights in each run to sum to one before solving. If \code{FALSE},
+manual weights are used exactly as supplied. If \code{NULL}, the default is
+resolved from the run design: automatic grids are normalized and manual
+designs are not normalized.}
 
 \item{objective_scaling}{Logical. If \code{TRUE}, request scaling of the
 participating objectives before weighted aggregation in the solving layer.}
 
-\item{control}{A control object created with \code{\link{mo_control}}. It
-controls how infeasible runs, runs without a solution, and unexpected
-errors are handled.}
+\item{control}{A control object created with
+\code{\link{set_runs_control}}. It controls how infeasible runs, runs
+without a solution, and unexpected errors are handled.}
 }
 \value{
 The updated \code{Problem} object with the weighted-sum method
@@ -79,24 +83,28 @@ objective specifications and the requested weights.
 \strong{Run designs}
 
 Weighted-sum runs are specified through the \code{runs} argument. This
-argument must be created with either \code{\link{run_grid}} or
-\code{\link{run_manual}}.
+argument must be created with either \code{\link{set_runs_grid}} or
+\code{\link{set_runs_manual}}.
 
-\code{run_grid(n = ...)} automatically generates a grid of weight
+\code{set_runs_grid(n = ...)} automatically generates a grid of weight
 combinations. For two objectives, this is a regular sequence of weights along
-the line between the two objectives. For three or more objectives, the grid
-is generated over the weight simplex, where all weights are non-negative and
-sum to one.
+the line between the two pure-objective extremes. For three or more
+objectives, the grid is generated over the weight simplex, where all weights
+are non-negative and sum to one.
 
-\code{run_manual()} allows users to provide explicit weight combinations.
-In manual weighted-sum runs, each row is one optimization run and columns must
-be named \code{weight_<alias>}. For example, if
+Boundary weight combinations are always included in automatic grids. This
+means that pure-objective weight vectors are included, where all weight is
+assigned to one objective.
+
+\code{set_runs_manual()} allows users to provide explicit weight
+combinations. In manual weighted-sum runs, each row is one optimization run
+and columns must be named \code{weight_<alias>}. For example, if
 \code{aliases = c("cost", "benefit")}, the manual run table must contain
 columns \code{weight_cost} and \code{weight_benefit}.
 
 The older \code{weights} argument is deprecated. It is still accepted for
 backwards compatibility and is internally converted to a one-row
-\code{run_manual()} design.
+\code{set_runs_manual()} design.
 
 \strong{Atomic objectives requirement}
 
@@ -123,6 +131,15 @@ registered atomic objectives are included in the weighted combination.
 
 \strong{Weight normalization}
 
+The default value of \code{normalize_weights} is \code{NULL}. In this case,
+the default behaviour depends on the run design:
+\itemize{
+\item automatic grids created with \code{set_runs_grid()} use
+\code{normalize_weights = TRUE};
+\item manual designs created with \code{set_runs_manual()} use
+\code{normalize_weights = FALSE}.
+}
+
 If \code{normalize_weights = TRUE}, the weights in each run are rescaled to
 sum to one:
 
@@ -135,8 +152,9 @@ weighted-sum formulation as long as all weights are multiplied by the same
 positive constant, but it can improve interpretability and numerical
 conditioning.
 
-If \code{normalize_weights = FALSE}, each row of weights must already sum to
-one.
+If \code{normalize_weights = FALSE}, manual weights are used exactly as
+supplied. Automatic grids generated by \code{set_runs_grid()} are already
+constructed on a normalized simplex.
 
 \strong{Objective scaling}
 
@@ -168,15 +186,15 @@ means that higher values of that objective are preferred.
 \strong{Failure handling}
 
 The \code{control} argument controls how failed runs are handled. It must be
-created with \code{\link{mo_control}}.
+created with \code{\link{set_runs_control}}.
 
 Weighted-sum runs do not normally introduce additional constraints, so they
 should not usually create infeasible subproblems by themselves. However, runs
 may still fail if the underlying model is infeasible, the solver stops before
 finding a feasible solution, or a numerical/modeling issue occurs. The
-\code{control} argument determines whether such failures stop the whole
-solve or are retained in the returned \code{SolutionSet} with missing
-objective values.
+\code{control} argument determines whether such failures stop the whole solve
+or are retained in the returned \code{SolutionSet} with missing objective
+values.
 
 \strong{Theoretical limitation}
 
@@ -250,7 +268,7 @@ x <- create_problem(
 x1 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_grid(n = 5, include_extremes = TRUE),
+  runs = set_runs_grid(n = 5),
   objective_scaling = TRUE
 )
 
@@ -265,8 +283,7 @@ manual_weights <- data.frame(
 x2 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_manual(manual_weights),
-  normalize_weights = FALSE,
+  runs = set_runs_manual(manual_weights),
   objective_scaling = TRUE
 )
 
@@ -281,7 +298,7 @@ manual_weights2 <- data.frame(
 x3 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_manual(manual_weights2),
+  runs = set_runs_manual(manual_weights2),
   normalize_weights = TRUE
 )
 
@@ -301,8 +318,8 @@ x4$data$method
 x5 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_grid(n = 5),
-  control = mo_control(
+  runs = set_runs_grid(n = 5),
+  control = set_runs_control(
     stop_on_infeasible = TRUE,
     stop_on_no_solution = TRUE,
     stop_on_error = TRUE
@@ -313,9 +330,9 @@ x5$data$method
 
 }
 \seealso{
-\code{\link{run_grid}},
-\code{\link{run_manual}},
-\code{\link{mo_control}},
+\code{\link{set_runs_grid}},
+\code{\link{set_runs_manual}},
+\code{\link{set_runs_control}},
 \code{\link{set_method_epsilon_constraint}},
 \code{\link{set_method_augmecon}},
 \code{\link{solve}}

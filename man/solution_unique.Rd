@@ -138,9 +138,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 7,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 7
     ),
     normalize_weights = TRUE
   )

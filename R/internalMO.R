@@ -2425,7 +2425,6 @@ add_objective <- function(x, objective) {
 #' @keywords internal
 .mo_get_solution_from <- function(x, run = NULL, solution_id = NULL) {
 
-  # Backward-compatible internal path.
   if (inherits(x, "Solution")) {
     return(x)
   }
@@ -2444,20 +2443,36 @@ add_objective <- function(x, objective) {
     .mo_abort("No stored solutions found in this SolutionSet.")
   }
 
-  # Keep only valid stored run-level solution objects. This protects against
-  # older SolutionSet objects where infeasible runs were stored as NULL entries.
-  is_sol <- vapply(sols, inherits, logical(1), "Solution")
+  is_sol <- vapply(
+    sols,
+    inherits,
+    logical(1),
+    "Solution"
+  )
+
   sols <- sols[is_sol]
 
   if (length(sols) == 0L) {
     .mo_abort("No stored valid solutions found in this SolutionSet.")
   }
 
-  # Ensure names exist for older objects when possible.
+  # Ensure names exist. New convention: names are character versions of
+  # numeric solution ids, which match run ids.
   if (is.null(names(sols)) || any(!nzchar(names(sols)))) {
     ids <- vapply(seq_along(sols), function(i) {
-      as.character(sols[[i]]$meta$solution_id %||% paste0("s", i))[1]
+      sid <- sols[[i]]$meta$solution_id %||%
+        sols[[i]]$meta$run_id %||%
+        i
+
+      sid <- as.integer(sid)[1]
+
+      if (is.na(sid) || sid < 1L) {
+        as.character(i)
+      } else {
+        as.character(sid)
+      }
     }, character(1))
+
     names(sols) <- ids
   }
 
@@ -2465,20 +2480,24 @@ add_objective <- function(x, objective) {
   # Case 1: selected by solution_id
   # ------------------------------------------------------------
   if (!is.null(solution_id)) {
-    solution_id <- as.character(solution_id)[1]
+    sid_int <- suppressWarnings(as.integer(solution_id))[1]
 
-    if (is.na(solution_id) || !nzchar(solution_id)) {
-      .mo_abort("`solution_id` must be a non-empty string.")
+    if (is.na(sid_int) || sid_int < 1L) {
+      .mo_abort("`solution_id` must be a positive integer.")
     }
 
-    if (!solution_id %in% names(sols)) {
+    sid_chr <- as.character(sid_int)
+
+    if (!sid_chr %in% names(sols)) {
       .mo_abort(
-        "No stored solution found for solution_id = '", solution_id, "'. ",
-        "Available solution ids are: ", paste(names(sols), collapse = ", "), "."
+        "No stored solution found for solution_id = ", sid_int, ". ",
+        "Available solution ids are: ",
+        paste(names(sols), collapse = ", "),
+        "."
       )
     }
 
-    return(sols[[solution_id]])
+    return(sols[[sid_chr]])
   }
 
   # ------------------------------------------------------------
@@ -2493,41 +2512,50 @@ add_objective <- function(x, objective) {
 
     runs <- x$solution$runs %||% NULL
 
-    if (!is.null(runs) &&
-        inherits(runs, "data.frame") &&
-        all(c("run_id", "solution_id") %in% names(runs))) {
-
-      idx <- match(run, runs$run_id)
+    if (
+      !is.null(runs) &&
+      inherits(runs, "data.frame") &&
+      all(c("run_id", "solution_id") %in% names(runs))
+    ) {
+      idx <- match(run, as.integer(runs$run_id))
 
       if (is.na(idx)) {
         .mo_abort("No run found with run_id = ", run, ".")
       }
 
-      sid <- runs$solution_id[idx]
+      sid <- suppressWarnings(as.integer(runs$solution_id[idx]))[1]
 
-      if (is.na(sid) || !nzchar(sid)) {
+      if (is.na(sid) || sid < 1L) {
         status_msg <- ""
+
         if ("status" %in% names(runs)) {
           status_msg <- paste0(" Run status is '", runs$status[idx], "'.")
         }
 
         .mo_abort(
-          "No stored solution is available for run_id = ", run, ".",
+          "No stored solution is available for run_id = ",
+          run,
+          ".",
           status_msg
         )
       }
 
-      if (!sid %in% names(sols)) {
+      sid_chr <- as.character(sid)
+
+      if (!sid_chr %in% names(sols)) {
         .mo_abort(
-          "Run ", run, " points to solution_id = '", sid,
-          "', but that solution is not stored."
+          "Run ",
+          run,
+          " points to solution_id = ",
+          sid,
+          ", but that solution is not stored."
         )
       }
 
-      return(sols[[sid]])
+      return(sols[[sid_chr]])
     }
 
-    # Fallback for old objects without solution_id.
+    # Fallback for old objects without a valid run table.
     stored_run_ids <- vapply(seq_along(sols), function(i) {
       rid <- sols[[i]]$meta$run_id %||% NA_integer_
       as.integer(rid)[1]
@@ -5370,17 +5398,34 @@ add_objective <- function(x, objective) {
     runs$run_id <- seq_len(nrow(runs))
   }
 
-  runs$solution_id <- NA_character_
+  runs$run_id <- as.integer(runs$run_id)
+
+  if (anyNA(runs$run_id) || any(runs$run_id < 1L)) {
+    stop(
+      "Run table contains invalid `run_id` values.",
+      call. = FALSE
+    )
+  }
+
+  # Public/internal convention:
+  # - solution_id is numeric.
+  # - solution_id matches run_id when a stored solution exists.
+  # - runs without stored solutions have solution_id = NA.
+  runs$solution_id <- NA_integer_
 
   if (is.null(sols) || !is.list(sols) || length(sols) == 0L) {
     x$solution$runs <- runs
+    x$solution$solutions <- list()
     return(x)
   }
 
-  # Keep only stored solutions. Infeasible/no-solution runs may be represented
-  # as NULL entries in older multi-objective workflows; they should remain in
-  # the run table, but they should not receive a solution_id.
-  is_sol <- vapply(sols, inherits, logical(1), "Solution")
+  is_sol <- vapply(
+    sols,
+    inherits,
+    logical(1),
+    "Solution"
+  )
+
   sols_valid <- sols[is_sol]
 
   if (length(sols_valid) == 0L) {
@@ -5389,7 +5434,7 @@ add_objective <- function(x, objective) {
     return(x)
   }
 
-  solution_ids <- .pa_make_solution_ids(length(sols_valid))
+  original_positions <- which(is_sol)
 
   stored_run_ids <- vapply(seq_along(sols_valid), function(i) {
     sol_i <- sols_valid[[i]]
@@ -5397,52 +5442,88 @@ add_objective <- function(x, objective) {
     rid <- sol_i$meta$run_id %||% NULL
 
     if (is.null(rid)) {
-      # Fallback for old objects: if the original list had numeric names,
-      # interpret them as run ids. Otherwise, use the position of the valid
-      # solution among all original entries.
-      original_i <- which(is_sol)[i]
+      original_i <- original_positions[i]
       nm <- names(sols)[original_i] %||% NA_character_
       rid <- suppressWarnings(as.integer(nm))
-      if (is.na(rid)) rid <- original_i
-    }
 
-    if (is.null(rid) || length(rid) == 0L || is.na(rid)) {
-      NA_integer_
-    } else {
-      as.integer(rid)[1]
-    }
-  }, integer(1))
-
-  for (i in seq_along(solution_ids)) {
-    rid <- stored_run_ids[i]
-
-    if (!is.na(rid)) {
-      idx <- match(rid, runs$run_id)
-      if (!is.na(idx)) {
-        runs$solution_id[idx] <- solution_ids[i]
+      if (is.na(rid)) {
+        rid <- original_i
       }
     }
 
-    sols_valid[[i]]$meta <- sols_valid[[i]]$meta %||% list()
-    sols_valid[[i]]$meta$solution_id <- solution_ids[i]
-    sols_valid[[i]]$meta$run_id <- rid
+    rid <- as.integer(rid)[1]
+
+    if (is.na(rid) || rid < 1L) {
+      NA_integer_
+    } else {
+      rid
+    }
+  }, integer(1))
+
+  keep <- !is.na(stored_run_ids) & stored_run_ids %in% runs$run_id
+
+  if (!all(keep)) {
+    sols_valid <- sols_valid[keep]
+    stored_run_ids <- stored_run_ids[keep]
   }
 
-  names(sols_valid) <- solution_ids
+  if (length(sols_valid) == 0L) {
+    x$solution$runs <- runs
+    x$solution$solutions <- list()
+    return(x)
+  }
+
+  if (anyDuplicated(stored_run_ids) > 0L) {
+    duplicated_runs <- unique(stored_run_ids[duplicated(stored_run_ids)])
+
+    stop(
+      "Multiple stored solutions point to the same run_id: ",
+      paste(duplicated_runs, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  solution_ids <- as.integer(stored_run_ids)
+
+  for (i in seq_along(sols_valid)) {
+    rid <- stored_run_ids[i]
+    sid <- solution_ids[i]
+
+    idx <- match(rid, runs$run_id)
+
+    if (!is.na(idx)) {
+      runs$solution_id[idx] <- sid
+    }
+
+    sols_valid[[i]]$meta <- sols_valid[[i]]$meta %||% list()
+    sols_valid[[i]]$meta$run_id <- rid
+    sols_valid[[i]]$meta$solution_id <- sid
+  }
+
+  # List names must be character in R, but the stored metadata and run table
+  # keep solution_id as integer.
+  names(sols_valid) <- as.character(solution_ids)
 
   x$solution$runs <- runs
   x$solution$solutions <- sols_valid
 
-  # Add solution_id to summary tables when they have run_id.
+  # Add/update solution_id in summary tables when they have run_id.
   if (!is.null(x$summary) && is.list(x$summary)) {
     run_map <- runs[, c("run_id", "solution_id"), drop = FALSE]
 
     for (nm in names(x$summary)) {
       tab <- x$summary[[nm]]
 
-      if (inherits(tab, "data.frame") &&
-          "run_id" %in% names(tab) &&
-          !("solution_id" %in% names(tab))) {
+      if (
+        inherits(tab, "data.frame") &&
+        "run_id" %in% names(tab)
+      ) {
+        # Replace old solution_id values such as "s1", "s2", ...
+        if ("solution_id" %in% names(tab)) {
+          tab$solution_id <- NULL
+        }
+
         tab <- merge(
           tab,
           run_map,
@@ -5453,6 +5534,7 @@ add_objective <- function(x, objective) {
 
         first <- intersect(c("run_id", "solution_id"), names(tab))
         rest <- setdiff(names(tab), first)
+
         tab <- tab[, c(first, rest), drop = FALSE]
         rownames(tab) <- NULL
 
@@ -5484,14 +5566,14 @@ add_objective <- function(x, objective) {
 .pamo_check_run_design <- function(runs) {
   if (missing(runs) || is.null(runs)) {
     stop(
-      "`runs` must be created with `run_grid()` or `run_manual()`.",
+      "`runs` must be created with `set_runs_grid()` or `set_runs_manual()`.",
       call. = FALSE
     )
   }
 
   if (!.pamo_is_run_design(runs)) {
     stop(
-      "`runs` must be created with `run_grid()` or `run_manual()`.",
+      "`runs` must be created with `set_runs_grid()` or `set_runs_manual()`.",
       call. = FALSE
     )
   }
@@ -5547,16 +5629,14 @@ add_objective <- function(x, objective) {
 #' @return A validated object of class \code{MOControl}.
 #'
 #' @noRd
-.pamo_check_mo_control <- function(control = NULL) {
-
-  # NULL means: use the default multi-objective controls.
+.pamo_check_mo_control <- function(control) {
   if (is.null(control)) {
-    return(mo_control())
+    return(set_runs_control())
   }
 
-  if (!inherits(control, "MOControl")) {
+  if (!inherits(control, "MOControl") && !inherits(control, "RunsControl")) {
     stop(
-      "`control` must be NULL or created with `mo_control()`.",
+      "`control` must be created with set_runs_control().",
       call. = FALSE
     )
   }
@@ -5564,29 +5644,22 @@ add_objective <- function(x, objective) {
   required <- c(
     "stop_on_infeasible",
     "stop_on_no_solution",
-    "stop_on_error",
-    "slack_upper_bound"
+    "stop_on_error"
   )
 
-  missing_fields <- setdiff(required, names(control))
+  missing <- setdiff(required, names(control))
 
-  if (length(missing_fields) > 0L) {
+  if (length(missing) > 0L) {
     stop(
-      "Invalid MOControl object. Missing field(s): ",
-      paste(missing_fields, collapse = ", "),
+      "Invalid control object. Missing field(s): ",
+      paste(missing, collapse = ", "),
       ".",
       call. = FALSE
     )
   }
 
-  logical_fields <- c(
-    "stop_on_infeasible",
-    "stop_on_no_solution",
-    "stop_on_error"
-  )
-
-  for (field in logical_fields) {
-    value <- control[[field]]
+  for (nm in required) {
+    value <- control[[nm]]
 
     if (
       !is.logical(value) ||
@@ -5594,31 +5667,18 @@ add_objective <- function(x, objective) {
       is.na(value)
     ) {
       stop(
-        "Invalid MOControl object: `",
-        field,
-        "` must be TRUE or FALSE.",
+        "Invalid control object. `", nm, "` must be TRUE or FALSE.",
         call. = FALSE
       )
     }
   }
 
-  slack_upper_bound <- control$slack_upper_bound
-
-  if (
-    !is.numeric(slack_upper_bound) ||
-    length(slack_upper_bound) != 1L ||
-    is.na(slack_upper_bound) ||
-    !is.finite(slack_upper_bound) ||
-    slack_upper_bound <= 0
-  ) {
-    stop(
-      paste0(
-        "Invalid MOControl object: `slack_upper_bound` must be ",
-        "a single positive finite number."
-      ),
-      call. = FALSE
-    )
-  }
-
-  control
+  structure(
+    list(
+      stop_on_infeasible = isTRUE(control$stop_on_infeasible),
+      stop_on_no_solution = isTRUE(control$stop_on_no_solution),
+      stop_on_error = isTRUE(control$stop_on_error)
+    ),
+    class = c("RunsControl", "MOControl", "list")
+  )
 }

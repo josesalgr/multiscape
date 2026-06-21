@@ -27,7 +27,7 @@ target was met in each run."><meta property="og:image" content="https://josesalg
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@ target was met in each run.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_targets</span><span class="op">(</span><span class="va">x</span>, run <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_targets</span><span class="op">(</span><span class="va">x</span>, solution <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,8 +74,8 @@ target was met in each run.</p>
 <code><a href="solve.html">solve</a></code>.</p></dd>
 
 
-<dt id="arg-run">run<a class="anchor" aria-label="anchor" href="#arg-run"></a></dt>
-<dd><p>Optional positive integer giving the run index to extract. If
+<dt id="arg-solution">solution<a class="anchor" aria-label="anchor" href="#arg-solution"></a></dt>
+<dd><p>Optional positive integer giving the solution index to extract. If
 <code>NULL</code>, all runs are returned when available.</p></dd>
 
 </dl></div>
@@ -113,9 +113,9 @@ default.</p></li>
 readability:</p><ul><li><p><code>target_raw</code> is returned as <code>target_level</code>;</p></li>
 <li><p><code>basis_total</code> is returned as <code>total_available</code>;</p></li>
 <li><p><code>target_value</code> is returned as <code>target</code>.</p></li>
-</ul><p>If <code>run</code> is provided, only rows belonging to that run are returned. If
-the result contains a <code>run_id</code> column but only a single run is present and
-<code>run</code> was not requested explicitly, the <code>run_id</code> column is removed
+</ul><p>If <code>solution</code> is provided, only rows belonging to that solution are returned. If
+the result contains a <code>run_id</code> column but only a single solution is present and
+<code>solution</code> was not requested explicitly, the <code>solution_id</code> column is removed
 for convenience.</p>
 <p>The <code>gap</code> column is expected to be part of the stored summary. When
 present, it typically represents:
@@ -169,11 +169,11 @@ $$</p>
 <span class="r-in"><span>  <span class="fu">get_targets</span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Target achievement for one run</span></span></span>
-<span class="r-in"><span>  <span class="va">run_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span><span class="op">$</span><span class="va">run_id</span></span></span>
+<span class="r-in"><span>  <span class="va">solution_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span><span class="op">$</span><span class="va">solution_id</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="fu">get_targets</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
-<span class="r-in"><span>    run <span class="op">=</span> <span class="va">run_ids</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span>    solution <span class="op">=</span> <span class="va">solution_ids</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   run_id feature feature_name target_level total_available target achieved  gap</span>

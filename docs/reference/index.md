@@ -26,7 +26,8 @@ Define feasible actions, their effects, and optional profits.
 
 ## Constraints
 
-Define target requirements and area-related constraints.
+Define target requirements, area limits, budgets, and locking
+constraints.
 
 - [`add_constraint_targets_absolute()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_absolute.md)
   : Add absolute targets
@@ -38,7 +39,7 @@ Define target requirements and area-related constraints.
   : Add budget constraint
 - [`add_constraint_locked_actions()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_actions.md)
   : Add locked action decisions to a planning problem
-- [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
+- [`add_constraint_locked_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_planning_units.md)
   : Add locked planning units to a problem
 
 ## Spatial relations
@@ -74,8 +75,8 @@ multi-objective workflows.
   : Add objective: maximize profit
 - [`add_objective_max_net_profit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_net_profit.md)
   : Add objective: maximize net profit
-- [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)
-  : Add objective: minimize fragmentation
+- [`add_objective_min_fragmentation_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.md)
+  : Add objective: minimize planning-unit fragmentation
 - [`add_objective_min_fragmentation_action()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.md)
   : Add objective: minimize action fragmentation
 - [`add_objective_min_intervention_impact()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.md)
@@ -107,30 +108,27 @@ Configure weighted-sum, epsilon-constraint, and AUGMECON workflows.
 - [`set_method_augmecon()`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md)
   : Set the AUGMECON multi-objective method
 
-## Multi-objective workflow configuration
+## Multi-objective run configuration
 
-Define run designs and execution controls for multi-objective workflows.
+Define automatic or manual run designs and execution controls for
+multi-objective workflows.
 
-- [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+- [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
   : Define an automatic multi-objective run grid
-- [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+- [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
   : Define a manual multi-objective run design
-- [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
-  : Control multi-objective method behavior
+- [`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md)
+  : Control multi-objective run behavior
 
 ## Results and extraction
 
 Extract run metadata, objective values, and solution-level results.
 
-- [`compile_model()`](https://josesalgr.github.io/multiscape/reference/compile_model.md)
-  : Compile the optimization model stored in a Problem
 - [`get_runs()`](https://josesalgr.github.io/multiscape/reference/get_runs.md)
-  : Get run-level results from a solution set
+  : Get run-level metadata from a solution set
 - [`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.md)
   : Get objective values from a solution set
-- [`get_objective_specs()`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md)
-  : Get objective specifications from a solution set
-- [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
+- [`get_planning_units()`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md)
   : Get planning-unit results from a solution set
 - [`get_actions()`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
   : Get action results from a solution set
@@ -138,8 +136,6 @@ Extract run metadata, objective values, and solution-level results.
   : Get feature summary from a solution set
 - [`get_targets()`](https://josesalgr.github.io/multiscape/reference/get_targets.md)
   : Get target achievement summary from a solution set
-- [`get_solution_vector()`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
-  : Get raw decision vector from a solution set
 
 ## Solution-set management
 
@@ -177,9 +173,7 @@ action assignments.
 
 Visualize spatial outputs and multi-objective trade-offs.
 
-- [`plot_spatial()`](https://josesalgr.github.io/multiscape/reference/plot_spatial.md)
-  : Plot spatial outputs from a solution set
-- [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
+- [`plot_spatial_planning_units()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_planning_units.md)
   : Plot selected planning units in space
 - [`plot_spatial_actions()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.md)
   : Plot selected actions in space
@@ -187,6 +181,13 @@ Visualize spatial outputs and multi-objective trade-offs.
   : Plot spatial feature values from a solution set
 - [`plot_tradeoff()`](https://josesalgr.github.io/multiscape/reference/plot_tradeoff.md)
   : Plot trade-offs from a solution set
+
+## Advanced functions
+
+Advanced utilities for inspecting or compiling optimization models.
+
+- [`compile_model()`](https://josesalgr.github.io/multiscape/reference/compile_model.md)
+  : Compile the optimization model stored in a Problem
 
 ## Classes
 
@@ -213,3 +214,22 @@ Simulated datasets distributed with the package.
   : Simulated planning units
 - [`load_sim_features_raster()`](https://josesalgr.github.io/multiscape/reference/load_sim_features_raster.md)
   : Example feature raster
+
+## Deprecated functions
+
+Deprecated functions kept for backwards compatibility.
+
+- [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
+  **\[obsoleta\]** : Add locked planning units to a problem
+- [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)
+  **\[obsoleta\]** : Add objective: minimize planning-unit fragmentation
+- [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
+  **\[obsoleta\]** : Get planning-unit results from a solution set
+- [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
+  **\[obsoleta\]** : Plot selected planning units in space
+- [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  **\[obsoleta\]** : Define an automatic multi-objective run grid
+- [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+  **\[obsoleta\]** : Define a manual multi-objective run design
+- [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
+  **\[obsoleta\]** : Control multi-objective run behavior

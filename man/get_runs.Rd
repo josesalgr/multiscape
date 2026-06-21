@@ -2,128 +2,41 @@
 % Please edit documentation in R/get_solution.R
 \name{get_runs}
 \alias{get_runs}
-\title{Get run-level results from a solution set}
+\title{Get run-level metadata from a solution set}
 \usage{
-get_runs(x, feasible_only = FALSE)
+get_runs(x)
 }
 \arguments{
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
-
-\item{feasible_only}{Logical. If \code{TRUE}, return only runs whose status
-indicates that a usable solution may be available. Defaults to
-\code{FALSE}.}
 }
 \value{
 A \code{data.frame} with one row per attempted optimization run.
+The table contains run metadata and the numeric mapping between
+\code{run_id} and \code{solution_id}, but not objective-value columns.
 }
 \description{
 Extract the run table from a \code{\link{solutionset-class}} object.
 }
 \details{
 A run represents an attempted optimization solve. Each run has a unique
-\code{run_id}, but only runs that produce a stored solution receive a
+\code{run_id}. Only runs that produce a stored solution receive a
 \code{solution_id}.
 
-Consequently, the number of runs may exceed the number of stored solutions.
-This commonly occurs when a multi-objective design contains infeasible,
-failed, or interrupted runs.
+The \code{solution_id} is numeric and matches the corresponding
+\code{run_id}. Therefore, if a run fails or is infeasible, its
+\code{solution_id} is \code{NA}; if a later run succeeds, its
+\code{solution_id} keeps the same value as its \code{run_id}.
 
-The run table combines:
-\itemize{
-\item run and solution identifiers;
-\item solver status, runtime, gap, and messages;
-\item multi-objective design parameters such as weights or epsilon levels;
-\item objective values stored in columns named
-\code{value_<objective>}.
-}
+This function is the user-facing place where the relationship between
+attempted runs and stored solutions is reported.
 
-If \code{feasible_only = TRUE}, runs with statuses \code{"optimal"},
-\code{"feasible"}, \code{"suboptimal"}, \code{"time_limit"}, or
-\code{"gap_limit"} are retained.
-}
-\examples{
-pu <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration")
-)
-
-effects <- data.frame(
-  action = rep(actions$id, each = 2),
-  feature = rep(features$id, times = 2),
-  multiplier = c(
-    1.0, 1.0,
-    1.5, 1.5
-  )
-)
-
-problem <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
-  cost = "cost"
-) |>
-  add_actions(
-    actions = actions,
-    cost = c(
-      conservation = 1,
-      restoration = 2
-    )
-  ) |>
-  add_effects(
-    effects = effects,
-    effect_type = "after"
-  ) |>
-  add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit") |>
-  set_method_weighted_sum(
-    aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
-    ),
-    normalize_weights = TRUE
-  )
-
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  problem <- set_solver_cbc(
-    problem,
-    verbose = FALSE
-  )
-
-  solutions <- solve(problem)
-
-  # All attempted runs
-  get_runs(solutions)
-
-  # Only runs with a usable solver status
-  get_runs(
-    solutions,
-    feasible_only = TRUE
-  )
-}
-
+Objective values are not returned by \code{get_runs()}. To extract objective
+values, use \code{\link{get_objectives}}.
 }
 \seealso{
 \code{\link{get_objectives}},
-\code{\link{get_objective_specs}},
 \code{\link{solution_filter}},
-\code{\link{run_grid}},
-\code{\link{run_manual}}
+\code{\link{set_runs_grid}},
+\code{\link{set_runs_manual}}
 }

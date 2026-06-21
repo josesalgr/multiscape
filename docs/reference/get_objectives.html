@@ -21,7 +21,7 @@ solutionset-class object."><meta property="og:image" content="https://josesalgr.
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,7 +53,7 @@ solutionset-class object."><meta property="og:image" content="https://josesalgr.
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_objectives</span><span class="op">(</span><span class="va">x</span>, format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"long"</span>, <span class="st">"wide"</span><span class="op">)</span>, feasible_only <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_objectives</span><span class="op">(</span><span class="va">x</span>, format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wide"</span>, <span class="st">"long"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,11 +68,6 @@ solutionset-class object."><meta property="og:image" content="https://josesalgr.
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
 <dd><p>Character. Output representation, either <code>"long"</code> or
 <code>"wide"</code>. Defaults to <code>"long"</code>.</p></dd>
-
-
-<dt id="arg-feasible-only">feasible_only<a class="anchor" aria-label="anchor" href="#arg-feasible-only"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, extract values only from runs
-whose status is interpreted as usable. Defaults to <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -96,7 +91,6 @@ format, every run occupies one row and every objective occupies one column.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="get_runs.html">get_runs</a></code>,
-<code><a href="get_objective_specs.html">get_objective_specs</a></code>,
 <code><a href="frontier_extremes.html">frontier_extremes</a></code>,
 <code><a href="frontier_distances.html">frontier_distances</a></code></p></div>
     </div>
@@ -154,9 +148,8 @@ format, every run occupies one row and every objective occupies one column.</p>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>      include_extremes <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
@@ -180,21 +173,15 @@ format, every run occupies one row and every objective occupies one column.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Objective values from usable runs only</span></span></span>
 <span class="r-in"><span>  <span class="fu">get_objectives</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
-<span class="r-in"><span>    feasible_only <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="va">solutions</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    run_id solution_id objective value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1          s1      cost   2.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2          s2      cost   3.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       3          s3      cost   3.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       4          s4      cost  12.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       5          s5      cost  18.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       1          s1   benefit   0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       2          s2   benefit   3.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8       3          s3   benefit   3.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       4          s4   benefit   7.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10      5          s5   benefit   7.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id cost benefit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1    2     0.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           2    3     3.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           3    3     3.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           4   12     7.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           5   18     7.5</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

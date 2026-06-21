@@ -13,6 +13,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_area_min.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_budget.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_locked_actions.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_locked_planning_units.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_targets_absolute.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html</loc></url>
@@ -25,6 +26,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.html</loc></url>
@@ -44,6 +46,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_features.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_objectives.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_objective_specs.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/get_planning_units.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_pu.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_runs.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_solution_vector.html</loc></url>
@@ -55,6 +58,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial_features.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial_planning_units.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_tradeoff.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/print.html</loc></url>
@@ -69,6 +73,9 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_method_augmecon.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/set_runs_control.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/set_runs_grid.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/set_runs_manual.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_solver.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_solver_cbc.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/set_solver_cplex.html</loc></url>

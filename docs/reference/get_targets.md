@@ -12,7 +12,7 @@ whether the target was met in each run.
 ## Usage
 
 ``` r
-get_targets(x, run = NULL)
+get_targets(x, solution = NULL, ...)
 ```
 
 ## Arguments
@@ -24,10 +24,10 @@ get_targets(x, run = NULL)
   object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-- run:
+- solution:
 
-  Optional positive integer giving the run index to extract. If `NULL`,
-  all runs are returned when available.
+  Optional positive integer giving the solution index to extract. If
+  `NULL`, all runs are returned when available.
 
 ## Value
 
@@ -71,10 +71,10 @@ readability:
 
 - `target_value` is returned as `target`.
 
-If `run` is provided, only rows belonging to that run are returned. If
-the result contains a `run_id` column but only a single run is present
-and `run` was not requested explicitly, the `run_id` column is removed
-for convenience.
+If `solution` is provided, only rows belonging to that solution are
+returned. If the result contains a `run_id` column but only a single
+solution is present and `solution` was not requested explicitly, the
+`solution_id` column is removed for convenience.
 
 The `gap` column is expected to be part of the stored summary. When
 present, it typically represents: \$\$ \mathrm{gap} =
@@ -126,11 +126,11 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_targets(solutions)
 
   # Target achievement for one run
-  run_ids <- get_runs(solutions)$run_id
+  solution_ids <- get_runs(solutions)$solution_id
 
   get_targets(
     solutions,
-    run = run_ids[1]
+    solution = solution_ids[1]
   )
 }
 #>   run_id feature feature_name target_level total_available target achieved  gap

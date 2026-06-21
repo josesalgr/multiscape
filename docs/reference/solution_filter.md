@@ -107,9 +107,8 @@ If more than one filter is supplied, filters are combined using logical
 If `nondominated = TRUE`, the function further keeps only non-dominated
 solutions among the runs retained by the previous filters. Dominance is
 evaluated in objective space using the objective values stored in the
-run table. Objective senses are read from
-[`get_objective_specs`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md);
-any maximization objective is internally multiplied by \\-1\\ so that
+run table. Objective senses are read from `get_objective_specs`; any
+maximization objective is internally multiplied by \\-1\\ so that
 dominance can be evaluated in minimization space.
 
 Non-dominated filtering requires the moocore package.
@@ -120,7 +119,7 @@ Non-dominated filtering requires the moocore package.
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md),
 [`get_runs`](https://josesalgr.github.io/multiscape/reference/get_runs.md),
 [`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
-[`get_objective_specs`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md),
+`get_objective_specs`,
 [`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md),
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
 
@@ -178,9 +177,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )

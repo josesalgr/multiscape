@@ -31,7 +31,7 @@ test_that("solve errors when multiple objectives are registered without a MO met
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag") |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   expect_error(
@@ -54,7 +54,7 @@ test_that("compile_model errors when multiple objectives are registered without 
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag")
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag")
 
   expect_error(
     multiscape::compile_model(p),

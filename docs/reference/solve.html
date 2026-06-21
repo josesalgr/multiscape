@@ -35,7 +35,7 @@ as multi-run SolutionSet objects."><meta property="og:image" content="https://jo
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -242,7 +242,7 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │└─without solution: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─statuses: optimal: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0.02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─gap: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design columns: none</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objective columns: value_cost</span>
@@ -298,7 +298,7 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │└─without solution: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─statuses: optimal: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0.02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─gap: 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design columns: none</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objective columns: value_cost</span>
@@ -307,33 +307,6 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">results.</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># Minimal multi-objective example</span></span></span>
-<span class="r-in"><span><span class="co"># ------------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="va">x_mo</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
-<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`weights` is deprecated. Use `runs = run_manual(data.frame(weight_&lt;alias&gt; = ...))` instead.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rcbc"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">x_mo</span> <span class="op">&lt;-</span> <span class="fu"><a href="set_solver_cbc.html">set_solver_cbc</a></span><span class="op">(</span><span class="va">x_mo</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">solset_mo</span> <span class="op">&lt;-</span> <span class="fu">solve</span><span class="op">(</span><span class="va">x_mo</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="va">solset_mo</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> Objective 'benefit' has no positive non-zero benefit coefficients.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> This objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> For add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects().</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

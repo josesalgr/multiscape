@@ -5150,17 +5150,15 @@ NULL
 #' @noRd
 .pa_get_objective_matrix <- function(x,
                                      objectives = NULL,
-                                     feasible_only = TRUE,
                                      minimize = TRUE,
                                      drop_na = TRUE) {
   if (!inherits(x, "SolutionSet")) {
     stop("x must be a SolutionSet object.", call. = FALSE)
   }
 
-  vals <- get_objectives(
+  vals <- .pa_get_objectives_internal(
     x,
-    format = "wide",
-    feasible_only = feasible_only
+    format = "wide"
   )
 
   if (!inherits(vals, "data.frame") || nrow(vals) == 0L) {
@@ -5286,4 +5284,63 @@ NULL
     minimize = isTRUE(minimize),
     matrix = mat
   )
+}
+
+
+.pa_get_objectives_internal <- function(x,
+                                        format = c("wide", "long")) {
+  format <- match.arg(format)
+
+  runs <- x$solution$runs %||% NULL
+
+  if (is.null(runs) || !inherits(runs, "data.frame")) {
+    stop("No run table found in x$solution$runs.", call. = FALSE)
+  }
+
+  value_cols <- grep("^value_", names(runs), value = TRUE)
+
+  if (length(value_cols) == 0L) {
+    stop(
+      "No objective value columns found in the internal run table. ",
+      "Expected columns named 'value_<objective>'.",
+      call. = FALSE
+    )
+  }
+
+  if (!("run_id" %in% names(runs))) {
+    runs$run_id <- seq_len(nrow(runs))
+  }
+
+  runs$run_id <- as.integer(runs$run_id)
+
+  if (!("solution_id" %in% names(runs))) {
+    runs$solution_id <- NA_integer_
+  } else {
+    runs$solution_id <- suppressWarnings(as.integer(runs$solution_id))
+  }
+
+  objectives <- sub("^value_", "", value_cols)
+
+  if (identical(format, "wide")) {
+    out <- runs[, c("run_id", "solution_id", value_cols), drop = FALSE]
+    names(out) <- c("run_id", "solution_id", objectives)
+    rownames(out) <- NULL
+    return(out)
+  }
+
+  out <- do.call(
+    rbind,
+    lapply(seq_along(value_cols), function(i) {
+      data.frame(
+        run_id = runs$run_id,
+        solution_id = runs$solution_id,
+        objective = objectives[i],
+        value = as.numeric(runs[[value_cols[i]]]),
+        stringsAsFactors = FALSE
+      )
+    })
+  )
+
+  rownames(out) <- NULL
+  out
 }

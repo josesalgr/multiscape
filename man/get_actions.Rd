@@ -4,16 +4,13 @@
 \alias{get_actions}
 \title{Get action results from a solution set}
 \usage{
-get_actions(x, only_selected = FALSE, run = NULL)
+get_actions(x, solution = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{only_selected}{Logical. If \code{TRUE}, return only rows where
-\code{selected == 1}. Default is \code{FALSE}.}
-
-\item{run}{Optional positive integer giving the run index to extract. If
+\item{solution}{Optional positive integer giving the solution index to extract. If
 \code{NULL}, all runs are returned when available.}
 }
 \value{
@@ -28,27 +25,23 @@ Extract the action-allocation summary table from a
 The returned table summarizes solution values at the
 planning unit--action level and typically includes a \code{selected}
 indicator showing whether each feasible \code{(pu, action)} pair is selected
-in a run.
+in a solution.
 }
 \details{
 This function reads the action summary stored in \code{x$summary$actions}. It
 does not reconstruct the table from the raw decision vector; it simply
-returns the stored summary after optional filtering.
+returns the stored summary after optional run filtering.
 
 Let \eqn{x_{ia}} denote the decision variable associated with selecting
 action \eqn{a} in planning unit \eqn{i}. In standard \pkg{multiscape}
 workflows, the \code{selected} column is the user-facing representation of
 that decision, typically coded as \code{0} or \code{1}.
 
-If \code{run} is provided, only rows belonging to that run are returned. This
-requires the summary table to contain a \code{run_id} column.
+If \code{solution} is provided, only rows belonging to that solution are returned. This
+requires the summary table to contain a \code{solution_id} column.
 
-If \code{only_selected = TRUE}, only rows with \code{selected == 1} are
-returned. This requires the summary table to contain a \code{selected}
-column.
-
-This function is intended for user-facing inspection of action allocations.
-For the raw model variable vector, use \code{\link{get_solution_vector}}.
+To return only selected action allocations, filter the returned table using
+\code{selected == 1}.
 }
 \examples{
 pu <- data.frame(
@@ -112,24 +105,26 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_actions(solutions)
 
   # Only selected action assignments
+  selected_actions <- get_actions(solutions)
+  selected_actions <- selected_actions[
+    selected_actions$selected == 1L,
+    ,
+    drop = FALSE
+  ]
+  selected_actions
+
+  # Action allocations for one solution
+  solution_ids <- get_runs(solutions)$solution_id
+
   get_actions(
     solutions,
-    only_selected = TRUE
-  )
-
-  # Action allocations for one run
-  run_ids <- get_runs(solutions)$run_id
-
-  get_actions(
-    solutions,
-    run = run_ids[1]
+    solution = solution_ids[1]
   )
 }
 
 }
 \seealso{
-\code{\link{get_pu}},
+\code{\link{get_planning_units}},
 \code{\link{get_features}},
-\code{\link{get_targets}},
-\code{\link{get_solution_vector}}
+\code{\link{get_targets}}
 }

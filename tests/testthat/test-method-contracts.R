@@ -20,7 +20,7 @@ test_that("set_method_weighted_sum rejects malformed manual weights", {
     multiscape::add_objective_min_cost(
       alias = "cost"
     ) |>
-    multiscape::add_objective_min_fragmentation_pu(
+    multiscape::add_objective_min_fragmentation_planning_units(
       alias = "frag"
     )
 
@@ -28,7 +28,7 @@ test_that("set_method_weighted_sum rejects malformed manual weights", {
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "frag"),
-      runs = multiscape::run_manual(
+      runs = multiscape::set_runs_manual(
         data.frame(
           weight_cost = 1
         )
@@ -54,13 +54,13 @@ test_that("set_method_weighted_sum rejects duplicate aliases", {
       include_self = TRUE
     ) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag")
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag")
 
   expect_error(
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "cost"),
-      runs = multiscape::run_manual(
+      runs = multiscape::set_runs_manual(
         data.frame(
           weight_cost = 1,
           check.names = FALSE
@@ -79,7 +79,7 @@ test_that("weighted-sum validates aliases and manual weights", {
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "cost"),
-      runs = multiscape::run_grid(3)
+      runs = multiscape::set_runs_grid(3)
     )
   )
 
@@ -87,7 +87,7 @@ test_that("weighted-sum validates aliases and manual weights", {
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "unknown"),
-      runs = multiscape::run_grid(3)
+      runs = multiscape::set_runs_grid(3)
     )
   )
 
@@ -95,7 +95,7 @@ test_that("weighted-sum validates aliases and manual weights", {
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "benefit"),
-      runs = multiscape::run_manual(
+      runs = multiscape::set_runs_manual(
         data.frame(weight_cost = 1)
       )
     )
@@ -104,19 +104,30 @@ test_that("weighted-sum validates aliases and manual weights", {
   out <- multiscape::set_method_weighted_sum(
     p,
     aliases = c("cost", "benefit"),
-    runs = multiscape::run_manual(
+    runs = multiscape::set_runs_manual(
       data.frame(
         weight_cost = 2,
         weight_benefit = 1
       )
-    ),
-    normalize_weights = FALSE
+    )
   )
 
   expect_s3_class(out, "Problem")
   expect_false(out$data$method$normalize_weights)
 })
 
+test_that("weighted-sum normalizes automatic grids by default", {
+  p <- make_round4_mo_problem()
+
+  out <- multiscape::set_method_weighted_sum(
+    p,
+    aliases = c("cost", "benefit"),
+    runs = multiscape::set_runs_grid(n = 3)
+  )
+
+  expect_s3_class(out, "Problem")
+  expect_true(out$data$method$normalize_weights)
+})
 
 test_that("epsilon-constraint validates unknown primary objectives", {
   p <- make_round4_mo_problem()
@@ -138,7 +149,7 @@ test_that("epsilon-constraint accepts manual designs resolved by the method", {
     p,
     primary = "cost",
     aliases = c("cost", "benefit"),
-    runs = multiscape::run_manual(
+    runs = multiscape::set_runs_manual(
       data.frame(eps_cost = 1)
     )
   )
@@ -162,7 +173,7 @@ test_that("AUGMECON validates primary, augmentation, and runs", {
     multiscape::set_method_augmecon(
       p,
       primary = "cost",
-      runs = multiscape::run_grid(3),
+      runs = multiscape::set_runs_grid(3),
       augmentation = -1
     )
   )
@@ -184,7 +195,7 @@ test_that("multi-objective methods reject invalid controls", {
     multiscape::set_method_weighted_sum(
       p,
       aliases = c("cost", "benefit"),
-      runs = multiscape::run_grid(3),
+      runs = multiscape::set_runs_grid(3),
       control = list()
     )
   )
@@ -193,7 +204,7 @@ test_that("multi-objective methods reject invalid controls", {
     multiscape::set_method_epsilon_constraint(
       p,
       primary = "cost",
-      runs = multiscape::run_grid(3),
+      runs = multiscape::set_runs_grid(3),
       control = list()
     )
   )
@@ -202,7 +213,7 @@ test_that("multi-objective methods reject invalid controls", {
     multiscape::set_method_augmecon(
       p,
       primary = "cost",
-      runs = multiscape::run_grid(3),
+      runs = multiscape::set_runs_grid(3),
       control = list()
     )
   )
@@ -215,13 +226,12 @@ test_that("weighted-sum can use raw manual weights", {
   out <- multiscape::set_method_weighted_sum(
     p,
     aliases = c("cost", "benefit"),
-    runs = multiscape::run_manual(
+    runs = multiscape::set_runs_manual(
       data.frame(
         weight_cost = 2,
         weight_benefit = 1
       )
-    ),
-    normalize_weights = FALSE
+    )
   )
 
   expect_s3_class(out, "Problem")

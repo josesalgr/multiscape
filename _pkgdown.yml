@@ -52,14 +52,14 @@ reference:
       - add_profit
 
   - title: Constraints
-    desc: Define target requirements and area-related constraints.
+    desc: Define target requirements, area limits, budgets, and locking constraints.
     contents:
       - add_constraint_targets_absolute
       - add_constraint_targets_relative
       - add_constraint_area
       - add_constraint_budget
       - add_constraint_locked_actions
-      - add_constraint_locked_pu
+      - add_constraint_locked_planning_units
 
   - title: Spatial relations
     desc: Register boundary and graph-based spatial relations from tables, polygons, or coordinates.
@@ -79,7 +79,7 @@ reference:
       - add_objective_min_loss
       - add_objective_max_profit
       - add_objective_max_net_profit
-      - add_objective_min_fragmentation_pu
+      - add_objective_min_fragmentation_planning_units
       - add_objective_min_fragmentation_action
       - add_objective_min_intervention_impact
 
@@ -99,25 +99,22 @@ reference:
       - set_method_epsilon_constraint
       - set_method_augmecon
 
-  - title: Multi-objective workflow configuration
-    desc: Define run designs and execution controls for multi-objective workflows.
+  - title: Multi-objective run configuration
+    desc: Define automatic or manual run designs and execution controls for multi-objective workflows.
     contents:
-      - run_grid
-      - run_manual
-      - mo_control
+      - set_runs_grid
+      - set_runs_manual
+      - set_runs_control
 
   - title: Results and extraction
     desc: Extract run metadata, objective values, and solution-level results.
     contents:
-      - compile_model
       - get_runs
       - get_objectives
-      - get_objective_specs
-      - get_pu
+      - get_planning_units
       - get_actions
       - get_features
       - get_targets
-      - get_solution_vector
 
   - title: Solution-set management
     desc: Filter, combine, and remove repeated solutions while preserving SolutionSet consistency.
@@ -141,11 +138,15 @@ reference:
   - title: Plotting
     desc: Visualize spatial outputs and multi-objective trade-offs.
     contents:
-      - plot_spatial
-      - plot_spatial_pu
+      - plot_spatial_planning_units
       - plot_spatial_actions
       - plot_spatial_features
       - plot_tradeoff
+
+  - title: Advanced functions
+    desc: Advanced utilities for inspecting or compiling optimization models.
+    contents:
+      - compile_model
 
   - title: Classes
     desc: Public classes used across the package.
@@ -158,3 +159,14 @@ reference:
     contents:
       - starts_with("sim_")
       - load_sim_features_raster
+
+  - title: Deprecated functions
+    desc: Deprecated functions kept for backwards compatibility.
+    contents:
+      - add_constraint_locked_pu
+      - add_objective_min_fragmentation_pu
+      - get_pu
+      - plot_spatial_pu
+      - run_grid
+      - run_manual
+      - mo_control

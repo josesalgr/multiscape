@@ -775,7 +775,7 @@ add_objective_max_net_profit <- function(
   )
 }
 
-#' @title Add objective: minimize fragmentation
+#' @title Add objective: minimize planning-unit fragmentation
 #'
 #' @description
 #' Define an objective that minimizes planning-unit fragmentation over a stored
@@ -898,7 +898,7 @@ add_objective_max_net_profit <- function(
 #'   edge_factor = 1
 #' )
 #'
-#' p <- add_objective_min_fragmentation_pu(
+#' p <- add_objective_min_fragmentation_planning_units(
 #'   p,
 #'   relation_name = "boundary"
 #' )
@@ -908,10 +908,11 @@ add_objective_max_net_profit <- function(
 #' @seealso
 #' \code{\link{add_spatial_boundary}},
 #' \code{\link{add_spatial_relations}},
-#' \code{\link{add_objective_min_fragmentation_action}}
+#' \code{\link{add_objective_min_fragmentation_action}},
+#' \code{\link{add_objective_min_fragmentation_pu}}
 #'
 #' @export
-add_objective_min_fragmentation_pu <- function(
+add_objective_min_fragmentation_planning_units <- function(
     x,
     relation_name = "boundary",
     weight_multiplier = 1,
@@ -946,6 +947,43 @@ add_objective_min_fragmentation_pu <- function(
     objective_id = "min_fragmentation",
     objective_args = args,
     sense = "min",
+    alias = alias
+  )
+}
+
+
+#' @title Add objective: minimize planning-unit fragmentation
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' \code{add_objective_min_fragmentation_pu()} has been replaced by
+#' \code{\link{add_objective_min_fragmentation_planning_units}}.
+#'
+#' @inheritParams add_objective_min_fragmentation_planning_units
+#'
+#' @return An updated \code{Problem} object.
+#'
+#' @seealso
+#' \code{\link{add_objective_min_fragmentation_planning_units}}
+#'
+#' @export
+add_objective_min_fragmentation_pu <- function(
+    x,
+    relation_name = "boundary",
+    weight_multiplier = 1,
+    alias = NULL
+) {
+  lifecycle::deprecate_warn(
+    "1.1.0",
+    "add_objective_min_fragmentation_pu()",
+    "add_objective_min_fragmentation_planning_units()"
+  )
+
+  add_objective_min_fragmentation_planning_units(
+    x = x,
+    relation_name = relation_name,
+    weight_multiplier = weight_multiplier,
     alias = alias
   )
 }

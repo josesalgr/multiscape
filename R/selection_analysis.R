@@ -103,9 +103,8 @@
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -357,9 +356,8 @@ selection_frequency <- function(x) {
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -556,8 +554,7 @@ selection_similarity <- function(
 
   solution_ids <- runs$solution_id
   solution_ids <- solution_ids[
-    !is.na(solution_ids) &
-      nzchar(solution_ids)
+    !is.na(solution_ids) & solution_ids >= 1L
   ]
 
   unique(as.character(solution_ids))

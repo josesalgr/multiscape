@@ -29,7 +29,7 @@ used later by solve."><meta property="og:image" content="https://josesalgr.githu
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@ used later by <code><a href="solve.html">solve</a></code>.</p>
 <span>  <span class="va">aliases</span>,</span>
 <span>  runs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  normalize_weights <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  normalize_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  objective_scaling <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  control <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -90,9 +90,9 @@ must correspond to a previously registered atomic objective.</p></dd>
 
 
 <dt id="arg-runs">runs<a class="anchor" aria-label="anchor" href="#arg-runs"></a></dt>
-<dd><p>A run design created with <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>. For weighted-sum methods, automatic grids define
-weight combinations, while manual runs must contain columns named
+<dd><p>A run design created with <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>. For weighted-sum methods, automatic grids
+define weight combinations, while manual runs must contain columns named
 <code>weight_&lt;alias&gt;</code>.</p></dd>
 
 
@@ -100,12 +100,16 @@ weight combinations, while manual runs must contain columns named
 <dd><p>Deprecated. Numeric vector of weights, with the same length
 and order as <code>aliases</code>. This argument is kept for backwards
 compatibility and is internally converted to
-<code>runs = run_manual(...)</code>. New code should use <code>runs</code> instead.</p></dd>
+<code>runs = set_runs_manual(...)</code>. New code should use <code>runs</code>
+instead.</p></dd>
 
 
 <dt id="arg-normalize-weights">normalize_weights<a class="anchor" aria-label="anchor" href="#arg-normalize-weights"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, normalize the weights in
-each run to sum to one before solving.</p></dd>
+<dd><p>Logical or <code>NULL</code>. If <code>TRUE</code>, normalize
+the weights in each run to sum to one before solving. If <code>FALSE</code>,
+manual weights are used exactly as supplied. If <code>NULL</code>, the default is
+resolved from the run design: automatic grids are normalized and manual
+designs are not normalized.</p></dd>
 
 
 <dt id="arg-objective-scaling">objective_scaling<a class="anchor" aria-label="anchor" href="#arg-objective-scaling"></a></dt>
@@ -114,9 +118,9 @@ participating objectives before weighted aggregation in the solving layer.</p></
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
-<dd><p>A control object created with <code><a href="mo_control.html">mo_control</a></code>. It
-controls how infeasible runs, runs without a solution, and unexpected
-errors are handled.</p></dd>
+<dd><p>A control object created with
+<code><a href="set_runs_control.html">set_runs_control</a></code>. It controls how infeasible runs, runs
+without a solution, and unexpected errors are handled.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -144,21 +148,24 @@ responsible for constructing a solver-ready scalar objective from the stored
 objective specifications and the requested weights.</p>
 <p><strong>Run designs</strong></p>
 <p>Weighted-sum runs are specified through the <code>runs</code> argument. This
-argument must be created with either <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>.</p>
-<p><code>run_grid(n = ...)</code> automatically generates a grid of weight
+argument must be created with either <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>.</p>
+<p><code>set_runs_grid(n = ...)</code> automatically generates a grid of weight
 combinations. For two objectives, this is a regular sequence of weights along
-the line between the two objectives. For three or more objectives, the grid
-is generated over the weight simplex, where all weights are non-negative and
-sum to one.</p>
-<p><code><a href="run_manual.html">run_manual()</a></code> allows users to provide explicit weight combinations.
-In manual weighted-sum runs, each row is one optimization run and columns must
-be named <code>weight_&lt;alias&gt;</code>. For example, if
+the line between the two pure-objective extremes. For three or more
+objectives, the grid is generated over the weight simplex, where all weights
+are non-negative and sum to one.</p>
+<p>Boundary weight combinations are always included in automatic grids. This
+means that pure-objective weight vectors are included, where all weight is
+assigned to one objective.</p>
+<p><code><a href="set_runs_manual.html">set_runs_manual()</a></code> allows users to provide explicit weight
+combinations. In manual weighted-sum runs, each row is one optimization run
+and columns must be named <code>weight_&lt;alias&gt;</code>. For example, if
 <code>aliases = c("cost", "benefit")</code>, the manual run table must contain
 columns <code>weight_cost</code> and <code>weight_benefit</code>.</p>
 <p>The older <code>weights</code> argument is deprecated. It is still accepted for
 backwards compatibility and is internally converted to a one-row
-<code><a href="run_manual.html">run_manual()</a></code> design.</p>
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code> design.</p>
 <p><strong>Atomic objectives requirement</strong></p>
 <p>The weighted-sum method can only be used with atomic objectives that have
 already been registered under aliases. These aliases are typically created by
@@ -175,7 +182,12 @@ calling objective setters with an <code>alias</code> argument, for example:</p><
 </ul><p>The <code>aliases</code> argument passed to this function selects which of those
 registered atomic objectives are included in the weighted combination.</p>
 <p><strong>Weight normalization</strong></p>
-<p>If <code>normalize_weights = TRUE</code>, the weights in each run are rescaled to
+<p>The default value of <code>normalize_weights</code> is <code>NULL</code>. In this case,
+the default behaviour depends on the run design:</p><ul><li><p>automatic grids created with <code><a href="set_runs_grid.html">set_runs_grid()</a></code> use
+<code>normalize_weights = TRUE</code>;</p></li>
+<li><p>manual designs created with <code><a href="set_runs_manual.html">set_runs_manual()</a></code> use
+<code>normalize_weights = FALSE</code>.</p></li>
+</ul><p>If <code>normalize_weights = TRUE</code>, the weights in each run are rescaled to
 sum to one:</p>
 <p>$$
 \tilde{w}_k = \frac{w_k}{\sum_{j \in \mathcal{K}} w_j}.
@@ -184,8 +196,9 @@ $$</p>
 weighted-sum formulation as long as all weights are multiplied by the same
 positive constant, but it can improve interpretability and numerical
 conditioning.</p>
-<p>If <code>normalize_weights = FALSE</code>, each row of weights must already sum to
-one.</p>
+<p>If <code>normalize_weights = FALSE</code>, manual weights are used exactly as
+supplied. Automatic grids generated by <code><a href="set_runs_grid.html">set_runs_grid()</a></code> are already
+constructed on a normalized simplex.</p>
 <p><strong>Objective scaling</strong></p>
 <p>If <code>objective_scaling = TRUE</code>, the solving layer scales the
 participating objectives before combining them. The purpose of scaling is to
@@ -207,14 +220,14 @@ of each objective. For example, a positive weight on a maximization objective
 means that higher values of that objective are preferred.</p>
 <p><strong>Failure handling</strong></p>
 <p>The <code>control</code> argument controls how failed runs are handled. It must be
-created with <code><a href="mo_control.html">mo_control</a></code>.</p>
+created with <code><a href="set_runs_control.html">set_runs_control</a></code>.</p>
 <p>Weighted-sum runs do not normally introduce additional constraints, so they
 should not usually create infeasible subproblems by themselves. However, runs
 may still fail if the underlying model is infeasible, the solver stops before
 finding a feasible solution, or a numerical/modeling issue occurs. The
-<code>control</code> argument determines whether such failures stop the whole
-solve or are retained in the returned <code>SolutionSet</code> with missing
-objective values.</p>
+<code>control</code> argument determines whether such failures stop the whole solve
+or are retained in the returned <code>SolutionSet</code> with missing objective
+values.</p>
 <p><strong>Theoretical limitation</strong></p>
 <p>The weighted-sum method typically recovers only <em>supported</em> efficient
 solutions, that is, solutions lying on the convex hull of the Pareto front in
@@ -235,9 +248,9 @@ combination. In such cases, methods such as
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="run_grid.html">run_grid</a></code>,
-<code><a href="run_manual.html">run_manual</a></code>,
-<code><a href="mo_control.html">mo_control</a></code>,
+    <div class="dont-index"><p><code><a href="set_runs_grid.html">set_runs_grid</a></code>,
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>,
+<code><a href="set_runs_control.html">set_runs_control</a></code>,
 <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code>,
 <code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
 <code><a href="solve.html">solve</a></code></p></div>
@@ -291,7 +304,7 @@ combination. In such cases, methods such as
 <span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu">set_method_weighted_sum</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span>, include_extremes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  objective_scaling <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -334,11 +347,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -359,8 +369,7 @@ combination. In such cases, methods such as
 <span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu">set_method_weighted_sum</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">manual_weights</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  normalize_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">manual_weights</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  objective_scaling <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -405,11 +414,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -430,7 +436,7 @@ combination. In such cases, methods such as
 <span class="r-in"><span><span class="va">x3</span> <span class="op">&lt;-</span> <span class="fu">set_method_weighted_sum</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">manual_weights2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">manual_weights2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -473,11 +479,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -496,7 +499,7 @@ combination. In such cases, methods such as
 <span class="r-in"><span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  normalize_weights <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`weights` is deprecated. Use `runs = run_manual(data.frame(weight_&lt;alias&gt; = ...))` instead.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`weights` is deprecated. Use `runs = set_runs_manual(data.frame(weight_&lt;alias&gt; = ...))` instead.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
@@ -513,8 +516,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id weight_cost weight_benefit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1         0.4            0.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   weight_cost weight_benefit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         0.4            0.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
@@ -535,11 +538,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -555,8 +555,8 @@ combination. In such cases, methods such as
 <span class="r-in"><span><span class="va">x5</span> <span class="op">&lt;-</span> <span class="fu">set_method_weighted_sum</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="mo_control.html">mo_control</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="set_runs_control.html">set_runs_control</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    stop_on_infeasible <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>    stop_on_no_solution <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>    stop_on_error <span class="op">=</span> <span class="cn">TRUE</span></span></span>
@@ -602,11 +602,8 @@ combination. In such cases, methods such as
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>

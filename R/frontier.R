@@ -1,4 +1,6 @@
-#' Find objective-wise extreme solutions
+#' @include internalMO.R internal.R
+#'
+#' @title Find objective-wise extreme solutions
 #'
 #' @description
 #' Identify the observed minimum and maximum values for each objective in a
@@ -102,9 +104,8 @@
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -149,10 +150,9 @@ frontier_extremes <- function(x,
 
   ties <- match.arg(ties)
 
-  vals <- get_objectives(
+  vals <- .pa_get_objectives_internal(
     x,
-    format = "wide",
-    feasible_only = FALSE
+    format = "wide"
   )
 
   if (!inherits(vals, "data.frame") || nrow(vals) == 0L) {
@@ -233,7 +233,7 @@ frontier_extremes <- function(x,
 
   # Keep only stored solutions with complete objective values for the selected
   # objectives. This automatically removes infeasible runs with NA values.
-  has_solution <- !is.na(vals$solution_id) & nzchar(vals$solution_id)
+  has_solution <- !is.na(vals$solution_id) & vals$solution_id >= 1L
   complete_obj <- stats::complete.cases(vals[, objectives, drop = FALSE])
 
   vals <- vals[has_solution & complete_obj, , drop = FALSE]
@@ -472,9 +472,8 @@ frontier_extremes <- function(x,
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -569,7 +568,6 @@ frontier_distances <- function(
   obj <- .pa_get_objective_matrix(
     x,
     objectives = objectives,
-    feasible_only = FALSE,
     minimize = TRUE,
     drop_na = TRUE
   )
@@ -584,10 +582,9 @@ frontier_distances <- function(
 
   # Retrieve original objective values for the output and for reporting the
   # reference points in their original scales.
-  vals <- get_objectives(
+  vals <- .pa_get_objectives_internal(
     x,
-    format = "wide",
-    feasible_only = FALSE
+    format = "wide"
   )
 
   if (!("run_id" %in% names(vals))) {

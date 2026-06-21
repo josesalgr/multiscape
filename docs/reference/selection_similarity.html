@@ -21,7 +21,7 @@ solutionset-class object."><meta property="og:image" content="https://josesalgr.
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -192,9 +192,8 @@ object. To compare only a subset, first use
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>      include_extremes <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
@@ -241,11 +240,11 @@ object. To compare only a subset, first use
 <span class="r-in"><span>    format <span class="op">=</span> <span class="st">"matrix"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    s1        s2        s4   s5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> s1  1 0.0000000 0.0000000 0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> s2  0 1.0000000 0.3333333 0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> s4  0 0.3333333 1.0000000 0.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> s5  0 0.2500000 0.7500000 1.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1         2         4    5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 1 0.0000000 0.0000000 0.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0 1.0000000 0.3333333 0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0 0.3333333 1.0000000 0.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0 0.2500000 0.7500000 1.00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"metric")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "jaccard"</span>
 <span class="r-in"><span></span></span>

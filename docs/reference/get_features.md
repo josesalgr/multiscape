@@ -12,7 +12,7 @@ by the selected planning units or selected actions in each run.
 ## Usage
 
 ``` r
-get_features(x, run = NULL)
+get_features(x, solution = NULL, ...)
 ```
 
 ## Arguments
@@ -24,10 +24,10 @@ get_features(x, run = NULL)
   object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-- run:
+- solution:
 
-  Optional positive integer giving the run index to extract. If `NULL`,
-  all runs are returned when available.
+  Optional positive integer giving the solution index to extract. If
+  `NULL`, all runs are returned when available.
 
 ## Value
 
@@ -90,10 +90,10 @@ them from older columns such as `total_available`, `benefit`, `loss`,
 `net`, and `amount_after`. However, the returned table is organized
 using the newer selected-action terminology.
 
-If `run` is provided, only rows belonging to that run are returned. If
-the result contains a `run_id` column but only a single run is present
-and `run` was not requested explicitly, the `run_id` column is removed
-for convenience.
+If `solution` is provided, only rows belonging to that solution are
+returned. If the result contains a `solution_id` column but only a
+single solution is present and `solution` was not requested explicitly,
+the `solution_id` column is removed for convenience.
 
 This function summarizes feature outcomes in the result. It is different
 from
@@ -146,20 +146,20 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_features(solutions)
 
   # Feature outcomes for one run
-  run_ids <- get_runs(solutions)$run_id
+  solution_ids <- get_runs(solutions)$solution_id
 
   get_features(
     solutions,
-    run = run_ids[1]
+    solution = solution_ids[1]
   )
 }
-#>   run_id feature feature_name baseline_total selected_baseline
-#> 1      1       1          sp1              9                 5
-#> 2      1       2          sp2              6                 2
-#>   selected_amount_after selected_benefit selected_loss selected_net
-#> 1                     5                0             0            0
-#> 2                     2                0             0            0
-#>   selected_fraction_of_baseline solution_id
-#> 1                     0.5555556          s1
-#> 2                     0.3333333          s1
+#>   feature feature_name baseline_total selected_baseline selected_amount_after
+#> 1       1          sp1              9                 5                     5
+#> 2       2          sp2              6                 2                     2
+#>   selected_benefit selected_loss selected_net selected_fraction_of_baseline
+#> 1                0             0            0                     0.5555556
+#> 2                0             0            0                     0.3333333
+#>   solution_id
+#> 1           1
+#> 2           1
 ```

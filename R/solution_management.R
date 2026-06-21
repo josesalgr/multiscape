@@ -127,9 +127,8 @@
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -226,7 +225,9 @@ solution_filter <- function(x,
   }
 
   if (!("solution_id" %in% names(runs))) {
-    runs$solution_id <- NA_character_
+    runs$solution_id <- NA_integer_
+  } else {
+    runs$solution_id <- suppressWarnings(as.integer(runs$solution_id))
   }
 
   keep <- rep(TRUE, nrow(runs))
@@ -261,16 +262,25 @@ solution_filter <- function(x,
   # solution_id filter
   # --------------------------------------------------------------------------
   if (!is.null(solution_id)) {
-    solution_id <- as.character(solution_id)
-    solution_id <- solution_id[!is.na(solution_id) & nzchar(solution_id)]
+    solution_id <- suppressWarnings(as.integer(solution_id))
+    solution_id <- solution_id[
+      !is.na(solution_id) &
+        is.finite(solution_id) &
+        solution_id >= 1L
+    ]
 
     if (length(solution_id) == 0L) {
-      stop("`solution_id` must contain at least one non-empty value.", call. = FALSE)
+      stop(
+        "`solution_id` must contain at least one positive integer.",
+        call. = FALSE
+      )
     }
 
     available_solution_ids <- runs$solution_id
     available_solution_ids <- available_solution_ids[
-      !is.na(available_solution_ids) & nzchar(available_solution_ids)
+      !is.na(available_solution_ids) &
+        is.finite(available_solution_ids) &
+        available_solution_ids >= 1L
     ]
 
     missing_solution <- setdiff(solution_id, available_solution_ids)
@@ -363,7 +373,6 @@ solution_filter <- function(x,
     obj <- .pa_get_objective_matrix(
       out,
       objectives = objectives,
-      feasible_only = FALSE,
       minimize = TRUE,
       drop_na = TRUE
     )
@@ -377,9 +386,11 @@ solution_filter <- function(x,
       )
     }
 
-    keep_solution_ids <- obj$solution_id[nd]
+    keep_solution_ids <- suppressWarnings(as.integer(obj$solution_id[nd]))
     keep_solution_ids <- keep_solution_ids[
-      !is.na(keep_solution_ids) & nzchar(keep_solution_ids)
+      !is.na(keep_solution_ids) &
+        is.finite(keep_solution_ids) &
+        keep_solution_ids >= 1L
     ]
 
     if (length(keep_solution_ids) == 0L) {
@@ -456,7 +467,9 @@ solution_filter <- function(x,
   }
 
   if (!("solution_id" %in% names(runs))) {
-    runs$solution_id <- NA_character_
+    runs$solution_id <- NA_integer_
+  } else {
+    runs$solution_id <- suppressWarnings(as.integer(runs$solution_id))
   }
 
   runs <- runs[runs$run_id %in% run_ids, , drop = FALSE]
@@ -464,7 +477,7 @@ solution_filter <- function(x,
 
   keep_solution_ids <- runs$solution_id
   keep_solution_ids <- keep_solution_ids[
-    !is.na(keep_solution_ids) & nzchar(keep_solution_ids)
+    !is.na(keep_solution_ids) & keep_solution_ids >= 1L
   ]
 
   x$solution$runs <- runs
@@ -493,12 +506,21 @@ solution_filter <- function(x,
       sol_names <- names(sols)
 
       if (!is.null(sol_names) && all(nzchar(sol_names))) {
-        x$solution$solutions <- sols[sol_names %in% keep_solution_ids]
+        sol_names_int <- suppressWarnings(as.integer(sol_names))
+
+        x$solution$solutions <- sols[
+          !is.na(sol_names_int) &
+            sol_names_int %in% keep_solution_ids
+        ]
       } else {
         # Fallback for old objects without named stored solutions.
         keep <- vapply(sols, function(sol_i) {
-          sid <- sol_i$meta$solution_id %||% NA_character_
-          !is.na(sid) && nzchar(sid) && sid %in% keep_solution_ids
+          sid <- suppressWarnings(as.integer(sol_i$meta$solution_id %||% NA_integer_))[1]
+
+          !is.na(sid) &&
+            is.finite(sid) &&
+            sid >= 1L &&
+            sid %in% keep_solution_ids
         }, logical(1))
 
         x$solution$solutions <- sols[keep]
@@ -683,9 +705,8 @@ solution_filter <- function(x,
 #' weighted_problem <- make_problem() |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 4,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 4
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -693,9 +714,8 @@ solution_filter <- function(x,
 #' epsilon_problem <- make_problem() |>
 #'   set_method_epsilon_constraint(
 #'     primary = "cost",
-#'     runs = run_grid(
-#'       n = 4,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 4
 #'     )
 #'   )
 #'
@@ -789,11 +809,15 @@ solution_append <- function(x, y) {
   }
 
   if (!("solution_id" %in% names(xruns))) {
-    xruns$solution_id <- NA_character_
+    xruns$solution_id <- NA_integer_
+  } else {
+    xruns$solution_id <- suppressWarnings(as.integer(xruns$solution_id))
   }
 
   if (!("solution_id" %in% names(yruns))) {
-    yruns$solution_id <- NA_character_
+    yruns$solution_id <- NA_integer_
+  } else {
+    yruns$solution_id <- suppressWarnings(as.integer(yruns$solution_id))
   }
 
   xsols <- x$solution$solutions %||% list()
@@ -829,34 +853,41 @@ solution_append <- function(x, y) {
   # --------------------------------------------------------------------------
   # Reassign solution ids for y
   # --------------------------------------------------------------------------
-  existing_solution_ids <- xruns$solution_id
-  existing_solution_ids <- existing_solution_ids[
-    !is.na(existing_solution_ids) & nzchar(existing_solution_ids)
-  ]
+  # New convention:
+  # - solution_id is numeric.
+  # - solution_id matches the new run_id of the stored solution.
+  # - runs without stored solutions keep solution_id = NA.
 
-  y_solution_ids <- old_y_solution_id
-  y_solution_ids <- unique(y_solution_ids[!is.na(y_solution_ids) & nzchar(y_solution_ids)])
+  old_y_solution_id <- suppressWarnings(as.integer(old_y_solution_id))
 
-  if (length(y_solution_ids) > 0L) {
-    start <- length(existing_solution_ids) + 1L
-    stop <- length(existing_solution_ids) + length(y_solution_ids)
+  has_y_solution <- !is.na(old_y_solution_id) &
+    is.finite(old_y_solution_id) &
+    old_y_solution_id >= 1L
 
+  if (any(has_y_solution)) {
     y_solution_map <- data.frame(
-      old_solution_id = y_solution_ids,
-      new_solution_id = paste0("s", start:stop),
+      old_solution_id = old_y_solution_id[has_y_solution],
+      new_solution_id = yruns$run_id[has_y_solution],
       stringsAsFactors = FALSE
     )
 
-    yruns$solution_id <- y_solution_map$new_solution_id[
-      match(yruns$solution_id, y_solution_map$old_solution_id)
+    y_solution_map <- y_solution_map[
+      !duplicated(y_solution_map$old_solution_id),
+      ,
+      drop = FALSE
     ]
+
+    yruns$solution_id <- NA_integer_
+    yruns$solution_id[has_y_solution] <- yruns$run_id[has_y_solution]
+
   } else {
     y_solution_map <- data.frame(
-      old_solution_id = character(0),
-      new_solution_id = character(0),
+      old_solution_id = integer(0),
+      new_solution_id = integer(0),
       stringsAsFactors = FALSE
     )
-    yruns$solution_id <- NA_character_
+
+    yruns$solution_id <- NA_integer_
   }
 
   # --------------------------------------------------------------------------
@@ -867,22 +898,26 @@ solution_append <- function(x, y) {
 
     if (is.null(old_names) || any(!nzchar(old_names))) {
       old_names <- vapply(seq_along(ysols), function(i) {
-        ysols[[i]]$meta$solution_id %||% NA_character_
+        as.character(ysols[[i]]$meta$solution_id %||% NA_integer_)
       }, character(1))
     }
 
-    keep <- old_names %in% y_solution_map$old_solution_id
-    ysols <- ysols[keep]
-    old_names <- old_names[keep]
+    old_ids <- suppressWarnings(as.integer(old_names))
 
-    new_names <- y_solution_map$new_solution_id[
-      match(old_names, y_solution_map$old_solution_id)
+    keep <- !is.na(old_ids) &
+      old_ids %in% y_solution_map$old_solution_id
+
+    ysols <- ysols[keep]
+    old_ids <- old_ids[keep]
+
+    new_ids <- y_solution_map$new_solution_id[
+      match(old_ids, y_solution_map$old_solution_id)
     ]
 
-    names(ysols) <- new_names
+    names(ysols) <- as.character(new_ids)
 
     for (i in seq_along(ysols)) {
-      sid_new <- new_names[i]
+      sid_new <- as.integer(new_ids[i])
 
       rid_old <- ysols[[i]]$meta$run_id %||% NA_integer_
       rid_old <- as.integer(rid_old)[1]
@@ -1218,8 +1253,10 @@ solution_append <- function(x, y) {
     }
 
     if ("solution_id" %in% names(tab) && nrow(solution_map) > 0L) {
+      sid <- suppressWarnings(as.integer(tab$solution_id))
+
       tab$solution_id <- solution_map$new_solution_id[
-        match(tab$solution_id, solution_map$old_solution_id)
+        match(sid, solution_map$old_solution_id)
       ]
     }
 
@@ -1436,9 +1473,8 @@ solution_append <- function(x, y) {
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 7,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 7
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -1560,9 +1596,11 @@ solution_unique <- function(
     )
   }
 
-  has_solution <-
-    !is.na(runs$solution_id) &
-    nzchar(runs$solution_id)
+  runs$solution_id <- suppressWarnings(as.integer(runs$solution_id))
+
+  has_solution <- !is.na(runs$solution_id) &
+    is.finite(runs$solution_id) &
+    runs$solution_id >= 1L
 
   stored_runs <- runs[has_solution, , drop = FALSE]
   other_runs <- runs[!has_solution, , drop = FALSE]
@@ -1626,19 +1664,30 @@ solution_unique <- function(
 #'
 #' @noRd
 .pa_solution_decision_groups <- function(x, solution_ids) {
-  solution_ids <- as.character(solution_ids)
+  solution_ids <- suppressWarnings(as.integer(solution_ids))
+
+  if (
+    anyNA(solution_ids) ||
+    any(!is.finite(solution_ids)) ||
+    any(solution_ids < 1L)
+  ) {
+    stop(
+      "`solution_ids` must contain positive integers.",
+      call. = FALSE
+    )
+  }
 
   vectors <- lapply(
     solution_ids,
     function(sid) {
       v <- get_solution_vector(
         x,
-        solution_id = sid
+        solution = sid
       )
 
       if (is.null(v)) {
         stop(
-          "No decision vector found for solution_id = '",
+          "No decision vector found for solution = '",
           sid,
           "'.",
           call. = FALSE
@@ -1690,8 +1739,7 @@ solution_unique <- function(
 ) {
   vals <- get_objectives(
     x,
-    format = "wide",
-    feasible_only = FALSE
+    format = "wide"
   )
 
   if (!("solution_id" %in% names(vals))) {
@@ -1742,6 +1790,9 @@ solution_unique <- function(
       )
     }
   }
+
+  solution_ids <- suppressWarnings(as.integer(solution_ids))
+  vals$solution_id <- suppressWarnings(as.integer(vals$solution_id))
 
   idx <- match(solution_ids, vals$solution_id)
 

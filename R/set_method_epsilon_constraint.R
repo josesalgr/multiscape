@@ -64,32 +64,38 @@
 #' \strong{Run designs}
 #'
 #' Epsilon-constraint runs are specified through the \code{runs} argument. This
-#' argument must be created with either \code{\link{run_grid}} or
-#' \code{\link{run_manual}}.
+#' argument must be created with either \code{\link{set_runs_grid}} or
+#' \code{\link{set_runs_manual}}.
 #'
-#' \code{run_grid(n = ...)} requests automatic generation of epsilon levels
+#' \code{set_runs_grid(n = ...)} requests automatic generation of epsilon levels
 #' during \code{\link{solve}}. The epsilon levels are computed from
 #' extreme-point or payoff information. In the current implementation,
-#' \code{run_grid()} for epsilon-constraint supports exactly two objectives:
-#' one primary objective and one constrained objective.
+#' \code{set_runs_grid()} for epsilon-constraint supports exactly two
+#' objectives: one primary objective and one constrained objective.
 #'
-#' \code{run_manual()} allows users to provide explicit epsilon combinations.
-#' In manual epsilon-constraint runs, each row is one optimization run and
-#' columns must be named \code{eps_<alias>}, where \code{<alias>} is the alias of
-#' a constrained objective. For example, if \code{primary = "benefit"} and
-#' \code{aliases = c("benefit", "cost", "loss")}, the manual run table must
-#' contain columns \code{eps_cost} and \code{eps_loss}.
+#' Boundary epsilon levels are always included in automatic grids. Therefore,
+#' the lower and upper bounds of the automatically derived epsilon range are
+#' part of the generated run design.
 #'
-#' In \code{run_manual()}, each row is used exactly as supplied. The function
-#' does not automatically create a Cartesian product of epsilon values. If a
-#' Cartesian product is desired, it should be created explicitly by the user,
-#' for example with \code{\link{expand.grid}}, and then passed to
-#' \code{run_manual()}.
+#' \code{set_runs_manual()} allows users to provide explicit epsilon
+#' combinations. In manual epsilon-constraint runs, each row is one optimization
+#' run and columns must be named \code{eps_<alias>}, where \code{<alias>} is the
+#' alias of a constrained objective. For example, if \code{primary = "benefit"}
+#' and \code{aliases = c("benefit", "cost", "loss")}, the manual run table
+#' must contain columns \code{eps_cost} and \code{eps_loss}.
+#'
+#' In \code{set_runs_manual()}, each row is used exactly as supplied. The
+#' function does not automatically create a Cartesian product of epsilon values.
+#' If a Cartesian product is desired, it should be created explicitly by the
+#' user, for example with \code{\link{expand.grid}}, and then passed to
+#' \code{set_runs_manual()}.
 #'
 #' The older arguments \code{eps}, \code{mode}, \code{n_points}, and
-#' \code{include_extremes} are deprecated. They are still accepted for
-#' backwards compatibility and are internally converted to \code{run_grid()} or
-#' \code{run_manual()} designs.
+#' \code{include_extremes} are deprecated. They are still accepted for backwards
+#' compatibility and are internally converted to \code{set_runs_grid()} or
+#' \code{set_runs_manual()} designs. The deprecated \code{include_extremes}
+#' argument is ignored because automatic run grids now always include boundary
+#' levels.
 #'
 #' \strong{Atomic objectives requirement}
 #'
@@ -109,8 +115,8 @@
 #'
 #' \strong{Automatic epsilon grids}
 #'
-#' When \code{runs = run_grid(n = ...)} is used, the epsilon grid is not built
-#' immediately. Instead, it is constructed later during \code{\link{solve}}
+#' When \code{runs = set_runs_grid(n = ...)} is used, the epsilon grid is not
+#' built immediately. Instead, it is constructed later during \code{\link{solve}}
 #' using extreme-point or payoff information.
 #'
 #' In the current implementation, automatic epsilon-grid generation supports
@@ -120,13 +126,9 @@
 #'   \item one constrained objective.
 #' }
 #'
-#' Therefore, if \code{runs = run_grid(...)}, then \code{aliases} must contain
-#' exactly two objective aliases. Problems with three or more objectives must
-#' use \code{runs = run_manual(...)}.
-#'
-#' If \code{include_extremes = TRUE} is supplied inside \code{run_grid()}, the
-#' automatically generated grid includes the extreme values of the constrained
-#' objective. Otherwise, only interior values are used.
+#' Therefore, if \code{runs = set_runs_grid(...)}, then \code{aliases} must
+#' contain exactly two objective aliases. Problems with three or more objectives
+#' must use \code{runs = set_runs_manual(...)}.
 #'
 #' If \code{lexicographic = TRUE}, the extreme points used to generate the grid
 #' are computed lexicographically. In that case, one objective is optimized
@@ -149,12 +151,13 @@
 #' }
 #'
 #' This creates three runs, not a full Cartesian grid. To create all
-#' combinations, use \code{expand.grid()} before calling \code{run_manual()}.
+#' combinations, use \code{expand.grid()} before calling
+#' \code{set_runs_manual()}.
 #'
 #' \strong{Failure handling}
 #'
 #' The \code{control} argument controls how failed runs are handled. It must be
-#' created with \code{\link{mo_control}}.
+#' created with \code{\link{set_runs_control}}.
 #'
 #' Some epsilon levels may define infeasible subproblems. By default, failed
 #' runs can be retained in the returned \code{SolutionSet} with missing
@@ -176,41 +179,53 @@
 #'   \item \code{control}.
 #' }
 #'
-#' With \code{runs = run_grid(...)}, the actual epsilon design is generated
-#' later during \code{\link{solve}}. With \code{runs = run_manual(...)}, the
-#' explicit user-supplied run design is stored and then used by
-#' \code{\link{solve}}.
+#' With \code{runs = set_runs_grid(...)}, the actual epsilon design is generated
+#' later during \code{\link{solve}}. With
+#' \code{runs = set_runs_manual(...)}, the explicit user-supplied run design is
+#' stored and then used by \code{\link{solve}}.
 #'
 #' @param x A \code{Problem} object.
+#'
 #' @param primary Character string giving the alias of the primary objective to
 #'   optimize directly.
+#'
 #' @param aliases Optional character vector of objective aliases to include.
 #'   By default, all registered objective aliases are used. The value of
 #'   \code{primary} must be included in \code{aliases}.
-#' @param runs A run design created with \code{\link{run_grid}} or
-#'   \code{\link{run_manual}}. For epsilon-constraint methods,
-#'   \code{run_grid()} requests automatic epsilon-level generation, while
-#'   \code{run_manual()} requires columns named \code{eps_<alias>} for each
+#'
+#' @param runs A run design created with \code{\link{set_runs_grid}} or
+#'   \code{\link{set_runs_manual}}. For epsilon-constraint methods,
+#'   \code{set_runs_grid()} requests automatic epsilon-level generation, while
+#'   \code{set_runs_manual()} requires columns named \code{eps_<alias>} for each
 #'   constrained objective.
+#'
 #' @param eps Deprecated. Epsilon specification used by the previous
 #'   \code{mode = "manual"} interface. It may be a named numeric vector or a
 #'   named list of numeric vectors. New code should use
-#'   \code{runs = run_manual(...)} instead.
+#'   \code{runs = set_runs_manual(...)} instead.
+#'
 #' @param mode Deprecated. Previous interface selector, either \code{"manual"}
-#'   or \code{"auto"}. New code should use \code{runs = run_manual(...)} or
-#'   \code{runs = run_grid(...)} instead.
+#'   or \code{"auto"}. New code should use
+#'   \code{runs = set_runs_manual(...)} or
+#'   \code{runs = set_runs_grid(...)} instead.
+#'
 #' @param n_points Deprecated. Previous automatic-grid argument. New code should
-#'   use \code{runs = run_grid(n = ...)} instead.
-#' @param include_extremes Deprecated. Previous automatic-grid argument. New
-#'   code should use \code{runs = run_grid(n = ..., include_extremes = ...)}
-#'   instead.
+#'   use \code{runs = set_runs_grid(n = ...)} instead.
+#'
+#' @param include_extremes Deprecated and ignored. Automatic run grids now
+#'   always include boundary levels. New code should use
+#'   \code{runs = set_runs_grid(n = ...)}.
+#'
 #' @param lexicographic Logical scalar. If \code{TRUE}, compute automatic-grid
-#'   extreme points lexicographically when \code{runs = run_grid(...)} is used.
+#'   extreme points lexicographically when \code{runs = set_runs_grid(...)} is
+#'   used.
+#'
 #' @param lexicographic_tol Numeric scalar \eqn{\ge 0}. Tolerance used in
 #'   lexicographic extreme-point computation.
-#' @param control A control object created with \code{\link{mo_control}}. It
-#'   controls how infeasible runs, runs without a solution, and unexpected
-#'   errors are handled.
+#'
+#' @param control A control object created with
+#'   \code{\link{set_runs_control}}. It controls how infeasible runs, runs
+#'   without a solution, and unexpected errors are handled.
 #'
 #' @return An updated \code{Problem} object with the epsilon-constraint method
 #'   configuration stored in \code{x$data$method}.
@@ -264,7 +279,7 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost"),
-#'   runs = run_grid(n = 5, include_extremes = TRUE),
+#'   runs = set_runs_grid(n = 5),
 #'   lexicographic = TRUE,
 #'   lexicographic_tol = 1e-8
 #' )
@@ -280,7 +295,7 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost"),
-#'   runs = run_manual(eps_runs)
+#'   runs = set_runs_manual(eps_runs)
 #' )
 #'
 #' x2$data$method
@@ -295,7 +310,7 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost", "loss"),
-#'   runs = run_manual(eps_runs_3obj)
+#'   runs = set_runs_manual(eps_runs_3obj)
 #' )
 #'
 #' x3$data$method
@@ -311,7 +326,7 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost", "loss"),
-#'   runs = run_manual(eps_cartesian)
+#'   runs = set_runs_manual(eps_cartesian)
 #' )
 #'
 #' x4$data$method
@@ -332,8 +347,8 @@
 #'   x,
 #'   primary = "benefit",
 #'   aliases = c("benefit", "cost"),
-#'   runs = run_manual(data.frame(eps_cost = c(4, 6, 8))),
-#'   control = mo_control(
+#'   runs = set_runs_manual(data.frame(eps_cost = c(4, 6, 8))),
+#'   control = set_runs_control(
 #'     stop_on_infeasible = FALSE,
 #'     stop_on_no_solution = FALSE,
 #'     stop_on_error = TRUE
@@ -343,9 +358,9 @@
 #' x6$data$method
 #'
 #' @seealso
-#' \code{\link{run_grid}},
-#' \code{\link{run_manual}},
-#' \code{\link{mo_control}},
+#' \code{\link{set_runs_grid}},
+#' \code{\link{set_runs_manual}},
+#' \code{\link{set_runs_control}},
 #' \code{\link{set_method_augmecon}},
 #' \code{\link{set_method_weighted_sum}},
 #' \code{\link{solve}}
@@ -389,7 +404,10 @@ set_method_epsilon_constraint <- function(x,
     aliases <- obj_alias
   } else {
     if (!is.character(aliases) || length(aliases) == 0L || anyNA(aliases)) {
-      stop("`aliases` must be NULL or a non-empty character vector without NA.", call. = FALSE)
+      stop(
+        "`aliases` must be NULL or a non-empty character vector without NA.",
+        call. = FALSE
+      )
     }
 
     aliases <- as.character(aliases)
@@ -400,7 +418,11 @@ set_method_epsilon_constraint <- function(x,
 
     if (anyDuplicated(aliases) != 0L) {
       dups <- unique(aliases[duplicated(aliases)])
-      stop("`aliases` must not contain duplicates: ", paste(dups, collapse = ", "), call. = FALSE)
+      stop(
+        "`aliases` must not contain duplicates: ",
+        paste(dups, collapse = ", "),
+        call. = FALSE
+      )
     }
   }
 
@@ -436,7 +458,10 @@ set_method_epsilon_constraint <- function(x,
 
   if (old_args_used && !is.null(runs)) {
     stop(
-      "Use either `runs` or deprecated arguments (`eps`, `mode`, `n_points`, `include_extremes`), not both.",
+      paste0(
+        "Use either `runs` or deprecated arguments ",
+        "(`eps`, `mode`, `n_points`, `include_extremes`), not both."
+      ),
       call. = FALSE
     )
   }
@@ -444,15 +469,29 @@ set_method_epsilon_constraint <- function(x,
   if (is.null(runs) && old_args_used) {
     .pa_deprecate_arg(
       old = "eps/mode/n_points/include_extremes",
-      new = "runs = run_grid(...) or runs = run_manual(...)"
+      new = "runs = set_runs_grid(...) or runs = set_runs_manual(...)"
     )
+
+    if (!is.null(include_extremes) && !isTRUE(include_extremes)) {
+      lifecycle::deprecate_warn(
+        "1.1.0",
+        "set_method_epsilon_constraint(include_extremes = )",
+        details = paste0(
+          "Boundary levels are now always included in automatic run grids. ",
+          "The `include_extremes` argument is ignored."
+        )
+      )
+    }
 
     mode <- mode %||% if (!is.null(eps)) "manual" else "auto"
     mode <- match.arg(mode, choices = c("manual", "auto"))
 
     if (identical(mode, "manual")) {
       if (is.null(eps)) {
-        stop("In deprecated `mode = 'manual'`, `eps` must be supplied.", call. = FALSE)
+        stop(
+          "In deprecated `mode = 'manual'`, `eps` must be supplied.",
+          call. = FALSE
+        )
       }
 
       eps_df <- .pamo_eps_to_manual_df(
@@ -460,22 +499,23 @@ set_method_epsilon_constraint <- function(x,
         constrained = constrained
       )
 
-      runs <- run_manual(eps_df)
+      runs <- set_runs_manual(eps_df)
 
     } else {
       n_points <- as.integer(n_points %||% 10L)[1]
-      include_extremes <- include_extremes %||% TRUE
 
-      runs <- run_grid(
-        n = n_points,
-        include_extremes = isTRUE(include_extremes)
+      runs <- set_runs_grid(
+        n = n_points
       )
     }
   }
 
   if (is.null(runs)) {
     stop(
-      "`runs` must be supplied. Use `runs = run_grid(n = ...)` or `runs = run_manual(...)`.",
+      paste0(
+        "`runs` must be supplied. Use `runs = set_runs_grid(n = ...)` ",
+        "or `runs = set_runs_manual(...)`."
+      ),
       call. = FALSE
     )
   }
@@ -486,23 +526,31 @@ set_method_epsilon_constraint <- function(x,
   # Manual runs can still be used for 3+ objectives.
   if (.pamo_is_run_grid(runs) && length(constrained) != 1L) {
     stop(
-      "`runs = run_grid()` for epsilon-constraint currently supports exactly ",
-      "one constrained objective. Use `run_manual()` for 3+ objectives.",
+      paste0(
+        "`runs = set_runs_grid()` for epsilon-constraint currently supports ",
+        "exactly one constrained objective. Use `set_runs_manual()` for 3+ ",
+        "objectives."
+      ),
       call. = FALSE
     )
   }
 
   # ---- lexicographic
-  if (!is.logical(lexicographic) ||
-      length(lexicographic) != 1L ||
-      is.na(lexicographic)) {
+  if (
+    !is.logical(lexicographic) ||
+    length(lexicographic) != 1L ||
+    is.na(lexicographic)
+  ) {
     stop("`lexicographic` must be TRUE or FALSE.", call. = FALSE)
   }
 
   lexicographic_tol <- as.numeric(lexicographic_tol)[1]
 
   if (!is.finite(lexicographic_tol) || lexicographic_tol < 0) {
-    stop("`lexicographic_tol` must be a finite non-negative number.", call. = FALSE)
+    stop(
+      "`lexicographic_tol` must be a finite non-negative number.",
+      call. = FALSE
+    )
   }
 
   # ---- control

@@ -18,7 +18,8 @@ test_that("multiscape matches prioritizr on a one-action min-cost problem", {
 
   s_multiscape <- multiscape::solve(p_multiscape)
 
-  acts_multiscape <- multiscape::get_actions(s_multiscape, only_selected = TRUE)
+  acts_multiscape <- multiscape::get_actions(s_multiscape)
+  acts_multiscape <- acts_multiscape[acts_multiscape$selected == 1L, , drop = FALSE]
   sel_multiscape <- sort(unique(acts_multiscape$pu))
   cost_multiscape <- sum(toy$pu$cost[toy$pu$id %in% sel_multiscape])
 

@@ -19,10 +19,10 @@ test_that("multiscape matches prioritizr on a one-action boundary-penalized prob
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = FALSE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "frag"),
-      runs = multiscape::run_manual(
+      runs = multiscape::set_runs_manual(
         data.frame(
           weight_cost = 1,
           weight_frag = 1
@@ -32,7 +32,8 @@ test_that("multiscape matches prioritizr on a one-action boundary-penalized prob
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s_multiscape <- multiscape::solve(p_multiscape)
-  acts_multiscape <- multiscape::get_actions(s_multiscape, run = 1, only_selected = TRUE)
+  acts_multiscape <- multiscape::get_actions(s_multiscape, solution = 1)
+  acts_multiscape <- acts_multiscape[acts_multiscape$selected == 1L, , drop = FALSE]
   sel_multiscape <- sort(unique(acts_multiscape$pu))
   cost_multiscape <- sum(toy$pu$cost[toy$pu$id %in% sel_multiscape])
 

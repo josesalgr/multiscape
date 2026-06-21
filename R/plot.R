@@ -5,10 +5,42 @@ NULL
 # Internal helpers
 # -------------------------------------------------------------------
 
-.pa_plot_spatial_resolve_runs <- function(x, runs = NULL) {
+.pa_plot_spatial_resolve_solutions <- function(x,
+                                               solutions = NULL,
+                                               ...,
+                                               caller = "this function") {
   if (!inherits(x, "SolutionSet")) {
     stop(
       "x must be a SolutionSet object returned by solve().",
+      call. = FALSE
+    )
+  }
+
+  dots <- list(...)
+
+  if ("runs" %in% names(dots)) {
+    if (!is.null(solutions)) {
+      stop(
+        "Use either `solutions` or deprecated `runs`, not both.",
+        call. = FALSE
+      )
+    }
+
+    lifecycle::deprecate_warn(
+      "1.1.0",
+      paste0(caller, "(runs = )"),
+      paste0(caller, "(solutions = )")
+    )
+
+    solutions <- dots$runs
+    dots$runs <- NULL
+  }
+
+  if (length(dots) > 0L) {
+    stop(
+      "Unused argument(s): ",
+      paste(names(dots), collapse = ", "),
+      ".",
       call. = FALSE
     )
   }
@@ -36,9 +68,13 @@ NULL
     )
   }
 
+  runs_tbl$run_id <- as.integer(runs_tbl$run_id)
+  runs_tbl$solution_id <- suppressWarnings(as.integer(runs_tbl$solution_id))
+
   available <- runs_tbl[
     !is.na(runs_tbl$solution_id) &
-      nzchar(runs_tbl$solution_id),
+      is.finite(runs_tbl$solution_id) &
+      runs_tbl$solution_id >= 1L,
     ,
     drop = FALSE
   ]
@@ -50,61 +86,51 @@ NULL
     )
   }
 
-  if (is.null(runs)) {
-    return(as.integer(available$run_id[1L]))
+  if (is.null(solutions)) {
+    return(as.integer(available$solution_id[1L]))
   }
 
   if (
-    !is.numeric(runs) &&
-    !is.integer(runs)
+    !is.numeric(solutions) &&
+    !is.integer(solutions)
   ) {
     stop(
-      "`runs` must contain positive integer run ids.",
+      "`solutions` must contain positive integer solution ids.",
       call. = FALSE
     )
   }
 
   if (
-    anyNA(runs) ||
-    any(!is.finite(runs)) ||
-    any(runs < 1) ||
-    any(runs != floor(runs))
+    anyNA(solutions) ||
+    any(!is.finite(solutions)) ||
+    any(solutions < 1) ||
+    any(solutions != floor(solutions))
   ) {
     stop(
-      "`runs` must contain positive integer run ids.",
+      "`solutions` must contain positive integer solution ids.",
       call. = FALSE
     )
   }
 
-  runs <- unique(as.integer(runs))
+  solutions <- unique(as.integer(solutions))
 
-  unknown <- setdiff(runs, runs_tbl$run_id)
+  unknown <- setdiff(solutions, available$solution_id)
 
   if (length(unknown) > 0L) {
-    stop(
-      "Unknown run id(s): ",
-      paste(unknown, collapse = ", "),
-      ".",
-      call. = FALSE
-    )
-  }
-
-  idx <- match(runs, runs_tbl$run_id)
-  solution_ids <- runs_tbl$solution_id[idx]
-  missing <- is.na(solution_ids) | !nzchar(solution_ids)
-
-  if (any(missing)) {
-    bad_runs <- runs[missing]
     status_msg <- ""
 
-    if ("status" %in% names(runs_tbl)) {
+    idx_run <- match(unknown, runs_tbl$run_id)
+
+    if ("status" %in% names(runs_tbl) && any(!is.na(idx_run))) {
+      ok <- !is.na(idx_run)
+
       status_msg <- paste0(
         " Status: ",
         paste(
           paste0(
-            bad_runs,
+            unknown[ok],
             "=",
-            as.character(runs_tbl$status[idx][missing])
+            as.character(runs_tbl$status[idx_run[ok]])
           ),
           collapse = ", "
         ),
@@ -113,15 +139,25 @@ NULL
     }
 
     stop(
-      "No stored solution is available for run id(s): ",
-      paste(bad_runs, collapse = ", "),
+      "No stored solution is available for solution id(s): ",
+      paste(unknown, collapse = ", "),
       ".",
       status_msg,
       call. = FALSE
     )
   }
 
-  runs
+  solutions
+}
+
+
+.pa_plot_spatial_resolve_runs <- function(x, runs = NULL) {
+  .pa_plot_spatial_resolve_solutions(
+    x = x,
+    solutions = NULL,
+    runs = runs,
+    caller = ".pa_plot_spatial_resolve_runs"
+  )
 }
 
 
@@ -162,6 +198,7 @@ NULL
   pu_sf[, "id", drop = FALSE]
 }
 
+
 .pa_plot_spatial_make_base_plot <- function(
     pu_sf_min,
     show_base = TRUE,
@@ -182,6 +219,7 @@ NULL
   p + ggplot2::theme_minimal()
 }
 
+
 #' @title Plot spatial outputs from a solution set
 #'
 #' @description
@@ -190,7 +228,7 @@ NULL
 #'
 #' Depending on \code{what}, this function dispatches to one of:
 #' \itemize{
-#'   \item \code{\link{plot_spatial_pu}},
+#'   \item \code{\link{plot_spatial_planning_units}},
 #'   \item \code{\link{plot_spatial_actions}},
 #'   \item \code{\link{plot_spatial_features}}.
 #' }
@@ -203,8 +241,8 @@ NULL
 #'   \code{\link{solve}}.
 #' @param what Character string indicating what to plot. Must be one of
 #'   \code{"pu"}, \code{"actions"}, or \code{"features"}.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
-#'   available run is plotted by default.
+#' @param solutions Optional integer vector of solution ids. If \code{NULL}, the
+#'   first available solution is plotted by default.
 #' @param actions Optional action subset used when \code{what = "actions"}.
 #' @param features Optional feature subset used when \code{what = "features"}.
 #' @param value Character string used only when \code{what = "features"}.
@@ -278,15 +316,15 @@ NULL
 #' }
 #'
 #' @seealso
-#' \code{\link{plot_spatial_pu}},
+#' \code{\link{plot_spatial_planning_units}},
 #' \code{\link{plot_spatial_actions}},
 #' \code{\link{plot_spatial_features}}
 #'
-#' @export
+#' @noRd
 plot_spatial <- function(
     x,
     what = c("pu", "actions", "features"),
-    runs = NULL,
+    solutions = NULL,
     actions = NULL,
     features = NULL,
     value = c("final", "baseline", "benefit"),
@@ -308,9 +346,9 @@ plot_spatial <- function(
   value <- match.arg(value)
 
   if (identical(what, "pu")) {
-    return(plot_spatial_pu(
+    return(plot_spatial_planning_units(
       x = x,
-      runs = runs,
+      solutions = solutions,
       ...,
       base_alpha = base_alpha,
       selected_alpha = selected_alpha,
@@ -325,7 +363,7 @@ plot_spatial <- function(
   if (identical(what, "actions")) {
     return(plot_spatial_actions(
       x = x,
-      runs = runs,
+      solutions = solutions,
       actions = actions,
       layout = layout,
       max_facets = max_facets,
@@ -345,7 +383,7 @@ plot_spatial <- function(
 
   plot_spatial_features(
     x = x,
-    runs = runs,
+    solutions = solutions,
     features = features,
     value = value,
     layout = layout,
@@ -363,6 +401,7 @@ plot_spatial <- function(
   )
 }
 
+
 #' @title Plot selected planning units in space
 #'
 #' @description
@@ -370,8 +409,8 @@ plot_spatial <- function(
 #' \code{\link{solutionset-class}} object returned by \code{\link{solve}}.
 #'
 #' This function maps the planning-unit selection summary returned by
-#' \code{\link{get_pu}} onto the planning-unit geometry stored in the associated
-#' \code{Problem} object.
+#' \code{\link{get_planning_units}} onto the planning-unit geometry stored in
+#' the associated \code{Problem} object.
 #'
 #' @details
 #' Let \eqn{w_i \in \{0,1\}} denote the planning-unit selection variable for
@@ -384,8 +423,8 @@ plot_spatial <- function(
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
-#'   available run is plotted by default.
+#' @param solutions Optional integer vector of solution ids. If \code{NULL}, the
+#'   first available solution is plotted by default.
 #' @param ... Reserved for future extensions.
 #' @param base_alpha Numeric value in \eqn{[0,1]} giving the alpha of the base
 #'   planning-unit layer.
@@ -438,19 +477,19 @@ plot_spatial <- function(
 #'
 #'   solutions <- solve(problem)
 #'
-#'   plot_spatial_pu(solutions)
+#'   plot_spatial_planning_units(solutions)
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
-#' \code{\link{plot_spatial}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{plot_spatial_actions}},
-#' \code{\link{plot_spatial_features}}
+#' \code{\link{plot_spatial_features}},
+#' \code{\link{plot_spatial_planning_units}}
 #'
 #' @export
-plot_spatial_pu <- function(
+plot_spatial_planning_units <- function(
     x,
-    runs = NULL,
+    solutions = NULL,
     ...,
     base_alpha = 0.10,
     selected_alpha = 0.90,
@@ -461,10 +500,10 @@ plot_spatial_pu <- function(
     show_base = TRUE
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("plot_spatial_pu() requires the 'sf' package.", call. = FALSE)
+    stop("plot_spatial_planning_units() requires the 'sf' package.", call. = FALSE)
   }
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("plot_spatial_pu() requires the 'ggplot2' package.", call. = FALSE)
+    stop("plot_spatial_planning_units() requires the 'ggplot2' package.", call. = FALSE)
   }
 
   if (!isTRUE(draw_borders)) {
@@ -472,28 +511,41 @@ plot_spatial_pu <- function(
     selected_color <- NA
   }
 
-  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
-  multi_runs <- length(run_ids) > 1L
+  solution_ids <- .pa_plot_spatial_resolve_solutions(
+    x = x,
+    solutions = solutions,
+    ...,
+    caller = "plot_spatial_planning_units"
+  )
+
+  multi_solutions <- length(solution_ids) > 1L
   pu_sf_min <- .pa_plot_spatial_get_geometry(x)
 
-  pu_list <- vector("list", length(run_ids))
+  pu_list <- vector("list", length(solution_ids))
 
-  for (i in seq_along(run_ids)) {
-    run_i <- run_ids[i]
+  for (i in seq_along(solution_ids)) {
+    solution_i <- solution_ids[i]
 
-    pu_tbl <- get_pu(
+    pu_tbl <- get_planning_units(
       x,
-      only_selected = FALSE,
-      run = run_i
+      solution = solution_i
     )
+
     if (!all(c("id", "selected") %in% names(pu_tbl))) {
-      stop("PU summary must contain 'id' and 'selected'.", call. = FALSE)
+      stop("Planning-unit summary must contain 'id' and 'selected'.", call. = FALSE)
     }
 
     pu_tbl$id <- as.integer(pu_tbl$id)
-    g_i <- merge(pu_sf_min, pu_tbl[, c("id", "selected")], by = "id", all.x = TRUE)
+
+    g_i <- merge(
+      pu_sf_min,
+      pu_tbl[, c("id", "selected")],
+      by = "id",
+      all.x = TRUE
+    )
+
     g_i$selected[is.na(g_i$selected)] <- 0L
-    g_i$run_id <- run_i
+    g_i$solution_id <- solution_i
     pu_list[[i]] <- g_i
   }
 
@@ -520,13 +572,63 @@ plot_spatial_pu <- function(
     ) +
     ggplot2::labs(title = "Selected planning units")
 
-  if (isTRUE(multi_runs)) {
-    p <- p + ggplot2::facet_wrap(~run_id)
+  if (isTRUE(multi_solutions)) {
+    p <- p + ggplot2::facet_wrap(~solution_id)
   }
 
   print(p)
   invisible(p)
 }
+
+
+#' @title Plot selected planning units in space
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' \code{plot_spatial_pu()} has been replaced by
+#' \code{\link{plot_spatial_planning_units}}.
+#'
+#' @inheritParams plot_spatial_planning_units
+#'
+#' @return Invisibly returns a \code{ggplot} object.
+#'
+#' @seealso
+#' \code{\link{plot_spatial_planning_units}}
+#'
+#' @export
+plot_spatial_pu <- function(
+    x,
+    solutions = NULL,
+    ...,
+    base_alpha = 0.10,
+    selected_alpha = 0.90,
+    base_fill = "grey92",
+    base_color = NA,
+    selected_color = NA,
+    draw_borders = FALSE,
+    show_base = TRUE
+) {
+  lifecycle::deprecate_warn(
+    "1.1.0",
+    "plot_spatial_pu()",
+    "plot_spatial_planning_units()"
+  )
+
+  plot_spatial_planning_units(
+    x = x,
+    solutions = solutions,
+    ...,
+    base_alpha = base_alpha,
+    selected_alpha = selected_alpha,
+    base_fill = base_fill,
+    base_color = base_color,
+    selected_color = selected_color,
+    draw_borders = draw_borders,
+    show_base = show_base
+  )
+}
+
 
 #' @title Plot selected actions in space
 #'
@@ -556,8 +658,8 @@ plot_spatial_pu <- function(
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
-#'   available run is plotted by default.
+#' @param solutions Optional integer vector of solution ids. If \code{NULL}, the
+#'   first available solution is plotted by default.
 #' @param actions Optional action subset to display. Entries may match action
 #'   ids or action-set labels.
 #' @param layout Character string controlling the layout. Must be one of
@@ -650,14 +752,13 @@ plot_spatial_pu <- function(
 #'
 #' @seealso
 #' \code{\link{get_actions}},
-#' \code{\link{plot_spatial}},
-#' \code{\link{plot_spatial_pu}},
+#' \code{\link{plot_spatial_planning_units}},
 #' \code{\link{plot_spatial_features}}
 #'
 #' @export
 plot_spatial_actions <- function(
     x,
-    runs = NULL,
+    solutions = NULL,
     actions = NULL,
     layout = NULL,
     max_facets = 4L,
@@ -689,10 +790,16 @@ plot_spatial_actions <- function(
     selected_color <- NA
   }
 
-  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
-  multi_runs <- length(run_ids) > 1L
+  solution_ids <- .pa_plot_spatial_resolve_solutions(
+    x = x,
+    solutions = solutions,
+    ...,
+    caller = "plot_spatial_actions"
+  )
 
-  if (isTRUE(multi_runs) && identical(layout, "facet")) {
+  multi_solutions <- length(solution_ids) > 1L
+
+  if (isTRUE(multi_solutions) && identical(layout, "facet")) {
     stop(
       "When plotting multiple runs for actions, use layout = 'single'. ",
       "Faceting by both run and action is not supported.",
@@ -702,15 +809,14 @@ plot_spatial_actions <- function(
 
   pu_sf_min <- .pa_plot_spatial_get_geometry(x)
 
-  act_list <- vector("list", length(run_ids))
+  act_list <- vector("list", length(solution_ids))
 
-  for (i in seq_along(run_ids)) {
-    run_i <- run_ids[i]
+  for (i in seq_along(solution_ids)) {
+    solution_i <- solution_ids[i]
 
     act_tbl <- get_actions(
       x,
-      only_selected = FALSE,
-      run = run_i
+      solution = solution_i
     )
     if (is.null(act_tbl) || !inherits(act_tbl, "data.frame")) {
       stop("No actions summary found for the selected run.", call. = FALSE)
@@ -732,7 +838,7 @@ plot_spatial_actions <- function(
     }
 
     if (nrow(act_tbl) == 0L) next
-    act_tbl$run_id <- run_i
+    act_tbl$solution_id <- solution_i
     act_list[[i]] <- act_tbl
   }
 
@@ -757,7 +863,7 @@ plot_spatial_actions <- function(
   # -------------------------------------------------------------------
   # one run + action facets
   # -------------------------------------------------------------------
-  if (!isTRUE(multi_runs) && identical(layout, "facet")) {
+  if (!isTRUE(multi_solutions) && identical(layout, "facet")) {
     if (is.null(actions) && length(acts) > max_facets) {
       warning(
         "Showing only the first ", max_facets,
@@ -803,7 +909,7 @@ plot_spatial_actions <- function(
   # -------------------------------------------------------------------
   # single layout (possibly multiple runs)
   # -------------------------------------------------------------------
-  lab_list <- split(act_tbl, act_tbl$run_id)
+  lab_list <- split(act_tbl, act_tbl$solution_id)
   warned_multi_action <- FALSE
 
   lab_out <- lapply(names(lab_list), function(rr) {
@@ -822,7 +928,7 @@ plot_spatial_actions <- function(
     names(tmp)[names(tmp) == "pu"] <- "id"
     tmp$id <- as.integer(tmp$id)
     tmp$action <- as.character(tmp$action)
-    tmp$run_id <- as.integer(rr)
+    tmp$solution_id <- as.integer(rr)
     tmp
   })
 
@@ -858,11 +964,11 @@ plot_spatial_actions <- function(
     ggplot2::coord_sf(datum = NA) +
     base_theme
 
-  if (isTRUE(multi_runs)) {
+  if (isTRUE(multi_solutions)) {
     p <- p +
       ggplot2::facet_wrap(
-        ~run_id,
-        labeller = ggplot2::labeller(run_id = function(x) paste("Run", x))
+        ~solution_id,
+        labeller = ggplot2::labeller(solution_id = function(x) paste("Solution", x))
       ) +
       ggplot2::theme(
         axis.text = ggplot2::element_blank(),
@@ -928,8 +1034,8 @@ plot_spatial_actions <- function(
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param runs Optional integer vector of run ids. If \code{NULL}, the first
-#'   available run is plotted by default.
+#' @param solutions Optional integer vector of solution ids. If \code{NULL}, the
+#'   first available solution is plotted by default.
 #' @param features Optional feature subset to display. Matching is attempted
 #'   against both feature ids and feature names.
 #' @param value Character string indicating which feature quantity to plot. Must
@@ -1034,14 +1140,13 @@ plot_spatial_actions <- function(
 #'
 #' @seealso
 #' \code{\link{get_features}},
-#' \code{\link{plot_spatial}},
-#' \code{\link{plot_spatial_pu}},
+#' \code{\link{plot_spatial_planning_units}},
 #' \code{\link{plot_spatial_actions}}
 #'
 #' @export
 plot_spatial_features <- function(
     x,
-    runs = NULL,
+    solutions = NULL,
     features = NULL,
     value = c("final", "baseline", "benefit"),
     layout = NULL,
@@ -1073,10 +1178,16 @@ plot_spatial_features <- function(
     selected_color <- NA
   }
 
-  run_ids <- .pa_plot_spatial_resolve_runs(x, runs = runs)
-  multi_runs <- length(run_ids) > 1L
+  solution_ids <- .pa_plot_spatial_resolve_solutions(
+    x = x,
+    solutions = solutions,
+    ...,
+    caller = "plot_spatial_features"
+  )
 
-  if (isTRUE(multi_runs)) {
+  multi_solutions <- length(solution_ids) > 1L
+
+  if (isTRUE(multi_solutions)) {
     if (is.null(features) || length(features) != 1L) {
       stop(
         "When plotting multiple runs for features, `features` must specify exactly one feature.",
@@ -1104,10 +1215,10 @@ plot_spatial_features <- function(
   feat_map <- feats[, intersect(c("id", "name"), names(feats)), drop = FALSE]
   if (!("name" %in% names(feat_map))) feat_map$name <- as.character(feat_map$id)
 
-  feature_frames <- vector("list", length(run_ids))
+  feature_frames <- vector("list", length(solution_ids))
 
-  for (i in seq_along(run_ids)) {
-    run_i <- run_ids[i]
+  for (i in seq_along(solution_ids)) {
+    solution_i <- solution_ids[i]
 
     base_tbl <- stats::aggregate(
       amount ~ pu + feature,
@@ -1129,8 +1240,7 @@ plot_spatial_features <- function(
       act_sel <- tryCatch(
         get_actions(
           x,
-          only_selected = FALSE,
-          run = run_i
+          solution = solution_i
         ),
         error = function(e) NULL
       )
@@ -1171,7 +1281,7 @@ plot_spatial_features <- function(
 
     ff <- merge(ff, feat_map, by.x = "feature", by.y = "id", all.x = TRUE)
     ff$feature_label <- as.character(ff$name)
-    ff$run_id <- run_i
+    ff$solution_id <- solution_i
 
     if (!is.null(features)) {
       features_chr <- as.character(features)
@@ -1191,7 +1301,7 @@ plot_spatial_features <- function(
     stop("No features available to plot for the requested subset.", call. = FALSE)
   }
 
-  if (!isTRUE(multi_runs)) {
+  if (!isTRUE(multi_solutions)) {
     feat_levels <- unique(ff$feature_label)
     if (identical(layout, "facet") && is.null(features) && length(feat_levels) > max_facets) {
       warning(
@@ -1205,7 +1315,12 @@ plot_spatial_features <- function(
   }
 
   names(ff)[names(ff) == "pu"] <- "id"
-  g <- merge(pu_sf_min, ff[, c("id", "feature_label", "run_id", value)], by = "id", all.y = TRUE)
+  g <- merge(
+    pu_sf_min,
+    ff[, c("id", "feature_label", "solution_id", value)],
+    by = "id",
+    all.y = TRUE
+  )
   g <- sf::st_as_sf(g)
 
   p <- ggplot2::ggplot() +
@@ -1218,8 +1333,8 @@ plot_spatial_features <- function(
     ggplot2::theme_minimal() +
     ggplot2::labs(title = paste("Spatial", value, "by feature"), fill = value)
 
-  if (isTRUE(multi_runs)) {
-    p <- p + ggplot2::facet_wrap(~run_id)
+  if (isTRUE(multi_solutions)) {
+    p <- p + ggplot2::facet_wrap(~solution_id)
   } else if (identical(layout, "facet")) {
     p <- p + ggplot2::facet_wrap(~feature_label)
   }
@@ -1377,9 +1492,8 @@ plot_spatial_features <- function(
 #'     add_objective_max_benefit(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
-#'       runs = run_grid(
-#'         n = 3,
-#'         include_extremes = TRUE
+#'       runs = set_runs_grid(
+#'         n = 3
 #'       ),
 #'       normalize_weights = TRUE
 #'     ) |>

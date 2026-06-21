@@ -1,5 +1,73 @@
 # Changelog
 
+## multiscape 1.1.1
+
+### User-facing API
+
+- Renamed planning-unit functions and arguments to use `planning_units`
+  consistently instead of `pu`.
+
+- Deprecated older function aliases kept for backwards compatibility:
+
+  - [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
+    in favour of
+    [`get_planning_units()`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md);
+  - [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
+    in favour of
+    [`plot_spatial_planning_units()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_planning_units.md);
+  - [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
+    in favour of the planning-unit naming convention;
+  - [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)
+    in favour of
+    [`add_objective_min_fragmentation_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.md).
+
+- Deprecated older multi-objective run helpers:
+
+  - [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+    in favour of
+    [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md);
+  - [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+    in favour of
+    [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md);
+  - [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
+    in favour of
+    [`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
+
+### Solution and result extractors
+
+- Simplified public result tables to use `solution_id` as the main
+  identifier for stored solutions.
+- Kept `run_id` primarily for
+  [`get_runs()`](https://josesalgr.github.io/multiscape/reference/get_runs.md)
+  and internal diagnostics, reducing ambiguity in user-facing summary
+  outputs.
+- Updated
+  [`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.md)
+  to return cleaner user-facing tables while preserving run-level
+  identifiers internally for frontier and dominance calculations.
+- Updated getters, plotting functions, and error messages to use
+  `solution`/`solutions` terminology consistently.
+
+### Multi-objective methods
+
+- Updated weighted-sum defaults so that automatic grids are normalized
+  by default, while manual weight designs use the supplied weights
+  exactly.
+- Allowed manual weighted-sum weights to be non-negative and have any
+  positive row total when `normalize_weights = FALSE`.
+- Improved validation of manual weighted-sum designs and multi-objective
+  control objects.
+- Removed outdated internal `feasible_only` handling from objective
+  extraction workflows.
+
+### Maintenance
+
+- Updated tests to reflect the new `solution_id`-based public API.
+- Improved internal separation between user-facing extractors and
+  run-level helper functions.
+- Fixed inconsistencies in deprecated `run` terminology across getters,
+  plotting, and frontier utilities.
+
 ## multiscape 1.1.0
 
 ### Solution architecture
@@ -65,10 +133,9 @@
 - Added
   [`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.md)
   to extract objective values in long or wide format.
-- Added
-  [`get_objective_specs()`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md)
-  to extract registered objective aliases, objective types, model types,
-  optimization senses, and creation metadata.
+- Added `get_objective_specs()` to extract registered objective aliases,
+  objective types, model types, optimization senses, and creation
+  metadata.
 - Updated objective extraction to include both `run_id` and
   `solution_id`.
 - Updated existing extraction functions to work consistently with the
