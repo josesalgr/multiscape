@@ -87,7 +87,7 @@ present, it typically represents: \$\$ \mathrm{gap} =
 
 ## See also
 
-[`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md),
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md),
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md),
 [`get_features`](https://josesalgr.github.io/multiscape/reference/get_features.md)
 

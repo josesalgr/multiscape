@@ -107,7 +107,7 @@ which focuses on target achievement.
 
 ## See also
 
-[`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md),
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md),
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md),
 [`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md)
 

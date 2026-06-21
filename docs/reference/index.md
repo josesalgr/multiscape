@@ -158,6 +158,8 @@ points.
   : Find objective-wise extreme solutions
 - [`frontier_distances()`](https://josesalgr.github.io/multiscape/reference/frontier_distances.md)
   : Compute distances to observed ideal or nadir points
+- [`frontier_knee()`](https://josesalgr.github.io/multiscape/reference/frontier_knee.md)
+  : Identify knee solutions on an observed Pareto frontier
 
 ## Selection analysis
 

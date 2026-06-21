@@ -128,6 +128,7 @@ reference:
     contents:
       - frontier_extremes
       - frontier_distances
+      - frontier_knee
 
   - title: Selection analysis
     desc: Analyze the recurrence and structural similarity of planning-unit and action assignments.

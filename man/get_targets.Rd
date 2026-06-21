@@ -128,7 +128,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{get_pu}},
+\code{\link{get_planning_units}},
 \code{\link{get_actions}},
 \code{\link{get_features}}
 }
