@@ -43,9 +43,8 @@
 #' If \code{nondominated = TRUE}, the function further keeps only non-dominated
 #' solutions among the runs retained by the previous filters. Dominance is
 #' evaluated in objective space using the objective values stored in the run
-#' table. Objective senses are read from \code{\link{get_objective_specs}}; any
-#' maximization objective is internally multiplied by \eqn{-1} so that
-#' dominance can be evaluated in minimization space.
+#' table. Objective senses are obtained from the objective specifications stored in
+#' the original problem.
 #'
 #' Non-dominated filtering requires the \pkg{moocore} package.
 #'
