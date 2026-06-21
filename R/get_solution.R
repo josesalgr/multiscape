@@ -1278,8 +1278,7 @@ get_objectives <- function(x,
 #' @seealso
 #' \code{\link{get_runs}},
 #' \code{\link{get_objectives}},
-#' \code{\link{frontier_extremes}},
-#' \code{\link{solution_filter}}
+#' \code{\link{frontier_extremes}}
 #' @noRd
 get_objective_specs <- function(x) {
   if (!inherits(x, "SolutionSet")) {
