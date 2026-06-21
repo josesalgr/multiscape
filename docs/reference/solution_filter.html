@@ -148,9 +148,8 @@ preserves traceability to the original run design.</p>
 <p>If <code>nondominated = TRUE</code>, the function further keeps only non-dominated
 solutions among the runs retained by the previous filters. Dominance is
 evaluated in objective space using the objective values stored in the run
-table. Objective senses are read from <code>get_objective_specs</code>; any
-maximization objective is internally multiplied by \(-1\) so that
-dominance can be evaluated in minimization space.</p>
+table. Objective senses are obtained from the objective specifications stored in
+the original problem.</p>
 <p>Non-dominated filtering requires the <span class="pkg">moocore</span> package.</p>
     </div>
     <div class="section level2">
