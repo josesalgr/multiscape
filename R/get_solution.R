@@ -141,6 +141,9 @@ get_planning_units <- function(x, solution = NULL, ...) {
 #'   \code{\link{solve}}.
 #' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all solutions are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} containing the stored planning-unit summary.
 #'
@@ -449,7 +452,7 @@ get_actions <- function(x, solution = NULL, ...) {
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_targets}}
 #'
@@ -717,7 +720,7 @@ get_features <- function(x, solution = NULL, ...) {
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_features}}
 #'
@@ -815,7 +818,7 @@ get_targets <- function(x, solution = NULL, ...) {
 #' table.
 #'
 #' To inspect selected planning units or selected actions in a more interpretable
-#' form, use \code{\link{get_pu}} or \code{\link{get_actions}} instead.
+#' form, use \code{\link{get_planning_units}} or \code{\link{get_actions}} instead.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
@@ -881,7 +884,7 @@ get_targets <- function(x, solution = NULL, ...) {
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_features}},
 #' \code{\link{get_targets}}
