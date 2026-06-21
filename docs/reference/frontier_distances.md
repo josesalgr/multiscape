@@ -48,7 +48,7 @@ for the selected objectives.
 
 The table contains:
 
-- `run_id` and `solution_id`;
+- `solution_id`;
 
 - the original objective values;
 
@@ -93,10 +93,10 @@ To calculate distances using only non-dominated solutions, first use:
     frontier_distances(x_nd)
 
 Objective values are internally transformed to a common minimization
-space using the objective senses registered in `get_objective_specs`.
-Objectives with `sense = "min"` are kept unchanged, whereas objectives
-with `sense = "max"` are multiplied by \\-1\\. In this transformed
-space, lower values are always better.
+space using the objective senses registered in the original problem.
+`sense = "min"` are kept unchanged, whereas objectives with
+`sense = "max"` are multiplied by \\-1\\. In this transformed space,
+lower values are always better.
 
 The observed ideal point is defined by the best observed value for each
 objective:
@@ -144,7 +144,6 @@ nadir point.
 
 [`frontier_extremes`](https://josesalgr.github.io/multiscape/reference/frontier_extremes.md),
 [`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
-`get_objective_specs`,
 [`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md)
 
 ## Examples
@@ -261,14 +260,11 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     )
   }
 }
-#> 'as(<dgTMatrix>, "dgCMatrix")' is deprecated.
-#> Use 'as(., "CsparseMatrix")' instead.
-#> See help("Deprecated") and help("Matrix-deprecated").
-#>   run_id solution_id cost benefit norm_cost norm_benefit distance_to_ideal
-#> 1      1           1    2     0.0    0.0000   1.00000000         1.0000000
-#> 2      2           2    3     3.5    0.0625   0.53333333         0.5369830
-#> 3      4           4   12     7.0    0.6250   0.06666667         0.6285455
-#> 4      5           5   18     7.5    1.0000   0.00000000         1.0000000
+#>   solution_id cost benefit norm_cost norm_benefit distance_to_ideal
+#> 1           1    2     0.0    0.0000   1.00000000         1.0000000
+#> 2           2    3     3.5    0.0625   0.53333333         0.5369830
+#> 3           4   12     7.0    0.6250   0.06666667         0.6285455
+#> 4           5   18     7.5    1.0000   0.00000000         1.0000000
 #>   rank_to_ideal distance_to_nadir rank_from_nadir
 #> 1             3          1.000000               3
 #> 2             1          1.047227               1

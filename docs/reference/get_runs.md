@@ -49,3 +49,45 @@ values, use
 [`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md),
 [`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md),
 [`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
+
+## Examples
+
+``` r
+pu <- data.frame(
+  id = 1:4,
+  cost = c(1, 2, 3, 4)
+)
+
+features <- data.frame(
+  id = 1:2,
+  name = c("sp1", "sp2")
+)
+
+dist_features <- data.frame(
+  pu = c(1, 1, 2, 3, 4),
+  feature = c(1, 2, 2, 1, 2),
+  amount = c(5, 2, 3, 4, 1)
+)
+
+problem <- create_problem(
+  pu = pu,
+  features = features,
+  dist_features = dist_features,
+  cost = "cost"
+) |>
+  add_constraint_targets_relative(0.05) |>
+  add_objective_min_cost(alias = "cost")
+
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  problem <- set_solver_cbc(
+    problem,
+    verbose = FALSE
+  )
+
+  solutions <- solve(problem)
+
+  get_runs(solutions)
+}
+#>   run_id solution_id  status runtime gap objective
+#> 1      1           1 optimal       0   0         1
+```

@@ -29,6 +29,11 @@ get_actions(x, solution = NULL, ...)
   Optional positive integer giving the solution index to extract. If
   `NULL`, all runs are returned when available.
 
+- ...:
+
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
+
 ## Value
 
 A `data.frame` containing the stored action-allocation summary. Typical

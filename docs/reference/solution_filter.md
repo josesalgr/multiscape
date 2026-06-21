@@ -119,8 +119,7 @@ Non-dominated filtering requires the moocore package.
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md),
 [`get_runs`](https://josesalgr.github.io/multiscape/reference/get_runs.md),
 [`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
-`get_objective_specs`,
-[`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md),
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md),
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md)
 
 ## Examples

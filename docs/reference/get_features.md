@@ -29,6 +29,11 @@ get_features(x, solution = NULL, ...)
   Optional positive integer giving the solution index to extract. If
   `NULL`, all runs are returned when available.
 
+- ...:
+
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
+
 ## Value
 
 A `data.frame` with one row per feature, or one row per feature–run
@@ -153,13 +158,13 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     solution = solution_ids[1]
   )
 }
-#>   feature feature_name baseline_total selected_baseline selected_amount_after
-#> 1       1          sp1              9                 5                     5
-#> 2       2          sp2              6                 2                     2
-#>   selected_benefit selected_loss selected_net selected_fraction_of_baseline
-#> 1                0             0            0                     0.5555556
-#> 2                0             0            0                     0.3333333
-#>   solution_id
-#> 1           1
-#> 2           1
+#>   solution_id feature feature_name baseline_total selected_baseline
+#> 1           1       1          sp1              9                 5
+#> 2           1       2          sp2              6                 2
+#>   selected_amount_after selected_benefit selected_loss selected_net
+#> 1                     5                0             0            0
+#> 2                     2                0             0            0
+#>   selected_fraction_of_baseline
+#> 1                     0.5555556
+#> 2                     0.3333333
 ```

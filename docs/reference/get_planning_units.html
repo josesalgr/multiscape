@@ -27,7 +27,7 @@ unit is selected in a solution."><meta property="og:image" content="https://jose
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,6 +77,12 @@ unit is selected in a solution.</p>
 <dt id="arg-solution">solution<a class="anchor" aria-label="anchor" href="#arg-solution"></a></dt>
 <dd><p>Optional positive integer giving the solution index to extract. If
 <code>NULL</code>, all solutions are returned when available.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Deprecated arguments kept for backwards compatibility. Currently
+supports <code>run</code> and <code>solution_id</code>, which are redirected to
+<code>solution</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -157,11 +163,11 @@ requires the summary table to contain a <code>solution_id</code> column.</p>
 <span class="r-in"><span>    solution <span class="op">=</span> <span class="va">solution_ids</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id id cost locked_in locked_out internal_id selected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1  1    1     FALSE      FALSE           1        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1  2    2     FALSE      FALSE           2        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1  3    3     FALSE      FALSE           3        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1  4    4     FALSE      FALSE           4        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id id cost locked_in locked_out selected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1  1    1     FALSE      FALSE        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1  2    2     FALSE      FALSE        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1  3    3     FALSE      FALSE        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1  4    4     FALSE      FALSE        0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

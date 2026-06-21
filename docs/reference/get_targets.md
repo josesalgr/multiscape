@@ -29,6 +29,11 @@ get_targets(x, solution = NULL, ...)
   Optional positive integer giving the solution index to extract. If
   `NULL`, all runs are returned when available.
 
+- ...:
+
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
+
 ## Value
 
 A simplified `data.frame` target summary, or `NULL` if the result does
@@ -133,10 +138,10 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     solution = solution_ids[1]
   )
 }
-#>   run_id feature feature_name target_level total_available target achieved  gap
-#> 1      1       1          sp1         0.05               9   0.45        5 4.55
-#> 2      1       2          sp2         0.05               6   0.30        2 1.70
-#>    met
-#> 1 TRUE
-#> 2 TRUE
+#>   solution_id feature feature_name target_level total_available target achieved
+#> 1           1       1          sp1         0.05               9   0.45        5
+#> 2           1       2          sp2         0.05               6   0.30        2
+#>    gap  met
+#> 1 4.55 TRUE
+#> 2 1.70 TRUE
 ```

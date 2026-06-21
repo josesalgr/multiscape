@@ -21,14 +21,13 @@ returned.}
 A \code{data.frame} with one or more rows per objective. The returned
 columns are:
 \itemize{
+\item \code{solution_id}: solution id;
 \item \code{objective}: objective name;
 \item \code{sense}: optimization sense, either \code{"min"} or
 \code{"max"};
 \item \code{bound}: observed bound, either \code{"min"} or \code{"max"};
 \item \code{role}: interpretation of the bound, either \code{"best"} or
 \code{"worst"};
-\item \code{run_id}: run id of the solution;
-\item \code{solution_id}: solution id;
 \item \code{value}: objective value at the observed bound.
 }
 }
@@ -42,9 +41,8 @@ selected objective. It also labels each extreme as \code{"best"} or
 objective.
 }
 \details{
-Objective values are obtained from \code{\link{get_objectives}} with
-\code{format = "wide"}. Objective senses are obtained from
-\code{\link{get_objective_specs}}.
+Objective values are obtained from the stored run table. Objective senses are
+obtained from the objective specifications stored in the original problem.
 
 For objectives with \code{sense = "min"}, the observed minimum is labelled
 as \code{"best"} and the observed maximum is labelled as \code{"worst"}.
@@ -143,6 +141,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 }
 \seealso{
 \code{\link{get_objectives}},
-\code{\link{get_objective_specs}},
 \code{\link{solution_filter}}
 }

@@ -303,7 +303,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 0
+#> │├─runtime: 0.02
 #> │├─gap: 0
 #> │├─design columns: none
 #> │└─objective columns: value_cost

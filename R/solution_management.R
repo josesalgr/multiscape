@@ -197,8 +197,7 @@
 #' \code{\link{solve}},
 #' \code{\link{get_runs}},
 #' \code{\link{get_objectives}},
-#' \code{\link{get_objective_specs}},
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}}
 #'
 #' @include internal.R
@@ -1535,7 +1534,6 @@ solution_append <- function(x, y) {
 #' \code{\link{solution_filter}},
 #' \code{\link{solution_append}},
 #' \code{\link{get_objectives}},
-#' \code{\link{get_solution_vector}}
 #'
 #' @export
 solution_unique <- function(

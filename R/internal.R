@@ -3927,37 +3927,55 @@ NULL
   solver_params_user <- sa$solver_params %||% list()
 
   # ---- autodetect solver if requested
-  available_gurobi   <- available_to_solve("gurobi")
-  available_cplex    <- available_to_solve("cplex")
-  available_symphony <- available_to_solve("symphony")
-  available_cbc      <- available_to_solve("cbc")
-
   if (identical(solver, "auto") || identical(solver, "") || is.null(solver)) {
-    if (requireNamespace("Rcplex", quietly = TRUE) && available_cplex) {
-      solver <- "cplex"
-    } else if (requireNamespace("gurobi", quietly = TRUE) && available_gurobi) {
+
+    if (requireNamespace("gurobi", quietly = TRUE) &&
+        isTRUE(available_to_solve("gurobi"))) {
       solver <- "gurobi"
-    } else if (requireNamespace("rcbc", quietly = TRUE) && available_cbc) {
+
+    } else if (requireNamespace("rcbc", quietly = TRUE) &&
+               isTRUE(available_to_solve("cbc"))) {
       solver <- "cbc"
-    } else if (requireNamespace("Rsymphony", quietly = TRUE) && available_symphony) {
+
+    } else if (requireNamespace("Rcplex", quietly = TRUE) &&
+               isTRUE(available_to_solve("cplex"))) {
+      solver <- "cplex"
+
+    } else if (requireNamespace("Rsymphony", quietly = TRUE) &&
+               isTRUE(available_to_solve("symphony"))) {
       solver <- "symphony"
+
     } else {
       stop("No optimization problem solvers available on this system.", call. = FALSE)
     }
+
   } else {
+
     if (!solver %in% c("gurobi", "cbc", "symphony", "cplex")) {
       stop("Solver not supported: ", solver, call. = FALSE)
     }
-    if (identical(solver, "gurobi") && (!requireNamespace("gurobi", quietly = TRUE) || !available_gurobi)) {
+
+    if (identical(solver, "gurobi") &&
+        (!requireNamespace("gurobi", quietly = TRUE) ||
+         !isTRUE(available_to_solve("gurobi")))) {
       stop("Gurobi solver not available (package/license not found).", call. = FALSE)
     }
-    if (identical(solver, "cbc") && (!requireNamespace("rcbc", quietly = TRUE) || !available_cbc)) {
+
+    if (identical(solver, "cbc") &&
+        (!requireNamespace("rcbc", quietly = TRUE) ||
+         !isTRUE(available_to_solve("cbc")))) {
       stop("CBC solver not available (rcbc not installed or CBC not available).", call. = FALSE)
     }
-    if (identical(solver, "symphony") && (!requireNamespace("Rsymphony", quietly = TRUE) || !available_symphony)) {
+
+    if (identical(solver, "symphony") &&
+        (!requireNamespace("Rsymphony", quietly = TRUE) ||
+         !isTRUE(available_to_solve("symphony")))) {
       stop("SYMPHONY solver not available (Rsymphony not installed).", call. = FALSE)
     }
-    if (identical(solver, "cplex") && (!requireNamespace("Rcplex", quietly = TRUE) || !available_cplex)) {
+
+    if (identical(solver, "cplex") &&
+        (!requireNamespace("Rcplex", quietly = TRUE) ||
+         !isTRUE(available_to_solve("cplex")))) {
       stop("CPLEX solver not available (Rcplex not installed/licensed).", call. = FALSE)
     }
   }
@@ -4073,9 +4091,7 @@ NULL
     row_ub[ii_eq] <- model$rhs[ii_eq]
 
     cbc_args <- list(
-      threads = as.character(cores),
-      log = as.integer(verbose),
-      verbose = 15,
+      log = if (isTRUE(verbose)) "1" else "0",
       ratio = as.character(gap_limit),
       sec = as.character(time_limit),
       timem = "elapsed",

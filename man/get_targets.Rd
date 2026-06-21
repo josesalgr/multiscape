@@ -12,6 +12,10 @@ get_targets(x, solution = NULL, ...)
 
 \item{solution}{Optional positive integer giving the solution index to extract. If
 \code{NULL}, all runs are returned when available.}
+
+\item{...}{Deprecated arguments kept for backwards compatibility. Currently
+supports \code{run} and \code{solution_id}, which are redirected to
+\code{solution}.}
 }
 \value{
 A simplified \code{data.frame} target summary, or \code{NULL} if the

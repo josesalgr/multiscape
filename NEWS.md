@@ -1,3 +1,13 @@
+# multiscape 1.1.2
+
+- Standardized user-facing result tables so `solution_id` is shown as the first column.
+- Removed `run_id` from user-facing solution extractors and frontier outputs; it is now kept for `get_runs()` and internal matching only.
+- Removed internal columns such as `internal_id` from planning-unit outputs.
+- Fixed `get_targets()` so it consistently returns `solution_id` instead of `run_id`.
+- Updated `frontier_extremes()` and `frontier_distances()` to follow the same `solution_id`-based output convention.
+- Added an example for `get_runs()`.
+- Fixed Rd warnings from missing cross-references and undocumented deprecated arguments.
+
 # multiscape 1.1.1
 
 ## User-facing API

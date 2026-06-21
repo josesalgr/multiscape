@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,16 @@
       <small>Source: <a href="https://github.com/josesalgr/multiscape/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.2" id="multiscape-112">multiscape 1.1.2<a class="anchor" aria-label="anchor" href="#multiscape-112"></a></h2>
+<ul><li>Standardized user-facing result tables so <code>solution_id</code> is shown as the first column.</li>
+<li>Removed <code>run_id</code> from user-facing solution extractors and frontier outputs; it is now kept for <code><a href="../reference/get_runs.html">get_runs()</a></code> and internal matching only.</li>
+<li>Removed internal columns such as <code>internal_id</code> from planning-unit outputs.</li>
+<li>Fixed <code><a href="../reference/get_targets.html">get_targets()</a></code> so it consistently returns <code>solution_id</code> instead of <code>run_id</code>.</li>
+<li>Updated <code><a href="../reference/frontier_extremes.html">frontier_extremes()</a></code> and <code><a href="../reference/frontier_distances.html">frontier_distances()</a></code> to follow the same <code>solution_id</code>-based output convention.</li>
+<li>Added an example for <code><a href="../reference/get_runs.html">get_runs()</a></code>.</li>
+<li>Fixed Rd warnings from missing cross-references and undocumented deprecated arguments.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.1" id="multiscape-111">multiscape 1.1.1<a class="anchor" aria-label="anchor" href="#multiscape-111"></a></h2>
 <div class="section level3">

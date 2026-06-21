@@ -12,9 +12,8 @@
 #' objective.
 #'
 #' @details
-#' Objective values are obtained from \code{\link{get_objectives}} with
-#' \code{format = "wide"}. Objective senses are obtained from
-#' \code{\link{get_objective_specs}}.
+#' Objective values are obtained from the stored run table. Objective senses are
+#' obtained from the objective specifications stored in the original problem.
 #'
 #' For objectives with \code{sense = "min"}, the observed minimum is labelled
 #' as \code{"best"} and the observed maximum is labelled as \code{"worst"}.
@@ -41,14 +40,13 @@
 #' @return A \code{data.frame} with one or more rows per objective. The returned
 #'   columns are:
 #' \itemize{
+#'   \item \code{solution_id}: solution id;
 #'   \item \code{objective}: objective name;
 #'   \item \code{sense}: optimization sense, either \code{"min"} or
 #'   \code{"max"};
 #'   \item \code{bound}: observed bound, either \code{"min"} or \code{"max"};
 #'   \item \code{role}: interpretation of the bound, either \code{"best"} or
 #'   \code{"worst"};
-#'   \item \code{run_id}: run id of the solution;
-#'   \item \code{solution_id}: solution id;
 #'   \item \code{value}: objective value at the observed bound.
 #' }
 #'
@@ -136,7 +134,6 @@
 #'
 #' @seealso
 #' \code{\link{get_objectives}},
-#' \code{\link{get_objective_specs}},
 #' \code{\link{solution_filter}}
 #'
 #' @include internal.R
@@ -266,23 +263,21 @@ frontier_extremes <- function(x,
     max_role <- if (identical(s, "min")) "worst" else "best"
 
     min_out <- data.frame(
+      solution_id = vals$solution_id[min_idx],
       objective = obj,
       sense = s,
       bound = "min",
       role = min_role,
-      run_id = vals$run_id[min_idx],
-      solution_id = vals$solution_id[min_idx],
       value = z[min_idx],
       stringsAsFactors = FALSE
     )
 
     max_out <- data.frame(
+      solution_id = vals$solution_id[max_idx],
       objective = obj,
       sense = s,
       bound = "max",
       role = max_role,
-      run_id = vals$run_id[max_idx],
-      solution_id = vals$solution_id[max_idx],
       value = z[max_idx],
       stringsAsFactors = FALSE
     )
@@ -324,8 +319,7 @@ frontier_extremes <- function(x,
 #' }
 #'
 #' Objective values are internally transformed to a common minimization space
-#' using the objective senses registered in
-#' \code{\link{get_objective_specs}}. Objectives with
+#' using the objective senses registered in the original problem.
 #' \code{sense = "min"} are kept unchanged, whereas objectives with
 #' \code{sense = "max"} are multiplied by \eqn{-1}. In this transformed space,
 #' lower values are always better.
@@ -398,7 +392,7 @@ frontier_extremes <- function(x,
 #'
 #' The table contains:
 #' \itemize{
-#'   \item \code{run_id} and \code{solution_id};
+#'   \item \code{solution_id};
 #'   \item the original objective values;
 #'   \item normalized objective values prefixed with \code{norm_};
 #'   \item distance and rank columns for the requested reference points.
@@ -536,7 +530,6 @@ frontier_extremes <- function(x,
 #' @seealso
 #' \code{\link{frontier_extremes}},
 #' \code{\link{get_objectives}},
-#' \code{\link{get_objective_specs}},
 #' \code{\link{solution_filter}}
 #'
 #' @export
@@ -692,7 +685,7 @@ frontier_distances <- function(
   # --------------------------------------------------------------------------
   # Build output
   # --------------------------------------------------------------------------
-  out <- vals[, c("run_id", "solution_id", objectives), drop = FALSE]
+  out <- vals[, c("solution_id", objectives), drop = FALSE]
 
   norm_df <- as.data.frame(
     norm_mat,

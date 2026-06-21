@@ -30,6 +30,9 @@
 #'   \code{\link{solve}}.
 #' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all solutions are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} containing the stored planning-unit summary.
 #'   Typical columns include planning-unit identifiers, optional labels, and a
@@ -117,7 +120,11 @@ get_planning_units <- function(x, solution = NULL, ...) {
   )
 
   rownames(pu) <- NULL
-  pu <- .pa_drop_run_id_if_solution_id_present(pu)
+  pu <- .pa_clean_solution_summary(
+    pu,
+    drop_internal = c("internal_id")
+  )
+
   pu
 }
 
@@ -184,6 +191,9 @@ get_pu <- function(x, solution = NULL, ...) {
 #'   \code{\link{solve}}.
 #' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} containing the stored action-allocation summary.
 #'   Typical columns include planning-unit ids, action ids, optional labels, and
@@ -298,14 +308,11 @@ get_actions <- function(x, solution = NULL, ...) {
     table_name = "Actions summary"
   )
 
-  a <- a[
-    ,
-    setdiff(names(a), c("internal_pu", "internal_action", "internal_row")),
-    drop = FALSE
-  ]
+  a <- .pa_clean_solution_summary(
+    a,
+    drop_internal = c("internal_pu", "internal_action", "internal_row")
+  )
 
-  rownames(a) <- NULL
-  a <- .pa_drop_run_id_if_solution_id_present(a)
   a
 }
 
@@ -383,6 +390,9 @@ get_actions <- function(x, solution = NULL, ...) {
 #'   \code{\link{solve}}.
 #' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} with one row per feature, or one row per
 #'   feature--run combination when multiple runs are present. The returned table
@@ -549,7 +559,7 @@ get_features <- function(x, solution = NULL, ...) {
   }
 
   keep_first <- c(
-    "run_id",
+    "solution_id",
     "feature",
     "feature_name",
     "baseline_total",
@@ -582,7 +592,8 @@ get_features <- function(x, solution = NULL, ...) {
   }
 
   rownames(out) <- NULL
-  out <- .pa_drop_run_id_if_solution_id_present(out)
+  out <- .pa_clean_solution_summary(out)
+
   out
 }
 
@@ -650,6 +661,9 @@ get_features <- function(x, solution = NULL, ...) {
 #'   \code{\link{solve}}.
 #' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A simplified \code{data.frame} target summary, or \code{NULL} if the
 #'   result does not contain targets. Typical columns include \code{feature},
@@ -751,7 +765,7 @@ get_targets <- function(x, solution = NULL, ...) {
   }
 
   keep <- c(
-    "run_id",
+    "solution_id",
     "feature",
     "feature_name",
     "target_raw",
@@ -768,13 +782,8 @@ get_targets <- function(x, solution = NULL, ...) {
   names(out)[names(out) == "basis_total"] <- "total_available"
   names(out)[names(out) == "target_value"] <- "target"
 
-  if ("solution_id" %in% names(out) &&
-      length(unique(out$solution_id[!is.na(out$solution_id)])) <= 1L &&
-      is.null(solution)) {
-    out$solution_id <- NULL
-  }
+  out <- .pa_clean_solution_summary(out)
 
-  out <- .pa_drop_run_id_if_solution_id_present(out)
   out
 }
 
@@ -812,6 +821,9 @@ get_targets <- function(x, solution = NULL, ...) {
 #'   \code{\link{solve}}.
 #' @param solution Optional character string giving the solution id to
 #'   extract. If supplied, \code{run} must be \code{NULL}.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A numeric vector with one value per internal model variable.
 #'
@@ -927,6 +939,43 @@ get_solution_vector <- function(x, solution = NULL, ...) {
 #' @return A \code{data.frame} with one row per attempted optimization run.
 #'   The table contains run metadata and the numeric mapping between
 #'   \code{run_id} and \code{solution_id}, but not objective-value columns.
+#'
+#' @examples
+#' pu <- data.frame(
+#'   id = 1:4,
+#'   cost = c(1, 2, 3, 4)
+#' )
+#'
+#' features <- data.frame(
+#'   id = 1:2,
+#'   name = c("sp1", "sp2")
+#' )
+#'
+#' dist_features <- data.frame(
+#'   pu = c(1, 1, 2, 3, 4),
+#'   feature = c(1, 2, 2, 1, 2),
+#'   amount = c(5, 2, 3, 4, 1)
+#' )
+#'
+#' problem <- create_problem(
+#'   pu = pu,
+#'   features = features,
+#'   dist_features = dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_constraint_targets_relative(0.05) |>
+#'   add_objective_min_cost(alias = "cost")
+#'
+#' if (requireNamespace("rcbc", quietly = TRUE)) {
+#'   problem <- set_solver_cbc(
+#'     problem,
+#'     verbose = FALSE
+#'   )
+#'
+#'   solutions <- solve(problem)
+#'
+#'   get_runs(solutions)
+#' }
 #'
 #' @seealso
 #' \code{\link{get_objectives}},
@@ -1409,14 +1458,30 @@ get_objective_specs <- function(x) {
 }
 
 
-.pa_drop_run_id_if_solution_id_present <- function(tab) {
+.pa_clean_solution_summary <- function(tab,
+                                       drop_internal = character()) {
   if (!inherits(tab, "data.frame")) {
     return(tab)
   }
 
-  if ("solution_id" %in% names(tab) && "run_id" %in% names(tab)) {
-    tab$run_id <- NULL
+  drop_cols <- unique(c("run_id", drop_internal))
+  drop_cols <- intersect(drop_cols, names(tab))
+
+  if (length(drop_cols) > 0L) {
+    tab <- tab[, setdiff(names(tab), drop_cols), drop = FALSE]
   }
 
+  if ("solution_id" %in% names(tab)) {
+    first <- "solution_id"
+    rest <- setdiff(names(tab), first)
+    tab <- tab[, c(first, rest), drop = FALSE]
+  }
+
+  rownames(tab) <- NULL
   tab
+}
+
+
+.pa_drop_run_id_if_solution_id_present <- function(tab) {
+  .pa_clean_solution_summary(tab)
 }

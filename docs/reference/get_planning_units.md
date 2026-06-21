@@ -29,6 +29,11 @@ get_planning_units(x, solution = NULL, ...)
   Optional positive integer giving the solution index to extract. If
   `NULL`, all solutions are returned when available.
 
+- ...:
+
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
+
 ## Value
 
 A `data.frame` containing the stored planning-unit summary. Typical
@@ -111,9 +116,9 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     solution = solution_ids[1]
   )
 }
-#>   solution_id id cost locked_in locked_out internal_id selected
-#> 1           1  1    1     FALSE      FALSE           1        1
-#> 2           1  2    2     FALSE      FALSE           2        0
-#> 3           1  3    3     FALSE      FALSE           3        0
-#> 4           1  4    4     FALSE      FALSE           4        0
+#>   solution_id id cost locked_in locked_out selected
+#> 1           1  1    1     FALSE      FALSE        1
+#> 2           1  2    2     FALSE      FALSE        0
+#> 3           1  3    3     FALSE      FALSE        0
+#> 4           1  4    4     FALSE      FALSE        0
 ```

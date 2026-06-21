@@ -201,5 +201,4 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 \code{\link{solution_filter}},
 \code{\link{solution_append}},
 \code{\link{get_objectives}},
-\code{\link{get_solution_vector}}
 }
