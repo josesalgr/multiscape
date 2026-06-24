@@ -20,7 +20,7 @@ Rcpp::List rcpp_reset_objective(SEXP x, std::string modelsense = "") {
 }
 
 
-// [[Rcpp::export]]
+
 void rcpp_add_to_objective(SEXP x,
                            Rcpp::IntegerVector ind,   // 1-based indices from R
                            Rcpp::NumericVector val) {
@@ -54,7 +54,7 @@ void rcpp_add_to_objective(SEXP x,
   }
 }
 
-// [[Rcpp::export]]
+
 void rcpp_add_to_objective_scalar(SEXP x, int ind1, double val) {
   Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
 

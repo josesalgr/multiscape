@@ -398,30 +398,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_add_to_objective
-void rcpp_add_to_objective(SEXP x, Rcpp::IntegerVector ind, Rcpp::NumericVector val);
-RcppExport SEXP _multiscape_rcpp_add_to_objective(SEXP xSEXP, SEXP indSEXP, SEXP valSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ind(indSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type val(valSEXP);
-    rcpp_add_to_objective(x, ind, val);
-    return R_NilValue;
-END_RCPP
-}
-// rcpp_add_to_objective_scalar
-void rcpp_add_to_objective_scalar(SEXP x, int ind1, double val);
-RcppExport SEXP _multiscape_rcpp_add_to_objective_scalar(SEXP xSEXP, SEXP ind1SEXP, SEXP valSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type ind1(ind1SEXP);
-    Rcpp::traits::input_parameter< double >::type val(valSEXP);
-    rcpp_add_to_objective_scalar(x, ind1, val);
-    return R_NilValue;
-END_RCPP
-}
 // rcpp_prepare_objective_max_benefit
 Rcpp::List rcpp_prepare_objective_max_benefit(SEXP x, Rcpp::DataFrame dist_actions_data, Rcpp::DataFrame dist_effects_data, std::string block_name, std::string tag);
 RcppExport SEXP _multiscape_rcpp_prepare_objective_max_benefit(SEXP xSEXP, SEXP dist_actions_dataSEXP, SEXP dist_effects_dataSEXP, SEXP block_nameSEXP, SEXP tagSEXP) {

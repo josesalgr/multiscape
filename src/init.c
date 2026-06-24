@@ -34,8 +34,8 @@ extern SEXP _multiscape_rcpp_add_target_recovery(SEXP, SEXP, SEXP, SEXP, SEXP, S
 
 //objectives
 extern SEXP _multiscape_rcpp_reset_objective(SEXP, SEXP);
-extern SEXP _multiscape_rcpp_add_to_objective(SEXP, SEXP, SEXP);
-extern SEXP _multiscape_rcpp_add_to_objective_scalar(SEXP, SEXP, SEXP);
+//extern SEXP _multiscape_rcpp_add_to_objective(SEXP, SEXP, SEXP);
+//extern SEXP _multiscape_rcpp_add_to_objective_scalar(SEXP, SEXP, SEXP);
 extern SEXP _multiscape_rcpp_model_set_objective_vector(SEXP, SEXP, SEXP);
 
 extern SEXP _multiscape_rcpp_prepare_objective_min_cost(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -79,9 +79,9 @@ static const R_CallMethodDef CallEntries[] = {
   {"_multiscape_rcpp_add_linear_constraint", (DL_FUNC) &_multiscape_rcpp_add_linear_constraint, 8},
   {"_multiscape_rcpp_add_objective_min_cost", (DL_FUNC) &_multiscape_rcpp_add_objective_min_cost, 8},
   {"_multiscape_rcpp_reset_objective", (DL_FUNC) &_multiscape_rcpp_reset_objective, 2},
-  {"_multiscape_rcpp_add_to_objective", (DL_FUNC) &_multiscape_rcpp_add_to_objective, 3},
+  //{"_multiscape_rcpp_add_to_objective", (DL_FUNC) &_multiscape_rcpp_add_to_objective, 3},
   {"_multiscape_rcpp_add_action_max_per_pu", (DL_FUNC) &_multiscape_rcpp_add_action_max_per_pu, 5},
-  {"_multiscape_rcpp_add_to_objective_scalar", (DL_FUNC) &_multiscape_rcpp_add_to_objective_scalar, 3},
+  //{"_multiscape_rcpp_add_to_objective_scalar", (DL_FUNC) &_multiscape_rcpp_add_to_objective_scalar, 3},
   {"_multiscape_rcpp_prepare_objective_min_fragmentation", (DL_FUNC) &_multiscape_rcpp_prepare_objective_min_fragmentation, 4},
   {"_multiscape_rcpp_add_objective_min_fragmentation", (DL_FUNC) &_multiscape_rcpp_add_objective_min_fragmentation, 6},
   {"_multiscape_rcpp_add_objective_max_benefit", (DL_FUNC) &_multiscape_rcpp_add_objective_max_benefit, 6},

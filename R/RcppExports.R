@@ -105,14 +105,6 @@ rcpp_reset_objective <- function(x, modelsense = "") {
     .Call(`_multiscape_rcpp_reset_objective`, x, modelsense)
 }
 
-rcpp_add_to_objective <- function(x, ind, val) {
-    invisible(.Call(`_multiscape_rcpp_add_to_objective`, x, ind, val))
-}
-
-rcpp_add_to_objective_scalar <- function(x, ind1, val) {
-    invisible(.Call(`_multiscape_rcpp_add_to_objective_scalar`, x, ind1, val))
-}
-
 rcpp_prepare_objective_max_benefit <- function(x, dist_actions_data, dist_effects_data, block_name = "prepare_max_benefit", tag = "") {
     .Call(`_multiscape_rcpp_prepare_objective_max_benefit`, x, dist_actions_data, dist_effects_data, block_name, tag)
 }
