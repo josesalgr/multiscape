@@ -150,7 +150,7 @@
 #' \code{\link{solution_filter}},
 #' \code{\link{solution_unique}},
 #' \code{\link{get_actions}},
-#' \code{\link{get_pu}}
+#' \code{\link{get_planning_units}}
 #'
 #' @export
 selection_frequency <- function(x) {
@@ -410,7 +410,7 @@ selection_frequency <- function(x) {
 #' \code{\link{solution_filter}},
 #' \code{\link{solution_unique}},
 #' \code{\link{get_actions}},
-#' \code{\link{get_pu}}
+#' \code{\link{get_planning_units}}
 #'
 #' @export
 selection_similarity <- function(
@@ -642,7 +642,7 @@ selection_similarity <- function(
   # model.
   if (is.null(selection)) {
     pu_data <- tryCatch(
-      get_pu(x),
+      get_planning_units(x),
       error = function(e) NULL
     )
 
@@ -654,7 +654,7 @@ selection_similarity <- function(
       stop(
         paste0(
           "No planning-unit/action results are available. ",
-          "Expected get_actions() or get_pu() to return stored selections."
+          "Expected get_actions() or get_planning_units() to return stored selections."
         ),
         call. = FALSE
       )

@@ -202,5 +202,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 \code{\link{solution_filter}},
 \code{\link{solution_unique}},
 \code{\link{get_actions}},
-\code{\link{get_pu}}
+\code{\link{get_planning_units}}
 }

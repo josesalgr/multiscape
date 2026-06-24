@@ -1,5 +1,4 @@
 #include "Package.h"
-#include "functions.h"
 #include "OptimizationProblem.h"
 
 // z_is <= w_i   <=>   z_is - w_i <= 0

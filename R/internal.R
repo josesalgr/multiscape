@@ -2748,17 +2748,7 @@ available_to_solve <- function(package = ""){
 
   # helper: coerce ids to integer safely
   .as_int_id <- function(x, what) {
-    if (is.factor(x)) x <- as.character(x)
-    if (is.character(x)) {
-      if (any(grepl("[^0-9\\-]", x))) {
-        stop(what, " must be numeric/integer ids (got non-numeric strings).", call. = FALSE)
-      }
-      x <- as.integer(x)
-    } else {
-      x <- as.integer(x)
-    }
-    if (anyNA(x)) stop(what, " contains NA after coercion to integer.", call. = FALSE)
-    x
+    .pa_as_int_id(x, what)
   }
 
   # keep raw PU table for downstream helpers such as add_locked_pu()
@@ -5358,5 +5348,56 @@ NULL
   )
 
   rownames(out) <- NULL
+  out
+}
+
+.pa_as_int_id <- function(x, what = "id") {
+  if (is.factor(x)) {
+    x <- as.character(x)
+  }
+
+  if (is.character(x)) {
+    x <- trimws(x)
+
+    if (anyNA(x) || any(!nzchar(x))) {
+      stop("`", what, "` must not contain NA or empty values.", call. = FALSE)
+    }
+
+    ok <- grepl("^[-+]?[0-9]+$", x)
+
+    if (!all(ok)) {
+      bad <- unique(x[!ok])
+      stop(
+        "`", what, "` must contain integer-like ids. ",
+        "Character ids with non-numeric symbols are not currently supported. ",
+        "Problematic values: ",
+        paste(utils::head(bad, 20), collapse = ", "),
+        if (length(bad) > 20) " ..." else "",
+        call. = FALSE
+      )
+    }
+
+    out <- suppressWarnings(as.integer(x))
+
+  } else if (is.numeric(x) || is.integer(x)) {
+
+    if (anyNA(x) || any(!is.finite(x))) {
+      stop("`", what, "` must not contain NA or non-finite values.", call. = FALSE)
+    }
+
+    if (any(abs(x - round(x)) > .Machine$double.eps^0.5)) {
+      stop("`", what, "` must contain integer-like numeric values.", call. = FALSE)
+    }
+
+    out <- as.integer(round(x))
+
+  } else {
+    stop("`", what, "` must be integer-like.", call. = FALSE)
+  }
+
+  if (anyNA(out)) {
+    stop("`", what, "` contains values that cannot be converted to integer.", call. = FALSE)
+  }
+
   out
 }
