@@ -1503,50 +1503,50 @@
 # (This keeps the path you started, but stores in base$data$objectives)
 # -------------------------------------------------------------------------
 
-.pamo_objective <- function(alias, sense = c("min", "max"), build, eval, meta = list()) {
-  sense <- match.arg(sense)
-  if (!is.character(alias) || length(alias) != 1 || !nzchar(alias)) {
-    stop("objective `alias` must be a non-empty string.", call. = FALSE)
-  }
-  if (!is.function(build)) stop("objective `build` must be a function.", call. = FALSE)
-  if (!is.function(eval))  stop("objective `eval` must be a function.", call. = FALSE)
-
-  structure(
-    list(alias = alias, sense = sense, build = build, eval = eval, meta = meta),
-    class = "pa_objective"
-  )
-}
-
-add_objective <- function(x, objective) {
-  #x <- .pamo_as_mo(x)
-  x <- .pa_clone_data(x)
-
-  if (!inherits(objective, "pa_objective")) {
-    stop("add_objective() expects an objective of class 'pa_objective'.", call. = FALSE)
-  }
-
-  # store it as an atomic spec in the multiscape registry
-  if (is.null(x$data$objectives) || !is.list(x$data$objectives)) {
-    x$data$objectives <- list()
-  }
-  if (!is.null(x$data$objectives[[objective$alias]])) {
-    stop("Objective alias already exists: '", objective$alias, "'.", call. = FALSE)
-  }
-
-  x$data$objectives[[objective$alias]] <- list(
-    alias = objective$alias,
-    objective_id = "custom",
-    model_type = "custom",
-    objective_args = list(
-      build = objective$build,
-      eval  = objective$eval,
-      meta  = objective$meta %||% list()
-    ),
-    sense = objective$sense
-  )
-
-  x
-}
+# .pamo_objective <- function(alias, sense = c("min", "max"), build, eval, meta = list()) {
+#   sense <- match.arg(sense)
+#   if (!is.character(alias) || length(alias) != 1 || !nzchar(alias)) {
+#     stop("objective `alias` must be a non-empty string.", call. = FALSE)
+#   }
+#   if (!is.function(build)) stop("objective `build` must be a function.", call. = FALSE)
+#   if (!is.function(eval))  stop("objective `eval` must be a function.", call. = FALSE)
+#
+#   structure(
+#     list(alias = alias, sense = sense, build = build, eval = eval, meta = meta),
+#     class = "pa_objective"
+#   )
+# }
+#
+# add_objective <- function(x, objective) {
+#   #x <- .pamo_as_mo(x)
+#   x <- .pa_clone_data(x)
+#
+#   if (!inherits(objective, "pa_objective")) {
+#     stop("add_objective() expects an objective of class 'pa_objective'.", call. = FALSE)
+#   }
+#
+#   # store it as an atomic spec in the multiscape registry
+#   if (is.null(x$data$objectives) || !is.list(x$data$objectives)) {
+#     x$data$objectives <- list()
+#   }
+#   if (!is.null(x$data$objectives[[objective$alias]])) {
+#     stop("Objective alias already exists: '", objective$alias, "'.", call. = FALSE)
+#   }
+#
+#   x$data$objectives[[objective$alias]] <- list(
+#     alias = objective$alias,
+#     objective_id = "custom",
+#     model_type = "custom",
+#     objective_args = list(
+#       build = objective$build,
+#       eval  = objective$eval,
+#       meta  = objective$meta %||% list()
+#     ),
+#     sense = objective$sense
+#   )
+#
+#   x
+# }
 
 
 
@@ -4443,67 +4443,67 @@ add_objective <- function(x, objective) {
 
 
 
-.pamo_build_manual_augmecon_runs <- function(x, verbose = FALSE) {
-  stopifnot(inherits(x, "Problem"))
-
-  method <- x$data$method %||% list()
-  grid <- method$grid %||% NULL
-  secondary <- as.character(method$secondary %||% character(0))
-
-  if (is.null(grid) || !is.list(grid) || length(grid) == 0L) {
-    stop("Manual AUGMECON mode requires a non-empty named grid list.", call. = FALSE)
-  }
-
-  if (length(secondary) == 0L) {
-    stop("Manual AUGMECON mode: secondary objectives are missing.", call. = FALSE)
-  }
-
-  if (!all(secondary %in% names(grid))) {
-    stop(
-      "Manual AUGMECON mode: grid is missing secondary objectives: ",
-      paste(setdiff(secondary, names(grid)), collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  .pamo_cli_step(
-    "Building manual AUGMECON grid for {.val {length(secondary)}} secondary objective{?s}.",
-    verbose = verbose
-  )
-
-  grid <- grid[secondary]
-
-  for (i in seq_along(secondary)) {
-    s <- secondary[i]
-    vals <- grid[[s]]
-
-    .pamo_cli_step(
-      "Secondary {.val {i}}/{.val {length(secondary)}}: {.val {s}} with {.val {length(vals)}} epsilon level{?s}.",
-      verbose = verbose
-    )
-  }
-
-  design_df <- expand.grid(
-    grid,
-    KEEP.OUT.ATTRS = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  names(design_df) <- paste0("eps_", secondary)
-  design_df$run_id <- seq_len(nrow(design_df))
-  design_df <- design_df[, c("run_id", setdiff(names(design_df), "run_id")), drop = FALSE]
-
-  attr(design_df, "primary_alias") <- as.character(method$primary %||% NA_character_)[1]
-  attr(design_df, "secondary_aliases") <- secondary
-  attr(design_df, "manual_grid") <- TRUE
-
-  .pamo_cli_done(
-    "Manual AUGMECON grid built with {.val {nrow(design_df)}} run{?s}.",
-    verbose = verbose
-  )
-
-  design_df
-}
+# .pamo_build_manual_augmecon_runs <- function(x, verbose = FALSE) {
+#   stopifnot(inherits(x, "Problem"))
+#
+#   method <- x$data$method %||% list()
+#   grid <- method$grid %||% NULL
+#   secondary <- as.character(method$secondary %||% character(0))
+#
+#   if (is.null(grid) || !is.list(grid) || length(grid) == 0L) {
+#     stop("Manual AUGMECON mode requires a non-empty named grid list.", call. = FALSE)
+#   }
+#
+#   if (length(secondary) == 0L) {
+#     stop("Manual AUGMECON mode: secondary objectives are missing.", call. = FALSE)
+#   }
+#
+#   if (!all(secondary %in% names(grid))) {
+#     stop(
+#       "Manual AUGMECON mode: grid is missing secondary objectives: ",
+#       paste(setdiff(secondary, names(grid)), collapse = ", "),
+#       call. = FALSE
+#     )
+#   }
+#
+#   .pamo_cli_step(
+#     "Building manual AUGMECON grid for {.val {length(secondary)}} secondary objective{?s}.",
+#     verbose = verbose
+#   )
+#
+#   grid <- grid[secondary]
+#
+#   for (i in seq_along(secondary)) {
+#     s <- secondary[i]
+#     vals <- grid[[s]]
+#
+#     .pamo_cli_step(
+#       "Secondary {.val {i}}/{.val {length(secondary)}}: {.val {s}} with {.val {length(vals)}} epsilon level{?s}.",
+#       verbose = verbose
+#     )
+#   }
+#
+#   design_df <- expand.grid(
+#     grid,
+#     KEEP.OUT.ATTRS = FALSE,
+#     stringsAsFactors = FALSE
+#   )
+#
+#   names(design_df) <- paste0("eps_", secondary)
+#   design_df$run_id <- seq_len(nrow(design_df))
+#   design_df <- design_df[, c("run_id", setdiff(names(design_df), "run_id")), drop = FALSE]
+#
+#   attr(design_df, "primary_alias") <- as.character(method$primary %||% NA_character_)[1]
+#   attr(design_df, "secondary_aliases") <- secondary
+#   attr(design_df, "manual_grid") <- TRUE
+#
+#   .pamo_cli_done(
+#     "Manual AUGMECON grid built with {.val {nrow(design_df)}} run{?s}.",
+#     verbose = verbose
+#   )
+#
+#   design_df
+# }
 
 
 

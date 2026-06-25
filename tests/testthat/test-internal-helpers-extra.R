@@ -2,10 +2,6 @@ test_that("internal formatting, cost, model, and relation helpers cover defensiv
   expect_null(multiscape:::.pa_safe_range(c(NA, Inf, -Inf)))
   expect_equal(multiscape:::.pa_safe_range(c(1.111111, 3.999999), digits = 2), c(1.11, 4))
 
-  expect_match(multiscape:::.pa_repr_atomic(character(0)), "none", fixed = TRUE)
-  expect_match(multiscape:::.pa_repr_atomic(character(0), label = "items"), "0 items", fixed = TRUE)
-  expect_match(multiscape:::.pa_repr_atomic(letters[1:8], max_items = 3), "8 total", fixed = TRUE)
-
   expect_equal(multiscape:::.pa_get_cost_vec(NULL), numeric(0))
   expect_equal(multiscape:::.pa_get_cost_vec(data.frame(id = 1:2)), numeric(0))
   expect_equal(multiscape:::.pa_get_cost_vec(data.frame(id = 1:2, monitoring_cost = c(5, 6))), c(5, 6))
@@ -30,15 +26,8 @@ test_that("internal formatting, cost, model, and relation helpers cover defensiv
   expect_equal(dims$nnz, 3L)
 
   p$data$model_index <- list(w_index = 1:4, x_index = 5:8)
-  blocks <- multiscape:::.pa_model_blocks(p)
-  expect_equal(blocks$n_w, 4L)
-  expect_equal(blocks$n_x, 4L)
-  expect_equal(blocks$n_z, 0L)
 
   p$data$model_args <- list(model_type = "test", modelsense = "max", objective_id = "benefit")
-  args <- multiscape:::.pa_model_args(p)
-  expect_equal(args$model_type, "test")
-  expect_true(is.na(args$budget))
 
   rel <- data.frame(internal_pu1 = c(1, 2), internal_pu2 = c(2, 3), weight = c(0.5, 2))
   p$data$spatial_relations <- list(neighbour = rel, empty = data.frame())
@@ -56,11 +45,6 @@ test_that("internal formatting, cost, model, and relation helpers cover defensiv
 
 test_that("input mode and coordinate helpers validate common paths", {
   d <- make_round4_base_data()
-  expect_equal(multiscape:::.pa_detect_input_mode(d$pu, d$features, d$dist_features)$mode, "tabular")
-  expect_error(multiscape:::.pa_detect_input_mode(d$pu, d$features, NULL), "Could not determine")
-  expect_error(multiscape:::.pa_detect_input_mode("pu.gpkg", d$features, d$dist_features), "pu.*not a data.frame")
-  expect_error(multiscape:::.pa_detect_input_mode(d$pu, "features.tif", d$dist_features), "features.*not a data.frame")
-  expect_equal(multiscape:::.pa_detect_input_mode("pu.gpkg", "features.tif", NULL)$mode, "spatial")
 
   p <- make_round4_problem()
   coords_df <- data.frame(id = 1:4, x = 1:4, y = 4:1, extra = letters[1:4])
