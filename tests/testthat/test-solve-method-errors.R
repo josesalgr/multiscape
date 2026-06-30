@@ -13,7 +13,7 @@ test_that("solve errors for unknown MO method configuration", {
       include_self = TRUE
     ) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag")
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag")
 
   p$data$method <- list(type = "not_a_method")
 

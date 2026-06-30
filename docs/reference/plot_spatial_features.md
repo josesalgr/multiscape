@@ -16,7 +16,7 @@ actions are obtained through
 ``` r
 plot_spatial_features(
   x,
-  runs = NULL,
+  solutions = NULL,
   features = NULL,
   value = c("final", "baseline", "benefit"),
   layout = NULL,
@@ -43,10 +43,10 @@ plot_spatial_features(
   object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-- runs:
+- solutions:
 
-  Optional integer vector of run ids. If `NULL`, the first available run
-  is plotted by default.
+  Optional integer vector of solution ids. If `NULL`, the first
+  available solution is plotted by default.
 
 - features:
 
@@ -144,8 +144,7 @@ object.
 ## See also
 
 [`get_features`](https://josesalgr.github.io/multiscape/reference/get_features.md),
-[`plot_spatial`](https://josesalgr.github.io/multiscape/reference/plot_spatial.md),
-[`plot_spatial_pu`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md),
+[`plot_spatial_planning_units`](https://josesalgr.github.io/multiscape/reference/plot_spatial_planning_units.md),
 [`plot_spatial_actions`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.md)
 
 ## Examples

@@ -21,7 +21,6 @@ test_that("frontier_distances returns normalized values and references", {
 
   expect_true(
     all(c(
-      "run_id",
       "solution_id",
       "norm_cost",
       "norm_benefit",

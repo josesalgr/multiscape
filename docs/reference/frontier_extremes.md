@@ -39,6 +39,8 @@ frontier_extremes(x, objectives = NULL, ties = c("all", "first"))
 A `data.frame` with one or more rows per objective. The returned columns
 are:
 
+- `solution_id`: solution id;
+
 - `objective`: objective name;
 
 - `sense`: optimization sense, either `"min"` or `"max"`;
@@ -47,18 +49,13 @@ are:
 
 - `role`: interpretation of the bound, either `"best"` or `"worst"`;
 
-- `run_id`: run id of the solution;
-
-- `solution_id`: solution id;
-
 - `value`: objective value at the observed bound.
 
 ## Details
 
-Objective values are obtained from
-[`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md)
-with `format = "wide"`. Objective senses are obtained from
-[`get_objective_specs`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md).
+Objective values are obtained from the stored run table. Objective
+senses are obtained from the objective specifications stored in the
+original problem.
 
 For objectives with `sense = "min"`, the observed minimum is labelled as
 `"best"` and the observed maximum is labelled as `"worst"`. For
@@ -75,7 +72,6 @@ behaviour is controlled by `ties`.
 ## See also
 
 [`get_objectives`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
-[`get_objective_specs`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md),
 [`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md)
 
 ## Examples
@@ -132,9 +128,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -162,9 +157,9 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     ties = "first"
   )
 }
-#>   objective sense bound  role run_id solution_id value
-#> 1      cost   min   min  best      1          s1   2.0
-#> 2      cost   min   max worst      5          s5  18.0
-#> 3   benefit   max   min worst      1          s1   0.0
-#> 4   benefit   max   max  best      5          s5   7.5
+#>   solution_id objective sense bound  role value
+#> 1           1      cost   min   min  best   2.0
+#> 2           5      cost   min   max worst  18.0
+#> 3           1   benefit   max   min worst   0.0
+#> 4           5   benefit   max   max  best   7.5
 ```

@@ -143,9 +143,8 @@ make_problem <- function() {
 weighted_problem <- make_problem() |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 4,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 4
     ),
     normalize_weights = TRUE
   )
@@ -153,9 +152,8 @@ weighted_problem <- make_problem() |>
 epsilon_problem <- make_problem() |>
   set_method_epsilon_constraint(
     primary = "cost",
-    runs = run_grid(
-      n = 4,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 4
     )
   )
 
@@ -191,9 +189,9 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_runs(weighted_solutions)
   get_runs(epsilon_solutions)
 }
-#>   run_id solution_id  status runtime gap message value_benefit value_cost
-#> 1      1          s1 optimal    0.00   0                   0.0          2
-#> 2      2          s2 optimal    0.02   0                   3.5          3
-#> 3      3          s3 optimal    0.00   0                   5.0          7
-#> 4      4          s4 optimal    0.00   0                   7.5         18
+#>   run_id solution_id  status runtime gap
+#> 1      1           1 optimal    0.00   0
+#> 2      2           2 optimal    0.02   0
+#> 3      3           3 optimal    0.00   0
+#> 4      4           4 optimal    0.01   0
 ```

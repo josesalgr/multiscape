@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,7 +112,7 @@
       </dl></div><div class="section level2">
       <h2 id="constraints">Constraints<a class="anchor" aria-label="anchor" href="#constraints"></a></h2>
 
-      <div class="section-desc"><p>Define target requirements and area-related constraints.</p></div>
+      <div class="section-desc"><p>Define target requirements, area limits, budgets, and locking constraints.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -156,7 +156,7 @@
 
         <dt>
 
-          <code><a href="add_constraint_locked_pu.html">add_constraint_locked_pu()</a></code>
+          <code><a href="add_constraint_locked_planning_units.html">add_constraint_locked_planning_units()</a></code>
 
         </dt>
         <dd>Add locked planning units to a problem</dd>
@@ -258,10 +258,10 @@
 
         <dt>
 
-          <code><a href="add_objective_min_fragmentation_pu.html">add_objective_min_fragmentation_pu()</a></code>
+          <code><a href="add_objective_min_fragmentation_planning_units.html">add_objective_min_fragmentation_planning_units()</a></code>
 
         </dt>
-        <dd>Add objective: minimize fragmentation</dd>
+        <dd>Add objective: minimize planning-unit fragmentation</dd>
 
         <dt>
 
@@ -351,9 +351,9 @@
         </dt>
         <dd>Set the AUGMECON multi-objective method</dd>
       </dl></div><div class="section level2">
-      <h2 id="multi-objective-workflow-configuration">Multi-objective workflow configuration<a class="anchor" aria-label="anchor" href="#multi-objective-workflow-configuration"></a></h2>
+      <h2 id="multi-objective-run-configuration">Multi-objective run configuration<a class="anchor" aria-label="anchor" href="#multi-objective-run-configuration"></a></h2>
 
-      <div class="section-desc"><p>Define run designs and execution controls for multi-objective workflows.</p></div>
+      <div class="section-desc"><p>Define automatic or manual run designs and execution controls for multi-objective workflows.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -362,24 +362,24 @@
 
       <dl><dt>
 
-          <code><a href="run_grid.html">run_grid()</a></code>
+          <code><a href="set_runs_grid.html">set_runs_grid()</a></code>
 
         </dt>
         <dd>Define an automatic multi-objective run grid</dd>
 
         <dt>
 
-          <code><a href="run_manual.html">run_manual()</a></code>
+          <code><a href="set_runs_manual.html">set_runs_manual()</a></code>
 
         </dt>
         <dd>Define a manual multi-objective run design</dd>
 
         <dt>
 
-          <code><a href="mo_control.html">mo_control()</a></code>
+          <code><a href="set_runs_control.html">set_runs_control()</a></code>
 
         </dt>
-        <dd>Control multi-objective method behavior</dd>
+        <dd>Control multi-objective run behavior</dd>
       </dl></div><div class="section level2">
       <h2 id="results-and-extraction">Results and extraction<a class="anchor" aria-label="anchor" href="#results-and-extraction"></a></h2>
 
@@ -392,17 +392,10 @@
 
       <dl><dt>
 
-          <code><a href="compile_model.html">compile_model()</a></code>
-
-        </dt>
-        <dd>Compile the optimization model stored in a Problem</dd>
-
-        <dt>
-
           <code><a href="get_runs.html">get_runs()</a></code>
 
         </dt>
-        <dd>Get run-level results from a solution set</dd>
+        <dd>Get run-level metadata from a solution set</dd>
 
         <dt>
 
@@ -413,14 +406,7 @@
 
         <dt>
 
-          <code><a href="get_objective_specs.html">get_objective_specs()</a></code>
-
-        </dt>
-        <dd>Get objective specifications from a solution set</dd>
-
-        <dt>
-
-          <code><a href="get_pu.html">get_pu()</a></code>
+          <code><a href="get_planning_units.html">get_planning_units()</a></code>
 
         </dt>
         <dd>Get planning-unit results from a solution set</dd>
@@ -445,13 +431,6 @@
 
         </dt>
         <dd>Get target achievement summary from a solution set</dd>
-
-        <dt>
-
-          <code><a href="get_solution_vector.html">get_solution_vector()</a></code>
-
-        </dt>
-        <dd>Get raw decision vector from a solution set</dd>
       </dl></div><div class="section level2">
       <h2 id="solution-set-management">Solution-set management<a class="anchor" aria-label="anchor" href="#solution-set-management"></a></h2>
 
@@ -505,6 +484,13 @@
 
         </dt>
         <dd>Compute distances to observed ideal or nadir points</dd>
+
+        <dt>
+
+          <code><a href="frontier_knee.html">frontier_knee()</a></code>
+
+        </dt>
+        <dd>Identify knee solutions on an observed Pareto frontier</dd>
       </dl></div><div class="section level2">
       <h2 id="selection-analysis">Selection analysis<a class="anchor" aria-label="anchor" href="#selection-analysis"></a></h2>
 
@@ -540,14 +526,7 @@
 
       <dl><dt>
 
-          <code><a href="plot_spatial.html">plot_spatial()</a></code>
-
-        </dt>
-        <dd>Plot spatial outputs from a solution set</dd>
-
-        <dt>
-
-          <code><a href="plot_spatial_pu.html">plot_spatial_pu()</a></code>
+          <code><a href="plot_spatial_planning_units.html">plot_spatial_planning_units()</a></code>
 
         </dt>
         <dd>Plot selected planning units in space</dd>
@@ -572,6 +551,22 @@
 
         </dt>
         <dd>Plot trade-offs from a solution set</dd>
+      </dl></div><div class="section level2">
+      <h2 id="advanced-functions">Advanced functions<a class="anchor" aria-label="anchor" href="#advanced-functions"></a></h2>
+
+      <div class="section-desc"><p>Advanced utilities for inspecting or compiling optimization models.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="compile_model.html">compile_model()</a></code>
+
+        </dt>
+        <dd>Compile the optimization model stored in a Problem</dd>
       </dl></div><div class="section level2">
       <h2 id="classes">Classes<a class="anchor" aria-label="anchor" href="#classes"></a></h2>
 
@@ -639,6 +634,64 @@
 
         </dt>
         <dd>Example feature raster</dd>
+      </dl></div><div class="section level2">
+      <h2 id="deprecated-functions">Deprecated functions<a class="anchor" aria-label="anchor" href="#deprecated-functions"></a></h2>
+
+      <div class="section-desc"><p>Deprecated functions kept for backwards compatibility.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="add_constraint_locked_pu.html">add_constraint_locked_pu()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Add locked planning units to a problem</dd>
+
+        <dt>
+
+          <code><a href="add_objective_min_fragmentation_pu.html">add_objective_min_fragmentation_pu()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Add objective: minimize planning-unit fragmentation</dd>
+
+        <dt>
+
+          <code><a href="get_pu.html">get_pu()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Get planning-unit results from a solution set</dd>
+
+        <dt>
+
+          <code><a href="plot_spatial_pu.html">plot_spatial_pu()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Plot selected planning units in space</dd>
+
+        <dt>
+
+          <code><a href="run_grid.html">run_grid()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Define an automatic multi-objective run grid</dd>
+
+        <dt>
+
+          <code><a href="run_manual.html">run_manual()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Define a manual multi-objective run design</dd>
+
+        <dt>
+
+          <code><a href="mo_control.html">mo_control()</a></code>
+          <span class="badge lifecycle lifecycle-obsoleta">obsoleta</span>
+        </dt>
+        <dd>Control multi-objective run behavior</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

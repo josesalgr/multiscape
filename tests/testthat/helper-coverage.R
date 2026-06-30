@@ -313,9 +313,8 @@ solve_round3_multiobjective <- function(n = 4L) {
     multiscape::add_objective_max_benefit(alias = "benefit") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "benefit"),
-      runs = multiscape::run_grid(
-        n = n,
-        include_extremes = TRUE
+      runs = multiscape::set_runs_grid(
+        n = n
       ),
       normalize_weights = TRUE
     ) |>

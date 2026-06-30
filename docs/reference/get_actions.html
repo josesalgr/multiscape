@@ -10,12 +10,12 @@ solutionset-class object returned by solve.
 The returned table summarizes solution values at the
 planning unit–action level and typically includes a selected
 indicator showing whether each feasible (pu, action) pair is selected
-in a run."><meta property="og:description" content="Extract the action-allocation summary table from a
+in a solution."><meta property="og:description" content="Extract the action-allocation summary table from a
 solutionset-class object returned by solve.
 The returned table summarizes solution values at the
 planning unit–action level and typically includes a selected
 indicator showing whether each feasible (pu, action) pair is selected
-in a run."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+in a solution."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -29,7 +29,7 @@ in a run."><meta property="og:image" content="https://josesalgr.github.io/multis
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,12 +60,12 @@ in a run."><meta property="og:image" content="https://josesalgr.github.io/multis
 <p>The returned table summarizes solution values at the
 planning unit–action level and typically includes a <code>selected</code>
 indicator showing whether each feasible <code>(pu, action)</code> pair is selected
-in a run.</p>
+in a solution.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_actions</span><span class="op">(</span><span class="va">x</span>, only_selected <span class="op">=</span> <span class="cn">FALSE</span>, run <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_actions</span><span class="op">(</span><span class="va">x</span>, solution <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -77,14 +77,15 @@ in a run.</p>
 <code><a href="solve.html">solve</a></code>.</p></dd>
 
 
-<dt id="arg-only-selected">only_selected<a class="anchor" aria-label="anchor" href="#arg-only-selected"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, return only rows where
-<code>selected == 1</code>. Default is <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-run">run<a class="anchor" aria-label="anchor" href="#arg-run"></a></dt>
-<dd><p>Optional positive integer giving the run index to extract. If
+<dt id="arg-solution">solution<a class="anchor" aria-label="anchor" href="#arg-solution"></a></dt>
+<dd><p>Optional positive integer giving the solution index to extract. If
 <code>NULL</code>, all runs are returned when available.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Deprecated arguments kept for backwards compatibility. Currently
+supports <code>run</code> and <code>solution_id</code>, which are redirected to
+<code>solution</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -97,25 +98,21 @@ a <code>selected</code> indicator.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function reads the action summary stored in <code>x$summary$actions</code>. It
 does not reconstruct the table from the raw decision vector; it simply
-returns the stored summary after optional filtering.</p>
+returns the stored summary after optional run filtering.</p>
 <p>Let \(x_{ia}\) denote the decision variable associated with selecting
 action \(a\) in planning unit \(i\). In standard <span class="pkg">multiscape</span>
 workflows, the <code>selected</code> column is the user-facing representation of
 that decision, typically coded as <code>0</code> or <code>1</code>.</p>
-<p>If <code>run</code> is provided, only rows belonging to that run are returned. This
-requires the summary table to contain a <code>run_id</code> column.</p>
-<p>If <code>only_selected = TRUE</code>, only rows with <code>selected == 1</code> are
-returned. This requires the summary table to contain a <code>selected</code>
-column.</p>
-<p>This function is intended for user-facing inspection of action allocations.
-For the raw model variable vector, use <code><a href="get_solution_vector.html">get_solution_vector</a></code>.</p>
+<p>If <code>solution</code> is provided, only rows belonging to that solution are returned. This
+requires the summary table to contain a <code>solution_id</code> column.</p>
+<p>To return only selected action allocations, filter the returned table using
+<code>selected == 1</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="get_pu.html">get_pu</a></code>,
+    <div class="dont-index"><p><code><a href="get_planning_units.html">get_planning_units</a></code>,
 <code><a href="get_features.html">get_features</a></code>,
-<code><a href="get_targets.html">get_targets</a></code>,
-<code><a href="get_solution_vector.html">get_solution_vector</a></code></p></div>
+<code><a href="get_targets.html">get_targets</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -181,28 +178,31 @@ For the raw model variable vector, use <code><a href="get_solution_vector.html">
 <span class="r-in"><span>  <span class="fu">get_actions</span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Only selected action assignments</span></span></span>
+<span class="r-in"><span>  <span class="va">selected_actions</span> <span class="op">&lt;-</span> <span class="fu">get_actions</span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">selected_actions</span> <span class="op">&lt;-</span> <span class="va">selected_actions</span><span class="op">[</span></span></span>
+<span class="r-in"><span>    <span class="va">selected_actions</span><span class="op">$</span><span class="va">selected</span> <span class="op">==</span> <span class="fl">1L</span>,</span></span>
+<span class="r-in"><span>    ,</span></span>
+<span class="r-in"><span>    drop <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span>  <span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="va">selected_actions</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Action allocations for one solution</span></span></span>
+<span class="r-in"><span>  <span class="va">solution_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span><span class="op">$</span><span class="va">solution_id</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="fu">get_actions</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
-<span class="r-in"><span>    only_selected <span class="op">=</span> <span class="cn">TRUE</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Action allocations for one run</span></span></span>
-<span class="r-in"><span>  <span class="va">run_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span><span class="op">$</span><span class="va">run_id</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="fu">get_actions</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
-<span class="r-in"><span>    run <span class="op">=</span> <span class="va">run_ids</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span>    solution <span class="op">=</span> <span class="va">solution_ids</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id solution_id pu       action cost status selected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1          s1  1 conservation    1      0        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      1          s1  1  restoration    2      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      1          s1  2 conservation    1      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      1          s1  2  restoration    2      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      1          s1  3 conservation    1      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      1          s1  3  restoration    2      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7      1          s1  4 conservation    1      0        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8      1          s1  4  restoration    2      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id pu       action cost status selected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1  1 conservation    1      0        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1  1  restoration    2      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1  2 conservation    1      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1  2  restoration    2      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           1  3 conservation    1      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6           1  3  restoration    2      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7           1  4 conservation    1      0        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8           1  4  restoration    2      0        0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

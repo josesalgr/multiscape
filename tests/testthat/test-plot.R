@@ -8,7 +8,7 @@ test_that("plot_tradeoff returns ggplot output", {
     multiscape::add_objective_max_benefit(alias = "benefit") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "benefit"),
-      runs = multiscape::run_grid(n = 3),
+      runs = multiscape::set_runs_grid(n = 3),
       normalize_weights = TRUE
     ) |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
@@ -42,23 +42,13 @@ test_that("planning-unit spatial plots return ggplot output", {
   s <- multiscape::solve(p)
 
   expect_s3_class(
-    multiscape::plot_spatial(s, what = "pu"),
-    "ggplot"
-  )
-
-  expect_s3_class(
-    multiscape::plot_spatial_pu(s),
+    multiscape::plot_spatial_planning_units(s),
     "ggplot"
   )
 
   expect_error(
-    multiscape::plot_spatial(s, what = "unknown"),
-    "arg"
-  )
-
-  expect_error(
-    multiscape::plot_spatial_pu(s, runs = 999L),
-    "Unknown run"
+    multiscape::plot_spatial_planning_units(s, solutions = 999L),
+    "solution"
   )
 })
 
@@ -147,14 +137,12 @@ test_that("spatial PU and implicit-action plots return ggplot objects", {
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s <- multiscape::solve(p)
-  run_id <- multiscape::get_runs(s)$run_id[1]
+  run_id <- multiscape::get_runs(s)$solution_id[1]
 
   expect_s3_class(
-    multiscape::plot_spatial_pu(
+    multiscape::plot_spatial_planning_units(
       s,
-      runs = run_id,
-      only_selected = TRUE,
-      layout = "single"
+      solutions = run_id
     ),
     "ggplot"
   )
@@ -181,7 +169,7 @@ test_that("action and feature plots cover filters and value modes", {
   s <- multiscape::solve(p)
 
   expect_gt(
-    nrow(multiscape::get_actions(s, only_selected = TRUE)),
+    nrow(multiscape::get_actions(s)),
     0L
   )
 

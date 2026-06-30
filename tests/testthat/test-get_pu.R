@@ -16,7 +16,7 @@ test_that("get_pu returns planning unit summary for Solution", {
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s <- multiscape::solve(p)
-  pu <- multiscape::get_pu(s)
+  pu <- multiscape::get_planning_units(s)
 
   expect_true(is.data.frame(pu))
   expect_gt(nrow(pu), 0)
@@ -39,10 +39,10 @@ test_that("get_pu returns planning unit summary for SolutionSet run", {
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_min_fragmentation_pu(alias = "frag") |>
+    multiscape::add_objective_min_fragmentation_planning_units(alias = "frag") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "frag"),
-      runs = multiscape::run_manual(
+      runs = multiscape::set_runs_manual(
         data.frame(
           weight_cost = 1,
           weight_frag = 1
@@ -52,7 +52,7 @@ test_that("get_pu returns planning unit summary for SolutionSet run", {
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s <- multiscape::solve(p)
-  pu <- multiscape::get_pu(s, run = 1)
+  pu <- multiscape::get_planning_units(s, solution = 1)
 
   expect_true(is.data.frame(pu))
 })

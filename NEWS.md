@@ -1,3 +1,50 @@
+# multiscape 1.1.2
+
+- Standardized user-facing result tables so `solution_id` is shown as the first column.
+- Removed `run_id` from user-facing solution extractors and frontier outputs; it is now kept for `get_runs()` and internal matching only.
+- Removed internal columns such as `internal_id` from planning-unit outputs.
+- Fixed `get_targets()` so it consistently returns `solution_id` instead of `run_id`.
+- Updated `frontier_extremes()` and `frontier_distances()` to follow the same `solution_id`-based output convention.
+- Added an example for `get_runs()`.
+- Fixed Rd warnings from missing cross-references and undocumented deprecated arguments.
+
+# multiscape 1.1.1
+
+## User-facing API
+
+* Renamed planning-unit functions and arguments to use `planning_units` consistently instead of `pu`.
+* Deprecated older function aliases kept for backwards compatibility:
+
+  * `get_pu()` in favour of `get_planning_units()`;
+  * `plot_spatial_pu()` in favour of `plot_spatial_planning_units()`;
+  * `add_constraint_locked_pu()` in favour of the planning-unit naming convention;
+  * `add_objective_min_fragmentation_pu()` in favour of `add_objective_min_fragmentation_planning_units()`.
+* Deprecated older multi-objective run helpers:
+
+  * `run_grid()` in favour of `set_runs_grid()`;
+  * `run_manual()` in favour of `set_runs_manual()`;
+  * `mo_control()` in favour of `set_runs_control()`.
+
+## Solution and result extractors
+
+* Simplified public result tables to use `solution_id` as the main identifier for stored solutions.
+* Kept `run_id` primarily for `get_runs()` and internal diagnostics, reducing ambiguity in user-facing summary outputs.
+* Updated `get_objectives()` to return cleaner user-facing tables while preserving run-level identifiers internally for frontier and dominance calculations.
+* Updated getters, plotting functions, and error messages to use `solution`/`solutions` terminology consistently.
+
+## Multi-objective methods
+
+* Updated weighted-sum defaults so that automatic grids are normalized by default, while manual weight designs use the supplied weights exactly.
+* Allowed manual weighted-sum weights to be non-negative and have any positive row total when `normalize_weights = FALSE`.
+* Improved validation of manual weighted-sum designs and multi-objective control objects.
+* Removed outdated internal `feasible_only` handling from objective extraction workflows.
+
+## Maintenance
+
+* Updated tests to reflect the new `solution_id`-based public API.
+* Improved internal separation between user-facing extractors and run-level helper functions.
+* Fixed inconsistencies in deprecated `run` terminology across getters, plotting, and frontier utilities.
+
 # multiscape 1.1.0
 
 ## Solution architecture

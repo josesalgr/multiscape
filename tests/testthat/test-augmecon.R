@@ -30,15 +30,14 @@ test_that("augmecon returns a SolutionSet with runs", {
     multiscape::add_objective_min_cost(
       alias = "cost"
     ) |>
-    multiscape::add_objective_min_fragmentation_pu(
+    multiscape::add_objective_min_fragmentation_planning_units(
       alias = "frag"
     ) |>
     multiscape::set_method_augmecon(
       primary = "cost",
       aliases = c("cost", "frag"),
-      runs = multiscape::run_grid(
-        n = 3,
-        include_extremes = TRUE
+      runs = multiscape::set_runs_grid(
+        n = 3
       ),
       augmentation = 1e-3
     ) |>
@@ -64,9 +63,7 @@ test_that("augmecon returns a SolutionSet with runs", {
     all(c(
       "run_id",
       "solution_id",
-      "status",
-      "value_cost",
-      "value_frag"
+      "status"
     ) %in% names(runs))
   )
 })

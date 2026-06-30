@@ -7,7 +7,7 @@ object.
 ## Usage
 
 ``` r
-get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
+get_objectives(x, format = c("wide", "long"))
 ```
 
 ## Arguments
@@ -23,11 +23,6 @@ get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
 
   Character. Output representation, either `"long"` or `"wide"`.
   Defaults to `"long"`.
-
-- feasible_only:
-
-  Logical. If `TRUE`, extract values only from runs whose status is
-  interpreted as usable. Defaults to `FALSE`.
 
 ## Value
 
@@ -54,7 +49,6 @@ column.
 ## See also
 
 [`get_runs`](https://josesalgr.github.io/multiscape/reference/get_runs.md),
-[`get_objective_specs`](https://josesalgr.github.io/multiscape/reference/get_objective_specs.md),
 [`frontier_extremes`](https://josesalgr.github.io/multiscape/reference/frontier_extremes.md),
 [`frontier_distances`](https://josesalgr.github.io/multiscape/reference/frontier_distances.md)
 
@@ -112,9 +106,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -138,19 +131,13 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 
   # Objective values from usable runs only
   get_objectives(
-    solutions,
-    feasible_only = TRUE
+    solutions
   )
 }
-#>    run_id solution_id objective value
-#> 1       1          s1      cost   2.0
-#> 2       2          s2      cost   3.0
-#> 3       3          s3      cost   3.0
-#> 4       4          s4      cost  12.0
-#> 5       5          s5      cost  18.0
-#> 6       1          s1   benefit   0.0
-#> 7       2          s2   benefit   3.5
-#> 8       3          s3   benefit   3.5
-#> 9       4          s4   benefit   7.0
-#> 10      5          s5   benefit   7.5
+#>   solution_id cost benefit
+#> 1           1    2     0.0
+#> 2           2    3     3.5
+#> 3           3    3     3.5
+#> 4           4   12     7.0
+#> 5           5   18     7.5
 ```

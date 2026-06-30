@@ -4,7 +4,7 @@
 \alias{get_objectives}
 \title{Get objective values from a solution set}
 \usage{
-get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
+get_objectives(x, format = c("wide", "long"))
 }
 \arguments{
 \item{x}{A \code{\link{solutionset-class}} object returned by
@@ -12,9 +12,6 @@ get_objectives(x, format = c("long", "wide"), feasible_only = FALSE)
 
 \item{format}{Character. Output representation, either \code{"long"} or
 \code{"wide"}. Defaults to \code{"long"}.}
-
-\item{feasible_only}{Logical. If \code{TRUE}, extract values only from runs
-whose status is interpreted as usable. Defaults to \code{FALSE}.}
 }
 \value{
 If \code{format = "long"}, a \code{data.frame} with columns
@@ -91,9 +88,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -117,15 +113,13 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 
   # Objective values from usable runs only
   get_objectives(
-    solutions,
-    feasible_only = TRUE
+    solutions
   )
 }
 
 }
 \seealso{
 \code{\link{get_runs}},
-\code{\link{get_objective_specs}},
 \code{\link{frontier_extremes}},
 \code{\link{frontier_distances}}
 }

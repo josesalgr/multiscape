@@ -5,15 +5,9 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Define a manual multi-objective run design — run_manual"><meta name="description" content="Create an explicit run-design specification in which each row defines one
-multi-objective optimization run.
-run_manual() is used when the exact objective weights or epsilon levels
-should be controlled by the user instead of being generated automatically
-with run_grid."><meta property="og:description" content="Create an explicit run-design specification in which each row defines one
-multi-objective optimization run.
-run_manual() is used when the exact objective weights or epsilon levels
-should be controlled by the user instead of being generated automatically
-with run_grid."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Define a manual multi-objective run design — run_manual"><meta name="description" content="
+run_manual() has been replaced by set_runs_manual."><meta property="og:description" content="
+run_manual() has been replaced by set_runs_manual."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -27,7 +21,7 @@ with run_grid."><meta property="og:image" content="https://josesalgr.github.io/m
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,16 +42,13 @@ with run_grid."><meta property="og:image" content="https://josesalgr.github.io/m
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Define a manual multi-objective run design</h1>
-      <small class="dont-index">Source: <a href="https://github.com/josesalgr/multiscape/blob/HEAD/R/run_design.R" class="external-link"><code>R/run_design.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/josesalgr/multiscape/blob/HEAD/R/set_run_design.R" class="external-link"><code>R/set_run_design.R</code></a></small>
       <div class="d-none name"><code>run_manual.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
-    <p>Create an explicit run-design specification in which each row defines one
-multi-objective optimization run.</p>
-<p><code>run_manual()</code> is used when the exact objective weights or epsilon levels
-should be controlled by the user instead of being generated automatically
-with <code><a href="run_grid.html">run_grid</a></code>.</p>
+    <p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a></p>
+<p><code>run_manual()</code> has been replaced by <code><a href="set_runs_manual.html">set_runs_manual</a></code>.</p>
     </div>
 
     <div class="section level2">
@@ -71,208 +62,19 @@ with <code><a href="run_grid.html">run_grid</a></code>.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A non-empty <code>data.frame</code> with one row per optimization run.
-Columns must use the naming conventions required by the selected
-multi-objective method, such as <code>weight_&lt;alias&gt;</code> or
-<code>eps_&lt;alias&gt;</code>.</p></dd>
+Run-design columns must be named using the <code>weight_&lt;alias&gt;</code> or
+<code>eps_&lt;alias&gt;</code> convention.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>RunManual</code> and <code>RunDesign</code>. The object
-stores the supplied run table and is intended to be passed to the
-<code>runs</code> argument of a multi-objective method function.</p>
+    <p>An object of class <code>RunManual</code> and <code>RunDesign</code>.</p>
     </div>
-    <div class="section level2">
-    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The input must be a <code>data.frame</code> with one row per requested
-optimization run. The required columns depend on the multi-objective method
-in which the design is used.</p>
-<p><strong>Weighted-sum designs</strong></p>
-<p>For <code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>, weight columns must follow the
-convention:</p>
-<div class="sourceCode"><pre><code>
-weight_&lt;alias&gt;
-</code></pre></div>
-
-<p>where <code>&lt;alias&gt;</code> is the alias of a registered objective.</p>
-<p>For example, objectives with aliases <code>"cost"</code> and <code>"benefit"</code>
-require:</p>
-<div class="sourceCode"><pre><code><span></span>
-<span><span class="va">weight_cost</span></span>
-<span><span class="va">weight_benefit</span></span></code></pre></div>
-
-<p>Each row defines the weights used in one weighted-sum run. Whether weights
-must already sum to one depends on the normalization settings supplied to
-<code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>.</p>
-<p><strong>Epsilon-constraint and AUGMECON designs</strong></p>
-<p>For <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code> and
-<code><a href="set_method_augmecon.html">set_method_augmecon</a></code>, epsilon columns must follow the
-convention:</p>
-<div class="sourceCode"><pre><code>
-eps_&lt;alias&gt;
-</code></pre></div>
-
-<p>where <code>&lt;alias&gt;</code> identifies a constrained secondary objective.</p>
-<p>The primary objective is optimized directly and therefore normally does not
-require an epsilon column. Each row defines one combination of epsilon
-bounds for the secondary objectives.</p>
-<p>Column names are matched against the registered objective aliases when the
-run design is resolved by the corresponding <code>set_method_*()</code> function.
-Therefore, aliases containing spaces or other non-syntactic characters
-should be avoided when manual run tables are expected to be used.</p>
-<p><code>run_manual()</code> performs only structural validation of the supplied object.
-Method-specific validation—including required columns, unknown aliases,
-missing values, weight validity, and epsilon compatibility—is performed when
-the design is attached to a multi-objective method or resolved before
-solving.</p>
-<p>Additional columns should not be used unless they are explicitly supported
-by the selected method. The order of rows is preserved and corresponds to
-the requested run order.</p>
-<p>Manual designs are useful when:</p><ul><li><p>exact preference weights are known;</p></li>
-<li><p>policy-relevant epsilon thresholds must be evaluated;</p></li>
-<li><p>irregular regions of the frontier require denser sampling;</p></li>
-<li><p>runs must reproduce a previously published experimental design;</p></li>
-<li><p>a small number of selected trade-off scenarios is preferred over a
-regular automatic grid.</p></li>
-</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="run_grid.html">run_grid</a></code>,
-<code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>,
-<code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code>,
-<code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
-<code><a href="get_runs.html">get_runs</a></code></p></div>
+    <div class="dont-index"><p><code><a href="set_runs_manual.html">set_runs_manual</a></code></p></div>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create an explicit weighted-sum design</span></span></span>
-<span class="r-in"><span><span class="va">weighted_runs</span> <span class="op">&lt;-</span> <span class="fu">run_manual</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    weight_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.75</span>, <span class="fl">0.50</span>, <span class="fl">0.25</span>, <span class="fl">0.0</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    weight_benefit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.25</span>, <span class="fl">0.50</span>, <span class="fl">0.75</span>, <span class="fl">1.0</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">weighted_runs</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   weight_cost weight_benefit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1.00           0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        0.75           0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        0.50           0.50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        0.25           0.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        0.00           1.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create an explicit epsilon-constraint design</span></span></span>
-<span class="r-in"><span><span class="va">epsilon_runs</span> <span class="op">&lt;-</span> <span class="fu">run_manual</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    eps_benefit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">epsilon_runs</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_benefit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Use a manual design in a weighted-sum workflow</span></span></span>
-<span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span></span>
-<span class="r-in"><span>    <span class="fl">1.5</span>, <span class="fl">1.5</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
-<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      conservation <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>      restoration <span class="op">=</span> <span class="fl">2</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    effects <span class="op">=</span> <span class="va">effects</span>,</span></span>
-<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu">run_manual</span><span class="op">(</span></span></span>
-<span class="r-in"><span>      <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>        weight_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.0</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>        weight_benefit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span></span></span>
-<span class="r-in"><span>      <span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span>,</span></span>
-<span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rcbc"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="set_solver_cbc.html">set_solver_cbc</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">problem</span>,</span></span>
-<span class="r-in"><span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Inspect the requested manual design and resulting objective values</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="get_objectives.html">get_objectives</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">solutions</span>,</span></span>
-<span class="r-in"><span>    format <span class="op">=</span> <span class="st">"wide"</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id solution_id cost benefit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1          s1    2     0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2          s2    3     3.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3          s3   18     7.5</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

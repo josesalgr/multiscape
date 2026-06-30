@@ -41,7 +41,7 @@ solve."><meta property="og:image" content="https://josesalgr.github.io/multiscap
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,6 +94,7 @@ configuration in <code>x$data$method</code>, to be used later by
 <span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-09</span>,</span>
 <span>  augmentation <span class="op">=</span> <span class="fl">0.001</span>,</span>
+<span>  slack_upper_bound <span class="op">=</span> <span class="fl">1e+06</span>,</span>
 <span>  control <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -118,28 +119,28 @@ value of <code>primary</code> must be included in <code>aliases</code>.</p></dd>
 
 
 <dt id="arg-runs">runs<a class="anchor" aria-label="anchor" href="#arg-runs"></a></dt>
-<dd><p>A run design created with <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>. For AUGMECON, <code><a href="run_grid.html">run_grid()</a></code> requests
-automatic epsilon-level generation for secondary objectives, while
-<code><a href="run_manual.html">run_manual()</a></code> requires columns named <code>eps_&lt;alias&gt;</code> for each
-secondary objective.</p></dd>
+<dd><p>A run design created with <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>. For AUGMECON,
+<code><a href="set_runs_grid.html">set_runs_grid()</a></code> requests automatic epsilon-level generation for
+secondary objectives, while <code><a href="set_runs_manual.html">set_runs_manual()</a></code> requires columns named
+<code>eps_&lt;alias&gt;</code> for each secondary objective.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
 <dd><p>Deprecated. Previous manual-grid argument. It must be a named
 list with one numeric vector per secondary objective. New code should use
-<code>runs = run_manual(...)</code> instead.</p></dd>
+<code>runs = set_runs_manual(...)</code> instead.</p></dd>
 
 
 <dt id="arg-n-points">n_points<a class="anchor" aria-label="anchor" href="#arg-n-points"></a></dt>
 <dd><p>Deprecated. Previous automatic-grid argument. New code should
-use <code>runs = run_grid(n = ...)</code> instead.</p></dd>
+use <code>runs = set_runs_grid(n = ...)</code> instead.</p></dd>
 
 
 <dt id="arg-include-extremes">include_extremes<a class="anchor" aria-label="anchor" href="#arg-include-extremes"></a></dt>
-<dd><p>Deprecated. Previous automatic-grid argument. New
-code should use <code>runs = run_grid(n = ..., include_extremes = ...)</code>
-instead.</p></dd>
+<dd><p>Deprecated and ignored. Automatic run grids now
+always include boundary levels. New code should use
+<code>runs = set_runs_grid(n = ...)</code>.</p></dd>
 
 
 <dt id="arg-lexicographic">lexicographic<a class="anchor" aria-label="anchor" href="#arg-lexicographic"></a></dt>
@@ -159,11 +160,15 @@ internally as \(\rho / R_k\), where \(R_k\) is the payoff-table range
 of the corresponding secondary objective.</p></dd>
 
 
+<dt id="arg-slack-upper-bound">slack_upper_bound<a class="anchor" aria-label="anchor" href="#arg-slack-upper-bound"></a></dt>
+<dd><p>A single positive finite numeric value defining the
+upper bound of AUGMECON slack variables. Defaults to <code>1e6</code>.</p></dd>
+
+
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
-<dd><p>A control object created with <code><a href="mo_control.html">mo_control</a></code>. It
-controls how infeasible runs, runs without a solution, and unexpected
-errors are handled. It also stores technical AUGMECON settings such as
-<code>slack_upper_bound</code>.</p></dd>
+<dd><p>A control object created with
+<code><a href="set_runs_control.html">set_runs_control</a></code>. It controls how infeasible runs, runs
+without a solution, and unexpected errors are handled.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -233,38 +238,40 @@ epsilon levels,</p></li>
 <li><p>the primary objective is augmented with a small slack-based reward.</p></li>
 </ul><p><strong>Run designs</strong></p>
 <p>AUGMECON runs are specified through the <code>runs</code> argument. This argument
-must be created with either <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>.</p>
-<p><code>run_grid(n = ...)</code> requests automatic generation of epsilon levels for
-the secondary objectives during <code><a href="solve.html">solve</a></code>. In that case, the
-method first computes extreme points and payoff-table ranges for the
+must be created with either <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>.</p>
+<p><code>set_runs_grid(n = ...)</code> requests automatic generation of epsilon
+levels for the secondary objectives during <code><a href="solve.html">solve</a></code>. In that case,
+the method first computes extreme points and payoff-table ranges for the
 secondary objectives, and then generates <code>n</code> levels for each one.</p>
-<p><code><a href="run_manual.html">run_manual()</a></code> allows users to provide explicit epsilon combinations.
-In manual AUGMECON runs, each row is one optimization run and columns must be
-named <code>eps_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of a secondary
-objective. For example, if <code>primary = "benefit"</code> and
+<p>Boundary epsilon levels are always included in automatic grids. Therefore,
+the lower and upper bounds of the automatically derived epsilon ranges are
+part of the generated run design.</p>
+<p><code><a href="set_runs_manual.html">set_runs_manual()</a></code> allows users to provide explicit epsilon
+combinations. In manual AUGMECON runs, each row is one optimization run and
+columns must be named <code>eps_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of
+a secondary objective. For example, if <code>primary = "benefit"</code> and
 <code>aliases = c("benefit", "cost", "loss")</code>, the manual run table must
 contain columns <code>eps_cost</code> and <code>eps_loss</code>.</p>
-<p>In <code><a href="run_manual.html">run_manual()</a></code>, each row is used exactly as supplied. The function
-does not automatically create a Cartesian product of epsilon values. If a
-Cartesian product is desired, it should be created explicitly by the user,
-for example with <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></code>, and then passed to
-<code><a href="run_manual.html">run_manual()</a></code>.</p>
+<p>In <code><a href="set_runs_manual.html">set_runs_manual()</a></code>, each row is used exactly as supplied. The
+function does not automatically create a Cartesian product of epsilon values.
+If a Cartesian product is desired, it should be created explicitly by the
+user, for example with <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></code>, and then passed to
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code>.</p>
 <p>The older arguments <code>grid</code>, <code>n_points</code>, and
-<code>include_extremes</code> are deprecated. They are still accepted for
-backwards compatibility and are internally converted to <code><a href="run_grid.html">run_grid()</a></code> or
-<code><a href="run_manual.html">run_manual()</a></code> designs.</p>
+<code>include_extremes</code> are deprecated. They are still accepted for backwards
+compatibility and are internally converted to <code><a href="set_runs_grid.html">set_runs_grid()</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code> designs. The deprecated <code>include_extremes</code>
+argument is ignored because automatic run grids now always include boundary
+levels.</p>
 <p><strong>Automatic epsilon grids</strong></p>
-<p>When <code>runs = run_grid(n = ...)</code> is used, the epsilon design is not built
-immediately. Instead, it is constructed later during <code><a href="solve.html">solve</a></code>
-using extreme-point or payoff-table information.</p>
-<p>For each secondary objective, <code><a href="run_grid.html">run_grid()</a></code> generates a sequence of
+<p>When <code>runs = set_runs_grid(n = ...)</code> is used, the epsilon design is not
+built immediately. Instead, it is constructed later during
+<code><a href="solve.html">solve</a></code> using extreme-point or payoff-table information.</p>
+<p>For each secondary objective, <code><a href="set_runs_grid.html">set_runs_grid()</a></code> generates a sequence of
 epsilon levels. With multiple secondary objectives, the final AUGMECON design
 is the Cartesian product of these sequences. Therefore, the number of runs
 can grow quickly as the number of secondary objectives increases.</p>
-<p>If <code>include_extremes = TRUE</code> is supplied inside <code><a href="run_grid.html">run_grid()</a></code>, the
-automatic grid includes the extreme values of each secondary objective.
-Otherwise, only interior values are used.</p>
 <p>If <code>lexicographic = TRUE</code>, extreme points are computed using
 lexicographic anchoring, which can improve payoff-table quality when
 objectives are tightly competing. The tolerance used for lexicographic
@@ -281,7 +288,8 @@ manual run design may contain:</p><div class="sourceCode"><pre><code><span></spa
 <span><span class="op">)</span></span></code></pre></div>
 
 <p>This creates three runs, not a full Cartesian grid. To create all
-combinations, use <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> before calling <code><a href="run_manual.html">run_manual()</a></code>.</p>
+combinations, use <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> before calling
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code>.</p>
 <p><strong>Normalization and augmentation</strong></p>
 <p>The augmentation term is scaled using the payoff-table ranges of the
 secondary objectives. If \(R_k\) denotes the range of secondary objective
@@ -297,17 +305,21 @@ units.</p>
 <p>In this implementation, the user supplies <code>augmentation</code> as the base
 coefficient \(\rho\), while the normalized slack coefficients are computed
 internally at solve time using the corresponding payoff-table ranges.</p>
-<p><strong>Failure handling and technical controls</strong></p>
-<p>The <code>control</code> argument controls how failed runs and technical AUGMECON
-settings are handled. It must be created with <code><a href="mo_control.html">mo_control</a></code>.</p>
+<p><strong>Failure handling</strong></p>
+<p>The <code>control</code> argument controls how failed runs are handled. It must be
+created with <code><a href="set_runs_control.html">set_runs_control</a></code>.</p>
 <p>Some epsilon combinations may define infeasible subproblems. By default,
 failed runs can be retained in the returned <code>SolutionSet</code> with missing
 objective values, while feasible runs are preserved. Alternatively, users can
 request that the solve stops when an infeasible run, a run without a solution,
 or an unexpected error is encountered.</p>
-<p>The <code>control</code> object also stores technical AUGMECON settings such as
-<code>slack_upper_bound</code>, the positive upper bound imposed on explicit slack
-variables associated with secondary objectives.</p>
+<p><strong>AUGMECON slack upper bound</strong></p>
+<p><code>slack_upper_bound</code> defines an explicit upper bound for slack variables
+introduced by the AUGMECON formulation. The value should be sufficiently large
+to avoid excluding valid solutions, but unnecessarily large bounds can weaken
+the mixed-integer formulation and reduce numerical performance.</p>
+<p>When possible, a problem-specific bound based on the ranges of the constrained
+objectives should be used.</p>
 <p><strong>Stored configuration</strong></p>
 <p>This function stores the method definition in <code>x$data$method</code> with:</p><ul><li><p><code>name = "augmecon"</code>,</p></li>
 <li><p><code>type = "augmecon"</code>,</p></li>
@@ -317,6 +329,7 @@ variables associated with secondary objectives.</p>
 <li><p><code>runs</code>,</p></li>
 <li><p>lexicographic configuration,</p></li>
 <li><p><code>augmentation</code>,</p></li>
+<li><p><code>slack_upper_bound</code>,</p></li>
 <li><p><code>control</code>.</p></li>
 </ul><p>The actual payoff table, grid construction, and subproblem solution loop are
 performed later by <code><a href="solve.html">solve</a></code>.</p>
@@ -330,9 +343,9 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="run_grid.html">run_grid</a></code>,
-<code><a href="run_manual.html">run_manual</a></code>,
-<code><a href="mo_control.html">mo_control</a></code>,
+    <div class="dont-index"><p><code><a href="set_runs_grid.html">set_runs_grid</a></code>,
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>,
+<code><a href="set_runs_control.html">set_runs_control</a></code>,
 <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></code>,
 <code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>,
 <code><a href="solve.html">solve</a></code></p></div>
@@ -388,7 +401,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span>, include_extremes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -453,11 +466,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Manual runs for one secondary objective</span></span></span>
@@ -469,7 +479,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">aug_runs</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">aug_runs</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -533,11 +543,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Manual runs for two secondary objectives</span></span></span>
@@ -550,7 +557,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">aug_runs_3obj</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">aug_runs_3obj</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -614,11 +621,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Cartesian epsilon design created explicitly by the user</span></span></span>
@@ -632,7 +636,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">aug_cartesian</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">aug_cartesian</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -699,11 +703,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Backwards-compatible deprecated usage</span></span></span>
@@ -717,7 +718,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`grid/n_points/include_extremes` is deprecated. Use `runs = run_grid(...) or runs = run_manual(...)` instead.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`grid/n_points/include_extremes` is deprecated. Use `runs = set_runs_grid(...) or runs = set_runs_manual(...)` instead.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x5</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
@@ -740,13 +741,13 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id eps_cost eps_loss</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1        4        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2        6        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3        8        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4        4        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      5        6        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      6        8        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost eps_loss</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        4        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        6        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        8        1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
@@ -782,11 +783,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Control failure handling and the AUGMECON slack upper bound</span></span></span>
@@ -794,13 +792,13 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  augmentation <span class="op">=</span> <span class="fl">1e-3</span>,</span></span>
-<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="mo_control.html">mo_control</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  slack_upper_bound <span class="op">=</span> <span class="fl">1e6</span>,</span></span>
+<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="set_runs_control.html">set_runs_control</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    stop_on_infeasible <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>    stop_on_no_solution <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>    stop_on_error <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>    slack_upper_bound <span class="op">=</span> <span class="fl">1e6</span></span></span>
+<span class="r-in"><span>    stop_on_error <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -864,11 +862,8 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

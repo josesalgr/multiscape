@@ -160,9 +160,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -209,11 +208,11 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     format = "matrix"
   )
 }
-#>    s1        s2        s4   s5
-#> s1  1 0.0000000 0.0000000 0.00
-#> s2  0 1.0000000 0.3333333 0.25
-#> s4  0 0.3333333 1.0000000 0.75
-#> s5  0 0.2500000 0.7500000 1.00
+#>   1         2         4    5
+#> 1 1 0.0000000 0.0000000 0.00
+#> 2 0 1.0000000 0.3333333 0.25
+#> 4 0 0.3333333 1.0000000 0.75
+#> 5 0 0.2500000 0.7500000 1.00
 #> attr(,"metric")
 #> [1] "jaccard"
 ```

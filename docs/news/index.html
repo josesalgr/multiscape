@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,63 @@
       <small>Source: <a href="https://github.com/josesalgr/multiscape/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.2" id="multiscape-112">multiscape 1.1.2<a class="anchor" aria-label="anchor" href="#multiscape-112"></a></h2>
+<ul><li>Standardized user-facing result tables so <code>solution_id</code> is shown as the first column.</li>
+<li>Removed <code>run_id</code> from user-facing solution extractors and frontier outputs; it is now kept for <code><a href="../reference/get_runs.html">get_runs()</a></code> and internal matching only.</li>
+<li>Removed internal columns such as <code>internal_id</code> from planning-unit outputs.</li>
+<li>Fixed <code><a href="../reference/get_targets.html">get_targets()</a></code> so it consistently returns <code>solution_id</code> instead of <code>run_id</code>.</li>
+<li>Updated <code><a href="../reference/frontier_extremes.html">frontier_extremes()</a></code> and <code><a href="../reference/frontier_distances.html">frontier_distances()</a></code> to follow the same <code>solution_id</code>-based output convention.</li>
+<li>Added an example for <code><a href="../reference/get_runs.html">get_runs()</a></code>.</li>
+<li>Fixed Rd warnings from missing cross-references and undocumented deprecated arguments.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.1" id="multiscape-111">multiscape 1.1.1<a class="anchor" aria-label="anchor" href="#multiscape-111"></a></h2>
+<div class="section level3">
+<h3 id="user-facing-api-1-1-1">User-facing API<a class="anchor" aria-label="anchor" href="#user-facing-api-1-1-1"></a></h3>
+<ul><li><p>Renamed planning-unit functions and arguments to use <code>planning_units</code> consistently instead of <code>pu</code>.</p></li>
+<li>
+<p>Deprecated older function aliases kept for backwards compatibility:</p>
+<ul><li>
+<code><a href="../reference/get_pu.html">get_pu()</a></code> in favour of <code><a href="../reference/get_planning_units.html">get_planning_units()</a></code>;</li>
+<li>
+<code><a href="../reference/plot_spatial_pu.html">plot_spatial_pu()</a></code> in favour of <code><a href="../reference/plot_spatial_planning_units.html">plot_spatial_planning_units()</a></code>;</li>
+<li>
+<code><a href="../reference/add_constraint_locked_pu.html">add_constraint_locked_pu()</a></code> in favour of the planning-unit naming convention;</li>
+<li>
+<code><a href="../reference/add_objective_min_fragmentation_pu.html">add_objective_min_fragmentation_pu()</a></code> in favour of <code><a href="../reference/add_objective_min_fragmentation_planning_units.html">add_objective_min_fragmentation_planning_units()</a></code>.</li>
+</ul></li>
+<li>
+<p>Deprecated older multi-objective run helpers:</p>
+<ul><li>
+<code><a href="../reference/run_grid.html">run_grid()</a></code> in favour of <code><a href="../reference/set_runs_grid.html">set_runs_grid()</a></code>;</li>
+<li>
+<code><a href="../reference/run_manual.html">run_manual()</a></code> in favour of <code><a href="../reference/set_runs_manual.html">set_runs_manual()</a></code>;</li>
+<li>
+<code><a href="../reference/mo_control.html">mo_control()</a></code> in favour of <code><a href="../reference/set_runs_control.html">set_runs_control()</a></code>.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="solution-and-result-extractors-1-1-1">Solution and result extractors<a class="anchor" aria-label="anchor" href="#solution-and-result-extractors-1-1-1"></a></h3>
+<ul><li>Simplified public result tables to use <code>solution_id</code> as the main identifier for stored solutions.</li>
+<li>Kept <code>run_id</code> primarily for <code><a href="../reference/get_runs.html">get_runs()</a></code> and internal diagnostics, reducing ambiguity in user-facing summary outputs.</li>
+<li>Updated <code><a href="../reference/get_objectives.html">get_objectives()</a></code> to return cleaner user-facing tables while preserving run-level identifiers internally for frontier and dominance calculations.</li>
+<li>Updated getters, plotting functions, and error messages to use <code>solution</code>/<code>solutions</code> terminology consistently.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="multi-objective-methods-1-1-1">Multi-objective methods<a class="anchor" aria-label="anchor" href="#multi-objective-methods-1-1-1"></a></h3>
+<ul><li>Updated weighted-sum defaults so that automatic grids are normalized by default, while manual weight designs use the supplied weights exactly.</li>
+<li>Allowed manual weighted-sum weights to be non-negative and have any positive row total when <code>normalize_weights = FALSE</code>.</li>
+<li>Improved validation of manual weighted-sum designs and multi-objective control objects.</li>
+<li>Removed outdated internal <code>feasible_only</code> handling from objective extraction workflows.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="maintenance-1-1-1">Maintenance<a class="anchor" aria-label="anchor" href="#maintenance-1-1-1"></a></h3>
+<ul><li>Updated tests to reflect the new <code>solution_id</code>-based public API.</li>
+<li>Improved internal separation between user-facing extractors and run-level helper functions.</li>
+<li>Fixed inconsistencies in deprecated <code>run</code> terminology across getters, plotting, and frontier utilities.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="multiscape-110">multiscape 1.1.0<a class="anchor" aria-label="anchor" href="#multiscape-110"></a></h2>
 <div class="section level3">
@@ -77,7 +134,7 @@
 <h3 id="result-extraction-1-1-0">Result extraction<a class="anchor" aria-label="anchor" href="#result-extraction-1-1-0"></a></h3>
 <ul><li>Added <code><a href="../reference/get_runs.html">get_runs()</a></code> to extract run-level status, runtime, gap, design parameters, solution identifiers, and objective values.</li>
 <li>Added <code><a href="../reference/get_objectives.html">get_objectives()</a></code> to extract objective values in long or wide format.</li>
-<li>Added <code><a href="../reference/get_objective_specs.html">get_objective_specs()</a></code> to extract registered objective aliases, objective types, model types, optimization senses, and creation metadata.</li>
+<li>Added <code>get_objective_specs()</code> to extract registered objective aliases, objective types, model types, optimization senses, and creation metadata.</li>
 <li>Updated objective extraction to include both <code>run_id</code> and <code>solution_id</code>.</li>
 <li>Updated existing extraction functions to work consistently with the unified <code>SolutionSet</code> architecture.</li>
 <li>Improved handling of infeasible runs and missing objective values during extraction.</li>

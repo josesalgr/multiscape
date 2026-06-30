@@ -1,4 +1,4 @@
-#' @include internalMO.R
+#' @include internalMO.R internal.R
 #'
 #' @title Get planning-unit results from a solution set
 #'
@@ -8,34 +8,31 @@
 #'
 #' The returned table summarizes solution values at the planning-unit level and
 #' typically includes a \code{selected} indicator showing whether each planning
-#' unit is selected in a run.
+#' unit is selected in a solution.
 #'
 #' @details
 #' This function reads the planning-unit summary stored in
 #' \code{x$summary$pu}. It does not reconstruct the table from the raw decision
-#' vector; it simply returns the stored summary after optional filtering.
+#' vector; it simply returns the stored summary after optional run filtering.
 #'
 #' Let \eqn{w_i} denote the planning-unit selection variable for planning unit
 #' \eqn{i}. In standard \pkg{multiscape} workflows, the \code{selected} column
 #' is the user-facing representation of that planning-unit decision, typically
 #' coded as \code{0} or \code{1}.
 #'
-#' If \code{run} is provided, only rows belonging to that run are returned. This
-#' requires the summary table to contain a \code{run_id} column.
+#' If \code{solution} is provided, only rows belonging to that solution are returned. This
+#' requires the summary table to contain a \code{solution_id} column.
 #'
-#' If \code{only_selected = TRUE}, only rows with \code{selected == 1} are
-#' returned. This requires the summary table to contain a \code{selected}
-#' column.
-#'
-#' This function is intended for user-facing inspection of planning-unit results.
-#' For the raw model variable vector, use \code{\link{get_solution_vector}}.
+#' To return only selected planning units, filter the returned table using
+#' \code{selected == 1}.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param only_selected Logical. If \code{TRUE}, return only rows where
-#'   \code{selected == 1}. Default is \code{FALSE}.
-#' @param run Optional positive integer giving the run index to extract. If
-#'   \code{NULL}, all runs are returned when available.
+#' @param solution Optional positive integer giving the solution index to extract. If
+#'   \code{NULL}, all solutions are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} containing the stored planning-unit summary.
 #'   Typical columns include planning-unit identifiers, optional labels, and a
@@ -76,60 +73,93 @@
 #'   solutions <- solve(problem)
 #'
 #'   # Planning-unit results for all stored runs
-#'   get_pu(solutions)
+#'   get_planning_units(solutions)
 #'
 #'   # Return only selected planning units
-#'   get_pu(
-#'     solutions,
-#'     only_selected = TRUE
-#'   )
+#'   selected_pu <- get_planning_units(solutions)
+#'   selected_pu <- selected_pu[selected_pu$selected == 1L, , drop = FALSE]
+#'   selected_pu
 #'
-#'   # Extract one run using its run_id
-#'   run_ids <- get_runs(solutions)$run_id
+#'   # Extract one run using its solution_id
+#'   solution_ids <- get_runs(solutions)$solution_id
 #'
-#'   get_pu(
+#'   get_planning_units(
 #'     solutions,
-#'     run = run_ids[1]
+#'     solution = solution_ids[1]
 #'   )
 #' }
 #'
 #' @seealso
 #' \code{\link{get_actions}},
 #' \code{\link{get_features}},
-#' \code{\link{get_targets}},
-#' \code{\link{get_solution_vector}}
+#' \code{\link{get_targets}}
 #'
 #' @export
-get_pu <- function(x, only_selected = FALSE, run = NULL) {
+get_planning_units <- function(x, solution = NULL, ...) {
 
   if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
+  solution <- .pa_resolve_solution_arg(
+    solution = solution,
+    ...,
+    caller = "get_planning_units"
+  )
+
   pu <- x$summary$pu %||% NULL
   if (is.null(pu)) {
-    stop("No PU summary found (x$summary$pu is NULL).", call. = FALSE)
+    stop("No planning-unit summary found (x$summary$pu is NULL).", call. = FALSE)
   }
 
-  if (inherits(x, "SolutionSet") && !is.null(run)) {
-    run <- as.integer(run)[1]
-    if (!is.finite(run) || is.na(run) || run < 1L) {
-      stop("run must be a positive integer (1-based).", call. = FALSE)
-    }
-    if (!("run_id" %in% names(pu))) {
-      stop("PU summary has no 'run_id' column.", call. = FALSE)
-    }
-    pu <- pu[pu$run_id == run, , drop = FALSE]
-  }
+  pu <- .pa_filter_summary_by_solution(
+    x = x,
+    tab = pu,
+    solution = solution,
+    table_name = "Planning-unit summary"
+  )
 
-  if (isTRUE(only_selected)) {
-    if (!("selected" %in% names(pu))) {
-      stop("PU summary has no 'selected' column.", call. = FALSE)
-    }
-    pu <- pu[pu$selected == 1L, , drop = FALSE]
-  }
+  rownames(pu) <- NULL
+  pu <- .pa_clean_solution_summary(
+    pu,
+    drop_internal = c("internal_id")
+  )
 
   pu
+}
+
+
+#' @title Get planning-unit results from a solution set
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' \code{get_pu()} has been replaced by
+#' \code{\link{get_planning_units}}.
+#'
+#' @param x A \code{\link{solutionset-class}} object returned by
+#'   \code{\link{solve}}.
+#' @param solution Optional positive integer giving the solution index to extract. If
+#'   \code{NULL}, all solutions are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
+#'
+#' @return A \code{data.frame} containing the stored planning-unit summary.
+#'
+#' @export
+get_pu <- function(x, solution = NULL, ...) {
+  lifecycle::deprecate_warn(
+    "1.1.0",
+    "get_pu()",
+    "get_planning_units()"
+  )
+
+  get_planning_units(
+    x = x,
+    solution = solution,
+    ...
+  )
 }
 
 
@@ -142,34 +172,31 @@ get_pu <- function(x, only_selected = FALSE, run = NULL) {
 #' The returned table summarizes solution values at the
 #' planning unit--action level and typically includes a \code{selected}
 #' indicator showing whether each feasible \code{(pu, action)} pair is selected
-#' in a run.
+#' in a solution.
 #'
 #' @details
 #' This function reads the action summary stored in \code{x$summary$actions}. It
 #' does not reconstruct the table from the raw decision vector; it simply
-#' returns the stored summary after optional filtering.
+#' returns the stored summary after optional run filtering.
 #'
 #' Let \eqn{x_{ia}} denote the decision variable associated with selecting
 #' action \eqn{a} in planning unit \eqn{i}. In standard \pkg{multiscape}
 #' workflows, the \code{selected} column is the user-facing representation of
 #' that decision, typically coded as \code{0} or \code{1}.
 #'
-#' If \code{run} is provided, only rows belonging to that run are returned. This
-#' requires the summary table to contain a \code{run_id} column.
+#' If \code{solution} is provided, only rows belonging to that solution are returned. This
+#' requires the summary table to contain a \code{solution_id} column.
 #'
-#' If \code{only_selected = TRUE}, only rows with \code{selected == 1} are
-#' returned. This requires the summary table to contain a \code{selected}
-#' column.
-#'
-#' This function is intended for user-facing inspection of action allocations.
-#' For the raw model variable vector, use \code{\link{get_solution_vector}}.
+#' To return only selected action allocations, filter the returned table using
+#' \code{selected == 1}.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param only_selected Logical. If \code{TRUE}, return only rows where
-#'   \code{selected == 1}. Default is \code{FALSE}.
-#' @param run Optional positive integer giving the run index to extract. If
+#' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} containing the stored action-allocation summary.
 #'   Typical columns include planning-unit ids, action ids, optional labels, and
@@ -237,57 +264,57 @@ get_pu <- function(x, only_selected = FALSE, run = NULL) {
 #'   get_actions(solutions)
 #'
 #'   # Only selected action assignments
+#'   selected_actions <- get_actions(solutions)
+#'   selected_actions <- selected_actions[
+#'     selected_actions$selected == 1L,
+#'     ,
+#'     drop = FALSE
+#'   ]
+#'   selected_actions
+#'
+#'   # Action allocations for one solution
+#'   solution_ids <- get_runs(solutions)$solution_id
+#'
 #'   get_actions(
 #'     solutions,
-#'     only_selected = TRUE
-#'   )
-#'
-#'   # Action allocations for one run
-#'   run_ids <- get_runs(solutions)$run_id
-#'
-#'   get_actions(
-#'     solutions,
-#'     run = run_ids[1]
+#'     solution = solution_ids[1]
 #'   )
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_features}},
-#' \code{\link{get_targets}},
-#' \code{\link{get_solution_vector}}
+#' \code{\link{get_targets}}
 #'
 #' @export
-get_actions <- function(x, only_selected = FALSE, run = NULL) {
+get_actions <- function(x, solution = NULL, ...) {
 
   if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
+
+  solution <- .pa_resolve_solution_arg(
+    solution = solution,
+    ...,
+    caller = "get_actions"
+  )
 
   a <- x$summary$actions %||% NULL
   if (is.null(a)) {
     stop("No actions summary found (x$summary$actions is NULL).", call. = FALSE)
   }
 
-  if (inherits(x, "SolutionSet") && !is.null(run)) {
-    run <- as.integer(run)[1]
-    if (!is.finite(run) || is.na(run) || run < 1L) {
-      stop("run must be a positive integer (1-based).", call. = FALSE)
-    }
-    if (!("run_id" %in% names(a))) {
-      stop("Actions summary has no 'run_id' column.", call. = FALSE)
-    }
-    a <- a[a$run_id == run, , drop = FALSE]
-  }
+  a <- .pa_filter_summary_by_solution(
+    x = x,
+    tab = a,
+    solution = solution,
+    table_name = "Actions summary"
+  )
 
-  if (isTRUE(only_selected)) {
-    if (!("selected" %in% names(a))) {
-      stop("Actions summary has no 'selected' column.", call. = FALSE)
-    }
-    a <- a[a$selected == 1L, , drop = FALSE]
-  }
-
-  a <- a[, setdiff(names(a), c("internal_pu", "internal_action", "internal_row")), drop = FALSE]
+  a <- .pa_clean_solution_summary(
+    a,
+    drop_internal = c("internal_pu", "internal_action", "internal_row")
+  )
 
   a
 }
@@ -354,9 +381,9 @@ get_actions <- function(x, only_selected = FALSE, run = NULL) {
 #' \code{loss}, \code{net}, and \code{amount_after}. However, the returned table
 #' is organized using the newer selected-action terminology.
 #'
-#' If \code{run} is provided, only rows belonging to that run are returned. If
-#' the result contains a \code{run_id} column but only a single run is present and
-#' \code{run} was not requested explicitly, the \code{run_id} column is removed
+#' If \code{solution} is provided, only rows belonging to that solution are returned. If
+#' the result contains a \code{solution_id} column but only a single solution is present and
+#' \code{solution} was not requested explicitly, the \code{solution_id} column is removed
 #' for convenience.
 #'
 #' This function summarizes feature outcomes in the result. It is different from
@@ -364,8 +391,11 @@ get_actions <- function(x, only_selected = FALSE, run = NULL) {
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param run Optional positive integer giving the run index to extract. If
+#' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A \code{data.frame} with one row per feature, or one row per
 #'   feature--run combination when multiple runs are present. The returned table
@@ -413,55 +443,43 @@ get_actions <- function(x, only_selected = FALSE, run = NULL) {
 #'   get_features(solutions)
 #'
 #'   # Feature outcomes for one run
-#'   run_ids <- get_runs(solutions)$run_id
+#'   solution_ids <- get_runs(solutions)$solution_id
 #'
 #'   get_features(
 #'     solutions,
-#'     run = run_ids[1]
+#'     solution = solution_ids[1]
 #'   )
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_targets}}
 #'
 #' @export
-get_features <- function(x, run = NULL) {
+get_features <- function(x, solution = NULL, ...) {
 
   if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
+
+  solution <- .pa_resolve_solution_arg(
+    solution = solution,
+    ...,
+    caller = "get_features"
+  )
 
   f <- x$summary$features %||% NULL
   if (is.null(f)) {
     stop("No features summary found (x$summary$features is NULL).", call. = FALSE)
   }
 
-  if (inherits(x, "SolutionSet") && !is.null(run)) {
-    run <- as.integer(run)[1]
-
-    if (!is.finite(run) || is.na(run) || run < 1L) {
-      stop("run must be a positive integer (1-based).", call. = FALSE)
-    }
-
-    if (!("run_id" %in% names(f))) {
-      stop("Features summary has no 'run_id' column.", call. = FALSE)
-    }
-
-    runs_avail <- sort(unique(f$run_id))
-
-    if (!(run %in% runs_avail)) {
-      stop(
-        "run=", run, " is out of range. Available runs: ",
-        paste(runs_avail, collapse = ", "),
-        ".",
-        call. = FALSE
-      )
-    }
-
-    f <- f[f$run_id == run, , drop = FALSE]
-  }
+  f <- .pa_filter_summary_by_solution(
+    x = x,
+    tab = f,
+    solution = solution,
+    table_name = "Features summary"
+  )
 
   out <- f
 
@@ -544,7 +562,7 @@ get_features <- function(x, run = NULL) {
   }
 
   keep_first <- c(
-    "run_id",
+    "solution_id",
     "feature",
     "feature_name",
     "baseline_total",
@@ -570,13 +588,14 @@ get_features <- function(x, run = NULL) {
 
   out <- out[, c(keep_first, keep_rest), drop = FALSE]
 
-  if ("run_id" %in% names(out) &&
-      length(unique(out$run_id)) <= 1L &&
-      is.null(run)) {
-    out$run_id <- NULL
+  if ("solution_id" %in% names(out) &&
+      length(unique(out$solution_id[!is.na(out$solution_id)])) <= 1L &&
+      is.null(solution)) {
+    out$solution_id <- NULL
   }
 
   rownames(out) <- NULL
+  out <- .pa_clean_solution_summary(out)
 
   out
 }
@@ -630,9 +649,9 @@ get_features <- function(x, run = NULL) {
 #'   \item \code{target_value} is returned as \code{target}.
 #' }
 #'
-#' If \code{run} is provided, only rows belonging to that run are returned. If
-#' the result contains a \code{run_id} column but only a single run is present and
-#' \code{run} was not requested explicitly, the \code{run_id} column is removed
+#' If \code{solution} is provided, only rows belonging to that solution are returned. If
+#' the result contains a \code{run_id} column but only a single solution is present and
+#' \code{solution} was not requested explicitly, the \code{solution_id} column is removed
 #' for convenience.
 #'
 #' The \code{gap} column is expected to be part of the stored summary. When
@@ -643,8 +662,11 @@ get_features <- function(x, run = NULL) {
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param run Optional positive integer giving the run index to extract. If
+#' @param solution Optional positive integer giving the solution index to extract. If
 #'   \code{NULL}, all runs are returned when available.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A simplified \code{data.frame} target summary, or \code{NULL} if the
 #'   result does not contain targets. Typical columns include \code{feature},
@@ -689,41 +711,43 @@ get_features <- function(x, run = NULL) {
 #'   get_targets(solutions)
 #'
 #'   # Target achievement for one run
-#'   run_ids <- get_runs(solutions)$run_id
+#'   solution_ids <- get_runs(solutions)$solution_id
 #'
 #'   get_targets(
 #'     solutions,
-#'     run = run_ids[1]
+#'     solution = solution_ids[1]
 #'   )
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_features}}
 #'
 #' @export
-get_targets <- function(x, run = NULL) {
+get_targets <- function(x, solution = NULL, ...) {
 
   if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
+
+  solution <- .pa_resolve_solution_arg(
+    solution = solution,
+    ...,
+    caller = "get_targets"
+  )
 
   t <- x$summary$targets %||% NULL
   if (is.null(t)) {
     return(NULL)
   }
 
-  if (inherits(x, "SolutionSet") && !is.null(run)) {
-    run <- as.integer(run)[1]
-    if (!is.finite(run) || is.na(run) || run < 1L) {
-      stop("run must be a positive integer (1-based).", call. = FALSE)
-    }
-    if (!("run_id" %in% names(t))) {
-      stop("Targets summary has no 'run_id' column.", call. = FALSE)
-    }
-    t <- t[t$run_id == run, , drop = FALSE]
-  }
+  t <- .pa_filter_summary_by_solution(
+    x = x,
+    tab = t,
+    solution = solution,
+    table_name = "Targets summary"
+  )
 
   out <- t
 
@@ -744,7 +768,7 @@ get_targets <- function(x, run = NULL) {
   }
 
   keep <- c(
-    "run_id",
+    "solution_id",
     "feature",
     "feature_name",
     "target_raw",
@@ -761,9 +785,7 @@ get_targets <- function(x, run = NULL) {
   names(out)[names(out) == "basis_total"] <- "total_available"
   names(out)[names(out) == "target_value"] <- "target"
 
-  if ("run_id" %in% names(out) && length(unique(out$run_id)) <= 1L && is.null(run)) {
-    out$run_id <- NULL
-  }
+  out <- .pa_clean_solution_summary(out)
 
   out
 }
@@ -796,15 +818,15 @@ get_targets <- function(x, run = NULL) {
 #' table.
 #'
 #' To inspect selected planning units or selected actions in a more interpretable
-#' form, use \code{\link{get_pu}} or \code{\link{get_actions}} instead.
+#' form, use \code{\link{get_planning_units}} or \code{\link{get_actions}} instead.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
-#' @param run Optional positive integer giving the run id to extract. If
-#'   \code{NULL}, the first stored solution is used unless \code{solution_id}
-#'   is supplied.
-#' @param solution_id Optional character string giving the solution id to
+#' @param solution Optional character string giving the solution id to
 #'   extract. If supplied, \code{run} must be \code{NULL}.
+#' @param ... Deprecated arguments kept for backwards compatibility. Currently
+#'   supports \code{run} and \code{solution_id}, which are redirected to
+#'   \code{solution}.
 #'
 #' @return A numeric vector with one value per internal model variable.
 #'
@@ -856,25 +878,33 @@ get_targets <- function(x, run = NULL) {
 #'   if (length(solution_ids) > 0L) {
 #'     get_solution_vector(
 #'       solutions,
-#'       solution_id = solution_ids[1]
+#'       solution = solution_ids[1]
 #'     )
 #'   }
 #' }
 #'
 #' @seealso
-#' \code{\link{get_pu}},
+#' \code{\link{get_planning_units}},
 #' \code{\link{get_actions}},
 #' \code{\link{get_features}},
 #' \code{\link{get_targets}}
-#'
-#' @export
-get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
+#' @noRd
+get_solution_vector <- function(x, solution = NULL, ...) {
 
   if (!inherits(x, c("SolutionSet"))) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
-  sol <- .mo_get_solution_from(x, run = run, solution_id = solution_id)
+  solution <- .pa_resolve_solution_arg(
+    solution = solution,
+    ...,
+    caller = "get_solution_vector"
+  )
+
+  sol <- .mo_get_solution_from(
+    x,
+    solution_id = solution
+  )
 
   v <- sol$solution$vector %||% NULL
   if (is.null(v)) {
@@ -885,41 +915,33 @@ get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
 }
 
 
-#' Get run-level results from a solution set
+#' Get run-level metadata from a solution set
 #'
 #' @description
 #' Extract the run table from a \code{\link{solutionset-class}} object.
 #'
 #' @details
 #' A run represents an attempted optimization solve. Each run has a unique
-#' \code{run_id}, but only runs that produce a stored solution receive a
+#' \code{run_id}. Only runs that produce a stored solution receive a
 #' \code{solution_id}.
 #'
-#' Consequently, the number of runs may exceed the number of stored solutions.
-#' This commonly occurs when a multi-objective design contains infeasible,
-#' failed, or interrupted runs.
+#' The \code{solution_id} is numeric and matches the corresponding
+#' \code{run_id}. Therefore, if a run fails or is infeasible, its
+#' \code{solution_id} is \code{NA}; if a later run succeeds, its
+#' \code{solution_id} keeps the same value as its \code{run_id}.
 #'
-#' The run table combines:
-#' \itemize{
-#'   \item run and solution identifiers;
-#'   \item solver status, runtime, gap, and messages;
-#'   \item multi-objective design parameters such as weights or epsilon levels;
-#'   \item objective values stored in columns named
-#'   \code{value_<objective>}.
-#' }
+#' This function is the user-facing place where the relationship between
+#' attempted runs and stored solutions is reported.
 #'
-#' If \code{feasible_only = TRUE}, runs with statuses \code{"optimal"},
-#' \code{"feasible"}, \code{"suboptimal"}, \code{"time_limit"}, or
-#' \code{"gap_limit"} are retained.
+#' Objective values are not returned by \code{get_runs()}. To extract objective
+#' values, use \code{\link{get_objectives}}.
 #'
 #' @param x A \code{\link{solutionset-class}} object returned by
 #'   \code{\link{solve}}.
 #'
-#' @param feasible_only Logical. If \code{TRUE}, return only runs whose status
-#'   indicates that a usable solution may be available. Defaults to
-#'   \code{FALSE}.
-#'
 #' @return A \code{data.frame} with one row per attempted optimization run.
+#'   The table contains run metadata and the numeric mapping between
+#'   \code{run_id} and \code{solution_id}, but not objective-value columns.
 #'
 #' @examples
 #' pu <- data.frame(
@@ -938,47 +960,14 @@ get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
 #'   amount = c(5, 2, 3, 4, 1)
 #' )
 #'
-#' actions <- data.frame(
-#'   id = c("conservation", "restoration")
-#' )
-#'
-#' effects <- data.frame(
-#'   action = rep(actions$id, each = 2),
-#'   feature = rep(features$id, times = 2),
-#'   multiplier = c(
-#'     1.0, 1.0,
-#'     1.5, 1.5
-#'   )
-#' )
-#'
 #' problem <- create_problem(
 #'   pu = pu,
 #'   features = features,
 #'   dist_features = dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     actions = actions,
-#'     cost = c(
-#'       conservation = 1,
-#'       restoration = 2
-#'     )
-#'   ) |>
-#'   add_effects(
-#'     effects = effects,
-#'     effect_type = "after"
-#'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
-#'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_max_benefit(alias = "benefit") |>
-#'   set_method_weighted_sum(
-#'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
-#'     ),
-#'     normalize_weights = TRUE
-#'   )
+#'   add_objective_min_cost(alias = "cost")
 #'
 #' if (requireNamespace("rcbc", quietly = TRUE)) {
 #'   problem <- set_solver_cbc(
@@ -988,25 +977,17 @@ get_solution_vector <- function(x, run = NULL, solution_id = NULL) {
 #'
 #'   solutions <- solve(problem)
 #'
-#'   # All attempted runs
 #'   get_runs(solutions)
-#'
-#'   # Only runs with a usable solver status
-#'   get_runs(
-#'     solutions,
-#'     feasible_only = TRUE
-#'   )
 #' }
 #'
 #' @seealso
 #' \code{\link{get_objectives}},
-#' \code{\link{get_objective_specs}},
 #' \code{\link{solution_filter}},
-#' \code{\link{run_grid}},
-#' \code{\link{run_manual}}
+#' \code{\link{set_runs_grid}},
+#' \code{\link{set_runs_manual}}
 #'
 #' @export
-get_runs <- function(x, feasible_only = FALSE) {
+get_runs <- function(x) {
   if (!inherits(x, "SolutionSet")) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
@@ -1019,31 +1000,44 @@ get_runs <- function(x, feasible_only = FALSE) {
 
   out <- runs
 
-  if (isTRUE(feasible_only)) {
-    if (!("status" %in% names(out))) {
-      stop("Cannot filter feasible runs because the run table has no 'status' column.", call. = FALSE)
-    }
-
-    feasible_status <- c(
-      "optimal",
-      "feasible",
-      "suboptimal",
-      "time_limit",
-      "gap_limit"
-    )
-
-    out <- out[
-      tolower(as.character(out$status)) %in% feasible_status,
-      ,
-      drop = FALSE
-    ]
+  if (!("run_id" %in% names(out))) {
+    stop("Run table has no 'run_id' column.", call. = FALSE)
   }
 
-  first <- intersect(c("run_id", "solution_id", "status"), names(out))
+  out$run_id <- as.integer(out$run_id)
+
+  if (!("solution_id" %in% names(out))) {
+    out$solution_id <- NA_integer_
+  } else {
+    out$solution_id <- suppressWarnings(as.integer(out$solution_id))
+  }
+
+  value_cols <- grep("^value_", names(out), value = TRUE)
+
+  if (length(value_cols) > 0L) {
+    out <- out[, setdiff(names(out), value_cols), drop = FALSE]
+  }
+
+  first <- intersect(
+    c("run_id", "solution_id", "status", "runtime", "gap", "message"),
+    names(out)
+  )
+
   rest <- setdiff(names(out), first)
+
   out <- out[, c(first, rest), drop = FALSE]
 
+  if ("message" %in% names(out)) {
+    msg <- as.character(out$message)
+    msg[is.na(msg)] <- ""
+
+    if (all(!nzchar(trimws(msg)))) {
+      out$message <- NULL
+    }
+  }
+
   rownames(out) <- NULL
+
   out
 }
 
@@ -1071,9 +1065,6 @@ get_runs <- function(x, feasible_only = FALSE) {
 #'
 #' @param format Character. Output representation, either \code{"long"} or
 #'   \code{"wide"}. Defaults to \code{"long"}.
-#'
-#' @param feasible_only Logical. If \code{TRUE}, extract values only from runs
-#'   whose status is interpreted as usable. Defaults to \code{FALSE}.
 #'
 #' @return If \code{format = "long"}, a \code{data.frame} with columns
 #'   \code{run_id}, \code{solution_id}, \code{objective}, and \code{value}.
@@ -1133,9 +1124,8 @@ get_runs <- function(x, feasible_only = FALSE) {
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -1159,70 +1149,31 @@ get_runs <- function(x, feasible_only = FALSE) {
 #'
 #'   # Objective values from usable runs only
 #'   get_objectives(
-#'     solutions,
-#'     feasible_only = TRUE
+#'     solutions
 #'   )
 #' }
 #'
 #' @seealso
 #' \code{\link{get_runs}},
-#' \code{\link{get_objective_specs}},
 #' \code{\link{frontier_extremes}},
 #' \code{\link{frontier_distances}}
 #'
 #' @export
 get_objectives <- function(x,
-                           format = c("long", "wide"),
-                           feasible_only = FALSE) {
+                           format = c("wide", "long")) {
   if (!inherits(x, "SolutionSet")) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
   }
 
   format <- match.arg(format)
 
-  runs <- get_runs(x, feasible_only = feasible_only)
-
-  value_cols <- grep("^value_", names(runs), value = TRUE)
-
-  if (length(value_cols) == 0L) {
-    stop(
-      "No objective value columns found in the run table. ",
-      "Expected columns named 'value_<objective>'.",
-      call. = FALSE
-    )
-  }
-
-  if (!("run_id" %in% names(runs))) {
-    runs$run_id <- seq_len(nrow(runs))
-  }
-
-  if (!("solution_id" %in% names(runs))) {
-    runs$solution_id <- NA_character_
-  }
-
-  objectives <- sub("^value_", "", value_cols)
-
-  if (identical(format, "wide")) {
-    out <- runs[, c("run_id", "solution_id", value_cols), drop = FALSE]
-    names(out) <- c("run_id", "solution_id", objectives)
-    rownames(out) <- NULL
-    return(out)
-  }
-
-  out <- do.call(
-    rbind,
-    lapply(seq_along(value_cols), function(i) {
-      data.frame(
-        run_id = runs$run_id,
-        solution_id = runs$solution_id,
-        objective = objectives[i],
-        value = as.numeric(runs[[value_cols[i]]]),
-        stringsAsFactors = FALSE
-      )
-    })
+  out <- .pa_get_objectives_internal(
+    x = x,
+    format = format
   )
 
-  rownames(out) <- NULL
+  out <- .pa_drop_run_id_if_solution_id_present(out)
+
   out
 }
 
@@ -1307,9 +1258,8 @@ get_objectives <- function(x,
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -1328,10 +1278,8 @@ get_objectives <- function(x,
 #' @seealso
 #' \code{\link{get_runs}},
 #' \code{\link{get_objectives}},
-#' \code{\link{frontier_extremes}},
-#' \code{\link{solution_filter}}
-#'
-#' @export
+#' \code{\link{frontier_extremes}}
+#' @noRd
 get_objective_specs <- function(x) {
   if (!inherits(x, "SolutionSet")) {
     stop("x must be a SolutionSet object returned by solve().", call. = FALSE)
@@ -1397,4 +1345,145 @@ get_objective_specs <- function(x) {
   rownames(out) <- NULL
 
   out
+}
+
+
+#' Resolve solution argument in public getters
+#'
+#' @noRd
+.pa_resolve_solution_arg <- function(solution = NULL,
+                                     ...,
+                                     caller = "this function") {
+  dots <- list(...)
+
+  if ("run" %in% names(dots)) {
+    if (!is.null(solution)) {
+      stop(
+        "Use either `solution` or deprecated `run`, not both.",
+        call. = FALSE
+      )
+    }
+
+    lifecycle::deprecate_warn(
+      "1.1.0",
+      paste0(caller, "(run = )"),
+      paste0(caller, "(solution = )")
+    )
+
+    solution <- dots$run
+    dots$run <- NULL
+  }
+
+  if ("solution_id" %in% names(dots)) {
+    if (!is.null(solution)) {
+      stop(
+        "Use either `solution` or deprecated `solution_id`, not both.",
+        call. = FALSE
+      )
+    }
+
+    lifecycle::deprecate_warn(
+      "1.1.0",
+      paste0(caller, "(solution_id = )"),
+      paste0(caller, "(solution = )")
+    )
+
+    solution <- dots$solution_id
+    dots$solution_id <- NULL
+  }
+
+  if (length(dots) > 0L) {
+    stop(
+      "Unused argument(s): ",
+      paste(names(dots), collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(solution)) {
+    return(NULL)
+  }
+
+  solution <- as.integer(solution)[1]
+
+  if (!is.finite(solution) || is.na(solution) || solution < 1L) {
+    stop(
+      "`solution` must be a positive integer solution id.",
+      call. = FALSE
+    )
+  }
+
+  solution
+}
+
+
+#' Filter a SolutionSet summary table by solution id
+#'
+#' @noRd
+.pa_filter_summary_by_solution <- function(x,
+                                           tab,
+                                           solution = NULL,
+                                           table_name = "summary") {
+  if (is.null(solution)) {
+    return(tab)
+  }
+
+  if (!("solution_id" %in% names(tab))) {
+    stop(
+      table_name,
+      " has no 'solution_id' column.",
+      call. = FALSE
+    )
+  }
+
+  sid <- suppressWarnings(as.integer(tab$solution_id))
+
+  out <- tab[
+    !is.na(sid) & sid == solution,
+    ,
+    drop = FALSE
+  ]
+
+  if (nrow(out) == 0L) {
+    stop(
+      "No rows found in ",
+      table_name,
+      " for solution = ",
+      solution,
+      ".",
+      call. = FALSE
+    )
+  }
+
+  out
+}
+
+
+.pa_clean_solution_summary <- function(tab,
+                                       drop_internal = character()) {
+  if (!inherits(tab, "data.frame")) {
+    return(tab)
+  }
+
+  drop_cols <- unique(c("run_id", drop_internal))
+  drop_cols <- intersect(drop_cols, names(tab))
+
+  if (length(drop_cols) > 0L) {
+    tab <- tab[, setdiff(names(tab), drop_cols), drop = FALSE]
+  }
+
+  if ("solution_id" %in% names(tab)) {
+    first <- "solution_id"
+    rest <- setdiff(names(tab), first)
+    tab <- tab[, c(first, rest), drop = FALSE]
+  }
+
+  rownames(tab) <- NULL
+  tab
+}
+
+
+.pa_drop_run_id_if_solution_id_present <- function(tab) {
+  .pa_clean_solution_summary(tab)
 }

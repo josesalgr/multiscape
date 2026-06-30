@@ -32,7 +32,7 @@ values for the selected objectives.
 
 The table contains:
 \itemize{
-\item \code{run_id} and \code{solution_id};
+\item \code{solution_id};
 \item the original objective values;
 \item normalized objective values prefixed with \code{norm_};
 \item distance and rank columns for the requested reference points.
@@ -76,8 +76,7 @@ frontier_distances(x_nd)
 }
 
 Objective values are internally transformed to a common minimization space
-using the objective senses registered in
-\code{\link{get_objective_specs}}. Objectives with
+using the objective senses registered in the original problem.
 \code{sense = "min"} are kept unchanged, whereas objectives with
 \code{sense = "max"} are multiplied by \eqn{-1}. In this transformed space,
 lower values are always better.
@@ -183,9 +182,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -249,6 +247,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 \seealso{
 \code{\link{frontier_extremes}},
 \code{\link{get_objectives}},
-\code{\link{get_objective_specs}},
 \code{\link{solution_filter}}
 }

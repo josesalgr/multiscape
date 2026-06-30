@@ -27,7 +27,7 @@ Problem object."><meta property="og:image" content="https://josesalgr.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,7 @@ Problem object."><meta property="og:image" content="https://josesalgr.github.io/
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_spatial_actions</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
-<span>  runs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  solutions <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  actions <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  layout <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_facets <span class="op">=</span> <span class="fl">4L</span>,</span>
@@ -91,9 +91,9 @@ Problem object."><meta property="og:image" content="https://josesalgr.github.io/
 <code><a href="solve.html">solve</a></code>.</p></dd>
 
 
-<dt id="arg-runs">runs<a class="anchor" aria-label="anchor" href="#arg-runs"></a></dt>
-<dd><p>Optional integer vector of run ids. If <code>NULL</code>, the first
-available run is plotted by default.</p></dd>
+<dt id="arg-solutions">solutions<a class="anchor" aria-label="anchor" href="#arg-solutions"></a></dt>
+<dd><p>Optional integer vector of solution ids. If <code>NULL</code>, the
+first available solution is plotted by default.</p></dd>
 
 
 <dt id="arg-actions">actions<a class="anchor" aria-label="anchor" href="#arg-actions"></a></dt>
@@ -180,8 +180,7 @@ planning unit, the action labels are collapsed using <code>"+"</code>.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="get_actions.html">get_actions</a></code>,
-<code><a href="plot_spatial.html">plot_spatial</a></code>,
-<code><a href="plot_spatial_pu.html">plot_spatial_pu</a></code>,
+<code><a href="plot_spatial_planning_units.html">plot_spatial_planning_units</a></code>,
 <code><a href="plot_spatial_features.html">plot_spatial_features</a></code></p></div>
     </div>
 

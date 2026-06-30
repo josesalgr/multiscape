@@ -6,7 +6,7 @@
 \usage{
 plot_spatial_features(
   x,
-  runs = NULL,
+  solutions = NULL,
   features = NULL,
   value = c("final", "baseline", "benefit"),
   layout = NULL,
@@ -27,8 +27,8 @@ plot_spatial_features(
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{runs}{Optional integer vector of run ids. If \code{NULL}, the first
-available run is plotted by default.}
+\item{solutions}{Optional integer vector of solution ids. If \code{NULL}, the
+first available solution is plotted by default.}
 
 \item{features}{Optional feature subset to display. Matching is attempted
 against both feature ids and feature names.}
@@ -191,7 +191,6 @@ if (
 }
 \seealso{
 \code{\link{get_features}},
-\code{\link{plot_spatial}},
-\code{\link{plot_spatial_pu}},
+\code{\link{plot_spatial_planning_units}},
 \code{\link{plot_spatial_actions}}
 }

@@ -356,21 +356,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_fix_z_ineligible_by_positive_delta
-Rcpp::List rcpp_fix_z_ineligible_by_positive_delta(SEXP x, Rcpp::DataFrame dist_features_data, Rcpp::DataFrame dist_benefit_data, bool fix_lb_too, double eps);
-RcppExport SEXP _multiscape_rcpp_fix_z_ineligible_by_positive_delta(SEXP xSEXP, SEXP dist_features_dataSEXP, SEXP dist_benefit_dataSEXP, SEXP fix_lb_tooSEXP, SEXP epsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type dist_features_data(dist_features_dataSEXP);
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type dist_benefit_data(dist_benefit_dataSEXP);
-    Rcpp::traits::input_parameter< bool >::type fix_lb_too(fix_lb_tooSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_fix_z_ineligible_by_positive_delta(x, dist_features_data, dist_benefit_data, fix_lb_too, eps));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rcpp_model_add_columns
 Rcpp::List rcpp_model_add_columns(SEXP x, Rcpp::NumericVector obj, Rcpp::NumericVector lb, Rcpp::NumericVector ub, Rcpp::CharacterVector vtype, Rcpp::CharacterVector names, std::string block_name, std::string tag);
 RcppExport SEXP _multiscape_rcpp_model_add_columns(SEXP xSEXP, SEXP objSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP vtypeSEXP, SEXP namesSEXP, SEXP block_nameSEXP, SEXP tagSEXP) {
@@ -411,30 +396,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type modelsense(modelsenseSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_reset_objective(x, modelsense));
     return rcpp_result_gen;
-END_RCPP
-}
-// rcpp_add_to_objective
-void rcpp_add_to_objective(SEXP x, Rcpp::IntegerVector ind, Rcpp::NumericVector val);
-RcppExport SEXP _multiscape_rcpp_add_to_objective(SEXP xSEXP, SEXP indSEXP, SEXP valSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ind(indSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type val(valSEXP);
-    rcpp_add_to_objective(x, ind, val);
-    return R_NilValue;
-END_RCPP
-}
-// rcpp_add_to_objective_scalar
-void rcpp_add_to_objective_scalar(SEXP x, int ind1, double val);
-RcppExport SEXP _multiscape_rcpp_add_to_objective_scalar(SEXP xSEXP, SEXP ind1SEXP, SEXP valSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type ind1(ind1SEXP);
-    Rcpp::traits::input_parameter< double >::type val(valSEXP);
-    rcpp_add_to_objective_scalar(x, ind1, val);
-    return R_NilValue;
 END_RCPP
 }
 // rcpp_prepare_objective_max_benefit

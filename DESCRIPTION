@@ -1,6 +1,6 @@
 Package: multiscape
 Type: Package
-Version: 1.1.0
+Version: 1.1.2
 Title: Multi-Objective Spatial Planning
 Description: Provides a modular framework for exact multi-objective spatial
     planning using mixed-integer programming. The package supports the
@@ -51,7 +51,9 @@ Imports:
     exactextractr,
     ggplot2,
     terra,
-    ggrepel
+    ggrepel,
+    lifecycle,
+    moocore
 Suggests: 
     roxygen2,
     prioritizr,
@@ -71,8 +73,7 @@ Suggests:
     tibble,
     reshape2,
     rcbc,
-    gurobi,
-    moocore
+    gurobi
 LinkingTo:
   Rcpp, 
   RcppArmadillo (>= 0.10.1.0.0), 
@@ -93,7 +94,7 @@ Collate:
     'add_constraint_budget.R'
     'add_constraint_group_area.R'
     'add_constraint_locked_actions.R'
-    'add_constraint_locked_pu.R'
+    'add_constraint_locked_planning_units.R'
     'add_constraint_targets.R'
     'add_effects.R'
     'add_groups.R'
@@ -104,21 +105,20 @@ Collate:
     'compile_model.R'
     'create_problem.R'
     'data-sim.R'
-    'frontier.R'
     'internalMO.R'
+    'frontier.R'
     'get_solution.R'
     'globals.R'
     'load_sim.R'
-    'mo_control.R'
     'package.R'
     'plot.R'
     'print.R'
     'problem-class.R'
-    'run_design.R'
     'selection_analysis.R'
     'set_method_augmecon.R'
     'set_method_epsilon_constraint.R'
     'set_method_weighted_sum.R'
+    'set_run_design.R'
     'set_solver.R'
     'solutionset-class.R'
     'solution-class.R'

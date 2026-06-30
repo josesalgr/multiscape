@@ -247,7 +247,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 0.02
+#> │├─runtime: 0
 #> │├─gap: 0
 #> │├─design columns: none
 #> │└─objective columns: value_cost
@@ -303,7 +303,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 0.02
+#> │├─runtime: 0
 #> │├─gap: 0
 #> │├─design columns: none
 #> │└─objective columns: value_cost
@@ -312,31 +312,4 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 #> # ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect
 #> results.
 
-# ------------------------------------------------------------
-# Minimal multi-objective example
-# ------------------------------------------------------------
-x_mo <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
-  cost = "cost"
-) |>
-  add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit") |>
-  set_method_weighted_sum(
-    aliases = c("cost", "benefit"),
-    weights = c(0.5, 0.5),
-    normalize_weights = TRUE
-  )
-#> Warning: `weights` is deprecated. Use `runs = run_manual(data.frame(weight_<alias> = ...))` instead.
-
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  x_mo <- set_solver_cbc(x_mo, verbose = FALSE)
-  solset_mo <- solve(x_mo)
-  print(solset_mo)
-}
-#> Error: Objective 'benefit' has no positive non-zero benefit coefficients.
-#> This objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.
-#> For add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects().
 ```

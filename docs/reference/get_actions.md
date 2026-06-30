@@ -7,12 +7,12 @@ object returned by
 
 The returned table summarizes solution values at the planning
 unit–action level and typically includes a `selected` indicator showing
-whether each feasible `(pu, action)` pair is selected in a run.
+whether each feasible `(pu, action)` pair is selected in a solution.
 
 ## Usage
 
 ``` r
-get_actions(x, only_selected = FALSE, run = NULL)
+get_actions(x, solution = NULL, ...)
 ```
 
 ## Arguments
@@ -24,15 +24,15 @@ get_actions(x, only_selected = FALSE, run = NULL)
   object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-- only_selected:
+- solution:
 
-  Logical. If `TRUE`, return only rows where `selected == 1`. Default is
-  `FALSE`.
+  Optional positive integer giving the solution index to extract. If
+  `NULL`, all runs are returned when available.
 
-- run:
+- ...:
 
-  Optional positive integer giving the run index to extract. If `NULL`,
-  all runs are returned when available.
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
 
 ## Value
 
@@ -44,29 +44,25 @@ columns include planning-unit ids, action ids, optional labels, and a
 
 This function reads the action summary stored in `x$summary$actions`. It
 does not reconstruct the table from the raw decision vector; it simply
-returns the stored summary after optional filtering.
+returns the stored summary after optional run filtering.
 
 Let \\x\_{ia}\\ denote the decision variable associated with selecting
 action \\a\\ in planning unit \\i\\. In standard multiscape workflows,
 the `selected` column is the user-facing representation of that
 decision, typically coded as `0` or `1`.
 
-If `run` is provided, only rows belonging to that run are returned. This
-requires the summary table to contain a `run_id` column.
+If `solution` is provided, only rows belonging to that solution are
+returned. This requires the summary table to contain a `solution_id`
+column.
 
-If `only_selected = TRUE`, only rows with `selected == 1` are returned.
-This requires the summary table to contain a `selected` column.
-
-This function is intended for user-facing inspection of action
-allocations. For the raw model variable vector, use
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md).
+To return only selected action allocations, filter the returned table
+using `selected == 1`.
 
 ## See also
 
-[`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md),
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md),
 [`get_features`](https://josesalgr.github.io/multiscape/reference/get_features.md),
-[`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md),
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
+[`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md)
 
 ## Examples
 
@@ -132,26 +128,29 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_actions(solutions)
 
   # Only selected action assignments
+  selected_actions <- get_actions(solutions)
+  selected_actions <- selected_actions[
+    selected_actions$selected == 1L,
+    ,
+    drop = FALSE
+  ]
+  selected_actions
+
+  # Action allocations for one solution
+  solution_ids <- get_runs(solutions)$solution_id
+
   get_actions(
     solutions,
-    only_selected = TRUE
-  )
-
-  # Action allocations for one run
-  run_ids <- get_runs(solutions)$run_id
-
-  get_actions(
-    solutions,
-    run = run_ids[1]
+    solution = solution_ids[1]
   )
 }
-#>   run_id solution_id pu       action cost status selected
-#> 1      1          s1  1 conservation    1      0        1
-#> 2      1          s1  1  restoration    2      0        0
-#> 3      1          s1  2 conservation    1      0        0
-#> 4      1          s1  2  restoration    2      0        0
-#> 5      1          s1  3 conservation    1      0        0
-#> 6      1          s1  3  restoration    2      0        0
-#> 7      1          s1  4 conservation    1      0        0
-#> 8      1          s1  4  restoration    2      0        0
+#>   solution_id pu       action cost status selected
+#> 1           1  1 conservation    1      0        1
+#> 2           1  1  restoration    2      0        0
+#> 3           1  2 conservation    1      0        0
+#> 4           1  2  restoration    2      0        0
+#> 5           1  3 conservation    1      0        0
+#> 6           1  3  restoration    2      0        0
+#> 7           1  4 conservation    1      0        0
+#> 8           1  4  restoration    2      0        0
 ```

@@ -6,7 +6,7 @@
 \usage{
 plot_spatial_pu(
   x,
-  runs = NULL,
+  solutions = NULL,
   ...,
   base_alpha = 0.1,
   selected_alpha = 0.9,
@@ -21,8 +21,8 @@ plot_spatial_pu(
 \item{x}{A \code{\link{solutionset-class}} object returned by
 \code{\link{solve}}.}
 
-\item{runs}{Optional integer vector of run ids. If \code{NULL}, the first
-available run is plotted by default.}
+\item{solutions}{Optional integer vector of solution ids. If \code{NULL}, the
+first available solution is plotted by default.}
 
 \item{...}{Reserved for future extensions.}
 
@@ -47,67 +47,11 @@ underneath the selected units.}
 Invisibly returns a \code{ggplot} object.
 }
 \description{
-Plot the spatial distribution of selected planning units from a
-\code{\link{solutionset-class}} object returned by \code{\link{solve}}.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 
-This function maps the planning-unit selection summary returned by
-\code{\link{get_pu}} onto the planning-unit geometry stored in the associated
-\code{Problem} object.
-}
-\details{
-Let \eqn{w_i \in \{0,1\}} denote the planning-unit selection variable for
-planning unit \eqn{i}. This function plots the user-facing
-\code{selected == 1} representation of \eqn{w_i}.
-
-If several runs are requested, the output is faceted by \code{run_id}.
-
-Planning-unit geometry must be available in the associated problem object.
-}
-\examples{
-if (
-  requireNamespace("sf", quietly = TRUE) &&
-  requireNamespace("ggplot2", quietly = TRUE) &&
-  requireNamespace("rcbc", quietly = TRUE)
-) {
-  data("sim_pu_sf", package = "multiscape")
-
-  pu <- sim_pu_sf[
-    seq_len(min(4L, nrow(sim_pu_sf))),
-  ]
-
-  pu$id <- seq_len(nrow(pu))
-  pu$cost <- seq_len(nrow(pu))
-
-  features <- data.frame(
-    id = 1L,
-    name = "feature_1"
-  )
-
-  dist_features <- data.frame(
-    pu = pu$id,
-    feature = 1L,
-    amount = rep(1, nrow(pu))
-  )
-
-  problem <- create_problem(
-    pu = pu,
-    features = features,
-    dist_features = dist_features,
-    cost = "cost"
-  ) |>
-    add_constraint_targets_relative(0.25) |>
-    add_objective_min_cost(alias = "cost") |>
-    set_solver_cbc(verbose = FALSE)
-
-  solutions <- solve(problem)
-
-  plot_spatial_pu(solutions)
-}
-
+\code{plot_spatial_pu()} has been replaced by
+\code{\link{plot_spatial_planning_units}}.
 }
 \seealso{
-\code{\link{get_pu}},
-\code{\link{plot_spatial}},
-\code{\link{plot_spatial_actions}},
-\code{\link{plot_spatial_features}}
+\code{\link{plot_spatial_planning_units}}
 }

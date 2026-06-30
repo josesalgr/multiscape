@@ -93,10 +93,6 @@ rcpp_add_target_recovery <- function(x, features_data, dist_actions_data, dist_b
     .Call(`_multiscape_rcpp_add_target_recovery`, x, features_data, dist_actions_data, dist_benefit_data, target_col, tol)
 }
 
-rcpp_fix_z_ineligible_by_positive_delta <- function(x, dist_features_data, dist_benefit_data, fix_lb_too = TRUE, eps = 1e-12) {
-    .Call(`_multiscape_rcpp_fix_z_ineligible_by_positive_delta`, x, dist_features_data, dist_benefit_data, fix_lb_too, eps)
-}
-
 rcpp_model_add_columns <- function(x, obj, lb, ub, vtype, names = NULL, block_name = "augmecon_slacks", tag = "") {
     .Call(`_multiscape_rcpp_model_add_columns`, x, obj, lb, ub, vtype, names, block_name, tag)
 }
@@ -107,14 +103,6 @@ rcpp_model_set_objective_vector <- function(x, obj, model_sense = "min") {
 
 rcpp_reset_objective <- function(x, modelsense = "") {
     .Call(`_multiscape_rcpp_reset_objective`, x, modelsense)
-}
-
-rcpp_add_to_objective <- function(x, ind, val) {
-    invisible(.Call(`_multiscape_rcpp_add_to_objective`, x, ind, val))
-}
-
-rcpp_add_to_objective_scalar <- function(x, ind1, val) {
-    invisible(.Call(`_multiscape_rcpp_add_to_objective_scalar`, x, ind1, val))
 }
 
 rcpp_prepare_objective_max_benefit <- function(x, dist_actions_data, dist_effects_data, block_name = "prepare_max_benefit", tag = "") {

@@ -103,9 +103,8 @@
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -151,7 +150,7 @@
 #' \code{\link{solution_filter}},
 #' \code{\link{solution_unique}},
 #' \code{\link{get_actions}},
-#' \code{\link{get_pu}}
+#' \code{\link{get_planning_units}}
 #'
 #' @export
 selection_frequency <- function(x) {
@@ -357,9 +356,8 @@ selection_frequency <- function(x) {
 #'   add_objective_max_benefit(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
-#'     runs = run_grid(
-#'       n = 5,
-#'       include_extremes = TRUE
+#'     runs = set_runs_grid(
+#'       n = 5
 #'     ),
 #'     normalize_weights = TRUE
 #'   )
@@ -412,7 +410,7 @@ selection_frequency <- function(x) {
 #' \code{\link{solution_filter}},
 #' \code{\link{solution_unique}},
 #' \code{\link{get_actions}},
-#' \code{\link{get_pu}}
+#' \code{\link{get_planning_units}}
 #'
 #' @export
 selection_similarity <- function(
@@ -556,8 +554,7 @@ selection_similarity <- function(
 
   solution_ids <- runs$solution_id
   solution_ids <- solution_ids[
-    !is.na(solution_ids) &
-      nzchar(solution_ids)
+    !is.na(solution_ids) & solution_ids >= 1L
   ]
 
   unique(as.character(solution_ids))
@@ -645,7 +642,7 @@ selection_similarity <- function(
   # model.
   if (is.null(selection)) {
     pu_data <- tryCatch(
-      get_pu(x),
+      get_planning_units(x),
       error = function(e) NULL
     )
 
@@ -657,7 +654,7 @@ selection_similarity <- function(
       stop(
         paste0(
           "No planning-unit/action results are available. ",
-          "Expected get_actions() or get_pu() to return stored selections."
+          "Expected get_actions() or get_planning_units() to return stored selections."
         ),
         call. = FALSE
       )

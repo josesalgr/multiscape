@@ -1,18 +1,14 @@
 # Get planning-unit results from a solution set
 
-Extract the planning-unit summary table from a
-[`solutionset-class`](https://josesalgr.github.io/multiscape/reference/solutionset-class.md)
-object returned by
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
+**\[deprecated\]**
 
-The returned table summarizes solution values at the planning-unit level
-and typically includes a `selected` indicator showing whether each
-planning unit is selected in a run.
+`get_pu()` has been replaced by
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md).
 
 ## Usage
 
 ``` r
-get_pu(x, only_selected = FALSE, run = NULL)
+get_pu(x, solution = NULL, ...)
 ```
 
 ## Arguments
@@ -24,106 +20,16 @@ get_pu(x, only_selected = FALSE, run = NULL)
   object returned by
   [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
-- only_selected:
+- solution:
 
-  Logical. If `TRUE`, return only rows where `selected == 1`. Default is
-  `FALSE`.
+  Optional positive integer giving the solution index to extract. If
+  `NULL`, all solutions are returned when available.
 
-- run:
+- ...:
 
-  Optional positive integer giving the run index to extract. If `NULL`,
-  all runs are returned when available.
+  Deprecated arguments kept for backwards compatibility. Currently
+  supports `run` and `solution_id`, which are redirected to `solution`.
 
 ## Value
 
-A `data.frame` containing the stored planning-unit summary. Typical
-columns include planning-unit identifiers, optional labels, and a
-`selected` indicator.
-
-## Details
-
-This function reads the planning-unit summary stored in `x$summary$pu`.
-It does not reconstruct the table from the raw decision vector; it
-simply returns the stored summary after optional filtering.
-
-Let \\w_i\\ denote the planning-unit selection variable for planning
-unit \\i\\. In standard multiscape workflows, the `selected` column is
-the user-facing representation of that planning-unit decision, typically
-coded as `0` or `1`.
-
-If `run` is provided, only rows belonging to that run are returned. This
-requires the summary table to contain a `run_id` column.
-
-If `only_selected = TRUE`, only rows with `selected == 1` are returned.
-This requires the summary table to contain a `selected` column.
-
-This function is intended for user-facing inspection of planning-unit
-results. For the raw model variable vector, use
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md).
-
-## See also
-
-[`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md),
-[`get_features`](https://josesalgr.github.io/multiscape/reference/get_features.md),
-[`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md),
-[`get_solution_vector`](https://josesalgr.github.io/multiscape/reference/get_solution_vector.md)
-
-## Examples
-
-``` r
-pu <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-problem <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
-  cost = "cost"
-) |>
-  add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost")
-
-if (requireNamespace("rcbc", quietly = TRUE)) {
-  problem <- set_solver_cbc(
-    problem,
-    verbose = FALSE
-  )
-
-  solutions <- solve(problem)
-
-  # Planning-unit results for all stored runs
-  get_pu(solutions)
-
-  # Return only selected planning units
-  get_pu(
-    solutions,
-    only_selected = TRUE
-  )
-
-  # Extract one run using its run_id
-  run_ids <- get_runs(solutions)$run_id
-
-  get_pu(
-    solutions,
-    run = run_ids[1]
-  )
-}
-#>   run_id solution_id id cost locked_in locked_out internal_id selected
-#> 1      1          s1  1    1     FALSE      FALSE           1        1
-#> 2      1          s1  2    2     FALSE      FALSE           2        0
-#> 3      1          s1  3    3     FALSE      FALSE           3        0
-#> 4      1          s1  4    4     FALSE      FALSE           4        0
-```
+A `data.frame` containing the stored planning-unit summary.

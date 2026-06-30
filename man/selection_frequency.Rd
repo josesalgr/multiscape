@@ -111,9 +111,8 @@ problem <- create_problem(
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 5,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 5
     ),
     normalize_weights = TRUE
   )
@@ -160,5 +159,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 \code{\link{solution_filter}},
 \code{\link{solution_unique}},
 \code{\link{get_actions}},
-\code{\link{get_pu}}
+\code{\link{get_planning_units}}
 }

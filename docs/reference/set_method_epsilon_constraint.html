@@ -33,7 +33,7 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,10 +106,10 @@ By default, all registered objective aliases are used. The value of
 
 
 <dt id="arg-runs">runs<a class="anchor" aria-label="anchor" href="#arg-runs"></a></dt>
-<dd><p>A run design created with <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>. For epsilon-constraint methods,
-<code><a href="run_grid.html">run_grid()</a></code> requests automatic epsilon-level generation, while
-<code><a href="run_manual.html">run_manual()</a></code> requires columns named <code>eps_&lt;alias&gt;</code> for each
+<dd><p>A run design created with <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>. For epsilon-constraint methods,
+<code><a href="set_runs_grid.html">set_runs_grid()</a></code> requests automatic epsilon-level generation, while
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code> requires columns named <code>eps_&lt;alias&gt;</code> for each
 constrained objective.</p></dd>
 
 
@@ -117,29 +117,31 @@ constrained objective.</p></dd>
 <dd><p>Deprecated. Epsilon specification used by the previous
 <code>mode = "manual"</code> interface. It may be a named numeric vector or a
 named list of numeric vectors. New code should use
-<code>runs = run_manual(...)</code> instead.</p></dd>
+<code>runs = set_runs_manual(...)</code> instead.</p></dd>
 
 
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
 <dd><p>Deprecated. Previous interface selector, either <code>"manual"</code>
-or <code>"auto"</code>. New code should use <code>runs = run_manual(...)</code> or
-<code>runs = run_grid(...)</code> instead.</p></dd>
+or <code>"auto"</code>. New code should use
+<code>runs = set_runs_manual(...)</code> or
+<code>runs = set_runs_grid(...)</code> instead.</p></dd>
 
 
 <dt id="arg-n-points">n_points<a class="anchor" aria-label="anchor" href="#arg-n-points"></a></dt>
 <dd><p>Deprecated. Previous automatic-grid argument. New code should
-use <code>runs = run_grid(n = ...)</code> instead.</p></dd>
+use <code>runs = set_runs_grid(n = ...)</code> instead.</p></dd>
 
 
 <dt id="arg-include-extremes">include_extremes<a class="anchor" aria-label="anchor" href="#arg-include-extremes"></a></dt>
-<dd><p>Deprecated. Previous automatic-grid argument. New
-code should use <code>runs = run_grid(n = ..., include_extremes = ...)</code>
-instead.</p></dd>
+<dd><p>Deprecated and ignored. Automatic run grids now
+always include boundary levels. New code should use
+<code>runs = set_runs_grid(n = ...)</code>.</p></dd>
 
 
 <dt id="arg-lexicographic">lexicographic<a class="anchor" aria-label="anchor" href="#arg-lexicographic"></a></dt>
 <dd><p>Logical scalar. If <code>TRUE</code>, compute automatic-grid
-extreme points lexicographically when <code>runs = run_grid(...)</code> is used.</p></dd>
+extreme points lexicographically when <code>runs = set_runs_grid(...)</code> is
+used.</p></dd>
 
 
 <dt id="arg-lexicographic-tol">lexicographic_tol<a class="anchor" aria-label="anchor" href="#arg-lexicographic-tol"></a></dt>
@@ -148,9 +150,9 @@ lexicographic extreme-point computation.</p></dd>
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
-<dd><p>A control object created with <code><a href="mo_control.html">mo_control</a></code>. It
-controls how infeasible runs, runs without a solution, and unexpected
-errors are handled.</p></dd>
+<dd><p>A control object created with
+<code><a href="set_runs_control.html">set_runs_control</a></code>. It controls how infeasible runs, runs
+without a solution, and unexpected errors are handled.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -193,28 +195,33 @@ solver-ready constrained forms. The method always follows the same principle:</p
 generates a set of trade-off solutions.</p>
 <p><strong>Run designs</strong></p>
 <p>Epsilon-constraint runs are specified through the <code>runs</code> argument. This
-argument must be created with either <code><a href="run_grid.html">run_grid</a></code> or
-<code><a href="run_manual.html">run_manual</a></code>.</p>
-<p><code>run_grid(n = ...)</code> requests automatic generation of epsilon levels
+argument must be created with either <code><a href="set_runs_grid.html">set_runs_grid</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>.</p>
+<p><code>set_runs_grid(n = ...)</code> requests automatic generation of epsilon levels
 during <code><a href="solve.html">solve</a></code>. The epsilon levels are computed from
 extreme-point or payoff information. In the current implementation,
-<code><a href="run_grid.html">run_grid()</a></code> for epsilon-constraint supports exactly two objectives:
-one primary objective and one constrained objective.</p>
-<p><code><a href="run_manual.html">run_manual()</a></code> allows users to provide explicit epsilon combinations.
-In manual epsilon-constraint runs, each row is one optimization run and
-columns must be named <code>eps_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the alias of
-a constrained objective. For example, if <code>primary = "benefit"</code> and
-<code>aliases = c("benefit", "cost", "loss")</code>, the manual run table must
-contain columns <code>eps_cost</code> and <code>eps_loss</code>.</p>
-<p>In <code><a href="run_manual.html">run_manual()</a></code>, each row is used exactly as supplied. The function
-does not automatically create a Cartesian product of epsilon values. If a
-Cartesian product is desired, it should be created explicitly by the user,
-for example with <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></code>, and then passed to
-<code><a href="run_manual.html">run_manual()</a></code>.</p>
+<code><a href="set_runs_grid.html">set_runs_grid()</a></code> for epsilon-constraint supports exactly two
+objectives: one primary objective and one constrained objective.</p>
+<p>Boundary epsilon levels are always included in automatic grids. Therefore,
+the lower and upper bounds of the automatically derived epsilon range are
+part of the generated run design.</p>
+<p><code><a href="set_runs_manual.html">set_runs_manual()</a></code> allows users to provide explicit epsilon
+combinations. In manual epsilon-constraint runs, each row is one optimization
+run and columns must be named <code>eps_&lt;alias&gt;</code>, where <code>&lt;alias&gt;</code> is the
+alias of a constrained objective. For example, if <code>primary = "benefit"</code>
+and <code>aliases = c("benefit", "cost", "loss")</code>, the manual run table
+must contain columns <code>eps_cost</code> and <code>eps_loss</code>.</p>
+<p>In <code><a href="set_runs_manual.html">set_runs_manual()</a></code>, each row is used exactly as supplied. The
+function does not automatically create a Cartesian product of epsilon values.
+If a Cartesian product is desired, it should be created explicitly by the
+user, for example with <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></code>, and then passed to
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code>.</p>
 <p>The older arguments <code>eps</code>, <code>mode</code>, <code>n_points</code>, and
-<code>include_extremes</code> are deprecated. They are still accepted for
-backwards compatibility and are internally converted to <code><a href="run_grid.html">run_grid()</a></code> or
-<code><a href="run_manual.html">run_manual()</a></code> designs.</p>
+<code>include_extremes</code> are deprecated. They are still accepted for backwards
+compatibility and are internally converted to <code><a href="set_runs_grid.html">set_runs_grid()</a></code> or
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code> designs. The deprecated <code>include_extremes</code>
+argument is ignored because automatic run grids now always include boundary
+levels.</p>
 <p><strong>Atomic objectives requirement</strong></p>
 <p>The epsilon-constraint method can only be used with atomic objectives that
 have already been registered under aliases. These aliases are typically
@@ -228,18 +235,15 @@ example:</p><div class="sourceCode"><pre><code><span></span>
 <p>The <code>primary</code> argument selects which registered objective is optimized
 directly. The remaining aliases are treated as constrained objectives.</p>
 <p><strong>Automatic epsilon grids</strong></p>
-<p>When <code>runs = run_grid(n = ...)</code> is used, the epsilon grid is not built
-immediately. Instead, it is constructed later during <code><a href="solve.html">solve</a></code>
+<p>When <code>runs = set_runs_grid(n = ...)</code> is used, the epsilon grid is not
+built immediately. Instead, it is constructed later during <code><a href="solve.html">solve</a></code>
 using extreme-point or payoff information.</p>
 <p>In the current implementation, automatic epsilon-grid generation supports
 exactly two objectives:</p><ul><li><p>one primary objective,</p></li>
 <li><p>one constrained objective.</p></li>
-</ul><p>Therefore, if <code>runs = run_grid(...)</code>, then <code>aliases</code> must contain
-exactly two objective aliases. Problems with three or more objectives must
-use <code>runs = run_manual(...)</code>.</p>
-<p>If <code>include_extremes = TRUE</code> is supplied inside <code><a href="run_grid.html">run_grid()</a></code>, the
-automatically generated grid includes the extreme values of the constrained
-objective. Otherwise, only interior values are used.</p>
+</ul><p>Therefore, if <code>runs = set_runs_grid(...)</code>, then <code>aliases</code> must
+contain exactly two objective aliases. Problems with three or more objectives
+must use <code>runs = set_runs_manual(...)</code>.</p>
 <p>If <code>lexicographic = TRUE</code>, the extreme points used to generate the grid
 are computed lexicographically. In that case, one objective is optimized
 first, and then the second objective is optimized while constraining the
@@ -256,10 +260,11 @@ a manual run design may contain:</p><div class="sourceCode"><pre><code><span></s
 <span><span class="op">)</span></span></code></pre></div>
 
 <p>This creates three runs, not a full Cartesian grid. To create all
-combinations, use <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> before calling <code><a href="run_manual.html">run_manual()</a></code>.</p>
+combinations, use <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> before calling
+<code><a href="set_runs_manual.html">set_runs_manual()</a></code>.</p>
 <p><strong>Failure handling</strong></p>
 <p>The <code>control</code> argument controls how failed runs are handled. It must be
-created with <code><a href="mo_control.html">mo_control</a></code>.</p>
+created with <code><a href="set_runs_control.html">set_runs_control</a></code>.</p>
 <p>Some epsilon levels may define infeasible subproblems. By default, failed
 runs can be retained in the returned <code>SolutionSet</code> with missing
 objective values, while feasible runs are preserved. Alternatively, users can
@@ -274,16 +279,16 @@ or an unexpected error is encountered.</p>
 <li><p><code>runs</code>,</p></li>
 <li><p>lexicographic configuration,</p></li>
 <li><p><code>control</code>.</p></li>
-</ul><p>With <code>runs = run_grid(...)</code>, the actual epsilon design is generated
-later during <code><a href="solve.html">solve</a></code>. With <code>runs = run_manual(...)</code>, the
-explicit user-supplied run design is stored and then used by
-<code><a href="solve.html">solve</a></code>.</p>
+</ul><p>With <code>runs = set_runs_grid(...)</code>, the actual epsilon design is generated
+later during <code><a href="solve.html">solve</a></code>. With
+<code>runs = set_runs_manual(...)</code>, the explicit user-supplied run design is
+stored and then used by <code><a href="solve.html">solve</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="run_grid.html">run_grid</a></code>,
-<code><a href="run_manual.html">run_manual</a></code>,
-<code><a href="mo_control.html">mo_control</a></code>,
+    <div class="dont-index"><p><code><a href="set_runs_grid.html">set_runs_grid</a></code>,
+<code><a href="set_runs_manual.html">set_runs_manual</a></code>,
+<code><a href="set_runs_control.html">set_runs_control</a></code>,
 <code><a href="set_method_augmecon.html">set_method_augmecon</a></code>,
 <code><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></code>,
 <code><a href="solve.html">solve</a></code></p></div>
@@ -339,7 +344,7 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_grid.html">run_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span>, include_extremes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  lexicographic <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  lexicographic_tol <span class="op">=</span> <span class="fl">1e-8</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -389,11 +394,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -414,7 +416,7 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_runs</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">eps_runs</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
@@ -462,11 +464,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -488,7 +487,7 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_runs_3obj</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">eps_runs_3obj</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
@@ -536,11 +535,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -563,7 +559,7 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="va">eps_cartesian</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="va">eps_cartesian</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
@@ -614,11 +610,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -638,7 +631,7 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  mode <span class="op">=</span> <span class="st">"manual"</span>,</span></span>
 <span class="r-in"><span>  eps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`eps/mode/n_points/include_extremes` is deprecated. Use `runs = run_grid(...) or runs = run_manual(...)` instead.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`eps/mode/n_points/include_extremes` is deprecated. Use `runs = set_runs_grid(...) or runs = set_runs_manual(...)` instead.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x5</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">method</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
@@ -661,10 +654,10 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "manual"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   run_id eps_cost</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1        4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2        6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3        8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   eps_cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunManual" "RunDesign"</span>
@@ -685,11 +678,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -706,8 +696,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-in"><span>  <span class="va">x</span>,</span></span>
 <span class="r-in"><span>  primary <span class="op">=</span> <span class="st">"benefit"</span>,</span></span>
 <span class="r-in"><span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="run_manual.html">run_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="mo_control.html">mo_control</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  runs <span class="op">=</span> <span class="fu"><a href="set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eps_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="set_runs_control.html">set_runs_control</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    stop_on_infeasible <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>    stop_on_no_solution <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>    stop_on_error <span class="op">=</span> <span class="cn">TRUE</span></span></span>
@@ -759,11 +749,8 @@ explicit user-supplied run design is stored and then used by
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $slack_upper_bound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e+06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MOControl" "list"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunsControl" "MOControl"   "list"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stop_on_infeasible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>

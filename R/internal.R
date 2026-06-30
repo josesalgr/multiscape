@@ -27,14 +27,14 @@ assertthat::on_failure(no_extra_arguments) <- function(call, env) {
 #' @return `logical` if assertion is met and a `warning` if it is not.
 #'
 #' @noRd
-verify_that <- function(..., env = parent.frame()) {
-  res <- assertthat::validate_that(..., env = env)
-  if (isTRUE(res)) {
-    return(TRUE)
-  }
-  warning(res, immediate. = TRUE)
-  FALSE
-}
+# verify_that <- function(..., env = parent.frame()) {
+#   res <- assertthat::validate_that(..., env = env)
+#   if (isTRUE(res)) {
+#     return(TRUE)
+#   }
+#   warning(res, immediate. = TRUE)
+#   FALSE
+# }
 
 #' Atomic representation
 #'
@@ -49,18 +49,18 @@ verify_that <- function(..., env = parent.frame()) {
 #' repr_atomic(letters)
 #' repr_atomic(letters, "characters")
 #' @noRd
-repr_atomic <- function(x, description = "") {
-  n <- length(x)
-  if (nchar(description) > 0) {
-    description <- paste0(" ", description)
-  }
-  if (length(x) <= 4) {
-    x <- x[seq_len(min(length(x), 4))]
-  } else {
-    x <- c(x[seq_len(min(length(x), 3))], "...")
-  }
-  paste0(paste(x, collapse = ", "), " (", n, description, ")")
-}
+# repr_atomic <- function(x, description = "") {
+#   n <- length(x)
+#   if (nchar(description) > 0) {
+#     description <- paste0(" ", description)
+#   }
+#   if (length(x) <= 4) {
+#     x <- x[seq_len(min(length(x), 4))]
+#   } else {
+#     x <- c(x[seq_len(min(length(x), 3))], "...")
+#   }
+#   paste0(paste(x, collapse = ", "), " (", n, description, ")")
+# }
 
 #' Create a new `pproto` object
 #'
@@ -1067,65 +1067,65 @@ available_to_solve <- function(package = ""){
 }
 
 
-.pa_apply_action_max_per_pu_if_present <- function(x) {
-  stopifnot(inherits(x, "Problem"))
-
-  spec <- x$data$constraints$action_max_per_pu %||% NULL
-  if (is.null(spec)) return(invisible(x))
-
-  if (is.null(x$data$model_ptr)) {
-    stop("No active model pointer found in x$data$model_ptr.", call. = FALSE)
-  }
-
-  if (!exists("rcpp_add_action_max_per_pu", mode = "function")) {
-    stop("Missing rcpp_add_action_max_per_pu() in the package.", call. = FALSE)
-  }
-
-  da <- x$data$dist_actions_model
-  if (is.null(da) || !inherits(da, "data.frame") || nrow(da) == 0) {
-    stop("action_max_per_pu requires non-empty x$data$dist_actions_model.", call. = FALSE)
-  }
-
-  # defensive: required columns
-  need <- c("internal_pu", "internal_action", "internal_row")
-  miss <- setdiff(need, names(da))
-  if (length(miss) > 0) {
-    stop("dist_actions_model must contain columns: ", paste(miss, collapse = ", "), call. = FALSE)
-  }
-
-  maxv <- as.integer(spec$max %||% 1L)
-  if (!is.finite(maxv) || is.na(maxv) || maxv < 0L) stop("Invalid max in action_max_per_pu.", call. = FALSE)
-
-  # Convert external ids -> internal ids
-  pu_ext <- spec$pu %||% x$data$pu$id
-  pu_ext <- as.integer(pu_ext)
-  pu_map <- x$data$pu[, c("id","internal_id")]
-  pu_int <- pu_map$internal_id[match(pu_ext, pu_map$id)]
-  pu_int <- pu_int[!is.na(pu_int)]
-  if (length(pu_int) == 0) stop("action_max_per_pu: no valid PUs after mapping to internal ids.", call. = FALSE)
-
-  act_ext <- spec$actions %||% x$data$actions$id
-  act_ext <- as.character(act_ext)
-  act_map <- x$data$actions[, c("id","internal_id")]
-  act_int <- act_map$internal_id[match(act_ext, act_map$id)]
-  act_int <- act_int[!is.na(act_int)]
-  if (length(act_int) == 0) stop("action_max_per_pu: no valid actions after mapping to internal ids.", call. = FALSE)
-
-  # call C++
-  res <- rcpp_add_action_max_per_pu(
-    x = x$data$model_ptr,
-    dist_actions_data = da,
-    max_per_pu = maxv,
-    internal_pu_ids = as.integer(pu_int),
-    internal_action_ids = as.integer(act_int)
-  )
-
-  # optional registry
-  x$data$model_registry <- x$data$model_registry %||% list(cons = list(), vars = list(), obj_templates = list(), objective = list())
-  x$data$model_registry$cons$action_max_per_pu <- res
-
-  invisible(x)
-}
+# .pa_apply_action_max_per_pu_if_present <- function(x) {
+#   stopifnot(inherits(x, "Problem"))
+#
+#   spec <- x$data$constraints$action_max_per_pu %||% NULL
+#   if (is.null(spec)) return(invisible(x))
+#
+#   if (is.null(x$data$model_ptr)) {
+#     stop("No active model pointer found in x$data$model_ptr.", call. = FALSE)
+#   }
+#
+#   if (!exists("rcpp_add_action_max_per_pu", mode = "function")) {
+#     stop("Missing rcpp_add_action_max_per_pu() in the package.", call. = FALSE)
+#   }
+#
+#   da <- x$data$dist_actions_model
+#   if (is.null(da) || !inherits(da, "data.frame") || nrow(da) == 0) {
+#     stop("action_max_per_pu requires non-empty x$data$dist_actions_model.", call. = FALSE)
+#   }
+#
+#   # defensive: required columns
+#   need <- c("internal_pu", "internal_action", "internal_row")
+#   miss <- setdiff(need, names(da))
+#   if (length(miss) > 0) {
+#     stop("dist_actions_model must contain columns: ", paste(miss, collapse = ", "), call. = FALSE)
+#   }
+#
+#   maxv <- as.integer(spec$max %||% 1L)
+#   if (!is.finite(maxv) || is.na(maxv) || maxv < 0L) stop("Invalid max in action_max_per_pu.", call. = FALSE)
+#
+#   # Convert external ids -> internal ids
+#   pu_ext <- spec$pu %||% x$data$pu$id
+#   pu_ext <- as.integer(pu_ext)
+#   pu_map <- x$data$pu[, c("id","internal_id")]
+#   pu_int <- pu_map$internal_id[match(pu_ext, pu_map$id)]
+#   pu_int <- pu_int[!is.na(pu_int)]
+#   if (length(pu_int) == 0) stop("action_max_per_pu: no valid PUs after mapping to internal ids.", call. = FALSE)
+#
+#   act_ext <- spec$actions %||% x$data$actions$id
+#   act_ext <- as.character(act_ext)
+#   act_map <- x$data$actions[, c("id","internal_id")]
+#   act_int <- act_map$internal_id[match(act_ext, act_map$id)]
+#   act_int <- act_int[!is.na(act_int)]
+#   if (length(act_int) == 0) stop("action_max_per_pu: no valid actions after mapping to internal ids.", call. = FALSE)
+#
+#   # call C++
+#   res <- rcpp_add_action_max_per_pu(
+#     x = x$data$model_ptr,
+#     dist_actions_data = da,
+#     max_per_pu = maxv,
+#     internal_pu_ids = as.integer(pu_int),
+#     internal_action_ids = as.integer(act_int)
+#   )
+#
+#   # optional registry
+#   x$data$model_registry <- x$data$model_registry %||% list(cons = list(), vars = list(), obj_templates = list(), objective = list())
+#   x$data$model_registry$cons$action_max_per_pu <- res
+#
+#   invisible(x)
+# }
 
 .pa_apply_area_constraints_if_present <- function(x) {
   stopifnot(inherits(x, "Problem"))
@@ -1432,23 +1432,23 @@ available_to_solve <- function(package = ""){
   base::round(range(x), digits)
 }
 
-.pa_repr_atomic <- function(x, label = NULL, max_items = 6) {
-  x <- as.character(x)
-  x <- x[!is.na(x) & nzchar(x)]
-  if (length(x) == 0) {
-    if (is.null(label)) return("{.muted (none)}")
-    return(paste0("{.muted (0 ", label, ")}"))
-  }
-  if (length(x) <= max_items) {
-    paste0(paste0('"', x, '"', collapse = ", "))
-  } else {
-    head <- x[seq_len(max_items)]
-    paste0(
-      paste0('"', head, '"', collapse = ", "),
-      ", {.muted ... (", length(x), " total)}"
-    )
-  }
-}
+# .pa_repr_atomic <- function(x, label = NULL, max_items = 6) {
+#   x <- as.character(x)
+#   x <- x[!is.na(x) & nzchar(x)]
+#   if (length(x) == 0) {
+#     if (is.null(label)) return("{.muted (none)}")
+#     return(paste0("{.muted (0 ", label, ")}"))
+#   }
+#   if (length(x) <= max_items) {
+#     paste0(paste0('"', x, '"', collapse = ", "))
+#   } else {
+#     head <- x[seq_len(max_items)]
+#     paste0(
+#       paste0('"', head, '"', collapse = ", "),
+#       ", {.muted ... (", length(x), " total)}"
+#     )
+#   }
+# }
 
 .pa_get_cost_vec <- function(pu) {
   if (is.null(pu) || nrow(pu) == 0) return(numeric(0))
@@ -1514,46 +1514,46 @@ available_to_solve <- function(package = ""){
   list(n_con = as.integer(n_con), n_var = as.integer(n_var), nnz = as.integer(nnz))
 }
 
-.pa_model_blocks <- function(self) {
-  # Returns list(n_w, n_x, n_z) if index mapping exists; otherwise NULL.
-  # This expects you to store something like idx from rcpp_add_base_variables()
-  # in self$data$model_index. Your idx currently returns w_index/x_index and
-  # could also return z_index (recommended).
-  idx <- self$data$model_index
-  if (is.null(idx) || !is.list(idx)) return(NULL)
+# .pa_model_blocks <- function(self) {
+#   # Returns list(n_w, n_x, n_z) if index mapping exists; otherwise NULL.
+#   # This expects you to store something like idx from rcpp_add_base_variables()
+#   # in self$data$model_index. Your idx currently returns w_index/x_index and
+#   # could also return z_index (recommended).
+#   idx <- self$data$model_index
+#   if (is.null(idx) || !is.list(idx)) return(NULL)
+#
+#   n_w <- if (!is.null(idx$w_index)) length(idx$w_index) else NA_integer_
+#   n_x <- if (!is.null(idx$x_index)) length(idx$x_index) else NA_integer_
+#   n_z <- if (!is.null(idx$z_index)) length(idx$z_index) else NA_integer_
+#
+#   # if none exist, don't print a misleading line
+#   if (is.na(n_w) && is.na(n_x) && is.na(n_z)) return(NULL)
+#
+#   list(
+#     n_w = ifelse(is.na(n_w), 0L, as.integer(n_w)),
+#     n_x = ifelse(is.na(n_x), 0L, as.integer(n_x)),
+#     n_z = ifelse(is.na(n_z), 0L, as.integer(n_z))
+#   )
+# }
 
-  n_w <- if (!is.null(idx$w_index)) length(idx$w_index) else NA_integer_
-  n_x <- if (!is.null(idx$x_index)) length(idx$x_index) else NA_integer_
-  n_z <- if (!is.null(idx$z_index)) length(idx$z_index) else NA_integer_
-
-  # if none exist, don't print a misleading line
-  if (is.na(n_w) && is.na(n_x) && is.na(n_z)) return(NULL)
-
-  list(
-    n_w = ifelse(is.na(n_w), 0L, as.integer(n_w)),
-    n_x = ifelse(is.na(n_x), 0L, as.integer(n_x)),
-    n_z = ifelse(is.na(n_z), 0L, as.integer(n_z))
-  )
-}
-
-.pa_model_args <- function(self) {
-  # Return a standardized args list if present; otherwise NULL
-  a <- self$data$model_args
-  if (is.null(a) || !is.list(a)) return(NULL)
-
-  # Standardize expected fields (do not error if missing)
-  out <- list(
-    model_type    = if (!is.null(a$model_type)) a$model_type else NA_character_,
-    modelsense    = if (!is.null(a$modelsense)) a$modelsense else NA_character_,
-    objective_id  = if (!is.null(a$objective_id)) a$objective_id else NA_character_,
-    budget        = if (!is.null(a$budget)) a$budget else NA_real_,
-    blm           = if (!is.null(a$blm)) a$blm else NA_real_,
-    benefit_exponent         = if (!is.null(a$benefit_exponent)) a$benefit_exponent else NA_integer_,
-    curve_segments      = if (!is.null(a$curve_segments)) a$curve_segments else NA_integer_
-  )
-
-  out
-}
+# .pa_model_args <- function(self) {
+#   # Return a standardized args list if present; otherwise NULL
+#   a <- self$data$model_args
+#   if (is.null(a) || !is.list(a)) return(NULL)
+#
+#   # Standardize expected fields (do not error if missing)
+#   out <- list(
+#     model_type    = if (!is.null(a$model_type)) a$model_type else NA_character_,
+#     modelsense    = if (!is.null(a$modelsense)) a$modelsense else NA_character_,
+#     objective_id  = if (!is.null(a$objective_id)) a$objective_id else NA_character_,
+#     budget        = if (!is.null(a$budget)) a$budget else NA_real_,
+#     blm           = if (!is.null(a$blm)) a$blm else NA_real_,
+#     benefit_exponent         = if (!is.null(a$benefit_exponent)) a$benefit_exponent else NA_integer_,
+#     curve_segments      = if (!is.null(a$curve_segments)) a$curve_segments else NA_integer_
+#   )
+#
+#   out
+# }
 
 
 # -------------------------------------------------------------------------
@@ -1563,91 +1563,91 @@ available_to_solve <- function(package = ""){
 
 
 # internal helper: detect tabular vs spatial vs invalid mixes
-.pa_detect_input_mode <- function(pu, features, dist_features) {
-
-  # ---- local helpers (NO imports; only type checks)
-  .is_df <- function(x) inherits(x, "data.frame")
-
-  .is_spatraster <- function(x) inherits(x, "SpatRaster")
-  .is_spatvector <- function(x) inherits(x, "SpatVector")
-  .is_sf <- function(x) inherits(x, "sf")
-
-  .is_raster_path <- function(x) {
-    is.character(x) && length(x) == 1L &&
-      grepl("\\.(tif|tiff|grd|asc|nc)$", tolower(x))
-  }
-
-  .is_vector_path <- function(x) {
-    is.character(x) && length(x) == 1L &&
-      grepl("\\.(shp|gpkg|geojson|json|fgb)$", tolower(x))
-  }
-
-  .is_spatial_pu <- function(x) .is_spatraster(x) || .is_spatvector(x) || .is_sf(x) || .is_raster_path(x) || .is_vector_path(x)
-  .is_spatial_features <- function(x) .is_spatraster(x) || .is_raster_path(x)
-
-  dist_missing <- missing(dist_features) || is.null(dist_features)
-
-  # ------------------------------------------------------------
-  # Rule 1: If dist_features is provided as data.frame -> TABULAR
-  # ------------------------------------------------------------
-  if (!dist_missing) {
-    if (!.is_df(dist_features)) {
-      stop("`dist_features` must be a data.frame in tabular mode, or NULL/missing in spatial mode.", call. = FALSE)
-    }
-
-    # dist_features df => require pu + features df (avoid ambiguity)
-    if (!.is_df(pu)) {
-      stop("Tabular mode detected because `dist_features` is a data.frame, but `pu` is not a data.frame.", call. = FALSE)
-    }
-    if (!.is_df(features)) {
-      stop("Tabular mode detected because `dist_features` is a data.frame, but `features` is not a data.frame.", call. = FALSE)
-    }
-
-    return(list(mode = "tabular"))
-  }
-
-  # ------------------------------------------------------------
-  # Rule 2: dist_features missing/NULL -> could be SPATIAL or invalid
-  # ------------------------------------------------------------
-  # spatial mode requires at least one spatial-ish input
-  if (.is_spatial_features(features) || .is_spatial_pu(pu)) {
-    return(list(mode = "spatial"))
-  }
-
-  # dist_features missing + no spatial inputs -> invalid (user forgot dist_features)
-  stop(
-    "Could not determine input style. Provide tabular inputs (data.frames: `pu`, `features`, `dist_features`) ",
-    "or spatial inputs (e.g., `pu` and/or `features` as rasters/vectors/paths) with `dist_features = NULL`.",
-    call. = FALSE
-  )
-}
+# .pa_detect_input_mode <- function(pu, features, dist_features) {
+#
+#   # ---- local helpers (NO imports; only type checks)
+#   .is_df <- function(x) inherits(x, "data.frame")
+#
+#   .is_spatraster <- function(x) inherits(x, "SpatRaster")
+#   .is_spatvector <- function(x) inherits(x, "SpatVector")
+#   .is_sf <- function(x) inherits(x, "sf")
+#
+#   .is_raster_path <- function(x) {
+#     is.character(x) && length(x) == 1L &&
+#       grepl("\\.(tif|tiff|grd|asc|nc)$", tolower(x))
+#   }
+#
+#   .is_vector_path <- function(x) {
+#     is.character(x) && length(x) == 1L &&
+#       grepl("\\.(shp|gpkg|geojson|json|fgb)$", tolower(x))
+#   }
+#
+#   .is_spatial_pu <- function(x) .is_spatraster(x) || .is_spatvector(x) || .is_sf(x) || .is_raster_path(x) || .is_vector_path(x)
+#   .is_spatial_features <- function(x) .is_spatraster(x) || .is_raster_path(x)
+#
+#   dist_missing <- missing(dist_features) || is.null(dist_features)
+#
+#   # ------------------------------------------------------------
+#   # Rule 1: If dist_features is provided as data.frame -> TABULAR
+#   # ------------------------------------------------------------
+#   if (!dist_missing) {
+#     if (!.is_df(dist_features)) {
+#       stop("`dist_features` must be a data.frame in tabular mode, or NULL/missing in spatial mode.", call. = FALSE)
+#     }
+#
+#     # dist_features df => require pu + features df (avoid ambiguity)
+#     if (!.is_df(pu)) {
+#       stop("Tabular mode detected because `dist_features` is a data.frame, but `pu` is not a data.frame.", call. = FALSE)
+#     }
+#     if (!.is_df(features)) {
+#       stop("Tabular mode detected because `dist_features` is a data.frame, but `features` is not a data.frame.", call. = FALSE)
+#     }
+#
+#     return(list(mode = "tabular"))
+#   }
+#
+#   # ------------------------------------------------------------
+#   # Rule 2: dist_features missing/NULL -> could be SPATIAL or invalid
+#   # ------------------------------------------------------------
+#   # spatial mode requires at least one spatial-ish input
+#   if (.is_spatial_features(features) || .is_spatial_pu(pu)) {
+#     return(list(mode = "spatial"))
+#   }
+#
+#   # dist_features missing + no spatial inputs -> invalid (user forgot dist_features)
+#   stop(
+#     "Could not determine input style. Provide tabular inputs (data.frames: `pu`, `features`, `dist_features`) ",
+#     "or spatial inputs (e.g., `pu` and/or `features` as rasters/vectors/paths) with `dist_features = NULL`.",
+#     call. = FALSE
+#   )
+# }
 
 # helpers
-.read_rast <- function(x) {
-  if (is.null(x)) return(NULL)
-  if (inherits(x, "SpatRaster")) return(x)
-  if (is.character(x)) return(terra::rast(x))
-  stop("Unsupported raster input.", call. = FALSE)
-}
-.read_vect <- function(x) {
-  if (is.null(x)) return(NULL)
-  if (inherits(x, "SpatVector")) return(x)
-  if (inherits(x, "sf")) return(terra::vect(x))
-  if (is.character(x)) return(terra::vect(x))
-  stop("Unsupported vector input.", call. = FALSE)
-}
+# .read_rast <- function(x) {
+#   if (is.null(x)) return(NULL)
+#   if (inherits(x, "SpatRaster")) return(x)
+#   if (is.character(x)) return(terra::rast(x))
+#   stop("Unsupported raster input.", call. = FALSE)
+# }
+# .read_vect <- function(x) {
+#   if (is.null(x)) return(NULL)
+#   if (inherits(x, "SpatVector")) return(x)
+#   if (inherits(x, "sf")) return(terra::vect(x))
+#   if (is.character(x)) return(terra::vect(x))
+#   stop("Unsupported vector input.", call. = FALSE)
+# }
 .is_raster_path <- function(x) {
   is.character(x) && grepl("\\.(tif|tiff|grd|asc|nc)$", tolower(x))
 }
 
-.fun_from_name <- function(name) {
-  switch(
-    name,
-    mean = function(v, ...) mean(v, na.rm = TRUE),
-    sum  = function(v, ...) sum(v, na.rm = TRUE),
-    stop("Unknown aggregation function: ", name, call. = FALSE)
-  )
-}
+# .fun_from_name <- function(name) {
+#   switch(
+#     name,
+#     mean = function(v, ...) mean(v, na.rm = TRUE),
+#     sum  = function(v, ...) sum(v, na.rm = TRUE),
+#     stop("Unknown aggregation function: ", name, call. = FALSE)
+#   )
+# }
 
 
 .pa_has_coords <- function(x) {
@@ -2748,17 +2748,7 @@ available_to_solve <- function(package = ""){
 
   # helper: coerce ids to integer safely
   .as_int_id <- function(x, what) {
-    if (is.factor(x)) x <- as.character(x)
-    if (is.character(x)) {
-      if (any(grepl("[^0-9\\-]", x))) {
-        stop(what, " must be numeric/integer ids (got non-numeric strings).", call. = FALSE)
-      }
-      x <- as.integer(x)
-    } else {
-      x <- as.integer(x)
-    }
-    if (anyNA(x)) stop(what, " contains NA after coercion to integer.", call. = FALSE)
-    x
+    .pa_as_int_id(x, what)
   }
 
   # keep raw PU table for downstream helpers such as add_locked_pu()
@@ -3082,42 +3072,42 @@ available_to_solve <- function(package = ""){
 }
 
 # internal registry for MO objectives inside Problem
-.pa_init_objectives <- function(x) {
-  if (is.null(x$data$objectives) || !is.list(x$data$objectives)) {
-    x$data$objectives <- list()
-  }
-  x
-}
+# .pa_init_objectives <- function(x) {
+#   if (is.null(x$data$objectives) || !is.list(x$data$objectives)) {
+#     x$data$objectives <- list()
+#   }
+#   x
+# }
 
 
-.pa_get_objective_specs <- function(x) {
-  if (is.null(x$data$objectives)) return(list())
-  x$data$objectives
-}
+# .pa_get_objective_specs <- function(x) {
+#   if (is.null(x$data$objectives)) return(list())
+#   x$data$objectives
+# }
 
 
 
-.pa_set_objective_linear <- function(x, obj, modelsense = c("min", "max")) {
-  stopifnot(inherits(x, "Problem"))
-  modelsense <- match.arg(modelsense)
+# .pa_set_objective_linear <- function(x, obj, modelsense = c("min", "max")) {
+#   stopifnot(inherits(x, "Problem"))
+#   modelsense <- match.arg(modelsense)
+#
+#   # guarda runtime update para que .pa_apply_runtime_updates_to_model() lo aplique
+#   x$data$runtime_updates <- x$data$runtime_updates %||% list()
+#   x$data$runtime_updates$obj <- as.numeric(obj)
+#   x$data$runtime_updates$modelsense <- modelsense
+#
+#   # marca "dirty" para que se regenere model_list desde ptr si aplica (o solo runtime update)
+#   x$data$meta$model_dirty <- TRUE
+#   x
+# }
 
-  # guarda runtime update para que .pa_apply_runtime_updates_to_model() lo aplique
-  x$data$runtime_updates <- x$data$runtime_updates %||% list()
-  x$data$runtime_updates$obj <- as.numeric(obj)
-  x$data$runtime_updates$modelsense <- modelsense
-
-  # marca "dirty" para que se regenere model_list desde ptr si aplica (o solo runtime update)
-  x$data$meta$model_dirty <- TRUE
-  x
-}
-
-.pa_mark_mo_needs <- function(x, needs) {
-  stopifnot(inherits(x, "Problem"))
-  x$data$mo <- x$data$mo %||% list()
-  x$data$mo$needs <- utils::modifyList(x$data$mo$needs %||% list(), needs)
-  x$data$meta$model_dirty <- TRUE
-  x
-}
+# .pa_mark_mo_needs <- function(x, needs) {
+#   stopifnot(inherits(x, "Problem"))
+#   x$data$mo <- x$data$mo %||% list()
+#   x$data$mo$needs <- utils::modifyList(x$data$mo$needs %||% list(), needs)
+#   x$data$meta$model_dirty <- TRUE
+#   x
+# }
 
 
 .pa_fast_extract <- function(x, y, fun = c("sum", "mean", "max")) {
@@ -3927,37 +3917,55 @@ NULL
   solver_params_user <- sa$solver_params %||% list()
 
   # ---- autodetect solver if requested
-  available_gurobi   <- available_to_solve("gurobi")
-  available_cplex    <- available_to_solve("cplex")
-  available_symphony <- available_to_solve("symphony")
-  available_cbc      <- available_to_solve("cbc")
-
   if (identical(solver, "auto") || identical(solver, "") || is.null(solver)) {
-    if (requireNamespace("Rcplex", quietly = TRUE) && available_cplex) {
-      solver <- "cplex"
-    } else if (requireNamespace("gurobi", quietly = TRUE) && available_gurobi) {
+
+    if (requireNamespace("gurobi", quietly = TRUE) &&
+        isTRUE(available_to_solve("gurobi"))) {
       solver <- "gurobi"
-    } else if (requireNamespace("rcbc", quietly = TRUE) && available_cbc) {
+
+    } else if (requireNamespace("rcbc", quietly = TRUE) &&
+               isTRUE(available_to_solve("cbc"))) {
       solver <- "cbc"
-    } else if (requireNamespace("Rsymphony", quietly = TRUE) && available_symphony) {
+
+    } else if (requireNamespace("Rcplex", quietly = TRUE) &&
+               isTRUE(available_to_solve("cplex"))) {
+      solver <- "cplex"
+
+    } else if (requireNamespace("Rsymphony", quietly = TRUE) &&
+               isTRUE(available_to_solve("symphony"))) {
       solver <- "symphony"
+
     } else {
       stop("No optimization problem solvers available on this system.", call. = FALSE)
     }
+
   } else {
+
     if (!solver %in% c("gurobi", "cbc", "symphony", "cplex")) {
       stop("Solver not supported: ", solver, call. = FALSE)
     }
-    if (identical(solver, "gurobi") && (!requireNamespace("gurobi", quietly = TRUE) || !available_gurobi)) {
+
+    if (identical(solver, "gurobi") &&
+        (!requireNamespace("gurobi", quietly = TRUE) ||
+         !isTRUE(available_to_solve("gurobi")))) {
       stop("Gurobi solver not available (package/license not found).", call. = FALSE)
     }
-    if (identical(solver, "cbc") && (!requireNamespace("rcbc", quietly = TRUE) || !available_cbc)) {
+
+    if (identical(solver, "cbc") &&
+        (!requireNamespace("rcbc", quietly = TRUE) ||
+         !isTRUE(available_to_solve("cbc")))) {
       stop("CBC solver not available (rcbc not installed or CBC not available).", call. = FALSE)
     }
-    if (identical(solver, "symphony") && (!requireNamespace("Rsymphony", quietly = TRUE) || !available_symphony)) {
+
+    if (identical(solver, "symphony") &&
+        (!requireNamespace("Rsymphony", quietly = TRUE) ||
+         !isTRUE(available_to_solve("symphony")))) {
       stop("SYMPHONY solver not available (Rsymphony not installed).", call. = FALSE)
     }
-    if (identical(solver, "cplex") && (!requireNamespace("Rcplex", quietly = TRUE) || !available_cplex)) {
+
+    if (identical(solver, "cplex") &&
+        (!requireNamespace("Rcplex", quietly = TRUE) ||
+         !isTRUE(available_to_solve("cplex")))) {
       stop("CPLEX solver not available (Rcplex not installed/licensed).", call. = FALSE)
     }
   }
@@ -4073,9 +4081,7 @@ NULL
     row_ub[ii_eq] <- model$rhs[ii_eq]
 
     cbc_args <- list(
-      threads = as.character(cores),
-      log = as.integer(verbose),
-      verbose = 15,
+      log = if (isTRUE(verbose)) "1" else "0",
       ratio = as.character(gap_limit),
       sec = as.character(time_limit),
       timem = "elapsed",
@@ -5310,17 +5316,15 @@ NULL
 #' @noRd
 .pa_get_objective_matrix <- function(x,
                                      objectives = NULL,
-                                     feasible_only = TRUE,
                                      minimize = TRUE,
                                      drop_na = TRUE) {
   if (!inherits(x, "SolutionSet")) {
     stop("x must be a SolutionSet object.", call. = FALSE)
   }
 
-  vals <- get_objectives(
+  vals <- .pa_get_objectives_internal(
     x,
-    format = "wide",
-    feasible_only = feasible_only
+    format = "wide"
   )
 
   if (!inherits(vals, "data.frame") || nrow(vals) == 0L) {
@@ -5446,4 +5450,114 @@ NULL
     minimize = isTRUE(minimize),
     matrix = mat
   )
+}
+
+
+.pa_get_objectives_internal <- function(x,
+                                        format = c("wide", "long")) {
+  format <- match.arg(format)
+
+  runs <- x$solution$runs %||% NULL
+
+  if (is.null(runs) || !inherits(runs, "data.frame")) {
+    stop("No run table found in x$solution$runs.", call. = FALSE)
+  }
+
+  value_cols <- grep("^value_", names(runs), value = TRUE)
+
+  if (length(value_cols) == 0L) {
+    stop(
+      "No objective value columns found in the internal run table. ",
+      "Expected columns named 'value_<objective>'.",
+      call. = FALSE
+    )
+  }
+
+  if (!("run_id" %in% names(runs))) {
+    runs$run_id <- seq_len(nrow(runs))
+  }
+
+  runs$run_id <- as.integer(runs$run_id)
+
+  if (!("solution_id" %in% names(runs))) {
+    runs$solution_id <- NA_integer_
+  } else {
+    runs$solution_id <- suppressWarnings(as.integer(runs$solution_id))
+  }
+
+  objectives <- sub("^value_", "", value_cols)
+
+  if (identical(format, "wide")) {
+    out <- runs[, c("run_id", "solution_id", value_cols), drop = FALSE]
+    names(out) <- c("run_id", "solution_id", objectives)
+    rownames(out) <- NULL
+    return(out)
+  }
+
+  out <- do.call(
+    rbind,
+    lapply(seq_along(value_cols), function(i) {
+      data.frame(
+        run_id = runs$run_id,
+        solution_id = runs$solution_id,
+        objective = objectives[i],
+        value = as.numeric(runs[[value_cols[i]]]),
+        stringsAsFactors = FALSE
+      )
+    })
+  )
+
+  rownames(out) <- NULL
+  out
+}
+
+.pa_as_int_id <- function(x, what = "id") {
+  if (is.factor(x)) {
+    x <- as.character(x)
+  }
+
+  if (is.character(x)) {
+    x <- trimws(x)
+
+    if (anyNA(x) || any(!nzchar(x))) {
+      stop("`", what, "` must not contain NA or empty values.", call. = FALSE)
+    }
+
+    ok <- grepl("^[-+]?[0-9]+$", x)
+
+    if (!all(ok)) {
+      bad <- unique(x[!ok])
+      stop(
+        "`", what, "` must contain integer-like ids. ",
+        "Character ids with non-numeric symbols are not currently supported. ",
+        "Problematic values: ",
+        paste(utils::head(bad, 20), collapse = ", "),
+        if (length(bad) > 20) " ..." else "",
+        call. = FALSE
+      )
+    }
+
+    out <- suppressWarnings(as.integer(x))
+
+  } else if (is.numeric(x) || is.integer(x)) {
+
+    if (anyNA(x) || any(!is.finite(x))) {
+      stop("`", what, "` must not contain NA or non-finite values.", call. = FALSE)
+    }
+
+    if (any(abs(x - round(x)) > .Machine$double.eps^0.5)) {
+      stop("`", what, "` must contain integer-like numeric values.", call. = FALSE)
+    }
+
+    out <- as.integer(round(x))
+
+  } else {
+    stop("`", what, "` must be integer-like.", call. = FALSE)
+  }
+
+  if (anyNA(out)) {
+    stop("`", what, "` contains values that cannot be converted to integer.", call. = FALSE)
+  }
+
+  out
 }

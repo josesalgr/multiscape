@@ -115,9 +115,8 @@ make_problem <- function() {
 weighted_problem <- make_problem() |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = run_grid(
-      n = 4,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 4
     ),
     normalize_weights = TRUE
   )
@@ -125,9 +124,8 @@ weighted_problem <- make_problem() |>
 epsilon_problem <- make_problem() |>
   set_method_epsilon_constraint(
     primary = "cost",
-    runs = run_grid(
-      n = 4,
-      include_extremes = TRUE
+    runs = set_runs_grid(
+      n = 4
     )
   )
 

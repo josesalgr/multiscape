@@ -237,7 +237,7 @@
 #   add_objective_max_benefit(alias = "benefit") |>
 #   set_method_weighted_sum(
 #     aliases = c("cost", "benefit"),
-#     runs = run_manual(
+#     runs = set_runs_manual(
 #       data.frame(
 #         weight_cost = 0.5,
 #         weight_benefit = 0.5

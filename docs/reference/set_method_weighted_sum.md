@@ -17,7 +17,7 @@ set_method_weighted_sum(
   aliases,
   runs = NULL,
   weights = NULL,
-  normalize_weights = TRUE,
+  normalize_weights = NULL,
   objective_scaling = FALSE,
   control = NULL
 )
@@ -37,9 +37,9 @@ set_method_weighted_sum(
 - runs:
 
   A run design created with
-  [`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+  [`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
   or
-  [`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+  [`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
   For weighted-sum methods, automatic grids define weight combinations,
   while manual runs must contain columns named `weight_<alias>`.
 
@@ -47,13 +47,15 @@ set_method_weighted_sum(
 
   Deprecated. Numeric vector of weights, with the same length and order
   as `aliases`. This argument is kept for backwards compatibility and is
-  internally converted to `runs = run_manual(...)`. New code should use
-  `runs` instead.
+  internally converted to `runs = set_runs_manual(...)`. New code should
+  use `runs` instead.
 
 - normalize_weights:
 
-  Logical. If `TRUE`, normalize the weights in each run to sum to one
-  before solving.
+  Logical or `NULL`. If `TRUE`, normalize the weights in each run to sum
+  to one before solving. If `FALSE`, manual weights are used exactly as
+  supplied. If `NULL`, the default is resolved from the run design:
+  automatic grids are normalized and manual designs are not normalized.
 
 - objective_scaling:
 
@@ -63,7 +65,7 @@ set_method_weighted_sum(
 - control:
 
   A control object created with
-  [`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+  [`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
   It controls how infeasible runs, runs without a solution, and
   unexpected errors are handled.
 
@@ -99,17 +101,21 @@ stored objective specifications and the requested weights.
 
 Weighted-sum runs are specified through the `runs` argument. This
 argument must be created with either
-[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
+[`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
 or
-[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md).
+[`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
 
-`run_grid(n = ...)` automatically generates a grid of weight
+`set_runs_grid(n = ...)` automatically generates a grid of weight
 combinations. For two objectives, this is a regular sequence of weights
-along the line between the two objectives. For three or more objectives,
-the grid is generated over the weight simplex, where all weights are
-non-negative and sum to one.
+along the line between the two pure-objective extremes. For three or
+more objectives, the grid is generated over the weight simplex, where
+all weights are non-negative and sum to one.
 
-[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+Boundary weight combinations are always included in automatic grids.
+This means that pure-objective weight vectors are included, where all
+weight is assigned to one objective.
+
+[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
 allows users to provide explicit weight combinations. In manual
 weighted-sum runs, each row is one optimization run and columns must be
 named `weight_<alias>`. For example, if
@@ -118,7 +124,7 @@ columns `weight_cost` and `weight_benefit`.
 
 The older `weights` argument is deprecated. It is still accepted for
 backwards compatibility and is internally converted to a one-row
-[`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
+[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
 design.
 
 **Atomic objectives requirement**
@@ -149,6 +155,17 @@ registered atomic objectives are included in the weighted combination.
 
 **Weight normalization**
 
+The default value of `normalize_weights` is `NULL`. In this case, the
+default behaviour depends on the run design:
+
+- automatic grids created with
+  [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
+  use `normalize_weights = TRUE`;
+
+- manual designs created with
+  [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
+  use `normalize_weights = FALSE`.
+
 If `normalize_weights = TRUE`, the weights in each run are rescaled to
 sum to one:
 
@@ -159,8 +176,10 @@ weighted-sum formulation as long as all weights are multiplied by the
 same positive constant, but it can improve interpretability and
 numerical conditioning.
 
-If `normalize_weights = FALSE`, each row of weights must already sum to
-one.
+If `normalize_weights = FALSE`, manual weights are used exactly as
+supplied. Automatic grids generated by
+[`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
+are already constructed on a normalized simplex.
 
 **Objective scaling**
 
@@ -192,7 +211,7 @@ preferred.
 
 The `control` argument controls how failed runs are handled. It must be
 created with
-[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md).
+[`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
 
 Weighted-sum runs do not normally introduce additional constraints, so
 they should not usually create infeasible subproblems by themselves.
@@ -237,9 +256,9 @@ The actual scalarization is performed later by
 
 ## See also
 
-[`run_grid`](https://josesalgr.github.io/multiscape/reference/run_grid.md),
-[`run_manual`](https://josesalgr.github.io/multiscape/reference/run_manual.md),
-[`mo_control`](https://josesalgr.github.io/multiscape/reference/mo_control.md),
+[`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md),
+[`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md),
+[`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md),
 [`set_method_epsilon_constraint`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md),
 [`set_method_augmecon`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md),
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
@@ -293,7 +312,7 @@ x <- create_problem(
 x1 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_grid(n = 5, include_extremes = TRUE),
+  runs = set_runs_grid(n = 5),
   objective_scaling = TRUE
 )
 
@@ -336,11 +355,8 @@ x1$data$method
 #> $stop_on_error
 #> [1] TRUE
 #> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
 #> attr(,"class")
-#> [1] "MOControl" "list"     
+#> [1] "RunsControl" "MOControl"   "list"       
 #> 
 #> $stop_on_infeasible
 #> [1] FALSE
@@ -361,8 +377,7 @@ manual_weights <- data.frame(
 x2 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_manual(manual_weights),
-  normalize_weights = FALSE,
+  runs = set_runs_manual(manual_weights),
   objective_scaling = TRUE
 )
 
@@ -407,11 +422,8 @@ x2$data$method
 #> $stop_on_error
 #> [1] TRUE
 #> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
 #> attr(,"class")
-#> [1] "MOControl" "list"     
+#> [1] "RunsControl" "MOControl"   "list"       
 #> 
 #> $stop_on_infeasible
 #> [1] FALSE
@@ -432,7 +444,7 @@ manual_weights2 <- data.frame(
 x3 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_manual(manual_weights2),
+  runs = set_runs_manual(manual_weights2),
   normalize_weights = TRUE
 )
 
@@ -475,11 +487,8 @@ x3$data$method
 #> $stop_on_error
 #> [1] TRUE
 #> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
 #> attr(,"class")
-#> [1] "MOControl" "list"     
+#> [1] "RunsControl" "MOControl"   "list"       
 #> 
 #> $stop_on_infeasible
 #> [1] FALSE
@@ -498,7 +507,7 @@ x4 <- set_method_weighted_sum(
   weights = c(0.4, 0.6),
   normalize_weights = FALSE
 )
-#> Warning: `weights` is deprecated. Use `runs = run_manual(data.frame(weight_<alias> = ...))` instead.
+#> Warning: `weights` is deprecated. Use `runs = set_runs_manual(data.frame(weight_<alias> = ...))` instead.
 
 x4$data$method
 #> $name
@@ -515,8 +524,8 @@ x4$data$method
 #> [1] "manual"
 #> 
 #> $values
-#>   run_id weight_cost weight_benefit
-#> 1      1         0.4            0.6
+#>   weight_cost weight_benefit
+#> 1         0.4            0.6
 #> 
 #> attr(,"class")
 #> [1] "RunManual" "RunDesign"
@@ -537,11 +546,8 @@ x4$data$method
 #> $stop_on_error
 #> [1] TRUE
 #> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
 #> attr(,"class")
-#> [1] "MOControl" "list"     
+#> [1] "RunsControl" "MOControl"   "list"       
 #> 
 #> $stop_on_infeasible
 #> [1] FALSE
@@ -557,8 +563,8 @@ x4$data$method
 x5 <- set_method_weighted_sum(
   x,
   aliases = c("cost", "benefit"),
-  runs = run_grid(n = 5),
-  control = mo_control(
+  runs = set_runs_grid(n = 5),
+  control = set_runs_control(
     stop_on_infeasible = TRUE,
     stop_on_no_solution = TRUE,
     stop_on_error = TRUE
@@ -604,11 +610,8 @@ x5$data$method
 #> $stop_on_error
 #> [1] TRUE
 #> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
 #> attr(,"class")
-#> [1] "MOControl" "list"     
+#> [1] "RunsControl" "MOControl"   "list"       
 #> 
 #> $stop_on_infeasible
 #> [1] TRUE

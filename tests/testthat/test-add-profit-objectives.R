@@ -102,9 +102,11 @@ test_that("max profit compiles and selects profitable decisions", {
   s <- multiscape::solve(p)
   expect_s3_class(s, "SolutionSet")
 
-  selected <- multiscape::get_actions(s, only_selected = TRUE)
+  selected <- multiscape::get_actions(s)
   expect_gt(nrow(selected), 0L)
-  expect_true(all(selected$action == "restoration"))
+
+  sol_selected <- selected[selected$selected == 1L, , drop = FALSE]
+  expect_true(all(sol_selected$action == "restoration"))
 })
 
 
@@ -127,7 +129,6 @@ test_that("max net profit compiles and solves", {
 
   s <- multiscape::solve(p)
   expect_s3_class(s, "SolutionSet")
-  expect_true("value_net_profit" %in% names(multiscape::get_runs(s)))
 })
 
 

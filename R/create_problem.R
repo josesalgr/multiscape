@@ -298,8 +298,16 @@ methods::setGeneric(
 
 .pa_fun_from_name <- function(x) {
   x <- match.arg(x, c("mean", "sum"))
-  if (identical(x, "mean")) return(function(v) mean(v, na.rm = TRUE))
-  function(v) sum(v, na.rm = TRUE)
+
+  if (identical(x, "mean")) {
+    return(function(v, ..., na.rm = TRUE) {
+      mean(v, na.rm = na.rm)
+    })
+  }
+
+  function(v, ..., na.rm = TRUE) {
+    sum(v, na.rm = na.rm)
+  }
 }
 
 # =========================================================
@@ -507,7 +515,7 @@ methods::setMethod(
     pu_df_raw <- terra::as.data.frame(pu_v)
     pu_df_raw$row_id <- seq_len(nrow(pu_df_raw))
     names(pu_df_raw)[names(pu_df_raw) == pu_id_col] <- "id"
-    pu_df_raw$id <- as.integer(round(pu_df_raw$id))
+    pu_df_raw$id <- .pa_as_int_id(pu_df_raw$id, "pu id")
 
     pu_df <- pu_df_raw
 
@@ -692,7 +700,7 @@ methods::setMethod(
     # ---- raw PU attributes (without geometry)
     pu_df_raw <- sf::st_drop_geometry(pu_sf)
     names(pu_df_raw)[names(pu_df_raw) == pu_id_col] <- "id"
-    pu_df_raw$id <- as.integer(round(pu_df_raw$id))
+    pu_df_raw$id <- .pa_as_int_id(pu_df_raw$id, "pu id")
 
     # ---- cost must come from sf attribute table
     if (is.null(cost)) {
@@ -726,7 +734,7 @@ methods::setMethod(
     if (!("id" %in% names(features))) {
       stop("`features` must contain an 'id' column.", call. = FALSE)
     }
-    features$id <- as.integer(features$id)
+    features$id <- .pa_as_int_id(features$id, "features$id")
 
     if ("name" %in% names(features)) {
       if (anyNA(features$name) || any(!nzchar(as.character(features$name)))) {
@@ -764,7 +772,11 @@ methods::setMethod(
     feature_raw <- dist_features$feature
 
     # case 1: already numeric ids
-    feature_as_int <- suppressWarnings(as.integer(feature_raw))
+    feature_as_int <- tryCatch(
+      .pa_as_int_id(feature_raw, "dist_features$feature"),
+      error = function(e) rep(NA_integer_, length(feature_raw))
+    )
+
     can_use_ids <- !anyNA(feature_as_int) &&
       all(feature_as_int %in% features$id)
 
@@ -849,7 +861,7 @@ methods::setMethod(
     if (pu_id_col %in% names(pu_sf_store)) {
       names(pu_sf_store)[names(pu_sf_store) == pu_id_col] <- "id"
     }
-    pu_sf_store$id <- as.integer(round(pu_sf_store$id))
+    pu_sf_store$id <- .pa_as_int_id(pu_sf_store$id, "pu sf id")
 
     ord <- match(x$data$pu$id, pu_sf_store$id)
     if (any(is.na(ord))) {

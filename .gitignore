@@ -17,3 +17,11 @@ src/*.lib
 .positai
 src/*.gcno
 src/*.gcda
+src/.*\.o$
+src/.*\.so$
+src/.*\.dll$
+src/.*\.gcda$
+src/.*\.gcno$
+tests/testthat/Rplots\.pdf$
+\.Rhistory$
+\.git$
