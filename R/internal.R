@@ -4351,7 +4351,7 @@ NULL
 
   s <- pproto(
     NULL, Solution,
-    problem = x,
+    problem = NULL,
     solution = list(
       objective = objval,
       vector = solvec,
