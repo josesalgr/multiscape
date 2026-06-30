@@ -971,6 +971,7 @@
     solutions = solutions,
     run_ids = design_df$run_id
   )
+  solutions <- .pa_strip_nested_solution_problems(solutions)
 
   .pamo_cli_done("Weighted solve finished.", verbose = verbose)
 
@@ -1302,6 +1303,7 @@
     solutions = solutions,
     run_ids = design_df$run_id
   )
+  solutions <- .pa_strip_nested_solution_problems(solutions)
 
   .pamo_cli_done("Epsilon-constraint solve finished.", verbose = verbose)
 
@@ -2923,9 +2925,12 @@
 
       secondary_min = min(vals_secondary),
       secondary_max = max(vals_secondary),
+      vals_secondary = vals_secondary,
 
-      solution_primary = sol_primary$solution,
-      solution_secondary = sol_secondary$solution
+      meta = list(
+        lexicographic = FALSE,
+        lexicographic_tol = 0
+      )
     ))
   }
 
@@ -3020,14 +3025,9 @@
     secondary_max = max(vals_secondary),
     vals_secondary = vals_secondary,
 
-    solution_primary = sol_primary_lexi$solution,
-    solution_secondary = sol_secondary_lexi$solution,
-
     meta = list(
       lexicographic = TRUE,
-      lexicographic_tol = lexi_tol,
-      stage1_primary_solution = sol_primary_stage1$solution,
-      stage1_secondary_solution = sol_secondary_stage1$solution
+      lexicographic_tol = lexi_tol
     )
   )
 }
@@ -3936,6 +3936,8 @@
     run_ids = design_df$run_id
   )
 
+  solutions <- .pa_strip_nested_solution_problems(solutions)
+
   .pamo_cli_done("AUGMECON solve finished.", verbose = verbose)
 
   ext <- attr(design_df, "extremes", exact = TRUE)
@@ -4171,8 +4173,8 @@
       secondary_min = min(vals_secondary),
       secondary_max = max(vals_secondary),
 
-      solution_primary = sol_primary$solution,
-      solution_secondary = sol_secondary$solution,
+      # solution_primary = sol_primary$solution,
+      # solution_secondary = sol_secondary$solution,
 
       meta = list(
         lexicographic = FALSE,
@@ -4281,14 +4283,12 @@
     secondary_min = min(vals_secondary),
     secondary_max = max(vals_secondary),
 
-    solution_primary = sol_primary_lexi$solution,
-    solution_secondary = sol_secondary_lexi$solution,
+    # solution_primary = sol_primary_lexi$solution,
+    # solution_secondary = sol_secondary_lexi$solution,
 
     meta = list(
       lexicographic = TRUE,
-      lexicographic_tol = lexi_tol,
-      stage1_primary_solution = sol_primary_stage1$solution,
-      stage1_secondary_solution = sol_secondary_stage1$solution
+      lexicographic_tol = lexi_tol
     )
   )
 }
@@ -5681,4 +5681,31 @@
     ),
     class = c("RunsControl", "MOControl", "list")
   )
+}
+
+
+#' Drop Problem objects stored inside run-level Solution objects
+#'
+#' @description
+#' Internal helper used to reduce the memory footprint of SolutionSet objects.
+#' The full Problem is stored once at SolutionSet$problem, so keeping an
+#' additional copy inside each run-level Solution is unnecessary.
+#'
+#' @noRd
+.pa_strip_nested_solution_problems <- function(solutions) {
+  if (is.null(solutions)) {
+    return(solutions)
+  }
+
+  if (!is.list(solutions)) {
+    return(solutions)
+  }
+
+  for (i in seq_along(solutions)) {
+    if (inherits(solutions[[i]], "Solution")) {
+      solutions[[i]]$problem <- NULL
+    }
+  }
+
+  solutions
 }
