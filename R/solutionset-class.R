@@ -595,6 +595,8 @@ SolutionSet <- pproto(
     run_ids = 1L
   )
 
+  solutions <- .pa_strip_nested_solution_problems(solutions)
+
   out <- pproto(
     NULL,
     SolutionSet,

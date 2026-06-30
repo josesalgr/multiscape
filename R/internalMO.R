@@ -971,6 +971,7 @@
     solutions = solutions,
     run_ids = design_df$run_id
   )
+  solutions <- .pa_strip_nested_solution_problems(solutions)
 
   .pamo_cli_done("Weighted solve finished.", verbose = verbose)
 
@@ -1302,6 +1303,7 @@
     solutions = solutions,
     run_ids = design_df$run_id
   )
+  solutions <- .pa_strip_nested_solution_problems(solutions)
 
   .pamo_cli_done("Epsilon-constraint solve finished.", verbose = verbose)
 
@@ -3934,6 +3936,8 @@
     run_ids = design_df$run_id
   )
 
+  solutions <- .pa_strip_nested_solution_problems(solutions)
+
   .pamo_cli_done("AUGMECON solve finished.", verbose = verbose)
 
   ext <- attr(design_df, "extremes", exact = TRUE)
@@ -5677,4 +5681,31 @@
     ),
     class = c("RunsControl", "MOControl", "list")
   )
+}
+
+
+#' Drop Problem objects stored inside run-level Solution objects
+#'
+#' @description
+#' Internal helper used to reduce the memory footprint of SolutionSet objects.
+#' The full Problem is stored once at SolutionSet$problem, so keeping an
+#' additional copy inside each run-level Solution is unnecessary.
+#'
+#' @noRd
+.pa_strip_nested_solution_problems <- function(solutions) {
+  if (is.null(solutions)) {
+    return(solutions)
+  }
+
+  if (!is.list(solutions)) {
+    return(solutions)
+  }
+
+  for (i in seq_along(solutions)) {
+    if (inherits(solutions[[i]], "Solution")) {
+      solutions[[i]]$problem <- NULL
+    }
+  }
+
+  solutions
 }
