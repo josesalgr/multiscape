@@ -103,6 +103,16 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
     inherits(`_inherit`, "pproto") || is.null(`_inherit`)
   )
 
+  # Create proto object without retaining the caller frame.
+  # proto::proto() defaults to envir = new.env(parent = parent.frame()),
+  # which can capture large temporary objects from pproto()/assign_fields().
+  new_proto <- function(...) {
+    proto::proto(
+      envir = new.env(parent = baseenv()),
+      ...
+    )
+  }
+
   # copy objects from one proto to another proto
   assign_fields <- function(p1, p2) {
     if (!inherits(p2, "proto")) {
@@ -111,7 +121,7 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
 
     for (i in p2$ls()) {
       if (inherits(p2[[i]], "proto")) {
-        p1[[i]] <- proto::proto(parent = emptyenv())
+        p1[[i]] <- new_proto()
         class(p1[[i]]) <- class(p2[[i]])
         assign_fields(p1[[i]], p2[[i]])
       } else {
@@ -123,24 +133,19 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
   }
 
   # create new proto without retaining the caller frame
-  p <- proto::proto(parent = emptyenv())
+  p <- new_proto()
 
   if (!is.null(`_inherit`)) {
-    # assign inherited members
     assign_fields(p, `_inherit`)
-
-    # assign inherited classes
     class(p) <- class(`_inherit`)
   } else {
-    # assign pproto class
     class(p) <- c("pproto", class(p))
   }
 
   # assign members to new proto without retaining the caller frame
-  dots <- proto::proto(parent = emptyenv(), ...)
+  dots <- new_proto(...)
   assign_fields(p, dots)
 
-  # assign new class if specified
   if (!is.null(`_class`)) {
     class(p) <- c(`_class`, class(p))
   }
