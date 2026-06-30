@@ -102,40 +102,49 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
     assertthat::is.string(`_class`) || is.null(`_class`),
     inherits(`_inherit`, "pproto") || is.null(`_inherit`)
   )
+
   # copy objects from one proto to another proto
   assign_fields <- function(p1, p2) {
     if (!inherits(p2, "proto")) {
       return()
     }
+
     for (i in p2$ls()) {
       if (inherits(p2[[i]], "proto")) {
-        p1[[i]] <- proto::proto()
+        p1[[i]] <- proto::proto(parent = emptyenv())
         class(p1[[i]]) <- class(p2[[i]])
         assign_fields(p1[[i]], p2[[i]])
       } else {
         p1[[i]] <- p2[[i]]
       }
     }
+
     assign_fields(p1, p2$.super)
   }
-  # create new proto
-  p <- proto::proto()
+
+  # create new proto without retaining the caller frame
+  p <- proto::proto(parent = emptyenv())
+
   if (!is.null(`_inherit`)) {
     # assign inherited members
     assign_fields(p, `_inherit`)
+
     # assign inherited classes
     class(p) <- class(`_inherit`)
   } else {
     # assign pproto class
     class(p) <- c("pproto", class(p))
   }
-  # assign members to new proto
-  assign_fields(p, proto::proto(...))
+
+  # assign members to new proto without retaining the caller frame
+  dots <- proto::proto(parent = emptyenv(), ...)
+  assign_fields(p, dots)
+
   # assign new class if specified
   if (!is.null(`_class`)) {
     class(p) <- c(`_class`, class(p))
   }
-  # return value
+
   p
 }
 
