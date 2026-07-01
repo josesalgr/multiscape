@@ -106,9 +106,15 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
   # Create proto object without retaining the caller frame.
   # proto::proto() defaults to envir = new.env(parent = parent.frame()),
   # which can capture large temporary objects from pproto()/assign_fields().
+  #
+  # Use the package namespace as the parent environment so proto methods can
+  # still find internal helpers such as .pa_cli_box_chars().
   new_proto <- function(...) {
+    ns <- parent.env(environment())
+
     proto::proto(
-      envir = new.env(parent = baseenv()),
+      envir = new.env(parent = ns),
+      funEnvir = ns,
       ...
     )
   }
