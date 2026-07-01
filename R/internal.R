@@ -2234,18 +2234,26 @@ available_to_solve <- function(package = ""){
 # -------------------------------------------------------------------------
 # Internal helpers AREAS
 # -------------------------------------------------------------------------
-.pa_get_area_vec <- function(x, area_col = NULL, area_unit = c("m2", "ha", "km2")) {
+.pa_get_area_vec <- function(x,
+                             area_col = NULL,
+                             area_unit = c("m2", "ha", "km2")) {
   stopifnot(inherits(x, "Problem"))
+
   area_unit <- match.arg(area_unit)
 
   pu <- x$data$pu
+
   if (is.null(pu) || !inherits(pu, "data.frame")) {
     stop("x$data$pu is missing or is not a data.frame.", call. = FALSE)
   }
 
   n_pu <- nrow(pu)
+
   if (n_pu <= 0L) {
-    stop("x$data$pu has zero rows; cannot retrieve planning unit areas.", call. = FALSE)
+    stop(
+      "x$data$pu has zero rows; cannot retrieve planning unit areas.",
+      call. = FALSE
+    )
   }
 
   area <- NULL
@@ -2253,12 +2261,68 @@ available_to_solve <- function(package = ""){
   area_col_used <- NULL
 
   # ---------------------------------------------------------
+  # helper: retrieve an area column from pu_data_raw aligned to x$data$pu$id
+  # ---------------------------------------------------------
+  get_raw_area <- function(col) {
+    raw <- x$data$pu_data_raw
+
+    if (is.null(raw) || !inherits(raw, "data.frame")) {
+      return(NULL)
+    }
+
+    if (!(col %in% names(raw))) {
+      return(NULL)
+    }
+
+    if (!("id" %in% names(raw))) {
+      stop(
+        "x$data$pu_data_raw is missing an 'id' column.",
+        call. = FALSE
+      )
+    }
+
+    raw_id <- as.integer(raw$id)
+    pu_id <- as.integer(pu$id)
+
+    if (anyNA(raw_id) || anyNA(pu_id)) {
+      stop(
+        "Could not coerce x$data$pu$id or x$data$pu_data_raw$id to integer ",
+        "while retrieving planning unit areas.",
+        call. = FALSE
+      )
+    }
+
+    if (anyDuplicated(raw_id) != 0L) {
+      stop(
+        "x$data$pu_data_raw$id contains duplicated planning unit ids.",
+        call. = FALSE
+      )
+    }
+
+    m <- match(pu_id, raw_id)
+
+    if (anyNA(m)) {
+      stop(
+        "Could not match all x$data$pu$id values to x$data$pu_data_raw$id ",
+        "while retrieving planning unit areas.",
+        call. = FALSE
+      )
+    }
+
+    as.numeric(raw[[col]][m])
+  }
+
+  # ---------------------------------------------------------
   # 1) explicit area_col
   # ---------------------------------------------------------
   if (!is.null(area_col)) {
     area_col <- as.character(area_col)[1]
+
     if (is.na(area_col) || !nzchar(area_col)) {
-      stop("area_col must be a non-empty string or NULL.", call. = FALSE)
+      stop(
+        "area_col must be a non-empty string or NULL.",
+        call. = FALSE
+      )
     }
 
     # 1a) from x$data$pu
@@ -2268,16 +2332,39 @@ available_to_solve <- function(package = ""){
       area_col_used <- area_col
 
       # 1b) from x$data$pu_sf
-    } else if (!is.null(x$data$pu_sf) && inherits(x$data$pu_sf, "sf") &&
-               area_col %in% names(x$data$pu_sf)) {
+    } else if (
+      !is.null(x$data$pu_sf) &&
+      inherits(x$data$pu_sf, "sf") &&
+      area_col %in% names(x$data$pu_sf)
+    ) {
       area <- as.numeric(x$data$pu_sf[[area_col]])
       area_source <- "pu_sf"
+      area_col_used <- area_col
+
+      # 1c) from x$data$pu_data_raw
+    } else if (
+      !is.null(x$data$pu_data_raw) &&
+      inherits(x$data$pu_data_raw, "data.frame") &&
+      area_col %in% names(x$data$pu_data_raw)
+    ) {
+      area <- get_raw_area(area_col)
+      area_source <- "pu_data_raw"
       area_col_used <- area_col
 
     } else {
       stop(
         "area_col '", area_col, "' was not found in x$data$pu",
-        if (!is.null(x$data$pu_sf) && inherits(x$data$pu_sf, "sf")) " or x$data$pu_sf." else ".",
+        if (!is.null(x$data$pu_sf) && inherits(x$data$pu_sf, "sf")) {
+          ", x$data$pu_sf"
+        } else {
+          ""
+        },
+        if (!is.null(x$data$pu_data_raw) &&
+            inherits(x$data$pu_data_raw, "data.frame")) {
+          ", or x$data$pu_data_raw."
+        } else {
+          "."
+        },
         " Provide a valid area column or spatial information.",
         call. = FALSE
       )
@@ -2287,8 +2374,19 @@ available_to_solve <- function(package = ""){
   # ---------------------------------------------------------
   # 2) automatic lookup if area_col is NULL
   # ---------------------------------------------------------
+  cand <- c(
+    "area",
+    "Area",
+    "AREA",
+    "surf",
+    "surface",
+    "area_m2",
+    "area_ha",
+    "area_km2"
+  )
+
+  # 2a) automatic lookup in x$data$pu
   if (is.null(area)) {
-    cand <- c("area", "Area", "AREA", "surf", "surface", "area_m2", "area_ha", "area_km2")
     hit_pu <- cand[cand %in% names(pu)][1]
 
     if (!is.na(hit_pu) && length(hit_pu) == 1L) {
@@ -2298,14 +2396,33 @@ available_to_solve <- function(package = ""){
     }
   }
 
-  if (is.null(area) && !is.null(x$data$pu_sf) && inherits(x$data$pu_sf, "sf")) {
-    cand <- c("area", "Area", "AREA", "surf", "surface", "area_m2", "area_ha", "area_km2")
+  # 2b) automatic lookup in x$data$pu_sf
+  if (
+    is.null(area) &&
+    !is.null(x$data$pu_sf) &&
+    inherits(x$data$pu_sf, "sf")
+  ) {
     hit_sf <- cand[cand %in% names(x$data$pu_sf)][1]
 
     if (!is.na(hit_sf) && length(hit_sf) == 1L) {
       area <- as.numeric(x$data$pu_sf[[hit_sf]])
       area_source <- "pu_sf"
       area_col_used <- hit_sf
+    }
+  }
+
+  # 2c) automatic lookup in x$data$pu_data_raw
+  if (
+    is.null(area) &&
+    !is.null(x$data$pu_data_raw) &&
+    inherits(x$data$pu_data_raw, "data.frame")
+  ) {
+    hit_raw <- cand[cand %in% names(x$data$pu_data_raw)][1]
+
+    if (!is.na(hit_raw) && length(hit_raw) == 1L) {
+      area <- get_raw_area(hit_raw)
+      area_source <- "pu_data_raw"
+      area_col_used <- hit_raw
     }
   }
 
@@ -2327,8 +2444,14 @@ available_to_solve <- function(package = ""){
     } else {
       stop(
         "Could not retrieve planning unit area.\n",
-        "No usable area column was found in x$data$pu, and no spatial geometry is available ",
-        "to derive area internally.\n",
+        "No usable area column was found in x$data$pu",
+        if (!is.null(x$data$pu_data_raw) &&
+            inherits(x$data$pu_data_raw, "data.frame")) {
+          " or x$data$pu_data_raw"
+        } else {
+          ""
+        },
+        ", and no spatial geometry is available to derive area internally.\n",
         "Provide `area_col` explicitly or build the Problem object with spatial information.",
         call. = FALSE
       )
@@ -2342,18 +2465,28 @@ available_to_solve <- function(package = ""){
     stop(
       "Area vector length (", length(area), ") != n_pu (", n_pu, "). ",
       "Area source: ", area_source,
-      if (!is.null(area_col_used) && !is.na(area_col_used)) paste0(" [column='", area_col_used, "']") else "",
+      if (!is.null(area_col_used) && !is.na(area_col_used)) {
+        paste0(" [column='", area_col_used, "']")
+      } else {
+        ""
+      },
       ".",
       call. = FALSE
     )
   }
 
   if (anyNA(area) || any(!is.finite(area))) {
-    stop("Area vector contains NA or non-finite values.", call. = FALSE)
+    stop(
+      "Area vector contains NA or non-finite values.",
+      call. = FALSE
+    )
   }
 
   if (any(area < 0)) {
-    stop("Area vector contains negative values.", call. = FALSE)
+    stop(
+      "Area vector contains negative values.",
+      call. = FALSE
+    )
   }
 
   # ---------------------------------------------------------
@@ -2378,10 +2511,12 @@ available_to_solve <- function(package = ""){
 
   out <- switch(
     area_unit,
-    m2  = area_m2,
-    ha  = area_m2 / 1e4,
+    m2 = area_m2,
+    ha = area_m2 / 1e4,
     km2 = area_m2 / 1e6
   )
+
+  names(out) <- as.character(pu$id)
 
   out
 }
