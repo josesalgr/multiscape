@@ -4,12 +4,13 @@
 #'
 #' @description
 #' Define the action catalogue, the set of feasible planning unit--action pairs,
-#' and their implementation costs.
+#' their implementation costs, and the effective area represented by each
+#' feasible planning unit--action decision.
 #'
 #' This function adds two core components to a \code{Problem} object. First, it
 #' stores the action catalogue. Second, it creates the feasible planning
-#' unit--action table, including implementation costs, status codes, and
-#' internal indices used by the optimization backend.
+#' unit--action table, including implementation costs, effective action areas,
+#' status codes, and internal indices used by the optimization backend.
 #'
 #' Conceptually, if \eqn{\mathcal{I}} is the set of planning units and
 #' \eqn{\mathcal{A}} is the set of actions, this function determines which
@@ -83,8 +84,45 @@
 #'   feasible.
 #' }
 #'
-#' In the spatial case, feasible planning units are identified using
-#' \code{sf::st_intersects()} against the stored planning-unit geometry.
+#' Lists may mix vectors of planning-unit ids and \code{sf} objects across
+#' actions. In the spatial case, feasible planning units are identified using
+#' \code{sf::st_intersects()} against the stored planning-unit geometry. If
+#' \code{include_pairs} or \code{exclude_pairs} contains \code{sf} objects, the
+#' problem must contain planning-unit geometry in \code{x$data$pu_sf}; otherwise
+#' an error is raised.
+#'
+#' Spatial exclusions are applied after inclusions. If a planning unit--action
+#' pair is included and excluded, the exclusion takes precedence and the pair is
+#' removed. Spatial exclusions remove complete \code{(pu, action)} pairs; they
+#' do not partially subtract area from included geometries.
+#'
+#' \strong{Action areas.}
+#'
+#' The \code{action_area} column in \code{dist_actions} stores the effective
+#' area represented by each feasible \code{(pu, action)} decision. This is an
+#' area, not an action intensity.
+#'
+#' If \code{action_area = NULL}, action areas are derived automatically:
+#' \itemize{
+#'   \item when \code{include_pairs} is supplied using \code{sf} objects, action
+#'   areas are computed as the area of the spatial intersection between
+#'   planning-unit geometries and the corresponding action geometries;
+#'   \item when feasible pairs are supplied without spatial geometries, action
+#'   areas default to the full planning-unit area when this can be derived from
+#'   the problem object.
+#' }
+#'
+#' If \code{action_area} is supplied as a \code{data.frame}, it must contain
+#' columns \code{pu}, \code{action}, and \code{action_area}. A column named
+#' \code{area} is also accepted and renamed internally to \code{action_area}.
+#' Supplied areas must be finite and non-negative. User-supplied values override
+#' automatically derived values for matching feasible pairs. Rows referring to
+#' non-feasible pairs are ignored with a warning.
+#'
+#' If full planning-unit areas cannot be derived for some feasible pairs,
+#' \code{action_area} is left as \code{NA} for those pairs. Area-based action
+#' constraints should check for missing \code{action_area} values before model
+#' construction.
 #'
 #' \strong{Feasibility versus decision fixing.}
 #'
@@ -156,13 +194,20 @@
 #'   action id, or a \code{data.frame} with columns \code{action, cost} or
 #'   \code{pu, action, cost}.
 #'
+#' @param action_area Optional effective area specification for feasible
+#'   \code{(pu, action)} pairs. It may be \code{NULL} or a \code{data.frame}
+#'   with columns \code{pu}, \code{action}, and \code{action_area}. If
+#'   \code{NULL}, action areas are derived from spatial \code{include_pairs}
+#'   when available, otherwise they default to full planning-unit areas when
+#'   these can be derived from the problem.
+#'
 #' @return An updated \code{Problem} object with:
 #' \describe{
 #'   \item{\code{actions}}{The action catalogue, including a unique integer
 #'   \code{internal_id} for each action.}
 #'   \item{\code{dist_actions}}{The feasible planning unit--action table with
-#'   columns \code{pu}, \code{action}, \code{cost}, \code{status},
-#'   \code{internal_pu}, and \code{internal_action}.}
+#'   columns \code{pu}, \code{action}, \code{cost}, \code{action_area},
+#'   \code{status}, \code{internal_pu}, and \code{internal_action}.}
 #'   \item{\code{pu index}}{A mapping from user-supplied planning-unit ids to
 #'   internal integer ids.}
 #'   \item{\code{action index}}{A mapping from action ids to internal integer
@@ -179,7 +224,8 @@
 #' # ------------------------------------------------------
 #' pu <- data.frame(
 #'   id = 1:4,
-#'   cost = c(2, 3, 1, 4)
+#'   cost = c(2, 3, 1, 4),
+#'   area = c(100, 100, 100, 100)
 #' )
 #'
 #' features <- data.frame(
@@ -244,13 +290,31 @@
 #'
 #' p3$data$dist_actions
 #'
+#' # Example 4: provide action-specific areas manually
+#' action_area <- data.frame(
+#'   pu = c(1, 2, 3, 4),
+#'   action = c("conservation", "conservation", "restoration", "restoration"),
+#'   action_area = c(100, 50, 80, 100)
+#' )
+#'
+#' p4 <- add_actions(
+#'   x = p,
+#'   actions = actions,
+#'   include_pairs = include_df,
+#'   action_area = action_area,
+#'   cost = 10
+#' )
+#'
+#' p4$data$dist_actions
+#'
 #' @export
 add_actions <- function(
     x,
     actions,
     include_pairs = NULL,
     exclude_pairs = NULL,
-    cost = NULL
+    cost = NULL,
+    action_area = NULL
 ) {
 
   .as_int_id <- function(v, what) {
@@ -295,15 +359,167 @@ add_actions <- function(
     df
   }
 
-  .spec_to_pairs <- function(spec, what, action_ids, pu_ids, pu_sf, as_int_id_fun) {
+  .empty_pairs <- function(with_area = FALSE) {
+    if (isTRUE(with_area)) {
+      data.frame(
+        pu = integer(0),
+        action = character(0),
+        action_area = numeric(0),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      data.frame(
+        pu = integer(0),
+        action = character(0),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  .check_spatial_ready <- function(what, pu_sf) {
+    if (!requireNamespace("sf", quietly = TRUE)) {
+      stop(what, " provided as sf layers requires the 'sf' package.", call. = FALSE)
+    }
+
+    if (is.null(pu_sf) || !inherits(pu_sf, "sf")) {
+      stop(
+        "To use '", what, "' as sf layers, the problem object must contain ",
+        "x$data$pu_sf (sf planning unit geometry).",
+        call. = FALSE
+      )
+    }
+
+    if (!("id" %in% names(pu_sf))) {
+      stop("x$data$pu_sf is missing an 'id' column.", call. = FALSE)
+    }
+
+    invisible(TRUE)
+  }
+
+  .align_zone_crs <- function(zone, pu_sf, what, action) {
+    if (is.na(sf::st_crs(pu_sf)) || is.na(sf::st_crs(zone))) {
+      warning(
+        what, "[[", action, "]] or x$data$pu_sf has missing CRS; ",
+        "spatial intersections and areas may be unreliable.",
+        call. = FALSE,
+        immediate. = TRUE
+      )
+      return(zone)
+    }
+
+    if (sf::st_crs(pu_sf) != sf::st_crs(zone)) {
+      zone <- sf::st_transform(zone, sf::st_crs(pu_sf))
+    }
+
+    zone
+  }
+
+  .spatial_pairs <- function(
+    pu_sf,
+    zone,
+    action,
+    what,
+    as_int_id_fun,
+    compute_area = FALSE
+  ) {
+    if (!inherits(zone, "sf")) {
+      stop(what, "[[", action, "]] must be an sf object.", call. = FALSE)
+    }
+
+    zone <- .align_zone_crs(zone, pu_sf, what, action)
+
+    hits <- sf::st_intersects(pu_sf, zone, sparse = TRUE)
+    idx <- which(lengths(hits) > 0L)
+
+    if (length(idx) == 0L) {
+      return(.empty_pairs(with_area = compute_area))
+    }
+
+    feasible_ids <- as_int_id_fun(
+      pu_sf$id[idx],
+      paste0(what, "$pu")
+    )
+
+    if (!isTRUE(compute_area)) {
+      return(data.frame(
+        pu = feasible_ids,
+        action = action,
+        stringsAsFactors = FALSE
+      ))
+    }
+
+    pu_sub <- pu_sf[idx, , drop = FALSE]
+    pu_sub$id <- as_int_id_fun(
+      pu_sub$id,
+      "x$data$pu_sf$id"
+    )
+
+    zone_union <- sf::st_union(sf::st_geometry(zone))
+    zone_sf <- sf::st_sf(
+      .zone_id = 1L,
+      geometry = zone_union,
+      crs = sf::st_crs(pu_sub)
+    )
+
+    inter <- suppressWarnings(
+      sf::st_intersection(
+        pu_sub[, "id", drop = FALSE],
+        zone_sf
+      )
+    )
+
+    if (nrow(inter) == 0L) {
+      return(.empty_pairs(with_area = TRUE))
+    }
+
+    inter$id <- as_int_id_fun(
+      inter$id,
+      paste0(what, "$pu")
+    )
+
+    out <- data.frame(
+      pu = inter$id,
+      action = action,
+      action_area = as.numeric(sf::st_area(inter)),
+      stringsAsFactors = FALSE
+    )
+
+    out <- dplyr::group_by(
+      out,
+      .data$pu,
+      .data$action
+    )
+    out <- dplyr::summarise(
+      out,
+      action_area = sum(.data$action_area, na.rm = TRUE),
+      .groups = "drop"
+    )
+    out <- as.data.frame(out)
+
+    out
+  }
+
+  .spec_to_pairs <- function(
+    spec,
+    what,
+    action_ids,
+    pu_ids,
+    pu_sf,
+    as_int_id_fun,
+    compute_area = FALSE
+  ) {
     if (is.null(spec)) return(NULL)
 
     if (inherits(spec, "data.frame")) {
-      assertthat::assert_that(nrow(spec) > 0, msg = paste0(what, " is an empty data.frame."))
+      assertthat::assert_that(
+        nrow(spec) > 0,
+        msg = paste0(what, " is an empty data.frame.")
+      )
 
       if ("id" %in% names(spec) && !("action" %in% names(spec))) {
         names(spec)[names(spec) == "id"] <- "action"
       }
+
       assertthat::assert_that(
         assertthat::has_name(spec, "pu"),
         assertthat::has_name(spec, "action"),
@@ -316,16 +532,29 @@ add_actions <- function(
 
       if (!all(spec$pu %in% pu_ids)) {
         bad <- unique(spec$pu[!spec$pu %in% pu_ids])
-        stop(what, " contains PU ids not present in x: ", paste(bad, collapse = ", "), call. = FALSE)
-      }
-      if (!all(spec$action %in% action_ids)) {
-        bad <- unique(spec$action[!spec$action %in% action_ids])
-        stop(what, " contains action ids not present in actions: ", paste(bad, collapse = ", "), call. = FALSE)
+        stop(
+          what, " contains PU ids not present in x: ",
+          paste(bad, collapse = ", "),
+          call. = FALSE
+        )
       }
 
-      tmp <- spec[, c("pu", "action")]
+      if (!all(spec$action %in% action_ids)) {
+        bad <- unique(spec$action[!spec$action %in% action_ids])
+        stop(
+          what, " contains action ids not present in actions: ",
+          paste(bad, collapse = ", "),
+          call. = FALSE
+        )
+      }
+
+      tmp <- spec[, c("pu", "action"), drop = FALSE]
+
       if (nrow(dplyr::distinct(tmp)) != nrow(tmp)) {
-        stop(what, " has duplicate (pu, action) rows. Please de-duplicate.", call. = FALSE)
+        stop(
+          what, " has duplicate (pu, action) rows. Please de-duplicate.",
+          call. = FALSE
+        )
       }
 
       out <- spec[spec$feasible, c("pu", "action"), drop = FALSE]
@@ -334,94 +563,240 @@ add_actions <- function(
 
     if (is.list(spec)) {
       if (is.null(names(spec)) || any(names(spec) == "")) {
-        stop("If '", what, "' is a list, it must be a named list with names = action ids.", call. = FALSE)
+        stop(
+          "If '", what, "' is a list, it must be a named list with names = action ids.",
+          call. = FALSE
+        )
       }
+
       if (!all(names(spec) %in% action_ids)) {
         bad <- setdiff(names(spec), action_ids)
-        stop(what, " list contains unknown actions: ", paste(bad, collapse = ", "), call. = FALSE)
-      }
-
-      idx_first <- which(!vapply(spec, is.null, logical(1)))[1]
-      first <- spec[[idx_first]]
-      is_sf_list <- inherits(first, "sf")
-
-      if (is_sf_list) {
-        if (!requireNamespace("sf", quietly = TRUE)) {
-          stop(what, " provided as sf layers requires the 'sf' package.", call. = FALSE)
-        }
-        if (is.null(pu_sf) || !inherits(pu_sf, "sf")) {
-          stop("To use '", what, "' as sf layers, the problem object must contain x$data$pu_sf (sf planning unit geometry).", call. = FALSE)
-        }
-        if (!("id" %in% names(pu_sf))) {
-          stop("x$data$pu_sf is missing an 'id' column.", call. = FALSE)
-        }
-
-        pu_sf2 <- pu_sf
-        pu_sf2$id <- as_int_id_fun(pu_sf2$id, "x$data$pu_sf$id")
-
-        out <- vector("list", length(spec))
-        names(out) <- names(spec)
-
-        for (a in names(spec)) {
-          zone <- spec[[a]]
-          if (is.null(zone)) {
-            out[[a]] <- NULL
-            next
-          }
-          if (!inherits(zone, "sf")) {
-            stop(what, "[[", a, "]] must be an sf object.", call. = FALSE)
-          }
-
-          hits <- sf::st_intersects(pu_sf2, zone, sparse = TRUE)
-          feasible_ids <- pu_sf2$id[lengths(hits) > 0]
-
-          if (length(feasible_ids) == 0) {
-            out[[a]] <- NULL
-          } else {
-            out[[a]] <- data.frame(
-              pu = feasible_ids,
-              action = a,
-              stringsAsFactors = FALSE
-            )
-          }
-        }
-
-        out_df <- dplyr::bind_rows(out)
-        if (nrow(out_df) == 0) return(out_df)
-        out_df$pu <- as_int_id_fun(out_df$pu, paste0(what, "$pu"))
-        out_df <- dplyr::distinct(out_df)
-        return(out_df)
+        stop(
+          what, " list contains unknown actions: ",
+          paste(bad, collapse = ", "),
+          call. = FALSE
+        )
       }
 
       out <- vector("list", length(spec))
       names(out) <- names(spec)
 
       for (a in names(spec)) {
-        ids <- spec[[a]]
-        if (is.null(ids)) {
+        item <- spec[[a]]
+
+        if (is.null(item)) {
           out[[a]] <- NULL
           next
         }
-        ids <- unique(as_int_id_fun(ids, paste0(what, "[['", a, "']]")))
-        if (!all(ids %in% pu_ids)) {
-          bad <- ids[!ids %in% pu_ids]
-          stop(what, "[[", a, "]] contains PU ids not present in x: ", paste(bad, collapse = ", "), call. = FALSE)
+
+        if (inherits(item, "sf")) {
+          .check_spatial_ready(what, pu_sf)
+
+          pu_sf2 <- pu_sf
+          pu_sf2$id <- as_int_id_fun(
+            pu_sf2$id,
+            "x$data$pu_sf$id"
+          )
+
+          out[[a]] <- .spatial_pairs(
+            pu_sf = pu_sf2,
+            zone = item,
+            action = a,
+            what = what,
+            as_int_id_fun = as_int_id_fun,
+            compute_area = compute_area
+          )
+
+        } else {
+          ids <- unique(
+            as_int_id_fun(
+              item,
+              paste0(what, "[['", a, "']]")
+            )
+          )
+
+          if (!all(ids %in% pu_ids)) {
+            bad <- ids[!ids %in% pu_ids]
+            stop(
+              what, "[[", a, "]] contains PU ids not present in x: ",
+              paste(bad, collapse = ", "),
+              call. = FALSE
+            )
+          }
+
+          out[[a]] <- data.frame(
+            pu = ids,
+            action = a,
+            stringsAsFactors = FALSE
+          )
         }
-        out[[a]] <- data.frame(
-          pu = ids,
-          action = a,
-          stringsAsFactors = FALSE
-        )
       }
 
       out_df <- dplyr::bind_rows(out)
-      if (nrow(out_df) == 0) return(out_df)
-      out_df$pu <- as_int_id_fun(out_df$pu, paste0(what, "$pu"))
-      out_df <- dplyr::distinct(out_df)
+
+      if (nrow(out_df) == 0L) {
+        return(.empty_pairs(with_area = compute_area))
+      }
+
+      out_df$pu <- as_int_id_fun(
+        out_df$pu,
+        paste0(what, "$pu")
+      )
+      out_df$action <- as.character(out_df$action)
+
+      if ("action_area" %in% names(out_df)) {
+        out_df <- dplyr::group_by(
+          out_df,
+          .data$pu,
+          .data$action
+        )
+        out_df <- dplyr::summarise(
+          out_df,
+          action_area = if (all(is.na(.data$action_area))) {
+            NA_real_
+          } else {
+            sum(.data$action_area, na.rm = TRUE)
+          },
+          .groups = "drop"
+        )
+        out_df <- as.data.frame(out_df)
+      } else {
+        out_df <- dplyr::distinct(out_df)
+      }
+
       return(out_df)
     }
 
-    stop("Unsupported type for '", what, "'. Use NULL, data.frame, or a named list.", call. = FALSE)
+    stop(
+      "Unsupported type for '", what, "'. Use NULL, data.frame, or a named list.",
+      call. = FALSE
+    )
+  }
+
+  .process_action_area <- function(
+    action_area,
+    dist_actions,
+    pu_ids,
+    action_ids,
+    as_int_id_fun
+  ) {
+    if (!inherits(action_area, "data.frame")) {
+      stop("`action_area` must be NULL or a data.frame.", call. = FALSE)
+    }
+
+    if ("id" %in% names(action_area) && !("action" %in% names(action_area))) {
+      names(action_area)[names(action_area) == "id"] <- "action"
+    }
+
+    if ("area" %in% names(action_area) && !("action_area" %in% names(action_area))) {
+      names(action_area)[names(action_area) == "area"] <- "action_area"
+    }
+
+    if (!all(c("pu", "action", "action_area") %in% names(action_area))) {
+      stop(
+        "`action_area` data.frame must contain columns `pu`, `action`, and `action_area`.",
+        call. = FALSE
+      )
+    }
+
+    action_area$pu <- as_int_id_fun(
+      action_area$pu,
+      "action_area$pu"
+    )
+    action_area$action <- as.character(action_area$action)
+
+    if (
+      anyNA(action_area$action) ||
+      any(!nzchar(action_area$action))
+    ) {
+      stop(
+        "action_area$action must contain non-empty action ids.",
+        call. = FALSE
+      )
+    }
+
+    if (!all(action_area$pu %in% pu_ids)) {
+      bad <- unique(action_area$pu[!action_area$pu %in% pu_ids])
+      stop(
+        "action_area contains unknown pu id(s): ",
+        paste(bad, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    if (!all(action_area$action %in% action_ids)) {
+      bad <- unique(action_area$action[!action_area$action %in% action_ids])
+      stop(
+        "action_area contains unknown action id(s): ",
+        paste(bad, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    tmp <- action_area[, c("pu", "action"), drop = FALSE]
+
+    if (nrow(dplyr::distinct(tmp)) != nrow(tmp)) {
+      stop(
+        "action_area has duplicate (pu, action) rows.",
+        call. = FALSE
+      )
+    }
+
+    if (
+      !is.numeric(action_area$action_area) ||
+      anyNA(action_area$action_area) ||
+      any(!is.finite(action_area$action_area))
+    ) {
+      stop(
+        "action_area$action_area must contain only finite, non-missing numeric values.",
+        call. = FALSE
+      )
+    }
+
+    if (any(action_area$action_area < 0)) {
+      stop(
+        "action_area values must be non-negative.",
+        call. = FALSE
+      )
+    }
+
+    key_da <- paste(
+      dist_actions$pu,
+      dist_actions$action,
+      sep = "||"
+    )
+    key_aa <- paste(
+      action_area$pu,
+      action_area$action,
+      sep = "||"
+    )
+
+    unused <- setdiff(
+      key_aa,
+      key_da
+    )
+
+    if (length(unused) > 0L) {
+      warning(
+        "`action_area` contains (pu, action) pair(s) that are not feasible in ",
+        "`dist_actions`; these rows will be ignored.",
+        call. = FALSE,
+        immediate. = TRUE
+      )
+    }
+
+    m <- match(
+      key_da,
+      key_aa
+    )
+    hit <- !is.na(m)
+
+    out <- rep(NA_real_, nrow(dist_actions))
+    out[hit] <- action_area$action_area[m[hit]]
+
+    out
   }
 
   # ---- checks: x
@@ -446,13 +821,23 @@ add_actions <- function(
   )
 
   pu_ids <- x$data$pu$id
-  pu_index <- stats::setNames(x$data$pu$internal_id, as.character(x$data$pu$id))
+  pu_index <- stats::setNames(
+    x$data$pu$internal_id,
+    as.character(x$data$pu$id)
+  )
 
   # ---- actions catalog
-  assertthat::assert_that(inherits(actions, "data.frame"), nrow(actions) > 0)
+  assertthat::assert_that(
+    inherits(actions, "data.frame"),
+    nrow(actions) > 0
+  )
 
   if ("action" %in% names(actions) && !("id" %in% names(actions))) {
-    warning("actions has column 'action'. Renaming it to 'id'.", call. = FALSE, immediate. = TRUE)
+    warning(
+      "actions has column 'action'. Renaming it to 'id'.",
+      call. = FALSE,
+      immediate. = TRUE
+    )
     names(actions)[names(actions) == "action"] <- "id"
   }
 
@@ -514,16 +899,39 @@ add_actions <- function(
   }
 
   action_ids <- actions$id
-  action_index <- stats::setNames(actions$internal_id, actions$id)
+  action_index <- stats::setNames(
+    actions$internal_id,
+    actions$id
+  )
 
-  if (is.null(x$data$index) || !is.list(x$data$index)) x$data$index <- list()
+  if (is.null(x$data$index) || !is.list(x$data$index)) {
+    x$data$index <- list()
+  }
   x$data$index$pu <- pu_index
   x$data$index$action <- action_index
 
   # ---- build feasible pairs
   pu_sf <- x$data$pu_sf
-  include_df <- .spec_to_pairs(include_pairs, "include_pairs", action_ids, pu_ids, pu_sf, .as_int_id)
-  exclude_df <- .spec_to_pairs(exclude_pairs, "exclude_pairs", action_ids, pu_ids, pu_sf, .as_int_id)
+
+  include_df <- .spec_to_pairs(
+    spec = include_pairs,
+    what = "include_pairs",
+    action_ids = action_ids,
+    pu_ids = pu_ids,
+    pu_sf = pu_sf,
+    as_int_id_fun = .as_int_id,
+    compute_area = TRUE
+  )
+
+  exclude_df <- .spec_to_pairs(
+    spec = exclude_pairs,
+    what = "exclude_pairs",
+    action_ids = action_ids,
+    pu_ids = pu_ids,
+    pu_sf = pu_sf,
+    as_int_id_fun = .as_int_id,
+    compute_area = FALSE
+  )
 
   if (is.null(include_df)) {
     dist_actions <- base::expand.grid(
@@ -536,19 +944,113 @@ add_actions <- function(
     dist_actions <- include_df
   }
 
+  if (!"action_area" %in% names(dist_actions)) {
+    dist_actions$action_area <- NA_real_
+  }
+
   if (!is.null(exclude_df) && nrow(exclude_df) > 0) {
-    key_da <- paste(dist_actions$pu, dist_actions$action)
-    key_ex <- paste(exclude_df$pu, exclude_df$action)
+    key_da <- paste(
+      dist_actions$pu,
+      dist_actions$action,
+      sep = "||"
+    )
+    key_ex <- paste(
+      exclude_df$pu,
+      exclude_df$action,
+      sep = "||"
+    )
     keep <- !(key_da %in% key_ex)
     dist_actions <- dist_actions[keep, , drop = FALSE]
   }
 
   if (nrow(dist_actions) == 0) {
-    stop("No feasible (pu, action) pairs were created after applying include_pairs/exclude_pairs.", call. = FALSE)
+    stop(
+      "No feasible (pu, action) pairs were created after applying include_pairs/exclude_pairs.",
+      call. = FALSE
+    )
   }
 
-  dist_actions$pu <- .as_int_id(dist_actions$pu, "dist_actions$pu")
+  dist_actions$pu <- .as_int_id(
+    dist_actions$pu,
+    "dist_actions$pu"
+  )
   dist_actions$action <- as.character(dist_actions$action)
+
+  # ---- action areas
+  if (!is.null(action_area)) {
+    user_action_area <- .process_action_area(
+      action_area = action_area,
+      dist_actions = dist_actions,
+      pu_ids = pu_ids,
+      action_ids = action_ids,
+      as_int_id_fun = .as_int_id
+    )
+
+    hit <- !is.na(user_action_area)
+    dist_actions$action_area[hit] <- user_action_area[hit]
+  }
+
+  missing_action_area <- is.na(dist_actions$action_area)
+
+  if (any(missing_action_area)) {
+    pu_area <- tryCatch(
+      .pa_get_area_vec(
+        x,
+        area_col = NULL,
+        area_unit = "m2"
+      ),
+      error = function(e) NULL
+    )
+
+    if (!is.null(pu_area)) {
+      pu_area <- as.numeric(pu_area)
+      names(pu_area) <- as.character(x$data$pu$id)
+
+      fill_values <- pu_area[
+        as.character(dist_actions$pu[missing_action_area])
+      ]
+
+      dist_actions$action_area[missing_action_area] <- as.numeric(fill_values)
+    }
+  }
+
+  if (
+    any(
+      !is.na(dist_actions$action_area) &
+      !is.finite(dist_actions$action_area)
+    )
+  ) {
+    stop(
+      "action_area contains non-finite values.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    any(
+      !is.na(dist_actions$action_area) &
+      dist_actions$action_area < 0
+    )
+  ) {
+    stop(
+      "action_area values must be non-negative.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    any(
+      !is.na(dist_actions$action_area) &
+      dist_actions$action_area < 0
+    )
+  ) {
+    stop(
+      "action_area values must be non-negative.",
+      call. = FALSE
+    )
+  }
+
+
 
   # ---- costs
   dist_actions$cost <- 1
@@ -916,17 +1418,41 @@ add_actions <- function(
   # }
 
   # ---- add internal ids
-  dist_actions$internal_pu <- unname(pu_index[as.character(dist_actions$pu)])
-  dist_actions$internal_action <- unname(action_index[as.character(dist_actions$action)])
+  dist_actions$internal_pu <- unname(
+    pu_index[as.character(dist_actions$pu)]
+  )
+  dist_actions$internal_action <- unname(
+    action_index[as.character(dist_actions$action)]
+  )
 
-  dist_actions <- dist_actions[order(dist_actions$internal_pu, dist_actions$internal_action), , drop = FALSE]
+  dist_actions <- dist_actions[
+    order(dist_actions$internal_pu, dist_actions$internal_action),
+    ,
+    drop = FALSE
+  ]
 
   if (anyNA(dist_actions$internal_pu)) {
     stop("Internal error: could not map pu -> internal_pu.", call. = FALSE)
   }
+
   if (anyNA(dist_actions$internal_action)) {
     stop("Internal error: could not map action -> internal_action.", call. = FALSE)
   }
+
+  # Keep a stable column order.
+  dist_actions <- dist_actions[
+    ,
+    c(
+      "pu",
+      "action",
+      "cost",
+      "status",
+      "internal_pu",
+      "internal_action",
+      "action_area"
+    ),
+    drop = FALSE
+  ]
 
   x$data$actions <- actions
   x$data$dist_actions <- dist_actions
