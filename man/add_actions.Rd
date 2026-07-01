@@ -9,7 +9,8 @@ add_actions(
   actions,
   include_pairs = NULL,
   exclude_pairs = NULL,
-  cost = NULL
+  cost = NULL,
+  action_area = NULL
 )
 }
 \arguments{
@@ -33,6 +34,13 @@ matching pairs from the feasible set.}
 \code{NULL}, a scalar numeric value, a named numeric vector indexed by
 action id, or a \code{data.frame} with columns \code{action, cost} or
 \code{pu, action, cost}.}
+
+\item{action_area}{Optional effective area specification for feasible
+\code{(pu, action)} pairs. It may be \code{NULL} or a \code{data.frame}
+with columns \code{pu}, \code{action}, and \code{action_area}. If
+\code{NULL}, action areas are derived from spatial \code{include_pairs}
+when available, otherwise they default to full planning-unit areas when
+these can be derived from the problem.}
 }
 \value{
 An updated \code{Problem} object with:
@@ -40,8 +48,8 @@ An updated \code{Problem} object with:
 \item{\code{actions}}{The action catalogue, including a unique integer
 \code{internal_id} for each action.}
 \item{\code{dist_actions}}{The feasible planning unit--action table with
-columns \code{pu}, \code{action}, \code{cost}, \code{status},
-\code{internal_pu}, and \code{internal_action}.}
+columns \code{pu}, \code{action}, \code{cost}, \code{action_area},
+\code{status}, \code{internal_pu}, and \code{internal_action}.}
 \item{\code{pu index}}{A mapping from user-supplied planning-unit ids to
 internal integer ids.}
 \item{\code{action index}}{A mapping from action ids to internal integer
@@ -50,12 +58,13 @@ ids.}
 }
 \description{
 Define the action catalogue, the set of feasible planning unit--action pairs,
-and their implementation costs.
+their implementation costs, and the effective area represented by each
+feasible planning unit--action decision.
 
 This function adds two core components to a \code{Problem} object. First, it
 stores the action catalogue. Second, it creates the feasible planning
-unit--action table, including implementation costs, status codes, and
-internal indices used by the optimization backend.
+unit--action table, including implementation costs, effective action areas,
+status codes, and internal indices used by the optimization backend.
 
 Conceptually, if \eqn{\mathcal{I}} is the set of planning units and
 \eqn{\mathcal{A}} is the set of actions, this function determines which
@@ -129,8 +138,45 @@ contain either:
 feasible.
 }
 
-In the spatial case, feasible planning units are identified using
-\code{sf::st_intersects()} against the stored planning-unit geometry.
+Lists may mix vectors of planning-unit ids and \code{sf} objects across
+actions. In the spatial case, feasible planning units are identified using
+\code{sf::st_intersects()} against the stored planning-unit geometry. If
+\code{include_pairs} or \code{exclude_pairs} contains \code{sf} objects, the
+problem must contain planning-unit geometry in \code{x$data$pu_sf}; otherwise
+an error is raised.
+
+Spatial exclusions are applied after inclusions. If a planning unit--action
+pair is included and excluded, the exclusion takes precedence and the pair is
+removed. Spatial exclusions remove complete \code{(pu, action)} pairs; they
+do not partially subtract area from included geometries.
+
+\strong{Action areas.}
+
+The \code{action_area} column in \code{dist_actions} stores the effective
+area represented by each feasible \code{(pu, action)} decision. This is an
+area, not an action intensity.
+
+If \code{action_area = NULL}, action areas are derived automatically:
+\itemize{
+\item when \code{include_pairs} is supplied using \code{sf} objects, action
+areas are computed as the area of the spatial intersection between
+planning-unit geometries and the corresponding action geometries;
+\item when feasible pairs are supplied without spatial geometries, action
+areas default to the full planning-unit area when this can be derived from
+the problem object.
+}
+
+If \code{action_area} is supplied as a \code{data.frame}, it must contain
+columns \code{pu}, \code{action}, and \code{action_area}. A column named
+\code{area} is also accepted and renamed internally to \code{action_area}.
+Supplied areas must be finite and non-negative. User-supplied values override
+automatically derived values for matching feasible pairs. Rows referring to
+non-feasible pairs are ignored with a warning.
+
+If full planning-unit areas cannot be derived for some feasible pairs,
+\code{action_area} is left as \code{NA} for those pairs. Area-based action
+constraints should check for missing \code{action_area} values before model
+construction.
 
 \strong{Feasibility versus decision fixing.}
 
@@ -187,7 +233,8 @@ decision-fixing constraints, objectives, and solver settings before calling
 # ------------------------------------------------------
 pu <- data.frame(
   id = 1:4,
-  cost = c(2, 3, 1, 4)
+  cost = c(2, 3, 1, 4),
+  area = c(100, 100, 100, 100)
 )
 
 features <- data.frame(
@@ -251,6 +298,23 @@ p3 <- add_actions(
 )
 
 p3$data$dist_actions
+
+# Example 4: provide action-specific areas manually
+action_area <- data.frame(
+  pu = c(1, 2, 3, 4),
+  action = c("conservation", "conservation", "restoration", "restoration"),
+  action_area = c(100, 50, 80, 100)
+)
+
+p4 <- add_actions(
+  x = p,
+  actions = actions,
+  include_pairs = include_df,
+  action_area = action_area,
+  cost = 10
+)
+
+p4$data$dist_actions
 
 }
 \seealso{
