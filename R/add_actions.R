@@ -215,7 +215,16 @@
 #'   \code{NULL}, action areas are derived from spatial \code{include_pairs}
 #'   when available, otherwise they default to full planning-unit areas when
 #'   these can be derived from the problem.
+#'#'
+#' @param progress Logical. If \code{TRUE}, show progress messages for large
+#'   spatial action intersections when the \code{cli} package is available.
 #'
+#' @param chunk_size Positive integer. Number of candidate planning units to
+#'   process per chunk when spatial action zones require partial intersections.
+#'   Smaller values reduce peak memory use; larger values may be faster when
+#'   enough memory is available.
+#'
+
 #' @return An updated \code{Problem} object with:
 #' \describe{
 #'   \item{\code{actions}}{The action catalogue, including a unique integer
@@ -332,7 +341,9 @@ add_actions <- function(
     include_pairs = NULL,
     exclude_pairs = NULL,
     cost = NULL,
-    action_area = NULL
+    action_area = NULL,
+    progress = TRUE,
+    chunk_size = 5000
 ) {
 
   .as_int_id <- function(v, what) {
@@ -476,143 +487,246 @@ add_actions <- function(
     zone
   }
 
-  .spatial_pairs <- function(
-    pu_sf,
-    zone,
-    action,
-    what,
-    as_int_id_fun,
-    compute_area = FALSE,
-    keep_geometry = FALSE
-  ) {
-    if (!inherits(zone, "sf")) {
-      stop(
-        what,
-        "[[",
-        action,
-        "]] must be an sf object.",
-        call. = FALSE
-      )
+  .spatial_pairs <- function(x,
+                             action_id,
+                             zone_sf,
+                             compute_area = TRUE,
+                             keep_geometry = FALSE,
+                             progress = TRUE,
+                             chunk_size = 5000) {
+    pu_sf <- x$data$pu_sf
+
+    pu_geom <- pu_sf[, "id", drop = FALSE]
+
+    if (sf::st_crs(pu_geom) != sf::st_crs(zone_sf)) {
+      zone_sf <- sf::st_transform(zone_sf, sf::st_crs(pu_geom))
     }
 
-    zone <- .align_zone_crs(
-      zone = zone,
-      pu_sf = pu_sf,
-      what = what,
-      action = action
+    zone_union <- sf::st_union(sf::st_geometry(zone_sf))
+
+    zone_union <- sf::st_sf(
+      action = action_id,
+      geometry = sf::st_sfc(zone_union, crs = sf::st_crs(pu_geom))
     )
 
-    hits <- sf::st_intersects(
-      pu_sf,
-      zone,
+    # 1. Candidatas: intersectan o tocan la zona
+    hits_intersects <- sf::st_intersects(
+      pu_geom,
+      zone_union,
       sparse = TRUE
     )
 
-    idx <- which(lengths(hits) > 0L)
+    idx_intersects <- which(lengths(hits_intersects) > 0L)
 
-    if (length(idx) == 0L) {
-      return(.empty_pairs(
-        with_area = compute_area,
-        with_geometry = keep_geometry,
-        crs = sf::st_crs(pu_sf)
-      ))
-    }
+    if (length(idx_intersects) == 0L) {
+      if (isTRUE(keep_geometry)) {
+        return(
+          sf::st_sf(
+            pu = integer(),
+            action = character(),
+            action_area = numeric(),
+            geometry = sf::st_sfc(crs = sf::st_crs(pu_geom))
+          )
+        )
+      }
 
-    feasible_ids <- as_int_id_fun(
-      pu_sf$id[idx],
-      paste0(what, "$pu")
-    )
-
-    if (!isTRUE(compute_area)) {
-      return(data.frame(
-        pu = feasible_ids,
-        action = action,
-        stringsAsFactors = FALSE
-      ))
-    }
-
-    pu_sub <- pu_sf[idx, , drop = FALSE]
-
-    pu_sub$id <- as_int_id_fun(
-      pu_sub$id,
-      "x$data$pu_sf$id"
-    )
-
-    zone_union <- sf::st_union(
-      sf::st_geometry(zone)
-    )
-
-    zone_sf <- sf::st_sf(
-      .zone_id = 1L,
-      geometry = zone_union,
-      crs = sf::st_crs(pu_sub)
-    )
-
-    inter <- suppressWarnings(
-      sf::st_intersection(
-        pu_sub[, "id", drop = FALSE],
-        zone_sf
+      return(
+        data.frame(
+          pu = integer(),
+          action = character(),
+          action_area = numeric()
+        )
       )
-    )
-
-    if (nrow(inter) == 0L) {
-      return(.empty_pairs(
-        with_area = TRUE,
-        with_geometry = keep_geometry,
-        crs = sf::st_crs(pu_sf)
-      ))
     }
 
-    inter$pu <- as_int_id_fun(
-      inter$id,
-      paste0(what, "$pu")
+    pu_candidates <- pu_geom[idx_intersects, , drop = FALSE]
+
+    # 2. Full cover: PUs completamente dentro/cubiertas por la zona
+    hits_covered <- sf::st_covered_by(
+      pu_candidates,
+      zone_union,
+      sparse = TRUE
     )
 
-    inter$action <- action
-    inter$action_area <- as.numeric(sf::st_area(inter))
+    idx_full_local <- which(lengths(hits_covered) > 0L)
+    idx_full <- idx_intersects[idx_full_local]
+
+    idx_partial <- setdiff(idx_intersects, idx_full)
+
+    # 3. PUs completamente cubiertas: no necesitan st_intersection()
+    full_out <- NULL
+
+    if (length(idx_full) > 0L) {
+      full_out <- pu_geom[idx_full, , drop = FALSE]
+
+      full_out$pu <- as.integer(full_out$id)
+      full_out$action <- as.character(action_id)
+      full_out$action_area <- as.numeric(sf::st_area(full_out))
+
+      if (isTRUE(keep_geometry)) {
+        full_out <- full_out |>
+          dplyr::select(
+            pu,
+            action,
+            action_area,
+            geometry
+          )
+      } else {
+        full_out <- full_out |>
+          sf::st_drop_geometry() |>
+          dplyr::select(
+            pu,
+            action,
+            action_area
+          )
+      }
+    }
+
+    # 4. PUs parciales: solo estas requieren intersección real
+    partial_out <- NULL
+
+    if (length(idx_partial) > 0L) {
+      idx_chunks <- split(
+        idx_partial,
+        ceiling(seq_along(idx_partial) / chunk_size)
+      )
+
+      use_cli <- isTRUE(progress) && requireNamespace("cli", quietly = TRUE)
+
+      if (use_cli) {
+        cli::cli_progress_bar(
+          name = paste0("Intersecting partial PUs for action `", action_id, "`"),
+          total = length(idx_chunks),
+          type = "iterator",
+          clear = FALSE
+        )
+      }
+
+      partial_list <- vector("list", length(idx_chunks))
+
+      for (k in seq_along(idx_chunks)) {
+        pu_sub <- pu_geom[idx_chunks[[k]], , drop = FALSE]
+
+        inter_k <- suppressWarnings(
+          sf::st_intersection(
+            pu_sub,
+            zone_union
+          )
+        )
+
+        if (nrow(inter_k) > 0L) {
+          inter_k$pu <- as.integer(inter_k$id)
+          inter_k$action <- as.character(action_id)
+          inter_k$action_area <- as.numeric(sf::st_area(inter_k))
+
+          inter_k <- inter_k |>
+            dplyr::filter(
+              !is.na(.data$action_area),
+              is.finite(.data$action_area),
+              .data$action_area > 0
+            )
+
+          if (nrow(inter_k) > 0L) {
+            if (isTRUE(keep_geometry)) {
+              partial_list[[k]] <- inter_k |>
+                dplyr::select(
+                  pu,
+                  action,
+                  action_area,
+                  geometry
+                )
+            } else {
+              partial_list[[k]] <- inter_k |>
+                sf::st_drop_geometry() |>
+                dplyr::select(
+                  pu,
+                  action,
+                  action_area
+                )
+            }
+          }
+        }
+
+        if (use_cli) {
+          cli::cli_progress_update()
+        }
+      }
+
+      if (use_cli) {
+        cli::cli_progress_done()
+      }
+
+      partial_list <- partial_list[
+        !vapply(partial_list, is.null, logical(1))
+      ]
+
+      if (length(partial_list) > 0L) {
+        if (isTRUE(keep_geometry)) {
+          partial_out <- do.call(rbind, partial_list)
+        } else {
+          partial_out <- dplyr::bind_rows(partial_list)
+        }
+      }
+    }
+
+    # 5. Combinar full + partial
+    out <- list(full_out, partial_out)
+    out <- out[!vapply(out, is.null, logical(1))]
+
+    if (length(out) == 0L) {
+      if (isTRUE(keep_geometry)) {
+        return(
+          sf::st_sf(
+            pu = integer(),
+            action = character(),
+            action_area = numeric(),
+            geometry = sf::st_sfc(crs = sf::st_crs(pu_geom))
+          )
+        )
+      }
+
+      return(
+        data.frame(
+          pu = integer(),
+          action = character(),
+          action_area = numeric()
+        )
+      )
+    }
 
     if (isTRUE(keep_geometry)) {
-      out <- inter[, c("pu", "action", "action_area"), drop = FALSE]
+      ans <- do.call(rbind, out)
 
-      out <- dplyr::group_by(
-        out,
-        .data$pu,
-        .data$action
-      )
+      ans <- ans |>
+        dplyr::group_by(
+          .data$pu,
+          .data$action
+        ) |>
+        dplyr::summarise(
+          action_area = sum(.data$action_area, na.rm = TRUE),
+          geometry = sf::st_union(geometry),
+          .groups = "drop"
+        ) |>
+        sf::st_as_sf()
+    } else {
+      ans <- dplyr::bind_rows(out)
 
-      out <- dplyr::summarise(
-        out,
-        action_area = sum(.data$action_area, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-      out <- sf::st_as_sf(out)
-
-      return(out)
+      ans <- ans |>
+        dplyr::group_by(
+          .data$pu,
+          .data$action
+        ) |>
+        dplyr::summarise(
+          action_area = sum(.data$action_area, na.rm = TRUE),
+          .groups = "drop"
+        ) |>
+        as.data.frame()
     }
 
-    out <- data.frame(
-      pu = inter$pu,
-      action = action,
-      action_area = inter$action_area,
-      stringsAsFactors = FALSE
-    )
+    ans$pu <- as.integer(ans$pu)
+    ans$action <- as.character(ans$action)
 
-    out <- dplyr::group_by(
-      out,
-      .data$pu,
-      .data$action
-    )
-
-    out <- dplyr::summarise(
-      out,
-      action_area = sum(.data$action_area, na.rm = TRUE),
-      .groups = "drop"
-    )
-
-    out <- as.data.frame(out)
-
-    out
+    ans
   }
 
   .spec_to_pairs <- function(
@@ -623,13 +737,22 @@ add_actions <- function(
     pu_sf,
     as_int_id_fun,
     compute_area = FALSE,
-    keep_geometry = FALSE
+    keep_geometry = FALSE,
+    spatial_mode = c("all", "spatial", "nonspatial"),
+    progress = TRUE,
+    chunk_size = 5000
   ) {
+    spatial_mode <- match.arg(spatial_mode)
+
     if (is.null(spec)) {
       return(NULL)
     }
 
     if (inherits(spec, "data.frame")) {
+      if (identical(spatial_mode, "spatial")) {
+        return(NULL)
+      }
+
       if (isTRUE(keep_geometry)) {
         return(NULL)
       }
@@ -726,28 +849,47 @@ add_actions <- function(
           next
         }
 
-        if (inherits(item, "sf")) {
+        item_is_sf <- inherits(item, "sf")
+
+        if (identical(spatial_mode, "spatial") && !item_is_sf) {
+          out[[a]] <- NULL
+          next
+        }
+
+        if (identical(spatial_mode, "nonspatial") && item_is_sf) {
+          out[[a]] <- NULL
+          next
+        }
+
+        if (item_is_sf) {
           .check_spatial_ready(
             what = what,
             pu_sf = pu_sf
           )
 
-          pu_sf2 <- pu_sf
+          if (isTRUE(keep_geometry) || isTRUE(compute_area)) {
+            out[[a]] <- .spatial_pairs(
+              x = x,
+              action_id = a,
+              zone_sf = item,
+              compute_area = compute_area,
+              keep_geometry = keep_geometry,
+              progress = progress,
+              chunk_size = chunk_size
+            )
+          } else {
+            spatial_tmp <- .spatial_pairs(
+              x = x,
+              action_id = a,
+              zone_sf = item,
+              compute_area = TRUE,
+              keep_geometry = FALSE,
+              progress = progress,
+              chunk_size = chunk_size
+            )
 
-          pu_sf2$id <- as_int_id_fun(
-            pu_sf2$id,
-            "x$data$pu_sf$id"
-          )
-
-          out[[a]] <- .spatial_pairs(
-            pu_sf = pu_sf2,
-            zone = item,
-            action = a,
-            what = what,
-            as_int_id_fun = as_int_id_fun,
-            compute_area = compute_area,
-            keep_geometry = keep_geometry
-          )
+            out[[a]] <- spatial_tmp[, c("pu", "action"), drop = FALSE]
+          }
 
         } else {
           if (isTRUE(keep_geometry)) {
@@ -783,9 +925,9 @@ add_actions <- function(
         }
       }
 
-      out_df <- dplyr::bind_rows(out)
+      out <- out[!vapply(out, is.null, logical(1))]
 
-      if (is.null(out_df) || nrow(out_df) == 0L) {
+      if (length(out) == 0L) {
         if (isTRUE(keep_geometry)) {
           return(.empty_pairs(
             with_area = TRUE,
@@ -802,6 +944,8 @@ add_actions <- function(
       }
 
       if (isTRUE(keep_geometry)) {
+        out_df <- do.call(rbind, out)
+
         if (!inherits(out_df, "sf")) {
           return(.empty_pairs(
             with_area = TRUE,
@@ -834,12 +978,19 @@ add_actions <- function(
           } else {
             sum(.data$action_area, na.rm = TRUE)
           },
+          geometry = sf::st_union(geometry),
           .groups = "drop"
         )
 
         out_df <- sf::st_as_sf(out_df)
 
         return(out_df)
+      }
+
+      out_df <- dplyr::bind_rows(out)
+
+      if (is.null(out_df) || nrow(out_df) == 0L) {
+        return(.empty_pairs(with_area = compute_area))
       }
 
       out_df$pu <- as_int_id_fun(
@@ -1032,6 +1183,22 @@ add_actions <- function(
 
   x <- .pa_clone_data(x)
 
+  if (!is.logical(progress) ||
+      length(progress) != 1L ||
+      is.na(progress)) {
+    stop("`progress` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  if (!is.numeric(chunk_size) ||
+      length(chunk_size) != 1L ||
+      is.na(chunk_size) ||
+      !is.finite(chunk_size) ||
+      chunk_size < 1) {
+    stop("`chunk_size` must be a positive integer.", call. = FALSE)
+  }
+
+  chunk_size <- as.integer(chunk_size)
+
   if (is.null(x$data$pu$internal_id)) {
     x$data$pu$internal_id <- seq_len(nrow(x$data$pu))
   }
@@ -1158,27 +1325,84 @@ add_actions <- function(
   # ---- build feasible pairs
   pu_sf <- x$data$pu_sf
 
-  include_df <- .spec_to_pairs(
-    spec = include_pairs,
-    what = "include_pairs",
-    action_ids = action_ids,
-    pu_ids = pu_ids,
-    pu_sf = pu_sf,
-    as_int_id_fun = .as_int_id,
-    compute_area = TRUE,
-    keep_geometry = FALSE
-  )
+  .spec_has_sf <- function(spec) {
+    is.list(spec) && any(vapply(spec, inherits, logical(1), what = "sf"))
+  }
 
-  include_sf <- .spec_to_pairs(
-    spec = include_pairs,
-    what = "include_pairs",
-    action_ids = action_ids,
-    pu_ids = pu_ids,
-    pu_sf = pu_sf,
-    as_int_id_fun = .as_int_id,
-    compute_area = TRUE,
-    keep_geometry = TRUE
-  )
+  include_df <- NULL
+  include_sf <- NULL
+
+  if (is.null(include_pairs)) {
+    include_df <- NULL
+    include_sf <- NULL
+
+  } else if (.spec_has_sf(include_pairs)) {
+    # Important: when include_pairs contains sf layers, compute the spatial
+    # intersections once with keep_geometry = TRUE and derive the tabular
+    # feasible-pair table from that sf result. This avoids doing the same
+    # expensive st_intersection() twice.
+    include_sf <- .spec_to_pairs(
+      spec = include_pairs,
+      what = "include_pairs",
+      action_ids = action_ids,
+      pu_ids = pu_ids,
+      pu_sf = pu_sf,
+      as_int_id_fun = .as_int_id,
+      compute_area = TRUE,
+      keep_geometry = TRUE,
+      spatial_mode = "spatial",
+      progress = progress,
+      chunk_size = chunk_size
+    )
+
+    include_spatial_df <- if (!is.null(include_sf) &&
+                              inherits(include_sf, "sf") &&
+                              nrow(include_sf) > 0L) {
+      sf::st_drop_geometry(include_sf)
+    } else {
+      .empty_pairs(with_area = TRUE)
+    }
+
+    include_nonspatial_df <- .spec_to_pairs(
+      spec = include_pairs,
+      what = "include_pairs",
+      action_ids = action_ids,
+      pu_ids = pu_ids,
+      pu_sf = pu_sf,
+      as_int_id_fun = .as_int_id,
+      compute_area = TRUE,
+      keep_geometry = FALSE,
+      spatial_mode = "nonspatial",
+      progress = progress,
+      chunk_size = chunk_size
+    )
+
+    include_df <- dplyr::bind_rows(
+      include_spatial_df,
+      include_nonspatial_df
+    )
+
+    if (nrow(include_df) == 0L) {
+      include_df <- .empty_pairs(with_area = TRUE)
+    }
+
+  } else {
+    include_df <- .spec_to_pairs(
+      spec = include_pairs,
+      what = "include_pairs",
+      action_ids = action_ids,
+      pu_ids = pu_ids,
+      pu_sf = pu_sf,
+      as_int_id_fun = .as_int_id,
+      compute_area = TRUE,
+      keep_geometry = FALSE,
+      spatial_mode = "all",
+      progress = progress,
+      chunk_size = chunk_size
+    )
+
+    include_sf <- NULL
+  }
 
   exclude_df <- .spec_to_pairs(
     spec = exclude_pairs,
@@ -1188,7 +1412,10 @@ add_actions <- function(
     pu_sf = pu_sf,
     as_int_id_fun = .as_int_id,
     compute_area = FALSE,
-    keep_geometry = FALSE
+    keep_geometry = FALSE,
+    spatial_mode = "all",
+    progress = progress,
+    chunk_size = chunk_size
   )
 
   if (is.null(include_df)) {
