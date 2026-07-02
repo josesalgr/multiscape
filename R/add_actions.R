@@ -542,16 +542,19 @@ add_actions <- function(
     pu_candidates <- pu_geom[idx_intersects, , drop = FALSE]
 
     # 2. Full cover: PUs completamente dentro/cubiertas por la zona
-    hits_covered <- sf::st_covered_by(
-      pu_candidates,
-      zone_union,
-      sparse = TRUE
-    )
+    # hits_covered <- sf::st_covered_by(
+    #   pu_candidates,
+    #   zone_union,
+    #   sparse = TRUE
+    # )
+    #
+    # idx_full_local <- which(lengths(hits_covered) > 0L)
+    # idx_full <- idx_intersects[idx_full_local]
+    #
+    # idx_partial <- setdiff(idx_intersects, idx_full)
 
-    idx_full_local <- which(lengths(hits_covered) > 0L)
-    idx_full <- idx_intersects[idx_full_local]
-
-    idx_partial <- setdiff(idx_intersects, idx_full)
+    idx_full <- integer(0)
+    idx_partial <- idx_intersects
 
     # 3. PUs completamente cubiertas: no necesitan st_intersection()
     full_out <- NULL
