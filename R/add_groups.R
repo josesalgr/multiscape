@@ -109,6 +109,8 @@ add_groups <- function(x,
     names(groups_tbl)[names(groups_tbl) == group_id_col] <- "id"
   }
 
+  groups_tbl$id <- as.character(groups_tbl$id)
+
   required_group_cols <- "id"
   missing_group_cols <- setdiff(required_group_cols, names(groups_tbl))
 
@@ -197,6 +199,8 @@ add_groups <- function(x,
     dist_groups,
     stringsAsFactors = FALSE
   )
+
+  dist_groups$group <- as.character(dist_groups$group)
 
   # Convert supplied areas to square metres for internal storage.
   if (dist_groups_from_sf) {

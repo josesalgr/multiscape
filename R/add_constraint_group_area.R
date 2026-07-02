@@ -130,13 +130,42 @@ add_constraint_group_area <- function(
 
   x <- .pa_clone_data(x)
 
+  # If groups = NULL, constrain only groups with positive available area in
+  # dist_groups. This avoids adding constraints for groups present in the group
+  # catalogue but absent from the current planning-unit subset.
   selected_groups <- if (is.null(groups)) {
-    x$data$groups$id
+    active_groups <- x$data$dist_groups |>
+      dplyr::filter(
+        !is.na(.data$group),
+        !is.na(.data$area),
+        is.finite(.data$area),
+        .data$area > 0
+      ) |>
+      dplyr::distinct(.data$group) |>
+      dplyr::pull(.data$group)
+
+    # Keep the same order as x$data$groups$id when possible.
+    active_groups <- as.character(active_groups)
+
+    groups_order <- as.character(x$data$groups$id)
+
+    groups_order[
+      groups_order %in% active_groups
+    ]
   } else {
     groups
   }
 
   selected_groups <- as.character(selected_groups)
+
+  if (length(selected_groups) == 0L ||
+      anyNA(selected_groups) ||
+      any(!nzchar(selected_groups))) {
+    stop(
+      "`groups` must identify at least one group with positive available area.",
+      call. = FALSE
+    )
+  }
 
   if (length(selected_groups) == 0L ||
       anyNA(selected_groups) ||
