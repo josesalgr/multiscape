@@ -7,18 +7,23 @@
 #'
 #' This function stores one area-constraint specification in the
 #' \code{Problem} object so that it can later be incorporated when the
-#' optimization model is assembled. Multiple area constraints can be added by
-#' calling this function repeatedly, provided that no duplicated combination of
-#' action subset and constraint sense is introduced.
+#' optimization model is assembled. Area constraints can be imposed either on
+#' the total selected planning-unit area or on the effective area of selected
+#' actions.
+#'
+#' Multiple area constraints can be added by calling this function repeatedly,
+#' provided that no duplicated combination of action subset and constraint sense
+#' is introduced.
 #'
 #' @details
 #' Use this function when area requirements must be imposed either on the total
-#' selected landscape or on the subset of selected decisions associated with
-#' specific actions.
+#' selected landscape or on the effective area allocated to specific actions.
+#'
+#' \strong{Total selected area.}
 #'
 #' Let \eqn{\mathcal{I}} denote the set of planning units and let
 #' \eqn{a_i \ge 0} be the area associated with planning unit
-#' \eqn{i \in \mathcal{I}}
+#' \eqn{i \in \mathcal{I}}.
 #'
 #' When \code{actions = NULL}, the constraint refers to the total selected area
 #' in the problem. In that case, let \eqn{w_i \in \{0,1\}} denote the binary
@@ -26,7 +31,7 @@
 #' decision in the model.
 #'
 #' Depending on \code{sense}, this function stores one of the following
-#' constraints:
+#' constraints.
 #'
 #' If \code{sense = "min"}:
 #' \deqn{
@@ -50,29 +55,55 @@
 #' }
 #' where \eqn{\tau} is the value supplied through \code{tolerance}.
 #'
-#' When \code{actions} is not \code{NULL}, the constraint is applied only to the
-#' selected decisions associated with the specified subset of actions. Let
-#' \eqn{\mathcal{A}^\star \subseteq \mathcal{A}} denote that subset and let
-#' \eqn{x_{ia} \in \{0,1\}} denote the binary variable indicating whether action
-#' \eqn{a \in \mathcal{A}^\star} is selected in planning unit
-#' \eqn{i \in \mathcal{I}}. In that case, the constrained quantity is
+#' \strong{Action-specific effective area.}
+#'
+#' When \code{actions} is not \code{NULL}, the constraint refers to the
+#' effective area of the selected decisions associated with the specified subset
+#' of actions.
+#'
+#' Let \eqn{\mathcal{A}^\star \subseteq \mathcal{A}} denote the specified
+#' action subset and let \eqn{x_{ia} \in \{0,1\}} denote the binary variable
+#' indicating whether action \eqn{a \in \mathcal{A}^\star} is selected in
+#' planning unit \eqn{i \in \mathcal{I}}. Let \eqn{b_{ia} \ge 0} denote the
+#' effective action area associated with feasible pair \eqn{(i,a)}, as stored in
+#' \code{x$data$dist_actions$action_area}. In that case, the constrained
+#' quantity is:
 #' \deqn{
-#' \sum_{i \in \mathcal{I}} \sum_{a \in \mathcal{A}^\star} a_i x_{ia}.
+#' \sum_{i \in \mathcal{I}} \sum_{a \in \mathcal{A}^\star} b_{ia} x_{ia}.
 #' }
 #'
-#' Under formulations where at most one action can be selected per planning
-#' unit, this coincides with the area allocated to that subset of actions.
+#' Effective action areas are defined in \code{\link{add_actions}}. They can be
+#' supplied manually through the \code{action_area} argument, derived from
+#' spatial \code{include_pairs}, or default to full planning-unit areas when
+#' these can be derived from the problem.
 #'
-#' Areas are obtained from the planning-unit table. If \code{area_col} is
-#' provided, that column is used. Otherwise, the model builder later determines
-#' the default area source according to the internal rules of the package. The
-#' value of \code{area_unit} indicates the unit in which \code{area} and
-#' \code{tolerance} are expressed and therefore how the stored threshold should
-#' be interpreted.
+#' Consequently, if no partial action areas are supplied and each feasible action
+#' is assumed to apply to the full planning unit, then an action-specific area
+#' constraint is numerically equivalent to using planning-unit areas for those
+#' action decisions. If partial action areas are supplied, the constraint uses
+#' those effective areas instead.
+#'
+#' \strong{Area units and area sources.}
+#'
+#' The value of \code{area_unit} indicates the unit in which \code{area} and
+#' \code{tolerance} are expressed.
+#'
+#' When \code{actions = NULL}, areas are obtained from the planning-unit table or
+#' planning-unit geometry. If \code{area_col} is provided, that column is used.
+#' Otherwise, the model builder determines the default area source according to
+#' the internal rules of the package.
+#'
+#' When \code{actions} is not \code{NULL}, the model builder uses
+#' \code{x$data$dist_actions$action_area}. These values are stored internally in
+#' square metres and are converted to \code{area_unit} when the model is built.
+#' If action areas are missing for relevant feasible \code{(pu, action)} pairs,
+#' the model builder may use \code{area_col} as a fallback to derive full
+#' planning-unit areas. If valid action areas still cannot be obtained, model
+#' construction fails with an error.
 #'
 #' This function only stores the constraint specification; it does not validate
-#' the feasibility of the threshold against the available planning units at this
-#' stage.
+#' the feasibility of the threshold against the available planning units or
+#' actions at this stage.
 #'
 #' Multiple area constraints can be stored in a \code{Problem} object. However,
 #' at most one can be stored for the same combination of action subset and
@@ -91,20 +122,24 @@
 #'   \code{sense = "equal"}. In that case, equality is interpreted as a band
 #'   around \code{area} with half-width \code{tolerance}. Ignored otherwise.
 #'
-#' @param area_col Optional character string giving the name of the area column
-#'   in \code{x$data$pu}. If \code{NULL}, the area source is resolved later by
-#'   the model builder.
+#' @param area_col Optional character string giving the name of the planning-unit
+#'   area column. When \code{actions = NULL}, this column is used as the source
+#'   of planning-unit areas. When \code{actions} is not \code{NULL}, the
+#'   constraint uses \code{x$data$dist_actions$action_area}; \code{area_col} can
+#'   still be used by the model builder as a fallback if action areas are missing
+#'   and full planning-unit areas can be derived.
 #'
 #' @param area_unit Character string indicating the unit of \code{area} and
 #'   \code{tolerance}. Must be one of \code{"m2"}, \code{"ha"}, or
 #'   \code{"km2"}.
 #'
 #' @param actions Optional subset of actions to which the constraint applies.
-#'   If \code{NULL}, the constraint applies to the total selected area in the
-#'   problem through the planning-unit selection variables. Otherwise, it applies
-#'   to the selected decision variables associated with the specified subset of
-#'   actions. This argument is resolved using the package's standard action
-#'   subset parser.
+#'   If \code{NULL}, the constraint applies to the total selected planning-unit
+#'   area through the planning-unit selection variables. Otherwise, it applies to
+#'   the effective area of the selected decision variables associated with the
+#'   specified subset of actions, using
+#'   \code{x$data$dist_actions$action_area}. This argument is resolved using the
+#'   package's standard action subset parser.
 #'
 #' @param name Optional character string used as the label of the stored linear
 #'   constraint when it is later added to the optimization model. If
@@ -114,7 +149,8 @@
 #'   specification appended to \code{x$data$constraints$area}.
 #'
 #' @seealso
-#' \code{\link{create_problem}}
+#' \code{\link{create_problem}},
+#' \code{\link{add_actions}}
 #'
 #' @examples
 #' pu <- data.frame(
@@ -150,6 +186,7 @@
 #'   cost = c(conservation = 1, restoration = 2)
 #' )
 #'
+#' # Constrain the total selected planning-unit area.
 #' p <- add_constraint_area(
 #'   x = p,
 #'   area = 25,
@@ -158,19 +195,13 @@
 #'   area_unit = "ha"
 #' )
 #'
+#' # Constrain the effective area allocated to restoration.
+#' # Because add_actions() can derive full planning-unit areas here,
+#' # restoration action areas default to the full area of each feasible PU.
 #' p <- add_constraint_area(
 #'   x = p,
 #'   area = 15,
 #'   sense = "max",
-#'   area_col = "area_ha",
-#'   area_unit = "ha",
-#'   actions = "restoration"
-#' )
-#'
-#' p <- add_constraint_area(
-#'   x = p,
-#'   area = 5,
-#'   sense = "min",
 #'   area_col = "area_ha",
 #'   area_unit = "ha",
 #'   actions = "restoration"

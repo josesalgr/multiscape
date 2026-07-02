@@ -1150,6 +1150,24 @@ available_to_solve <- function(package = ""){
 .pa_apply_area_constraints_if_present <- function(x) {
   stopifnot(inherits(x, "Problem"))
 
+  .area_unit_convert_from_m2 <- function(area_m2, unit) {
+    unit <- match.arg(unit, c("m2", "ha", "km2"))
+
+    switch(
+      unit,
+      m2 = area_m2,
+      ha = area_m2 / 1e4,
+      km2 = area_m2 / 1e6
+    )
+  }
+
+  .is_missing_actions <- function(actions_txt) {
+    length(actions_txt) == 0L ||
+      is.na(actions_txt) ||
+      !nzchar(trimws(actions_txt)) ||
+      identical(trimws(actions_txt), "NA")
+  }
+
   cons <- x$data$constraints %||% list()
   if (length(cons) == 0L) return(x)
 
@@ -1195,17 +1213,11 @@ available_to_solve <- function(package = ""){
   }
 
   w0 <- as.integer(ml$w_offset %||% 0L)
+  x0 <- as.integer(ml$x_offset %||% 0L)
+
   j0_w <- w0 + (0:(n_pu - 1L))
 
   da <- x$data$dist_actions_model %||% NULL
-  if (is.null(da) || !is.data.frame(da) || nrow(da) == 0L) {
-    stop(
-      "Action-level area constraints require `x$data$dist_actions_model`.",
-      call. = FALSE
-    )
-  }
-
-  x0 <- as.integer(ml$x_offset %||% 0L)
 
   for (k in seq_len(nrow(specs))) {
     spec <- specs[k, , drop = FALSE]
@@ -1221,40 +1233,90 @@ available_to_solve <- function(package = ""){
     if (!sense %in% c("min", "max", "equal")) {
       stop("Unknown area constraint sense: ", sense, call. = FALSE)
     }
+
+    if (!area_unit %in% c("m2", "ha", "km2")) {
+      stop("Unknown area constraint unit: ", area_unit, call. = FALSE)
+    }
+
     if (!is.finite(rhs) || is.na(rhs) || rhs < 0) {
       stop("Invalid area constraint value in stored area constraints.", call. = FALSE)
     }
+
     if (!is.finite(tol) || is.na(tol) || tol < 0) {
       stop("Invalid area constraint tolerance in stored area constraints.", call. = FALSE)
     }
+
     if (is.na(nm) || !nzchar(nm)) {
       stop("Stored area constraint has invalid `name`.", call. = FALSE)
     }
 
-    a <- .pa_get_area_vec(
-      x,
-      area_col = if (is.na(area_col)) NULL else area_col,
-      area_unit = area_unit %||% "m2"
-    )
-
-    if (length(a) != n_pu) {
-      stop(
-        "Area vector length (", length(a), ") != n_pu (", n_pu,
-        ") while applying area constraint `", nm, "`.",
-        call. = FALSE
-      )
+    area_col_arg <- if (is.na(area_col) || !nzchar(area_col)) {
+      NULL
+    } else {
+      area_col
     }
 
-    if (is.na(actions_txt) || !nzchar(actions_txt)) {
+    # ------------------------------------------------------------
+    # Case 1: actions = NULL
+    # Area of selected planning units: sum_i area_i * w_i
+    # ------------------------------------------------------------
+    if (.is_missing_actions(actions_txt)) {
+      a <- .pa_get_area_vec(
+        x,
+        area_col = area_col_arg,
+        area_unit = area_unit
+      )
+
+      if (length(a) != n_pu) {
+        stop(
+          "Area vector length (", length(a), ") != n_pu (", n_pu,
+          ") while applying area constraint `", nm, "`.",
+          call. = FALSE
+        )
+      }
 
       var_index <- j0_w
-      coeff <- a
+      coeff <- as.numeric(a)
 
+      # ------------------------------------------------------------
+      # Case 2: actions != NULL
+      # Effective action area: sum_ia action_area_ia * x_ia
+      # ------------------------------------------------------------
     } else {
+      if (is.null(da) || !is.data.frame(da) || nrow(da) == 0L) {
+        stop(
+          "Area constraints with `actions` require `x$data$dist_actions_model`.",
+          call. = FALSE
+        )
+      }
+
+      required_da_cols <- c(
+        "action",
+        "internal_row",
+        "internal_pu",
+        "action_area"
+      )
+
+      miss_da <- setdiff(required_da_cols, names(da))
+      if (length(miss_da) > 0L) {
+        stop(
+          "`dist_actions_model` must contain columns: ",
+          paste(miss_da, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
 
       actions_chr <- strsplit(actions_txt, "\\|", fixed = FALSE)[[1]]
+      actions_chr <- trimws(actions_chr)
+      actions_chr <- actions_chr[
+        !is.na(actions_chr) &
+          nzchar(actions_chr) &
+          actions_chr != "NA"
+      ]
 
       act_subset <- .pa_resolve_action_subset(x, subset = actions_chr)
+
       if (!is.data.frame(act_subset) || nrow(act_subset) == 0L) {
         stop(
           "Stored area constraint `", nm,
@@ -1273,22 +1335,58 @@ available_to_solve <- function(package = ""){
         )
       }
 
-      if (!("internal_row" %in% names(da))) {
+      da_sub <- da[keep, , drop = FALSE]
+
+      action_area_m2 <- as.numeric(da_sub$action_area)
+
+      missing_area <- is.na(action_area_m2)
+
+      if (any(missing_area)) {
+        pu_area_m2 <- tryCatch(
+          .pa_get_area_vec(
+            x,
+            area_col = area_col_arg,
+            area_unit = "m2"
+          ),
+          error = function(e) NULL
+        )
+
+        if (!is.null(pu_area_m2)) {
+          names(pu_area_m2) <- as.character(x$data$pu$id)
+
+          action_area_m2[missing_area] <- as.numeric(
+            pu_area_m2[as.character(da_sub$pu[missing_area])]
+          )
+        }
+      }
+
+      if (
+        anyNA(action_area_m2) ||
+        any(!is.finite(action_area_m2))
+      ) {
         stop(
-          "`dist_actions_model` must contain column `internal_row`.",
+          "Area constraint `", nm, "` uses `actions`, so it requires finite ",
+          "`action_area` values for all relevant feasible (pu, action) pairs. ",
+          "Provide `action_area` in add_actions(), use spatial include_pairs, ",
+          "or provide usable planning-unit areas through `area_col` or problem geometry.",
           call. = FALSE
         )
       }
 
-      if (!("internal_pu" %in% names(da))) {
+      if (any(action_area_m2 < 0)) {
         stop(
-          "`dist_actions_model` must contain column `internal_pu`.",
+          "`action_area` values used in area constraint `", nm,
+          "` must be non-negative.",
           call. = FALSE
         )
       }
 
-      var_index <- x0 + (as.integer(da$internal_row[keep]) - 1L)
-      coeff <- a[as.integer(da$internal_pu[keep])]
+      var_index <- x0 + (as.integer(da_sub$internal_row) - 1L)
+
+      coeff <- .area_unit_convert_from_m2(
+        action_area_m2,
+        area_unit
+      )
 
       if (length(var_index) != length(coeff) || length(coeff) == 0L) {
         stop(
@@ -1306,7 +1404,9 @@ available_to_solve <- function(package = ""){
         coeff = coeff,
         sense = ">=",
         rhs = rhs,
-        name = nm
+        name = nm,
+        block_name = "area",
+        tag = if (.is_missing_actions(actions_txt)) "planning_units" else "actions"
       )
 
     } else if (identical(sense, "max")) {
@@ -1317,7 +1417,9 @@ available_to_solve <- function(package = ""){
         coeff = coeff,
         sense = "<=",
         rhs = rhs,
-        name = nm
+        name = nm,
+        block_name = "area",
+        tag = if (.is_missing_actions(actions_txt)) "planning_units" else "actions"
       )
 
     } else if (identical(sense, "equal")) {
@@ -1330,7 +1432,9 @@ available_to_solve <- function(package = ""){
           coeff = coeff,
           sense = "==",
           rhs = rhs,
-          name = nm
+          name = nm,
+          block_name = "area",
+          tag = if (.is_missing_actions(actions_txt)) "planning_units" else "actions"
         )
 
       } else {
@@ -1341,7 +1445,9 @@ available_to_solve <- function(package = ""){
           coeff = coeff,
           sense = ">=",
           rhs = rhs - tol,
-          name = paste0(nm, "_lower")
+          name = paste0(nm, "_lower"),
+          block_name = "area",
+          tag = if (.is_missing_actions(actions_txt)) "planning_units" else "actions"
         )
 
         x <- .pa_add_linear_constraint(
@@ -1350,7 +1456,9 @@ available_to_solve <- function(package = ""){
           coeff = coeff,
           sense = "<=",
           rhs = rhs + tol,
-          name = paste0(nm, "_upper")
+          name = paste0(nm, "_upper"),
+          block_name = "area",
+          tag = if (.is_missing_actions(actions_txt)) "planning_units" else "actions"
         )
       }
     }

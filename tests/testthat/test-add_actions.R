@@ -185,3 +185,89 @@ test_that("add_actions rejects unknown ids in feasible-pair tables", {
     )
   )
 })
+
+
+test_that("area constraint without actions uses planning-unit areas", {
+  pu <- data.frame(
+    id = 1:2,
+    cost = c(1, 1),
+    area_ha = c(10, 20)
+  )
+
+  features <- data.frame(id = 1, name = "f1")
+
+  dist_features <- data.frame(
+    pu = c(1, 2),
+    feature = 1,
+    amount = c(1, 1)
+  )
+
+  p <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features
+  )
+
+  p <- add_actions(
+    p,
+    actions = data.frame(id = "restoration")
+  )
+
+  p <- add_constraint_area(
+    p,
+    area = 15,
+    sense = "min",
+    area_col = "area_ha",
+    area_unit = "ha"
+  )
+
+  expect_equal(p$data$constraints$area$actions, NA_character_)
+  expect_equal(p$data$constraints$area$value, 15)
+})
+
+
+test_that("area constraint with actions uses effective action_area", {
+  pu <- data.frame(
+    id = 1:2,
+    cost = c(1, 1),
+    area_ha = c(1, 1)
+  )
+
+  features <- data.frame(id = 1, name = "f1")
+
+  dist_features <- data.frame(
+    pu = c(1, 2),
+    feature = 1,
+    amount = c(1, 1)
+  )
+
+  actions <- data.frame(id = "restoration")
+
+  action_area <- data.frame(
+    pu = c(1, 2),
+    action = c("restoration", "restoration"),
+    action_area = c(5000, 10000) # m2 = 0.5 ha and 1 ha
+  )
+
+  p <- create_problem(
+    pu = pu,
+    features = features,
+    dist_features = dist_features
+  )
+
+  p <- add_actions(
+    p,
+    actions = actions,
+    action_area = action_area
+  )
+
+  p <- add_constraint_area(
+    p,
+    area = 1,
+    sense = "min",
+    area_unit = "ha",
+    actions = "restoration"
+  )
+
+  expect_equal(p$data$constraints$area$actions, "restoration")
+})
