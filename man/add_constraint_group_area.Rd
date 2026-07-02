@@ -16,7 +16,7 @@ add_constraint_group_area(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} object containing group-distribution data.}
+\item{x}{A \code{Problem} object containing group-area distribution data.}
 
 \item{target}{Numeric scalar or named numeric vector.}
 
@@ -26,7 +26,7 @@ add_constraint_group_area(
 
 \item{actions}{Optional subset of actions.}
 
-\item{relative}{Whether targets are proportions of the total amount
+\item{relative}{Whether targets are proportions of the total area
 available to each group.}
 
 \item{tolerance}{Equality tolerance.}
@@ -38,4 +38,19 @@ A modified \code{Problem} object.
 }
 \description{
 Add group-level area constraints
+}
+\details{
+This function stores group-level area constraints. Group areas must have been
+added previously with \code{\link[=add_groups]{add_groups()}}. Internally, group areas are represented
+by \code{x$data$dist_groups$area}, which is interpreted as the area of group \code{g}
+within planning unit \code{i}.
+
+If \code{relative = TRUE}, each target is interpreted as a proportion of the total
+area available to the corresponding group. If \code{relative = FALSE}, each target
+is interpreted as an absolute area in the same internal units used by
+\code{dist_groups$area}.
+
+When \code{actions} is not \code{NULL}, the constraint applies only to the selected
+subset of actions. In the current formulation, the group-area coefficients are
+derived downstream when the optimization model is assembled.
 }

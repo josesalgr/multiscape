@@ -2,21 +2,42 @@
 % Please edit documentation in R/add_groups.R
 \name{add_groups}
 \alias{add_groups}
-\title{Add groups and their distribution among planning units}
+\title{Add groups and their area distribution among planning units}
 \usage{
-add_groups(x, groups, dist_groups)
+add_groups(
+  x,
+  groups,
+  dist_groups = NULL,
+  group_id_col = "id",
+  area_unit = c("m2", "ha", "km2"),
+  min_overlap = 0
+)
 }
 \arguments{
 \item{x}{A \code{Problem} object.}
 
-\item{groups}{A data frame containing at least an \code{id} column.}
+\item{groups}{A data frame or \code{sf} object containing at least an \code{id} column.
+If \code{groups} is an \code{sf} object and \code{dist_groups = NULL}, group areas are
+derived from the spatial intersection between planning-unit geometries and
+group geometries.}
 
-\item{dist_groups}{A data frame containing columns \code{pu}, \code{group},
-and \code{amount}.}
+\item{dist_groups}{Optional data frame containing columns \code{pu}, \code{group},
+and \code{area}. If \code{NULL}, \code{groups} must be an \code{sf} object and planning-unit
+geometries must be available in \code{x$data$pu_sf}.}
+
+\item{group_id_col}{Character. Name of the group identifier column in
+\code{groups}. Defaults to \code{"id"}.}
+
+\item{area_unit}{Unit of \code{dist_groups$area} and \code{min_overlap}. One of
+\code{"m2"}, \code{"ha"}, or \code{"km2"}. Areas are stored internally in square metres.}
+
+\item{min_overlap}{Minimum overlap area used when deriving \code{dist_groups} from
+spatial group geometries. Values less than or equal to this threshold are
+discarded.}
 }
 \value{
 A modified \code{Problem} object.
 }
 \description{
-Add groups and their distribution among planning units
+Add groups and their area distribution among planning units
 }

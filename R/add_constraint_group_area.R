@@ -1,14 +1,29 @@
 #' Add group-level area constraints
 #'
-#' @param x A `Problem` object containing group-distribution data.
+#' @param x A `Problem` object containing group-area distribution data.
 #' @param target Numeric scalar or named numeric vector.
 #' @param sense One of `"min"`, `"max"`, or `"equal"`.
 #' @param groups Optional subset of group identifiers.
 #' @param actions Optional subset of actions.
-#' @param relative Whether targets are proportions of the total amount
+#' @param relative Whether targets are proportions of the total area
 #'   available to each group.
 #' @param tolerance Equality tolerance.
 #' @param name Optional constraint-name prefix.
+#'
+#' @details
+#' This function stores group-level area constraints. Group areas must have been
+#' added previously with [add_groups()]. Internally, group areas are represented
+#' by `x$data$dist_groups$area`, which is interpreted as the area of group `g`
+#' within planning unit `i`.
+#'
+#' If `relative = TRUE`, each target is interpreted as a proportion of the total
+#' area available to the corresponding group. If `relative = FALSE`, each target
+#' is interpreted as an absolute area in the same internal units used by
+#' `dist_groups$area`.
+#'
+#' When `actions` is not `NULL`, the constraint applies only to the selected
+#' subset of actions. In the current formulation, the group-area coefficients are
+#' derived downstream when the optimization model is assembled.
 #'
 #' @return A modified `Problem` object.
 #'
@@ -35,6 +50,58 @@ add_constraint_group_area <- function(
     )
   }
 
+  if (!is.data.frame(x$data$groups)) {
+    stop(
+      "`x$data$groups` must be a data.frame.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.data.frame(x$data$dist_groups)) {
+    stop(
+      "`x$data$dist_groups` must be a data.frame.",
+      call. = FALSE
+    )
+  }
+
+  if (!"id" %in% names(x$data$groups)) {
+    stop(
+      "`x$data$groups` must contain column `id`.",
+      call. = FALSE
+    )
+  }
+
+  required_dist_cols <- c("pu", "group", "area")
+  missing_dist_cols <- setdiff(
+    required_dist_cols,
+    names(x$data$dist_groups)
+  )
+
+  if (length(missing_dist_cols) > 0L) {
+    stop(
+      "`x$data$dist_groups` is missing required columns: ",
+      paste(missing_dist_cols, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (!is.numeric(x$data$dist_groups$area) ||
+      anyNA(x$data$dist_groups$area) ||
+      any(!is.finite(x$data$dist_groups$area)) ||
+      any(x$data$dist_groups$area < 0)) {
+    stop(
+      "`x$data$dist_groups$area` must contain finite, non-negative values.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.logical(relative) ||
+      length(relative) != 1L ||
+      is.na(relative)) {
+    stop("`relative` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   if (!is.numeric(target) ||
       length(target) < 1L ||
       anyNA(target) ||
@@ -53,21 +120,11 @@ add_constraint_group_area <- function(
     )
   }
 
-  if (
-    !is.logical(relative) ||
-    length(relative) != 1L ||
-    is.na(relative)
-  ) {
-    stop("`relative` must be TRUE or FALSE.", call. = FALSE)
-  }
-
-  if (
-    !is.numeric(tolerance) ||
-    length(tolerance) != 1L ||
-    is.na(tolerance) ||
-    !is.finite(tolerance) ||
-    tolerance < 0
-  ) {
+  if (!is.numeric(tolerance) ||
+      length(tolerance) != 1L ||
+      is.na(tolerance) ||
+      !is.finite(tolerance) ||
+      tolerance < 0) {
     stop("`tolerance` must be a single non-negative number.", call. = FALSE)
   }
 
@@ -81,7 +138,19 @@ add_constraint_group_area <- function(
 
   selected_groups <- as.character(selected_groups)
 
-  unknown <- setdiff(selected_groups, as.character(x$data$groups$id))
+  if (length(selected_groups) == 0L ||
+      anyNA(selected_groups) ||
+      any(!nzchar(selected_groups))) {
+    stop(
+      "`groups` must identify at least one valid group.",
+      call. = FALSE
+    )
+  }
+
+  unknown <- setdiff(
+    selected_groups,
+    as.character(x$data$groups$id)
+  )
 
   if (length(unknown) > 0L) {
     stop(
@@ -106,7 +175,11 @@ add_constraint_group_area <- function(
   }
 
   if (length(target) == 1L) {
-    target_values <- rep(as.numeric(target), length(selected_groups))
+    target_values <- rep(
+      as.numeric(target),
+      length(selected_groups)
+    )
+
     names(target_values) <- selected_groups
   } else {
     if (is.null(names(target)) || any(!nzchar(names(target)))) {
@@ -116,7 +189,10 @@ add_constraint_group_area <- function(
       )
     }
 
-    missing_targets <- setdiff(selected_groups, names(target))
+    missing_targets <- setdiff(
+      selected_groups,
+      names(target)
+    )
 
     if (length(missing_targets) > 0L) {
       stop(
@@ -156,6 +232,7 @@ add_constraint_group_area <- function(
       x$data$constraints$group_area,
       spec
     )
+
     rownames(x$data$constraints$group_area) <- NULL
   }
 
