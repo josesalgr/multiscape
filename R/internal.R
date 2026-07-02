@@ -5235,9 +5235,17 @@ NULL
         identical(trimws(actions_txt), "NA")
     )
 
-    if (use_all_actions) {
-      da_actions <- da
-    } else {
+    # ------------------------------------------------------------
+    # Case 1: actions explicitly supplied.
+    # Use exact group-action areas:
+    #
+    #   area(PU_i ∩ group_g ∩ action_a) * x_ia
+    #
+    # These coefficients are prepared by
+    # .pa_build_model_prepare_group_action_areas().
+    # ------------------------------------------------------------
+    if (!isTRUE(use_all_actions)) {
+
       actions_chr <- strsplit(
         actions_txt,
         "\\|"
@@ -5252,51 +5260,144 @@ NULL
       ]
 
       if (length(actions_chr) == 0L) {
-        da_actions <- da
+        use_all_actions <- TRUE
       } else {
+
         action_subset <- .pa_resolve_action_subset(
           x,
           subset = actions_chr
         )
 
-        da_actions <- da[
-          da$action %in% action_subset$id,
+        dga <- x$data$dist_group_actions %||% NULL
+
+        if (is.null(dga) ||
+            !is.data.frame(dga) ||
+            nrow(dga) == 0L) {
+          stop(
+            "Group-area constraints with `actions` require `x$data$dist_group_actions`. ",
+            "This table is built from exact group-action spatial overlaps. ",
+            "Use spatial `include_pairs` in add_actions() and spatial groups in add_groups(), ",
+            "or ensure that the builder can use the full-planning-unit fallback.",
+            call. = FALSE
+          )
+        }
+
+        required_dga_cols <- c(
+          "pu",
+          "group",
+          "action",
+          "area",
+          "internal_pu",
+          "internal_group",
+          "internal_action",
+          "internal_row"
+        )
+
+        missing_dga_cols <- setdiff(
+          required_dga_cols,
+          names(dga)
+        )
+
+        if (length(missing_dga_cols) > 0L) {
+          stop(
+            "`x$data$dist_group_actions` is missing required columns: ",
+            paste(missing_dga_cols, collapse = ", "),
+            ".",
+            call. = FALSE
+          )
+        }
+
+        if (!is.numeric(dga$area) ||
+            anyNA(dga$area) ||
+            any(!is.finite(dga$area)) ||
+            any(dga$area < 0)) {
+          stop(
+            "`x$data$dist_group_actions$area` must contain finite, non-negative values.",
+            call. = FALSE
+          )
+        }
+
+        matched <- dga[
+          dga$group == group_id &
+            dga$action %in% action_subset$id,
           ,
           drop = FALSE
         ]
+
+        if (nrow(matched) == 0L) {
+          stop(
+            "No group-action area rows match group `",
+            group_id,
+            "` and the selected actions.",
+            call. = FALSE
+          )
+        }
+
+        # Be robust to possible duplicated rows by aggregating coefficients
+        # per x-variable.
+        matched <- stats::aggregate(
+          area ~ internal_row,
+          data = matched,
+          FUN = sum
+        )
+
+        var_index <- x0 +
+          as.integer(matched$internal_row) -
+          1L
+
+        coeff <- as.numeric(matched$area)
       }
     }
 
-    matched <- merge(
-      da_actions[
-        ,
-        c("internal_pu", "internal_row"),
-        drop = FALSE
-      ],
-      dg[
-        ,
-        c("internal_pu", "area"),
-        drop = FALSE
-      ],
-      by = "internal_pu",
-      all = FALSE,
-      sort = FALSE
-    )
+    # ------------------------------------------------------------
+    # Case 2: no explicit action subset.
+    # Preserve the previous group-area semantics:
+    #
+    #   area(PU_i ∩ group_g) * x_ia
+    #
+    # for all feasible actions in the group planning units.
+    # ------------------------------------------------------------
+    if (isTRUE(use_all_actions)) {
 
-    if (nrow(matched) == 0L) {
-      stop(
-        "No decision variables match group `",
-        group_id,
-        "` and the selected actions.",
-        call. = FALSE
+      da_actions <- da
+
+      matched <- merge(
+        da_actions[
+          ,
+          c("internal_pu", "internal_row"),
+          drop = FALSE
+        ],
+        dg[
+          ,
+          c("internal_pu", "area"),
+          drop = FALSE
+        ],
+        by = "internal_pu",
+        all = FALSE,
+        sort = FALSE
       )
+
+      if (nrow(matched) == 0L) {
+        stop(
+          "No decision variables match group `",
+          group_id,
+          "`.",
+          call. = FALSE
+        )
+      }
+
+      matched <- stats::aggregate(
+        area ~ internal_row,
+        data = matched,
+        FUN = sum
+      )
+
+      var_index <- x0 +
+        as.integer(matched$internal_row) -
+        1L
+
+      coeff <- as.numeric(matched$area)
     }
-
-    var_index <- x0 +
-      as.integer(matched$internal_row) -
-      1L
-
-    coeff <- as.numeric(matched$area)
 
     cpp_sense <- switch(
       as.character(spec$sense)[1],

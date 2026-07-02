@@ -50,6 +50,9 @@ An updated \code{Problem} object with:
 \item{\code{dist_actions}}{The feasible planning unit--action table with
 columns \code{pu}, \code{action}, \code{cost}, \code{action_area},
 \code{status}, \code{internal_pu}, and \code{internal_action}.}
+\item{\code{dist_actions_sf}}{When spatial \code{include_pairs} are used,
+an \code{sf} object containing the exact planning unit--action
+intersection geometries.}
 \item{\code{pu index}}{A mapping from user-supplied planning-unit ids to
 internal integer ids.}
 \item{\code{action index}}{A mapping from action ids to internal integer
@@ -65,6 +68,13 @@ This function adds two core components to a \code{Problem} object. First, it
 stores the action catalogue. Second, it creates the feasible planning
 unit--action table, including implementation costs, effective action areas,
 status codes, and internal indices used by the optimization backend.
+
+When spatial \code{include_pairs} are supplied as \code{sf} layers, the
+function also stores the planning unit--action intersection geometries in
+\code{x$data$dist_actions_sf}. This auxiliary table is not used directly by
+the base action model, but can be used by downstream constraints that require
+exact spatial overlaps between actions and other spatial entities, such as
+groups.
 
 Conceptually, if \eqn{\mathcal{I}} is the set of planning units and
 \eqn{\mathcal{A}} is the set of actions, this function determines which
@@ -140,7 +150,7 @@ feasible.
 
 Lists may mix vectors of planning-unit ids and \code{sf} objects across
 actions. In the spatial case, feasible planning units are identified using
-\code{sf::st_intersects()} against the stored planning-unit geometry. If
+spatial intersections against the stored planning-unit geometry. If
 \code{include_pairs} or \code{exclude_pairs} contains \code{sf} objects, the
 problem must contain planning-unit geometry in \code{x$data$pu_sf}; otherwise
 an error is raised.
@@ -150,7 +160,7 @@ pair is included and excluded, the exclusion takes precedence and the pair is
 removed. Spatial exclusions remove complete \code{(pu, action)} pairs; they
 do not partially subtract area from included geometries.
 
-\strong{Action areas.}
+\strong{Action areas and action intersection geometries.}
 
 The \code{action_area} column in \code{dist_actions} stores the effective
 area represented by each feasible \code{(pu, action)} decision. This is an
@@ -165,6 +175,14 @@ planning-unit geometries and the corresponding action geometries;
 areas default to the full planning-unit area when this can be derived from
 the problem object.
 }
+
+When \code{include_pairs} contains \code{sf} objects, the corresponding
+planning unit--action intersection geometries are stored in
+\code{x$data$dist_actions_sf}. This object contains columns \code{pu},
+\code{action}, \code{internal_pu}, \code{internal_action},
+\code{action_area}, and geometry. It is intended for downstream spatial
+constraints that require exact overlaps between selected actions and other
+spatial layers.
 
 If \code{action_area} is supplied as a \code{data.frame}, it must contain
 columns \code{pu}, \code{action}, and \code{action_area}. A column named

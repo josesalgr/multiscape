@@ -157,6 +157,12 @@
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_tables(x)
 
+  # ------------------------------------------------------------
+  # prepare derived group-action area table if needed
+  # ------------------------------------------------------------
+  x <- .pa_build_model_prepare_group_action_areas(x)
+
+
   x <- .pa_build_model_validate_locked_in_action_feasibility(x)
 
   # ------------------------------------------------------------
@@ -1540,6 +1546,402 @@
   x$data$effects_meta$component <- "amount_after"
   x$data$effects_meta$action_id <- action_id
   x$data$effects_meta$action_name <- action_name
+
+  x
+}
+
+
+.pa_build_model_prepare_group_action_areas <- function(x) {
+  stopifnot(inherits(x, "Problem"))
+
+  specs <- x$data$constraints$group_area %||% NULL
+
+  if (is.null(specs) ||
+      !is.data.frame(specs) ||
+      nrow(specs) == 0L) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  if (!"actions" %in% names(specs)) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  actions_txt <- as.character(specs$actions)
+
+  needs_actions <- !is.na(actions_txt) &
+    nzchar(trimws(actions_txt)) &
+    trimws(actions_txt) != "NA"
+
+  if (!any(needs_actions)) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  da <- x$data$dist_actions_model %||% NULL
+
+  if (is.null(da) ||
+      !is.data.frame(da) ||
+      nrow(da) == 0L) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  required_da_cols <- c(
+    "pu",
+    "action",
+    "internal_pu",
+    "internal_action",
+    "internal_row",
+    "action_area"
+  )
+
+  missing_da_cols <- setdiff(required_da_cols, names(da))
+
+  if (length(missing_da_cols) > 0L) {
+    stop(
+      "`x$data$dist_actions_model` is missing required columns: ",
+      paste(missing_da_cols, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  dg <- x$data$dist_groups %||% NULL
+
+  if (is.null(dg) ||
+      !is.data.frame(dg) ||
+      nrow(dg) == 0L) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  required_dg_cols <- c(
+    "pu",
+    "group",
+    "area",
+    "internal_pu",
+    "internal_group"
+  )
+
+  missing_dg_cols <- setdiff(required_dg_cols, names(dg))
+
+  if (length(missing_dg_cols) > 0L) {
+    stop(
+      "`x$data$dist_groups` is missing required columns: ",
+      paste(missing_dg_cols, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  da_sf <- x$data$dist_actions_sf %||% NULL
+  groups_sf <- x$data$groups_sf %||% NULL
+
+  # Exact spatial route: action intersection geometries + group geometries.
+  if (!is.null(da_sf) &&
+      inherits(da_sf, "sf") &&
+      nrow(da_sf) > 0L &&
+      !is.null(groups_sf) &&
+      inherits(groups_sf, "sf") &&
+      nrow(groups_sf) > 0L) {
+
+    if (!requireNamespace("sf", quietly = TRUE)) {
+      stop(
+        "Package `sf` is required to derive group-action areas.",
+        call. = FALSE
+      )
+    }
+
+    if (!"id" %in% names(groups_sf)) {
+      stop(
+        "`x$data$groups_sf` must contain column `id`.",
+        call. = FALSE
+      )
+    }
+
+    if (is.na(sf::st_crs(da_sf))) {
+      stop(
+        "`x$data$dist_actions_sf` must have a valid CRS.",
+        call. = FALSE
+      )
+    }
+
+    if (is.na(sf::st_crs(groups_sf))) {
+      stop(
+        "`x$data$groups_sf` must have a valid CRS.",
+        call. = FALSE
+      )
+    }
+
+    if (sf::st_crs(da_sf) != sf::st_crs(groups_sf)) {
+      groups_sf <- sf::st_transform(
+        groups_sf,
+        sf::st_crs(da_sf)
+      )
+    }
+
+    groups_use <- groups_sf[, "id", drop = FALSE]
+    names(groups_use)[names(groups_use) == "id"] <- "group"
+
+    inter <- suppressWarnings(
+      sf::st_intersection(
+        da_sf,
+        groups_use
+      )
+    )
+
+    if (nrow(inter) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    inter$area <- as.numeric(sf::st_area(inter))
+
+    out <- sf::st_drop_geometry(inter)
+
+    out <- out[
+      !is.na(out$pu) &
+        !is.na(out$group) &
+        !is.na(out$action) &
+        !is.na(out$area) &
+        is.finite(out$area) &
+        out$area > 0,
+      ,
+      drop = FALSE
+    ]
+
+    if (nrow(out) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    out <- stats::aggregate(
+      area ~ pu + group + action,
+      data = out,
+      FUN = sum
+    )
+
+    # Join internal ids from dist_actions_model and dist_groups.
+    da_key <- da[
+      ,
+      c(
+        "pu",
+        "action",
+        "internal_pu",
+        "internal_action",
+        "internal_row"
+      ),
+      drop = FALSE
+    ]
+
+    dg_key <- unique(
+      dg[
+        ,
+        c(
+          "pu",
+          "group",
+          "internal_group"
+        ),
+        drop = FALSE
+      ]
+    )
+
+    out <- merge(
+      out,
+      da_key,
+      by = c("pu", "action"),
+      all.x = TRUE,
+      all.y = FALSE,
+      sort = FALSE
+    )
+
+    out <- merge(
+      out,
+      dg_key,
+      by = c("pu", "group"),
+      all.x = TRUE,
+      all.y = FALSE,
+      sort = FALSE
+    )
+
+    if (anyNA(out$internal_pu) ||
+        anyNA(out$internal_action) ||
+        anyNA(out$internal_row) ||
+        anyNA(out$internal_group)) {
+      stop(
+        "Failed to map group-action areas to internal planning-unit, action, or group ids.",
+        call. = FALSE
+      )
+    }
+
+    out <- out[
+      order(
+        out$internal_group,
+        out$internal_pu,
+        out$internal_action
+      ),
+      ,
+      drop = FALSE
+    ]
+
+    rownames(out) <- NULL
+
+    x$data$dist_group_actions <- out[
+      ,
+      c(
+        "pu",
+        "group",
+        "action",
+        "area",
+        "internal_pu",
+        "internal_group",
+        "internal_action",
+        "internal_row"
+      ),
+      drop = FALSE
+    ]
+
+    return(x)
+  }
+
+  # Conservative fallback:
+  # If exact geometries are unavailable, only allow fallback when all relevant
+  # actions cover the full planning-unit area.
+  pu_area <- tryCatch(
+    .pa_get_area_vec(
+      x,
+      area_col = NULL,
+      area_unit = "m2"
+    ),
+    error = function(e) NULL
+  )
+
+  if (is.null(pu_area)) {
+    stop(
+      "Group-area constraints with `actions` require exact group-action areas. ",
+      "Provide spatial `include_pairs` in add_actions() and spatial groups in add_groups(), ",
+      "or ensure full planning-unit action areas can be derived.",
+      call. = FALSE
+    )
+  }
+
+  names(pu_area) <- as.character(x$data$pu$id)
+
+  da_pu_area <- as.numeric(
+    pu_area[as.character(da$pu)]
+  )
+
+  if (anyNA(da_pu_area) ||
+      any(!is.finite(da_pu_area))) {
+    stop(
+      "Could not derive planning-unit areas for action full-area fallback.",
+      call. = FALSE
+    )
+  }
+
+  action_area <- as.numeric(da$action_area)
+
+  if (anyNA(action_area) ||
+      any(!is.finite(action_area))) {
+    stop(
+      "Group-area constraints with `actions` require finite `action_area` values.",
+      call. = FALSE
+    )
+  }
+
+  tol <- sqrt(.Machine$double.eps)
+
+  full_pu_action <- abs(action_area - da_pu_area) <= tol *
+    pmax(1, abs(da_pu_area))
+
+  if (!all(full_pu_action)) {
+    stop(
+      "Group-area constraints with `actions` require exact group-action areas ",
+      "when any selected action covers only part of a planning unit. ",
+      "Use spatial `include_pairs` in add_actions() and spatial groups in add_groups() ",
+      "so multiscape can derive area(PU ∩ action ∩ group).",
+      call. = FALSE
+    )
+  }
+
+  # Full-PU fallback: group-action area equals group area for each feasible action.
+  out <- merge(
+    da[
+      ,
+      c(
+        "pu",
+        "action",
+        "internal_pu",
+        "internal_action",
+        "internal_row"
+      ),
+      drop = FALSE
+    ],
+    dg[
+      ,
+      c(
+        "pu",
+        "group",
+        "area",
+        "internal_group"
+      ),
+      drop = FALSE
+    ],
+    by = "pu",
+    all = FALSE,
+    sort = FALSE
+  )
+
+  out <- out[
+    order(
+      out$internal_group,
+      out$internal_pu,
+      out$internal_action
+    ),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(out) <- NULL
+
+  x$data$dist_group_actions <- out[
+    ,
+    c(
+      "pu",
+      "group",
+      "action",
+      "area",
+      "internal_pu",
+      "internal_group",
+      "internal_action",
+      "internal_row"
+    ),
+    drop = FALSE
+  ]
 
   x
 }
