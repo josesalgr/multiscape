@@ -502,12 +502,20 @@ add_actions <- function(
       zone_sf <- sf::st_transform(zone_sf, sf::st_crs(pu_geom))
     }
 
-    zone_union <- sf::st_union(sf::st_geometry(zone_sf))
-
-    zone_union <- sf::st_sf(
-      action = action_id,
-      geometry = sf::st_sfc(zone_union, crs = sf::st_crs(pu_geom))
-    )
+    if (nrow(zone_sf) == 1L) {
+      zone_union <- sf::st_sf(
+        action = action_id,
+        geometry = sf::st_geometry(zone_sf)
+      )
+    } else {
+      zone_union <- sf::st_sf(
+        action = action_id,
+        geometry = sf::st_sfc(
+          sf::st_union(sf::st_geometry(zone_sf)),
+          crs = sf::st_crs(pu_geom)
+        )
+      )
+    }
 
     # 1. Candidatas: intersectan o tocan la zona
     hits_intersects <- sf::st_intersects(
@@ -698,33 +706,106 @@ add_actions <- function(
     }
 
     if (isTRUE(keep_geometry)) {
+      if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
+        cli::cli_inform(paste0(
+          "Action `", action_id, "`: binding final spatial outputs..."
+        ))
+      }
+
       ans <- do.call(rbind, out)
 
-      ans <- ans |>
-        dplyr::group_by(
-          .data$pu,
-          .data$action
-        ) |>
-        dplyr::summarise(
-          action_area = sum(.data$action_area, na.rm = TRUE),
-          geometry = sf::st_union(geometry),
-          .groups = "drop"
-        ) |>
-        sf::st_as_sf()
-    } else {
-      ans <- dplyr::bind_rows(out)
+      ans$pu <- as.integer(ans$pu)
+      ans$action <- as.character(ans$action)
+      ans$action_area <- as.numeric(ans$action_area)
 
       ans <- ans |>
-        dplyr::group_by(
-          .data$pu,
-          .data$action
-        ) |>
-        dplyr::summarise(
-          action_area = sum(.data$action_area, na.rm = TRUE),
-          .groups = "drop"
-        ) |>
-        as.data.frame()
+        dplyr::filter(
+          !is.na(.data$action_area),
+          is.finite(.data$action_area),
+          .data$action_area > 0
+        )
+
+      key <- paste(ans$pu, ans$action, sep = "||")
+
+      if (anyDuplicated(key) > 0L) {
+        if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
+          cli::cli_inform(paste0(
+            "Action `", action_id, "`: aggregating duplicated geometries..."
+          ))
+        }
+
+        ans <- ans |>
+          dplyr::group_by(
+            .data$pu,
+            .data$action
+          ) |>
+          dplyr::summarise(
+            action_area = sum(.data$action_area, na.rm = TRUE),
+            geometry = sf::st_union(geometry),
+            .groups = "drop"
+          ) |>
+          sf::st_as_sf()
+      } else {
+        ans <- ans |>
+          dplyr::select(
+            pu,
+            action,
+            action_area,
+            geometry
+          ) |>
+          sf::st_as_sf()
+      }
+
+    } else {
+      if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
+        cli::cli_inform(paste0(
+          "Action `", action_id, "`: binding final tabular outputs..."
+        ))
+      }
+
+      ans <- dplyr::bind_rows(out)
+
+      ans$pu <- as.integer(ans$pu)
+      ans$action <- as.character(ans$action)
+      ans$action_area <- as.numeric(ans$action_area)
+
+      ans <- ans |>
+        dplyr::filter(
+          !is.na(.data$action_area),
+          is.finite(.data$action_area),
+          .data$action_area > 0
+        )
+
+      key <- paste(ans$pu, ans$action, sep = "||")
+
+      if (anyDuplicated(key) > 0L) {
+        ans <- ans |>
+          dplyr::group_by(
+            .data$pu,
+            .data$action
+          ) |>
+          dplyr::summarise(
+            action_area = sum(.data$action_area, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          as.data.frame()
+      } else {
+        ans <- as.data.frame(ans)
+      }
     }
+
+    ans$pu <- as.integer(ans$pu)
+    ans$action <- as.character(ans$action)
+    ans$action_area <- as.numeric(ans$action_area)
+
+    if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
+      cli::cli_inform(paste0(
+        "Action `", action_id, "`: spatial pairs finished with ",
+        nrow(ans), " rows."
+      ))
+    }
+
+    ans
 
     ans$pu <- as.integer(ans$pu)
     ans$action <- as.character(ans$action)
@@ -967,25 +1048,40 @@ add_actions <- function(
         )
 
         out_df$action <- as.character(out_df$action)
+        out_df$action_area <- as.numeric(out_df$action_area)
 
-        out_df <- dplyr::group_by(
-          out_df,
-          .data$pu,
-          .data$action
-        )
+        key <- paste(out_df$pu, out_df$action, sep = "||")
 
-        out_df <- dplyr::summarise(
-          out_df,
-          action_area = if (all(is.na(.data$action_area))) {
-            NA_real_
-          } else {
-            sum(.data$action_area, na.rm = TRUE)
-          },
-          geometry = sf::st_union(geometry),
-          .groups = "drop"
-        )
+        if (anyDuplicated(key) > 0L) {
+          out_df <- dplyr::group_by(
+            out_df,
+            .data$pu,
+            .data$action
+          )
 
-        out_df <- sf::st_as_sf(out_df)
+          out_df <- dplyr::summarise(
+            out_df,
+            action_area = if (all(is.na(.data$action_area))) {
+              NA_real_
+            } else {
+              sum(.data$action_area, na.rm = TRUE)
+            },
+            geometry = sf::st_union(geometry),
+            .groups = "drop"
+          )
+
+          out_df <- sf::st_as_sf(out_df)
+
+        } else {
+          out_df <- out_df |>
+            dplyr::select(
+              pu,
+              action,
+              action_area,
+              geometry
+            ) |>
+            sf::st_as_sf()
+        }
 
         return(out_df)
       }

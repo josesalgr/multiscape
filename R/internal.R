@@ -5092,6 +5092,8 @@ NULL
 
   specs <- x$data$constraints$group_area %||% NULL
 
+  skipped_group_area_constraints <- list()
+
   if (is.null(specs) || nrow(specs) == 0L) {
     return(x)
   }
@@ -5318,19 +5320,24 @@ NULL
         }
 
         matched <- dga[
-          dga$group == group_id &
-            dga$action %in% action_subset$id,
+          as.character(dga$group) == as.character(group_id) &
+            as.character(dga$action) %in% as.character(action_subset$id),
           ,
           drop = FALSE
         ]
 
         if (nrow(matched) == 0L) {
-          stop(
-            "No group-action area rows match group `",
-            group_id,
-            "` and the selected actions.",
-            call. = FALSE
-          )
+          skipped_group_area_constraints[[length(skipped_group_area_constraints) + 1L]] <-
+            data.frame(
+              group = as.character(group_id),
+              actions = paste(as.character(action_subset$id), collapse = "|"),
+              sense = as.character(sense),
+              rhs = as.numeric(rhs),
+              reason = "zero eligible area for selected actions",
+              stringsAsFactors = FALSE
+            )
+
+          next
         }
 
         # Be robust to possible duplicated rows by aggregating coefficients
@@ -5421,6 +5428,25 @@ NULL
       block_name = "group_area",
       tag = as.character(group_id),
       refresh_snapshot = FALSE
+    )
+  }
+
+  if (length(skipped_group_area_constraints) > 0L) {
+    skipped_group_area_constraints <- dplyr::bind_rows(
+      skipped_group_area_constraints
+    )
+
+    x$data$meta <- x$data$meta %||% list()
+    x$data$meta$skipped_group_area_constraints <- skipped_group_area_constraints
+
+    warning(
+      "Skipped ",
+      nrow(skipped_group_area_constraints),
+      " group-area constraint(s) because the corresponding group(s) had zero ",
+      "eligible area for the selected action(s). See ",
+      "`x$data$meta$skipped_group_area_constraints` for details.",
+      call. = FALSE,
+      immediate. = TRUE
     )
   }
 

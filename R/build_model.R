@@ -1928,6 +1928,15 @@
 
   rownames(out) <- NULL
 
+  out$pu <- as.integer(out$pu)
+  out$group <- as.character(out$group)
+  out$action <- as.character(out$action)
+  out$area <- as.numeric(out$area)
+  out$internal_pu <- as.integer(out$internal_pu)
+  out$internal_group <- as.integer(out$internal_group)
+  out$internal_action <- as.integer(out$internal_action)
+  out$internal_row <- as.integer(out$internal_row)
+
   x$data$dist_group_actions <- out[
     ,
     c(
