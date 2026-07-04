@@ -1550,7 +1550,6 @@
   x
 }
 
-
 .pa_build_model_prepare_group_action_areas <- function(x) {
   stopifnot(inherits(x, "Problem"))
 
@@ -1608,47 +1607,15 @@
     )
   }
 
-  dg <- x$data$dist_groups %||% NULL
-
-  if (is.null(dg) ||
-      !is.data.frame(dg) ||
-      nrow(dg) == 0L) {
-    x$data$dist_group_actions <- NULL
-    return(x)
-  }
-
-  required_dg_cols <- c(
-    "pu",
-    "group",
-    "area",
-    "internal_pu",
-    "internal_group"
-  )
-
-  missing_dg_cols <- setdiff(required_dg_cols, names(dg))
-
-  if (length(missing_dg_cols) > 0L) {
-    stop(
-      "`x$data$dist_groups` is missing required columns: ",
-      paste(missing_dg_cols, collapse = ", "),
-      ".",
-      call. = FALSE
-    )
-  }
-
   # ---------------------------------------------------------------------------
-  # Precomputed route:
-  # If x$data$dist_group_actions already exists, use it directly.
+  # Precomputed route.
   #
-  # Expected input columns:
+  # If x$data$dist_group_actions already exists with columns:
   #   pu, group, action, area
   #
-  # Interpretation:
-  #   area = area(PU ∩ action ∩ group)
-  #
-  # This avoids deriving group-action areas spatially from dist_actions_sf and
-  # groups_sf, which can be very memory intensive for large instances and
-  # repeated epsilon-constraint model builds.
+  # then use it directly and do NOT require dist_groups to contain
+  # internal_pu/internal_group. This avoids spatial intersections during model
+  # building and is the intended route for large partial-action problems.
   # ---------------------------------------------------------------------------
 
   dga_pre <- x$data$dist_group_actions %||% NULL
@@ -1726,7 +1693,6 @@
       return(x)
     }
 
-    # Restrict to groups that are actually referenced by group-area constraints.
     constraint_groups <- unique(
       as.character(specs$group)
     )
@@ -1743,8 +1709,6 @@
         )
     }
 
-    # Restrict to actions that are actually referenced by action-filtered
-    # group-area constraints.
     constraint_actions <- unique(
       unlist(
         strsplit(
@@ -1805,23 +1769,57 @@
     da_key$internal_action <- as.integer(da_key$internal_action)
     da_key$internal_row <- as.integer(da_key$internal_row)
 
-    group_key <- unique(
-      dg[
-        ,
-        c(
-          "group",
-          "internal_group"
-        ),
-        drop = FALSE
-      ]
-    )
+    # Build group -> internal_group lookup from x$data$groups.
+    # This avoids requiring x$data$dist_groups to already contain internal ids.
+    groups_tbl <- x$data$groups %||% NULL
 
-    group_key$group <- as.character(group_key$group)
-    group_key$internal_group <- as.integer(group_key$internal_group)
-
-    if (anyDuplicated(group_key$group) > 0L) {
+    if (is.null(groups_tbl) ||
+        !is.data.frame(groups_tbl) ||
+        nrow(groups_tbl) == 0L ||
+        !"id" %in% names(groups_tbl)) {
       stop(
-        "`x$data$dist_groups` maps at least one group to multiple internal_group ids.",
+        "`x$data$groups` must contain column `id` to map precomputed ",
+        "group-action areas to internal group ids.",
+        call. = FALSE
+      )
+    }
+
+    groups_tbl$id <- as.character(groups_tbl$id)
+
+    if ("internal_id" %in% names(groups_tbl)) {
+      group_key <- groups_tbl |>
+        dplyr::transmute(
+          group = as.character(.data$id),
+          internal_group = as.integer(.data$internal_id)
+        )
+    } else if ("internal_group" %in% names(groups_tbl)) {
+      group_key <- groups_tbl |>
+        dplyr::transmute(
+          group = as.character(.data$id),
+          internal_group = as.integer(.data$internal_group)
+        )
+    } else {
+      group_key <- groups_tbl |>
+        dplyr::transmute(
+          group = as.character(.data$id),
+          internal_group = dplyr::row_number()
+        )
+    }
+
+    group_key <- group_key |>
+      dplyr::filter(
+        !is.na(.data$group),
+        nzchar(.data$group),
+        !is.na(.data$internal_group)
+      ) |>
+      dplyr::distinct(
+        .data$group,
+        .keep_all = TRUE
+      )
+
+    if (nrow(group_key) == 0L) {
+      stop(
+        "Could not derive a valid group -> internal_group lookup.",
         call. = FALSE
       )
     }
@@ -1946,6 +1944,40 @@
     x$data$meta$dist_group_actions_precomputed_used <- TRUE
 
     return(x)
+  }
+
+  # ---------------------------------------------------------------------------
+  # Original route below:
+  # If no precomputed dist_group_actions exists, require dist_groups with
+  # internal ids and derive exact areas spatially or via full-PU fallback.
+  # ---------------------------------------------------------------------------
+
+  dg <- x$data$dist_groups %||% NULL
+
+  if (is.null(dg) ||
+      !is.data.frame(dg) ||
+      nrow(dg) == 0L) {
+    x$data$dist_group_actions <- NULL
+    return(x)
+  }
+
+  required_dg_cols <- c(
+    "pu",
+    "group",
+    "area",
+    "internal_pu",
+    "internal_group"
+  )
+
+  missing_dg_cols <- setdiff(required_dg_cols, names(dg))
+
+  if (length(missing_dg_cols) > 0L) {
+    stop(
+      "`x$data$dist_groups` is missing required columns: ",
+      paste(missing_dg_cols, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
   }
 
   da_sf <- x$data$dist_actions_sf %||% NULL
