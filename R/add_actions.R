@@ -335,19 +335,18 @@
 #' p4$data$dist_actions
 #'
 #' @export
-add_actions <- function(
-    x,
-    actions,
-    include_pairs = NULL,
-    exclude_pairs = NULL,
-    cost = NULL,
-    action_area = NULL,
-    progress = TRUE,
-    chunk_size = 5000
-) {
-
+add_actions <- function(x,
+                        actions,
+                        include_pairs = NULL,
+                        exclude_pairs = NULL,
+                        cost = NULL,
+                        action_area = NULL,
+                        progress = TRUE,
+                        chunk_size = 5000) {
   .as_int_id <- function(v, what) {
-    if (is.factor(v)) v <- as.character(v)
+    if (is.factor(v)) {
+      v <- as.character(v)
+    }
 
     if (is.character(v)) {
       if (any(grepl("[^0-9\\-]", v))) {
@@ -383,7 +382,7 @@ add_actions <- function(
     f <- df$feasible
 
     if (is.logical(f)) {
-      # keep
+      # keep as is
     } else if (is.numeric(f) || is.integer(f)) {
       f <- f != 0
     } else if (is.factor(f)) {
@@ -414,12 +413,14 @@ add_actions <- function(
         )
       }
 
-      return(sf::st_sf(
-        pu = integer(0),
-        action = character(0),
-        action_area = numeric(0),
-        geometry = sf::st_sfc(crs = crs)
-      ))
+      return(
+        sf::st_sf(
+          pu = integer(0),
+          action = character(0),
+          action_area = numeric(0),
+          geometry = sf::st_sfc(crs = crs)
+        )
+      )
     }
 
     if (isTRUE(with_area)) {
@@ -449,7 +450,9 @@ add_actions <- function(
 
     if (is.null(pu_sf) || !inherits(pu_sf, "sf")) {
       stop(
-        "To use '", what, "' as sf layers, the problem object must contain ",
+        "To use '",
+        what,
+        "' as sf layers, the problem object must contain ",
         "x$data$pu_sf (sf planning unit geometry).",
         call. = FALSE
       )
@@ -468,7 +471,10 @@ add_actions <- function(
   .align_zone_crs <- function(zone, pu_sf, what, action) {
     if (is.na(sf::st_crs(pu_sf)) || is.na(sf::st_crs(zone))) {
       warning(
-        what, "[[", action, "]] or x$data$pu_sf has missing CRS; ",
+        what,
+        "[[",
+        action,
+        "]] or x$data$pu_sf has missing CRS; ",
         "spatial intersections and areas may be unreliable.",
         call. = FALSE,
         immediate. = TRUE
@@ -495,11 +501,13 @@ add_actions <- function(
                              progress = TRUE,
                              chunk_size = 5000) {
     pu_sf <- x$data$pu_sf
-
     pu_geom <- pu_sf[, "id", drop = FALSE]
 
     if (sf::st_crs(pu_geom) != sf::st_crs(zone_sf)) {
-      zone_sf <- sf::st_transform(zone_sf, sf::st_crs(pu_geom))
+      zone_sf <- sf::st_transform(
+        zone_sf,
+        sf::st_crs(pu_geom)
+      )
     }
 
     if (nrow(zone_sf) == 1L) {
@@ -517,7 +525,6 @@ add_actions <- function(
       )
     }
 
-    # 1. Candidatas: intersectan o tocan la zona
     hits_intersects <- sf::st_intersects(
       pu_geom,
       zone_union,
@@ -547,53 +554,35 @@ add_actions <- function(
       )
     }
 
-    pu_candidates <- pu_geom[idx_intersects, , drop = FALSE]
-
-    # 2. Full cover: PUs completamente dentro/cubiertas por la zona
-    # hits_covered <- sf::st_covered_by(
-    #   pu_candidates,
-    #   zone_union,
-    #   sparse = TRUE
-    # )
-    #
-    # idx_full_local <- which(lengths(hits_covered) > 0L)
-    # idx_full <- idx_intersects[idx_full_local]
-    #
-    # idx_partial <- setdiff(idx_intersects, idx_full)
-
     idx_full <- integer(0)
     idx_partial <- idx_intersects
 
-    # 3. PUs completamente cubiertas: no necesitan st_intersection()
     full_out <- NULL
 
     if (length(idx_full) > 0L) {
       full_out <- pu_geom[idx_full, , drop = FALSE]
-
       full_out$pu <- as.integer(full_out$id)
       full_out$action <- as.character(action_id)
       full_out$action_area <- as.numeric(sf::st_area(full_out))
 
       if (isTRUE(keep_geometry)) {
-        full_out <- full_out |>
-          dplyr::select(
-            pu,
-            action,
-            action_area,
-            geometry
-          )
+        full_out <- dplyr::select(
+          full_out,
+          pu,
+          action,
+          action_area,
+          geometry
+        )
       } else {
-        full_out <- full_out |>
-          sf::st_drop_geometry() |>
-          dplyr::select(
-            pu,
-            action,
-            action_area
-          )
+        full_out <- dplyr::select(
+          sf::st_drop_geometry(full_out),
+          pu,
+          action,
+          action_area
+        )
       }
     }
 
-    # 4. PUs parciales: solo estas requieren intersección real
     partial_out <- NULL
 
     if (length(idx_partial) > 0L) {
@@ -602,11 +591,16 @@ add_actions <- function(
         ceiling(seq_along(idx_partial) / chunk_size)
       )
 
-      use_cli <- isTRUE(progress) && requireNamespace("cli", quietly = TRUE)
+      use_cli <- isTRUE(progress) &&
+        requireNamespace("cli", quietly = TRUE)
 
       if (use_cli) {
         cli::cli_progress_bar(
-          name = paste0("Intersecting partial PUs for action `", action_id, "`"),
+          name = paste0(
+            "Intersecting partial PUs for action `",
+            action_id,
+            "`"
+          ),
           total = length(idx_chunks),
           type = "iterator",
           clear = FALSE
@@ -630,30 +624,29 @@ add_actions <- function(
           inter_k$action <- as.character(action_id)
           inter_k$action_area <- as.numeric(sf::st_area(inter_k))
 
-          inter_k <- inter_k |>
-            dplyr::filter(
-              !is.na(.data$action_area),
-              is.finite(.data$action_area),
-              .data$action_area > 0
-            )
+          inter_k <- dplyr::filter(
+            inter_k,
+            !is.na(.data$action_area),
+            is.finite(.data$action_area),
+            .data$action_area > 0
+          )
 
           if (nrow(inter_k) > 0L) {
             if (isTRUE(keep_geometry)) {
-              partial_list[[k]] <- inter_k |>
-                dplyr::select(
-                  pu,
-                  action,
-                  action_area,
-                  geometry
-                )
+              partial_list[[k]] <- dplyr::select(
+                inter_k,
+                pu,
+                action,
+                action_area,
+                geometry
+              )
             } else {
-              partial_list[[k]] <- inter_k |>
-                sf::st_drop_geometry() |>
-                dplyr::select(
-                  pu,
-                  action,
-                  action_area
-                )
+              partial_list[[k]] <- dplyr::select(
+                sf::st_drop_geometry(inter_k),
+                pu,
+                action,
+                action_area
+              )
             }
           }
         }
@@ -680,7 +673,6 @@ add_actions <- function(
       }
     }
 
-    # 5. Combinar full + partial
     out <- list(full_out, partial_out)
     out <- out[!vapply(out, is.null, logical(1))]
 
@@ -706,10 +698,15 @@ add_actions <- function(
     }
 
     if (isTRUE(keep_geometry)) {
-      if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
-        cli::cli_inform(paste0(
-          "Action `", action_id, "`: binding final spatial outputs..."
-        ))
+      if (isTRUE(progress) &&
+          requireNamespace("cli", quietly = TRUE)) {
+        cli::cli_inform(
+          paste0(
+            "Action `",
+            action_id,
+            "`: binding final spatial outputs..."
+          )
+        )
       }
 
       ans <- do.call(rbind, out)
@@ -718,49 +715,62 @@ add_actions <- function(
       ans$action <- as.character(ans$action)
       ans$action_area <- as.numeric(ans$action_area)
 
-      ans <- ans |>
-        dplyr::filter(
-          !is.na(.data$action_area),
-          is.finite(.data$action_area),
-          .data$action_area > 0
-        )
+      ans <- dplyr::filter(
+        ans,
+        !is.na(.data$action_area),
+        is.finite(.data$action_area),
+        .data$action_area > 0
+      )
 
       key <- paste(ans$pu, ans$action, sep = "||")
 
       if (anyDuplicated(key) > 0L) {
-        if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
-          cli::cli_inform(paste0(
-            "Action `", action_id, "`: aggregating duplicated geometries..."
-          ))
+        if (isTRUE(progress) &&
+            requireNamespace("cli", quietly = TRUE)) {
+          cli::cli_inform(
+            paste0(
+              "Action `",
+              action_id,
+              "`: aggregating duplicated geometries..."
+            )
+          )
         }
 
-        ans <- ans |>
-          dplyr::group_by(
-            .data$pu,
-            .data$action
-          ) |>
-          dplyr::summarise(
-            action_area = sum(.data$action_area, na.rm = TRUE),
-            geometry = sf::st_union(geometry),
-            .groups = "drop"
-          ) |>
-          sf::st_as_sf()
+        ans <- dplyr::group_by(
+          ans,
+          .data$pu,
+          .data$action
+        )
+
+        ans <- dplyr::summarise(
+          ans,
+          action_area = sum(.data$action_area, na.rm = TRUE),
+          geometry = sf::st_union(geometry),
+          .groups = "drop"
+        )
+
+        ans <- sf::st_as_sf(ans)
       } else {
-        ans <- ans |>
+        ans <- sf::st_as_sf(
           dplyr::select(
+            ans,
             pu,
             action,
             action_area,
             geometry
-          ) |>
-          sf::st_as_sf()
+          )
+        )
       }
-
     } else {
-      if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
-        cli::cli_inform(paste0(
-          "Action `", action_id, "`: binding final tabular outputs..."
-        ))
+      if (isTRUE(progress) &&
+          requireNamespace("cli", quietly = TRUE)) {
+        cli::cli_inform(
+          paste0(
+            "Action `",
+            action_id,
+            "`: binding final tabular outputs..."
+          )
+        )
       }
 
       ans <- dplyr::bind_rows(out)
@@ -769,26 +779,29 @@ add_actions <- function(
       ans$action <- as.character(ans$action)
       ans$action_area <- as.numeric(ans$action_area)
 
-      ans <- ans |>
-        dplyr::filter(
-          !is.na(.data$action_area),
-          is.finite(.data$action_area),
-          .data$action_area > 0
-        )
+      ans <- dplyr::filter(
+        ans,
+        !is.na(.data$action_area),
+        is.finite(.data$action_area),
+        .data$action_area > 0
+      )
 
       key <- paste(ans$pu, ans$action, sep = "||")
 
       if (anyDuplicated(key) > 0L) {
-        ans <- ans |>
-          dplyr::group_by(
-            .data$pu,
-            .data$action
-          ) |>
-          dplyr::summarise(
-            action_area = sum(.data$action_area, na.rm = TRUE),
-            .groups = "drop"
-          ) |>
-          as.data.frame()
+        ans <- dplyr::group_by(
+          ans,
+          .data$pu,
+          .data$action
+        )
+
+        ans <- dplyr::summarise(
+          ans,
+          action_area = sum(.data$action_area, na.rm = TRUE),
+          .groups = "drop"
+        )
+
+        ans <- as.data.frame(ans)
       } else {
         ans <- as.data.frame(ans)
       }
@@ -798,29 +811,33 @@ add_actions <- function(
     ans$action <- as.character(ans$action)
     ans$action_area <- as.numeric(ans$action_area)
 
-    if (isTRUE(progress) && requireNamespace("cli", quietly = TRUE)) {
-      cli::cli_inform(paste0(
-        "Action `", action_id, "`: spatial pairs finished with ",
-        nrow(ans), " rows."
-      ))
+    if (isTRUE(progress) &&
+        requireNamespace("cli", quietly = TRUE)) {
+      cli::cli_inform(
+        paste0(
+          "Action `",
+          action_id,
+          "`: spatial pairs finished with ",
+          nrow(ans),
+          " rows."
+        )
+      )
     }
 
     ans
   }
 
-  .spec_to_pairs <- function(
-    spec,
-    what,
-    action_ids,
-    pu_ids,
-    pu_sf,
-    as_int_id_fun,
-    compute_area = FALSE,
-    keep_geometry = FALSE,
-    spatial_mode = c("all", "spatial", "nonspatial"),
-    progress = TRUE,
-    chunk_size = 5000
-  ) {
+  .spec_to_pairs <- function(spec,
+                             what,
+                             action_ids,
+                             pu_ids,
+                             pu_sf,
+                             as_int_id_fun,
+                             compute_area = FALSE,
+                             keep_geometry = FALSE,
+                             spatial_mode = c("all", "spatial", "nonspatial"),
+                             progress = TRUE,
+                             chunk_size = 5000) {
     spatial_mode <- match.arg(spatial_mode)
 
     if (is.null(spec)) {
@@ -857,6 +874,7 @@ add_actions <- function(
       )
 
       spec$action <- as.character(spec$action)
+
       spec <- .normalize_feasible_col(spec, what)
 
       if (!all(spec$pu %in% pu_ids)) {
@@ -969,7 +987,6 @@ add_actions <- function(
 
             out[[a]] <- spatial_tmp[, c("pu", "action"), drop = FALSE]
           }
-
         } else {
           if (isTRUE(keep_geometry)) {
             out[[a]] <- NULL
@@ -1008,33 +1025,39 @@ add_actions <- function(
 
       if (length(out) == 0L) {
         if (isTRUE(keep_geometry)) {
-          return(.empty_pairs(
-            with_area = TRUE,
-            with_geometry = TRUE,
-            crs = if (!is.null(pu_sf) && inherits(pu_sf, "sf")) {
-              sf::st_crs(pu_sf)
-            } else {
-              NA
-            }
-          ))
+          return(
+            .empty_pairs(
+              with_area = TRUE,
+              with_geometry = TRUE,
+              crs = if (!is.null(pu_sf) && inherits(pu_sf, "sf")) {
+                sf::st_crs(pu_sf)
+              } else {
+                NA
+              }
+            )
+          )
         }
 
-        return(.empty_pairs(with_area = compute_area))
+        return(
+          .empty_pairs(with_area = compute_area)
+        )
       }
 
       if (isTRUE(keep_geometry)) {
         out_df <- do.call(rbind, out)
 
         if (!inherits(out_df, "sf")) {
-          return(.empty_pairs(
-            with_area = TRUE,
-            with_geometry = TRUE,
-            crs = if (!is.null(pu_sf) && inherits(pu_sf, "sf")) {
-              sf::st_crs(pu_sf)
-            } else {
-              NA
-            }
-          ))
+          return(
+            .empty_pairs(
+              with_area = TRUE,
+              with_geometry = TRUE,
+              crs = if (!is.null(pu_sf) && inherits(pu_sf, "sf")) {
+                sf::st_crs(pu_sf)
+              } else {
+                NA
+              }
+            )
+          )
         }
 
         out_df$pu <- as_int_id_fun(
@@ -1066,16 +1089,16 @@ add_actions <- function(
           )
 
           out_df <- sf::st_as_sf(out_df)
-
         } else {
-          out_df <- out_df |>
+          out_df <- sf::st_as_sf(
             dplyr::select(
+              out_df,
               pu,
               action,
               action_area,
               geometry
-            ) |>
-            sf::st_as_sf()
+            )
+          )
         }
 
         return(out_df)
@@ -1127,13 +1150,11 @@ add_actions <- function(
     )
   }
 
-  .process_action_area <- function(
-    action_area,
-    dist_actions,
-    pu_ids,
-    action_ids,
-    as_int_id_fun
-  ) {
+  .process_action_area <- function(action_area,
+                                   dist_actions,
+                                   pu_ids,
+                                   action_ids,
+                                   as_int_id_fun) {
     if (!inherits(action_area, "data.frame")) {
       stop(
         "`action_area` must be NULL or a data.frame.",
@@ -1145,13 +1166,15 @@ add_actions <- function(
       names(action_area)[names(action_area) == "id"] <- "action"
     }
 
-    if ("area" %in% names(action_area) && !("action_area" %in% names(action_area))) {
+    if ("area" %in% names(action_area) &&
+        !("action_area" %in% names(action_area))) {
       names(action_area)[names(action_area) == "area"] <- "action_area"
     }
 
     if (!all(c("pu", "action", "action_area") %in% names(action_area))) {
       stop(
-        "`action_area` data.frame must contain columns `pu`, `action`, and `action_area`.",
+        "`action_area` data.frame must contain columns `pu`, `action`, ",
+        "and `action_area`.",
         call. = FALSE
       )
     }
@@ -1230,10 +1253,7 @@ add_actions <- function(
       sep = "||"
     )
 
-    unused <- setdiff(
-      key_aa,
-      key_da
-    )
+    unused <- setdiff(key_aa, key_da)
 
     if (length(unused) > 0L) {
       warning(
@@ -1244,11 +1264,7 @@ add_actions <- function(
       )
     }
 
-    m <- match(
-      key_da,
-      key_aa
-    )
-
+    m <- match(key_da, key_aa)
     hit <- !is.na(m)
 
     out <- rep(NA_real_, nrow(dist_actions))
@@ -1257,7 +1273,6 @@ add_actions <- function(
     out
   }
 
-  # ---- checks: x
   assertthat::assert_that(
     !is.null(x),
     msg = "x is NULL"
@@ -1280,7 +1295,10 @@ add_actions <- function(
   if (!is.logical(progress) ||
       length(progress) != 1L ||
       is.na(progress)) {
-    stop("`progress` must be TRUE or FALSE.", call. = FALSE)
+    stop(
+      "`progress` must be TRUE or FALSE.",
+      call. = FALSE
+    )
   }
 
   if (!is.numeric(chunk_size) ||
@@ -1288,7 +1306,10 @@ add_actions <- function(
       is.na(chunk_size) ||
       !is.finite(chunk_size) ||
       chunk_size < 1) {
-    stop("`chunk_size` must be a positive integer.", call. = FALSE)
+    stop(
+      "`chunk_size` must be a positive integer.",
+      call. = FALSE
+    )
   }
 
   chunk_size <- as.integer(chunk_size)
@@ -1309,7 +1330,6 @@ add_actions <- function(
     as.character(x$data$pu$id)
   )
 
-  # ---- actions catalog
   assertthat::assert_that(
     inherits(actions, "data.frame"),
     nrow(actions) > 0
@@ -1340,9 +1360,7 @@ add_actions <- function(
   }
 
   if (anyDuplicated(actions$id) != 0L) {
-    duplicates <- unique(
-      actions$id[duplicated(actions$id)]
-    )
+    duplicates <- unique(actions$id[duplicated(actions$id)])
 
     stop(
       "actions$id must be unique. Duplicated id(s): ",
@@ -1368,7 +1386,8 @@ add_actions <- function(
   if ("action_set" %in% names(actions)) {
     actions$action_set <- as.character(actions$action_set)
 
-    if (anyNA(actions$action_set) || any(!nzchar(actions$action_set))) {
+    if (anyNA(actions$action_set) ||
+        any(!nzchar(actions$action_set))) {
       stop(
         "actions$action_set cannot contain NA or empty strings.",
         call. = FALSE
@@ -1376,11 +1395,7 @@ add_actions <- function(
     }
   }
 
-  actions <- actions[
-    order(actions$id),
-    ,
-    drop = FALSE
-  ]
+  actions <- actions[order(actions$id), , drop = FALSE]
 
   if (!("internal_id" %in% names(actions))) {
     actions$internal_id <- seq_len(nrow(actions))
@@ -1416,11 +1431,11 @@ add_actions <- function(
   x$data$index$pu <- pu_index
   x$data$index$action <- action_index
 
-  # ---- build feasible pairs
   pu_sf <- x$data$pu_sf
 
   .spec_has_sf <- function(spec) {
-    is.list(spec) && any(vapply(spec, inherits, logical(1), what = "sf"))
+    is.list(spec) &&
+      any(vapply(spec, inherits, logical(1), what = "sf"))
   }
 
   include_df <- NULL
@@ -1429,12 +1444,7 @@ add_actions <- function(
   if (is.null(include_pairs)) {
     include_df <- NULL
     include_sf <- NULL
-
   } else if (.spec_has_sf(include_pairs)) {
-    # Important: when include_pairs contains sf layers, compute the spatial
-    # intersections once with keep_geometry = TRUE and derive the tabular
-    # feasible-pair table from that sf result. This avoids doing the same
-    # expensive st_intersection() twice.
     include_sf <- .spec_to_pairs(
       spec = include_pairs,
       what = "include_pairs",
@@ -1479,7 +1489,6 @@ add_actions <- function(
     if (nrow(include_df) == 0L) {
       include_df <- .empty_pairs(with_area = TRUE)
     }
-
   } else {
     include_df <- .spec_to_pairs(
       spec = include_pairs,
@@ -1542,11 +1551,7 @@ add_actions <- function(
 
     keep <- !(key_da %in% key_ex)
 
-    dist_actions <- dist_actions[
-      keep,
-      ,
-      drop = FALSE
-    ]
+    dist_actions <- dist_actions[keep, , drop = FALSE]
   }
 
   dist_actions_sf <- NULL
@@ -1554,7 +1559,6 @@ add_actions <- function(
   if (!is.null(include_sf) &&
       inherits(include_sf, "sf") &&
       nrow(include_sf) > 0L) {
-
     if (!is.null(exclude_df) && nrow(exclude_df) > 0L) {
       key_sf <- paste(
         include_sf$pu,
@@ -1602,7 +1606,8 @@ add_actions <- function(
 
   if (nrow(dist_actions) == 0) {
     stop(
-      "No feasible (pu, action) pairs were created after applying include_pairs/exclude_pairs.",
+      "No feasible (pu, action) pairs were created after applying ",
+      "include_pairs/exclude_pairs.",
       call. = FALSE
     )
   }
@@ -1614,7 +1619,6 @@ add_actions <- function(
 
   dist_actions$action <- as.character(dist_actions$action)
 
-  # ---- action areas
   if (!is.null(action_area)) {
     user_action_area <- .process_action_area(
       action_area = action_area,
@@ -1625,6 +1629,7 @@ add_actions <- function(
     )
 
     hit <- !is.na(user_action_area)
+
     dist_actions$action_area[hit] <- user_action_area[hit]
   }
 
@@ -1668,20 +1673,14 @@ add_actions <- function(
     )
   }
 
-  # ---- costs
   dist_actions$cost <- 1
 
   if (is.null(cost)) {
-
-    # Keep the default cost of one for every feasible pair.
-
-  } else if (is.numeric(cost) &&
-             !is.null(names(cost))) {
-
+    # keep default cost
+  } else if (is.numeric(cost) && !is.null(names(cost))) {
     cost_names <- names(cost)
 
-    if (anyNA(cost_names) ||
-        any(!nzchar(cost_names))) {
+    if (anyNA(cost_names) || any(!nzchar(cost_names))) {
       stop(
         "Named `cost` vectors must have non-empty action ids.",
         call. = FALSE
@@ -1689,9 +1688,7 @@ add_actions <- function(
     }
 
     if (anyDuplicated(cost_names) > 0L) {
-      duplicates <- unique(
-        cost_names[duplicated(cost_names)]
-      )
+      duplicates <- unique(cost_names[duplicated(cost_names)])
 
       stop(
         "Named `cost` vector contains duplicated action id(s): ",
@@ -1701,10 +1698,7 @@ add_actions <- function(
       )
     }
 
-    unknown_actions <- setdiff(
-      cost_names,
-      action_ids
-    )
+    unknown_actions <- setdiff(cost_names, action_ids)
 
     if (length(unknown_actions) > 0L) {
       stop(
@@ -1715,10 +1709,7 @@ add_actions <- function(
       )
     }
 
-    missing_actions <- setdiff(
-      action_ids,
-      cost_names
-    )
+    missing_actions <- setdiff(action_ids, cost_names)
 
     if (length(missing_actions) > 0L) {
       stop(
@@ -1729,8 +1720,7 @@ add_actions <- function(
       )
     }
 
-    if (anyNA(cost) ||
-        any(!is.finite(cost))) {
+    if (anyNA(cost) || any(!is.finite(cost))) {
       stop(
         "Named `cost` vector must contain only finite, non-missing values.",
         call. = FALSE
@@ -1744,15 +1734,9 @@ add_actions <- function(
       )
     }
 
-    dist_actions$cost <- as.numeric(
-      cost[dist_actions$action]
-    )
-
-  } else if (is.numeric(cost) &&
-             length(cost) == 1L) {
-
-    if (is.na(cost) ||
-        !is.finite(cost)) {
+    dist_actions$cost <- as.numeric(cost[dist_actions$action])
+  } else if (is.numeric(cost) && length(cost) == 1L) {
+    if (is.na(cost) || !is.finite(cost)) {
       stop(
         "`cost` must be a finite, non-missing number.",
         call. = FALSE
@@ -1767,20 +1751,16 @@ add_actions <- function(
     }
 
     dist_actions$cost <- as.numeric(cost)
-
   } else if (inherits(cost, "data.frame")) {
-
     if ("id" %in% names(cost) && !("action" %in% names(cost))) {
       names(cost)[names(cost) == "id"] <- "action"
     }
 
     if (all(c("action", "cost") %in% names(cost)) &&
         !("pu" %in% names(cost))) {
-
       cost$action <- as.character(cost$action)
 
-      if (anyNA(cost$action) ||
-          any(!nzchar(cost$action))) {
+      if (anyNA(cost$action) || any(!nzchar(cost$action))) {
         stop(
           "cost$action must contain non-empty action ids.",
           call. = FALSE
@@ -1788,9 +1768,7 @@ add_actions <- function(
       }
 
       if (!all(cost$action %in% action_ids)) {
-        bad <- unique(
-          cost$action[!cost$action %in% action_ids]
-        )
+        bad <- unique(cost$action[!cost$action %in% action_ids])
 
         stop(
           "cost contains unknown actions: ",
@@ -1808,10 +1786,7 @@ add_actions <- function(
         )
       }
 
-      missing_actions <- setdiff(
-        action_ids,
-        cost$action
-      )
+      missing_actions <- setdiff(action_ids, cost$action)
 
       if (length(missing_actions) > 0L) {
         stop(
@@ -1844,9 +1819,7 @@ add_actions <- function(
       )
 
       dist_actions$cost <- cost$cost[m]
-
     } else if (all(c("pu", "action", "cost") %in% names(cost))) {
-
       cost$pu <- .as_int_id(
         cost$pu,
         "cost$pu"
@@ -1863,9 +1836,7 @@ add_actions <- function(
       }
 
       if (!all(cost$pu %in% pu_ids)) {
-        bad <- unique(
-          cost$pu[!cost$pu %in% pu_ids]
-        )
+        bad <- unique(cost$pu[!cost$pu %in% pu_ids])
 
         stop(
           "cost contains unknown pu id(s): ",
@@ -1876,9 +1847,7 @@ add_actions <- function(
       }
 
       if (!all(cost$action %in% action_ids)) {
-        bad <- unique(
-          cost$action[!cost$action %in% action_ids]
-        )
+        bad <- unique(cost$action[!cost$action %in% action_ids])
 
         stop(
           "cost contains unknown action id(s): ",
@@ -1953,7 +1922,7 @@ add_actions <- function(
         if (nrow(cost) == 0L) {
           warning(
             "After removing non-feasible (pu, action) rows, no pair-specific ",
-            "`cost` rows remain. Feasible pairs will retain their previous/default ",
+            "`cost` rows remain. Feasible pairs will retain their current/default ",
             "cost values.",
             call. = FALSE,
             immediate. = TRUE
@@ -1969,10 +1938,8 @@ add_actions <- function(
 
         hit <- !is.na(m)
 
-        # Rows not explicitly supplied retain the current/default cost.
         dist_actions$cost[hit] <- cost$cost[m[hit]]
       }
-
     } else {
       stop(
         paste0(
@@ -1982,7 +1949,6 @@ add_actions <- function(
         call. = FALSE
       )
     }
-
   } else {
     stop(
       "Unsupported type for `cost`.",
@@ -2015,24 +1981,8 @@ add_actions <- function(
     )
   }
 
-  # ---- initialize status as free
   dist_actions$status <- 0L
 
-  # ---- enforce PU locked_out
-  # if ("locked_out" %in% names(x$data$pu)) {
-  #   pu_locked_out <- x$data$pu$locked_out
-  #   pu_locked_out[is.na(pu_locked_out)] <- FALSE
-  #   pu_locked_out <- as.logical(pu_locked_out)
-  #
-  #   locked_out_pus <- x$data$pu$id[pu_locked_out]
-  #
-  #   if (length(locked_out_pus) > 0) {
-  #     idx_pu_lo <- dist_actions$pu %in% locked_out_pus
-  #     dist_actions$status[idx_pu_lo] <- 3L
-  #   }
-  # }
-
-  # ---- add internal ids
   dist_actions$internal_pu <- unname(
     pu_index[as.character(dist_actions$pu)]
   )
@@ -2064,7 +2014,6 @@ add_actions <- function(
     )
   }
 
-  # Keep a stable column order.
   dist_actions <- dist_actions[
     ,
     c(
@@ -2079,19 +2028,15 @@ add_actions <- function(
     drop = FALSE
   ]
 
-  # ---- finalize spatial action intersections, when available
   if (!is.null(dist_actions_sf) &&
       inherits(dist_actions_sf, "sf") &&
       nrow(dist_actions_sf) > 0L) {
-
     dist_actions_sf$pu <- .as_int_id(
       dist_actions_sf$pu,
       "dist_actions_sf$pu"
     )
 
-    dist_actions_sf$action <- as.character(
-      dist_actions_sf$action
-    )
+    dist_actions_sf$action <- as.character(dist_actions_sf$action)
 
     key_da <- paste(
       dist_actions$pu,
@@ -2176,4 +2121,4 @@ add_actions <- function(
   }
 
   x
-}
+}s
