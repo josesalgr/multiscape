@@ -1636,6 +1636,318 @@
     )
   }
 
+  # ---------------------------------------------------------------------------
+  # Precomputed route:
+  # If x$data$dist_group_actions already exists, use it directly.
+  #
+  # Expected input columns:
+  #   pu, group, action, area
+  #
+  # Interpretation:
+  #   area = area(PU ∩ action ∩ group)
+  #
+  # This avoids deriving group-action areas spatially from dist_actions_sf and
+  # groups_sf, which can be very memory intensive for large instances and
+  # repeated epsilon-constraint model builds.
+  # ---------------------------------------------------------------------------
+
+  dga_pre <- x$data$dist_group_actions %||% NULL
+
+  if (!is.null(dga_pre)) {
+    if (!is.data.frame(dga_pre) ||
+        nrow(dga_pre) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    required_dga_cols <- c(
+      "pu",
+      "group",
+      "action",
+      "area"
+    )
+
+    missing_dga_cols <- setdiff(
+      required_dga_cols,
+      names(dga_pre)
+    )
+
+    if (length(missing_dga_cols) > 0L) {
+      stop(
+        "`x$data$dist_group_actions` is missing required columns: ",
+        paste(missing_dga_cols, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    dga <- dga_pre |>
+      dplyr::transmute(
+        pu = as.integer(.data$pu),
+        group = as.character(.data$group),
+        action = as.character(.data$action),
+        area = as.numeric(.data$area)
+      ) |>
+      dplyr::filter(
+        !is.na(.data$pu),
+        !is.na(.data$group),
+        nzchar(.data$group),
+        !is.na(.data$action),
+        nzchar(.data$action),
+        !is.na(.data$area),
+        is.finite(.data$area),
+        .data$area > 0
+      )
+
+    if (nrow(dga) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    # Restrict to groups that are actually referenced by group-area constraints.
+    constraint_groups <- unique(
+      as.character(specs$group)
+    )
+
+    constraint_groups <- constraint_groups[
+      !is.na(constraint_groups) &
+        nzchar(constraint_groups)
+    ]
+
+    if (length(constraint_groups) > 0L) {
+      dga <- dga |>
+        dplyr::filter(
+          .data$group %in% constraint_groups
+        )
+    }
+
+    # Restrict to actions that are actually referenced by action-filtered
+    # group-area constraints.
+    constraint_actions <- unique(
+      unlist(
+        strsplit(
+          actions_txt[needs_actions],
+          split = ",",
+          fixed = TRUE
+        ),
+        use.names = FALSE
+      )
+    )
+
+    constraint_actions <- trimws(as.character(constraint_actions))
+
+    constraint_actions <- constraint_actions[
+      !is.na(constraint_actions) &
+        nzchar(constraint_actions) &
+        constraint_actions != "NA"
+    ]
+
+    if (length(constraint_actions) > 0L) {
+      dga <- dga |>
+        dplyr::filter(
+          .data$action %in% constraint_actions
+        )
+    }
+
+    if (nrow(dga) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    da_key <- da[
+      ,
+      c(
+        "pu",
+        "action",
+        "internal_pu",
+        "internal_action",
+        "internal_row"
+      ),
+      drop = FALSE
+    ]
+
+    da_key$pu <- as.integer(da_key$pu)
+    da_key$action <- as.character(da_key$action)
+    da_key$internal_pu <- as.integer(da_key$internal_pu)
+    da_key$internal_action <- as.integer(da_key$internal_action)
+    da_key$internal_row <- as.integer(da_key$internal_row)
+
+    group_key <- unique(
+      dg[
+        ,
+        c(
+          "group",
+          "internal_group"
+        ),
+        drop = FALSE
+      ]
+    )
+
+    group_key$group <- as.character(group_key$group)
+    group_key$internal_group <- as.integer(group_key$internal_group)
+
+    if (anyDuplicated(group_key$group) > 0L) {
+      stop(
+        "`x$data$dist_groups` maps at least one group to multiple internal_group ids.",
+        call. = FALSE
+      )
+    }
+
+    key_dga <- paste(
+      dga$pu,
+      dga$action,
+      sep = "||"
+    )
+
+    key_da <- paste(
+      da_key$pu,
+      da_key$action,
+      sep = "||"
+    )
+
+    unused_action_pairs <- setdiff(
+      key_dga,
+      key_da
+    )
+
+    if (length(unused_action_pairs) > 0L) {
+      warning(
+        "`x$data$dist_group_actions` contains ",
+        length(unused_action_pairs),
+        " (pu, action) pair(s) that are not feasible in ",
+        "`x$data$dist_actions_model`; these rows will be ignored.",
+        call. = FALSE,
+        immediate. = TRUE
+      )
+    }
+
+    dga <- dga |>
+      dplyr::inner_join(
+        da_key,
+        by = c("pu", "action")
+      ) |>
+      dplyr::inner_join(
+        group_key,
+        by = "group"
+      )
+
+    if (nrow(dga) == 0L) {
+      x$data$dist_group_actions <- data.frame(
+        pu = integer(),
+        group = character(),
+        action = character(),
+        area = numeric(),
+        internal_pu = integer(),
+        internal_group = integer(),
+        internal_action = integer(),
+        internal_row = integer(),
+        stringsAsFactors = FALSE
+      )
+
+      return(x)
+    }
+
+    dga <- dga |>
+      dplyr::group_by(
+        .data$pu,
+        .data$group,
+        .data$action,
+        .data$internal_pu,
+        .data$internal_group,
+        .data$internal_action,
+        .data$internal_row
+      ) |>
+      dplyr::summarise(
+        area = sum(.data$area, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      as.data.frame()
+
+    dga <- dga[
+      order(
+        dga$internal_group,
+        dga$internal_pu,
+        dga$internal_action
+      ),
+      ,
+      drop = FALSE
+    ]
+
+    rownames(dga) <- NULL
+
+    dga$pu <- as.integer(dga$pu)
+    dga$group <- as.character(dga$group)
+    dga$action <- as.character(dga$action)
+    dga$area <- as.numeric(dga$area)
+    dga$internal_pu <- as.integer(dga$internal_pu)
+    dga$internal_group <- as.integer(dga$internal_group)
+    dga$internal_action <- as.integer(dga$internal_action)
+    dga$internal_row <- as.integer(dga$internal_row)
+
+    if (anyNA(dga$internal_pu) ||
+        anyNA(dga$internal_action) ||
+        anyNA(dga$internal_row) ||
+        anyNA(dga$internal_group)) {
+      stop(
+        "Failed to map precomputed group-action areas to internal ids.",
+        call. = FALSE
+      )
+    }
+
+    x$data$dist_group_actions <- dga[
+      ,
+      c(
+        "pu",
+        "group",
+        "action",
+        "area",
+        "internal_pu",
+        "internal_group",
+        "internal_action",
+        "internal_row"
+      ),
+      drop = FALSE
+    ]
+
+    x$data$meta <- x$data$meta %||% list()
+    x$data$meta$dist_group_actions_precomputed_used <- TRUE
+
+    return(x)
+  }
+
   da_sf <- x$data$dist_actions_sf %||% NULL
   groups_sf <- x$data$groups_sf %||% NULL
 
@@ -1745,7 +2057,6 @@
       FUN = sum
     )
 
-    # Join internal ids from dist_actions_model and dist_groups.
     da_key <- da[
       ,
       c(
@@ -1844,7 +2155,8 @@
     stop(
       "Group-area constraints with `actions` require exact group-action areas. ",
       "Provide spatial `include_pairs` in add_actions() and spatial groups in add_groups(), ",
-      "or ensure full planning-unit action areas can be derived.",
+      "or provide precomputed `x$data$dist_group_actions` with columns ",
+      "`pu`, `group`, `action`, and `area`.",
       call. = FALSE
     )
   }
@@ -1882,8 +2194,9 @@
     stop(
       "Group-area constraints with `actions` require exact group-action areas ",
       "when any selected action covers only part of a planning unit. ",
-      "Use spatial `include_pairs` in add_actions() and spatial groups in add_groups() ",
-      "so multiscape can derive area(PU ∩ action ∩ group).",
+      "Use spatial `include_pairs` in add_actions() and spatial groups in add_groups(), ",
+      "or provide precomputed `x$data$dist_group_actions` with columns ",
+      "`pu`, `group`, `action`, and `area`.",
       call. = FALSE
     )
   }

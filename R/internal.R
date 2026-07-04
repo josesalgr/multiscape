@@ -16,52 +16,6 @@ assertthat::on_failure(no_extra_arguments) <- function(call, env) {
   "unused arguments"
 }
 
-#' Verify if assertion is met
-#'
-#' Verify if an assertion is met and throw a [base::warning()] if it
-#' is not. This function is equivalent to [assertthat::assert_that()]
-#' except that it throws warnings and not errors.
-#'
-#' @param x `logical` condition.
-#'
-#' @return `logical` if assertion is met and a `warning` if it is not.
-#'
-#' @noRd
-# verify_that <- function(..., env = parent.frame()) {
-#   res <- assertthat::validate_that(..., env = env)
-#   if (isTRUE(res)) {
-#     return(TRUE)
-#   }
-#   warning(res, immediate. = TRUE)
-#   FALSE
-# }
-
-#' Atomic representation
-#'
-#' Return a pretty character representation of an object with elements and
-#  names.
-#'
-#' @param x `object`.
-#'
-#' @return `character` object.
-#'
-#' @examples
-#' repr_atomic(letters)
-#' repr_atomic(letters, "characters")
-#' @noRd
-# repr_atomic <- function(x, description = "") {
-#   n <- length(x)
-#   if (nchar(description) > 0) {
-#     description <- paste0(" ", description)
-#   }
-#   if (length(x) <= 4) {
-#     x <- x[seq_len(min(length(x), 4))]
-#   } else {
-#     x <- c(x[seq_len(min(length(x), 3))], "...")
-#   }
-#   paste0(paste(x, collapse = ", "), " (", n, description, ")")
-# }
-
 #' Create a new `pproto` object
 #'
 #' Construct a new object with `pproto`. This object system is inspired
