@@ -1936,25 +1936,47 @@ add_actions <- function(
       )
 
       if (length(unknown_pairs) > 0L) {
-        stop(
-          "cost contains (pu, action) pair(s) that are not feasible: ",
-          paste(unknown_pairs, collapse = ", "),
-          ".",
-          call. = FALSE
+        warning(
+          "`cost` contains ",
+          length(unknown_pairs),
+          " (pu, action) pair(s) that are not feasible in `dist_actions`; ",
+          "these rows will be ignored.",
+          call. = FALSE,
+          immediate. = TRUE
         )
+
+        keep_cost <- key_c %in% key_da
+
+        cost <- cost[
+          keep_cost,
+          ,
+          drop = FALSE
+        ]
+
+        key_c <- key_c[keep_cost]
+
+        if (nrow(cost) == 0L) {
+          warning(
+            "After removing non-feasible (pu, action) rows, no pair-specific ",
+            "`cost` rows remain. Feasible pairs will retain their previous/default ",
+            "cost values.",
+            call. = FALSE,
+            immediate. = TRUE
+          )
+        }
       }
 
-      m <- match(
-        key_da,
-        key_c
-      )
+      if (nrow(cost) > 0L) {
+        m <- match(
+          key_da,
+          key_c
+        )
 
-      hit <- !is.na(m)
+        hit <- !is.na(m)
 
-      # Rows not explicitly supplied retain the default cost of one.
-      dist_actions$cost[hit] <- cost$cost[m[hit]]
-
-    } else {
+        # Rows not explicitly supplied retain the current/default cost.
+        dist_actions$cost[hit] <- cost$cost[m[hit]]
+      } else {
       stop(
         paste0(
           "Unsupported cost data.frame format. Use columns ",
