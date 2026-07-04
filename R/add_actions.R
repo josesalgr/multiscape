@@ -806,11 +806,6 @@ add_actions <- function(
     }
 
     ans
-
-    ans$pu <- as.integer(ans$pu)
-    ans$action <- as.character(ans$action)
-
-    ans
   }
 
   .spec_to_pairs <- function(
@@ -1976,7 +1971,9 @@ add_actions <- function(
 
         # Rows not explicitly supplied retain the current/default cost.
         dist_actions$cost[hit] <- cost$cost[m[hit]]
-      } else {
+      }
+
+    } else {
       stop(
         paste0(
           "Unsupported cost data.frame format. Use columns ",
