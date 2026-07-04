@@ -6,20 +6,22 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add management actions to a planning problem — add_actions"><meta name="description" content="Define the action catalogue, the set of feasible planning unit–action pairs,
-and their implementation costs.
+their implementation costs, and the effective area represented by each
+feasible planning unit–action decision.
 This function adds two core components to a Problem object. First, it
 stores the action catalogue. Second, it creates the feasible planning
-unit–action table, including implementation costs, status codes, and
-internal indices used by the optimization backend.
+unit–action table, including implementation costs, effective action areas,
+status codes, and internal indices used by the optimization backend.
 Conceptually, if \(\mathcal{I}\) is the set of planning units and
 \(\mathcal{A}\) is the set of actions, this function determines which
 pairs \((i,a) \in \mathcal{I} \times \mathcal{A}\) are feasible decisions
 and assigns a non-negative implementation cost to each feasible pair."><meta property="og:description" content="Define the action catalogue, the set of feasible planning unit–action pairs,
-and their implementation costs.
+their implementation costs, and the effective area represented by each
+feasible planning unit–action decision.
 This function adds two core components to a Problem object. First, it
 stores the action catalogue. Second, it creates the feasible planning
-unit–action table, including implementation costs, status codes, and
-internal indices used by the optimization backend.
+unit–action table, including implementation costs, effective action areas,
+status codes, and internal indices used by the optimization backend.
 Conceptually, if \(\mathcal{I}\) is the set of planning units and
 \(\mathcal{A}\) is the set of actions, this function determines which
 pairs \((i,a) \in \mathcal{I} \times \mathcal{A}\) are feasible decisions
@@ -64,11 +66,12 @@ and assigns a non-negative implementation cost to each feasible pair."><meta pro
 
     <div class="ref-description section level2">
     <p>Define the action catalogue, the set of feasible planning unit–action pairs,
-and their implementation costs.</p>
+their implementation costs, and the effective area represented by each
+feasible planning unit–action decision.</p>
 <p>This function adds two core components to a <code>Problem</code> object. First, it
 stores the action catalogue. Second, it creates the feasible planning
-unit–action table, including implementation costs, status codes, and
-internal indices used by the optimization backend.</p>
+unit–action table, including implementation costs, effective action areas,
+status codes, and internal indices used by the optimization backend.</p>
 <p>Conceptually, if \(\mathcal{I}\) is the set of planning units and
 \(\mathcal{A}\) is the set of actions, this function determines which
 pairs \((i,a) \in \mathcal{I} \times \mathcal{A}\) are feasible decisions
@@ -82,7 +85,8 @@ and assigns a non-negative implementation cost to each feasible pair.</p>
 <span>  <span class="va">actions</span>,</span>
 <span>  include_pairs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exclude_pairs <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cost <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  cost <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  action_area <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -120,6 +124,15 @@ matching pairs from the feasible set.</p></dd>
 action id, or a <code>data.frame</code> with columns <code>action, cost</code> or
 <code>pu, action, cost</code>.</p></dd>
 
+
+<dt id="arg-action-area">action_area<a class="anchor" aria-label="anchor" href="#arg-action-area"></a></dt>
+<dd><p>Optional effective area specification for feasible
+<code>(pu, action)</code> pairs. It may be <code>NULL</code> or a <code>data.frame</code>
+with columns <code>pu</code>, <code>action</code>, and <code>action_area</code>. If
+<code>NULL</code>, action areas are derived from spatial <code>include_pairs</code>
+when available, otherwise they default to full planning-unit areas when
+these can be derived from the problem.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -129,8 +142,8 @@ action id, or a <code>data.frame</code> with columns <code>action, cost</code> o
 
 <dt><code>dist_actions</code></dt>
 <dd><p>The feasible planning unit–action table with
-columns <code>pu</code>, <code>action</code>, <code>cost</code>, <code>status</code>,
-<code>internal_pu</code>, and <code>internal_action</code>.</p></dd>
+columns <code>pu</code>, <code>action</code>, <code>cost</code>, <code>action_area</code>,
+<code>status</code>, <code>internal_pu</code>, and <code>internal_action</code>.</p></dd>
 
 <dt><code>pu index</code></dt>
 <dd><p>A mapping from user-supplied planning-unit ids to
@@ -189,8 +202,36 @@ are retained. Missing values in <code>feasible</code> are treated as
 contain either:</p><ul><li><p>a vector of planning-unit ids, or</p></li>
 <li><p>an <code>sf</code> object defining the spatial zone where the action is
 feasible.</p></li>
-</ul><p>In the spatial case, feasible planning units are identified using
-<code><a href="https://r-spatial.github.io/sf/reference/geos_binary_pred.html" class="external-link">sf::st_intersects()</a></code> against the stored planning-unit geometry.</p>
+</ul><p>Lists may mix vectors of planning-unit ids and <code>sf</code> objects across
+actions. In the spatial case, feasible planning units are identified using
+<code><a href="https://r-spatial.github.io/sf/reference/geos_binary_pred.html" class="external-link">sf::st_intersects()</a></code> against the stored planning-unit geometry. If
+<code>include_pairs</code> or <code>exclude_pairs</code> contains <code>sf</code> objects, the
+problem must contain planning-unit geometry in <code>x$data$pu_sf</code>; otherwise
+an error is raised.</p>
+<p>Spatial exclusions are applied after inclusions. If a planning unit–action
+pair is included and excluded, the exclusion takes precedence and the pair is
+removed. Spatial exclusions remove complete <code>(pu, action)</code> pairs; they
+do not partially subtract area from included geometries.</p>
+<p><strong>Action areas.</strong></p>
+<p>The <code>action_area</code> column in <code>dist_actions</code> stores the effective
+area represented by each feasible <code>(pu, action)</code> decision. This is an
+area, not an action intensity.</p>
+<p>If <code>action_area = NULL</code>, action areas are derived automatically:</p><ul><li><p>when <code>include_pairs</code> is supplied using <code>sf</code> objects, action
+areas are computed as the area of the spatial intersection between
+planning-unit geometries and the corresponding action geometries;</p></li>
+<li><p>when feasible pairs are supplied without spatial geometries, action
+areas default to the full planning-unit area when this can be derived from
+the problem object.</p></li>
+</ul><p>If <code>action_area</code> is supplied as a <code>data.frame</code>, it must contain
+columns <code>pu</code>, <code>action</code>, and <code>action_area</code>. A column named
+<code>area</code> is also accepted and renamed internally to <code>action_area</code>.
+Supplied areas must be finite and non-negative. User-supplied values override
+automatically derived values for matching feasible pairs. Rows referring to
+non-feasible pairs are ignored with a warning.</p>
+<p>If full planning-unit areas cannot be derived for some feasible pairs,
+<code>action_area</code> is left as <code>NA</code> for those pairs. Area-based action
+constraints should check for missing <code>action_area</code> values before model
+construction.</p>
 <p><strong>Feasibility versus decision fixing.</strong></p>
 <p>This function only determines whether a pair \((i,a)\) exists in the model.
 It does not force a feasible action to be selected or forbidden beyond
@@ -238,7 +279,8 @@ decision-fixing constraints, objectives, and solver settings before calling
 <span class="r-in"><span><span class="co"># ------------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -300,13 +342,13 @@ decision-fixing constraints, objectives, and solver settings before calling
 <span class="r-msg co"><span class="r-pr">#&gt;</span> │└─checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
 <span class="r-in"><span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p1</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    5      0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration   12      0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    5      0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration   12      0           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    5      0           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration   12      0           3               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    5      0           1               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration   12      0           1               2         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    5      0           2               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration   12      0           2               2         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    5      0           3               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration   12      0           3               2         100</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Example 2: specify feasible pairs explicitly</span></span></span>
 <span class="r-in"><span><span class="va">include_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -322,11 +364,11 @@ decision-fixing constraints, objectives, and solver settings before calling
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation   10      0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation   10      0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3  restoration   10      0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4  restoration   10      0           4               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation   10      0           1               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation   10      0           2               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3  restoration   10      0           3               2         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4  restoration   10      0           4               2         100</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Example 3: remove selected pairs after full expansion</span></span></span>
 <span class="r-in"><span><span class="va">exclude_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -342,13 +384,35 @@ decision-fixing constraints, objectives, and solver settings before calling
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      0           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      0           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      0           1               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      0           3               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2         100</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example 4: provide action-specific areas manually</span></span></span>
+<span class="r-in"><span><span class="va">action_area</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"conservation"</span>, <span class="st">"restoration"</span>, <span class="st">"restoration"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  action_area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, <span class="fl">80</span>, <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu">add_actions</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
+<span class="r-in"><span>  actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
+<span class="r-in"><span>  include_pairs <span class="op">=</span> <span class="va">include_df</span>,</span></span>
+<span class="r-in"><span>  action_area <span class="op">=</span> <span class="va">action_area</span>,</span></span>
+<span class="r-in"><span>  cost <span class="op">=</span> <span class="fl">10</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">p4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation   10      0           1               1         100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation   10      0           2               1          50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3  restoration   10      0           3               2          80</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4  restoration   10      0           4               2         100</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

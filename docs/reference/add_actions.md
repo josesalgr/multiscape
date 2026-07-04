@@ -1,12 +1,14 @@
 # Add management actions to a planning problem
 
 Define the action catalogue, the set of feasible planning unit–action
-pairs, and their implementation costs.
+pairs, their implementation costs, and the effective area represented by
+each feasible planning unit–action decision.
 
 This function adds two core components to a `Problem` object. First, it
 stores the action catalogue. Second, it creates the feasible planning
-unit–action table, including implementation costs, status codes, and
-internal indices used by the optimization backend.
+unit–action table, including implementation costs, effective action
+areas, status codes, and internal indices used by the optimization
+backend.
 
 Conceptually, if \\\mathcal{I}\\ is the set of planning units and
 \\\mathcal{A}\\ is the set of actions, this function determines which
@@ -22,7 +24,8 @@ add_actions(
   actions,
   include_pairs = NULL,
   exclude_pairs = NULL,
-  cost = NULL
+  cost = NULL,
+  action_area = NULL
 )
 ```
 
@@ -58,6 +61,14 @@ add_actions(
   scalar numeric value, a named numeric vector indexed by action id, or
   a `data.frame` with columns `action, cost` or `pu, action, cost`.
 
+- action_area:
+
+  Optional effective area specification for feasible `(pu, action)`
+  pairs. It may be `NULL` or a `data.frame` with columns `pu`, `action`,
+  and `action_area`. If `NULL`, action areas are derived from spatial
+  `include_pairs` when available, otherwise they default to full
+  planning-unit areas when these can be derived from the problem.
+
 ## Value
 
 An updated `Problem` object with:
@@ -70,7 +81,7 @@ An updated `Problem` object with:
 - `dist_actions`:
 
   The feasible planning unit–action table with columns `pu`, `action`,
-  `cost`, `status`, `internal_pu`, and `internal_action`.
+  `cost`, `action_area`, `status`, `internal_pu`, and `internal_action`.
 
 - `pu index`:
 
@@ -143,9 +154,47 @@ may contain either:
 
 - an `sf` object defining the spatial zone where the action is feasible.
 
-In the spatial case, feasible planning units are identified using
+Lists may mix vectors of planning-unit ids and `sf` objects across
+actions. In the spatial case, feasible planning units are identified
+using
 [`sf::st_intersects()`](https://r-spatial.github.io/sf/reference/geos_binary_pred.html)
-against the stored planning-unit geometry.
+against the stored planning-unit geometry. If `include_pairs` or
+`exclude_pairs` contains `sf` objects, the problem must contain
+planning-unit geometry in `x$data$pu_sf`; otherwise an error is raised.
+
+Spatial exclusions are applied after inclusions. If a planning
+unit–action pair is included and excluded, the exclusion takes
+precedence and the pair is removed. Spatial exclusions remove complete
+`(pu, action)` pairs; they do not partially subtract area from included
+geometries.
+
+**Action areas.**
+
+The `action_area` column in `dist_actions` stores the effective area
+represented by each feasible `(pu, action)` decision. This is an area,
+not an action intensity.
+
+If `action_area = NULL`, action areas are derived automatically:
+
+- when `include_pairs` is supplied using `sf` objects, action areas are
+  computed as the area of the spatial intersection between planning-unit
+  geometries and the corresponding action geometries;
+
+- when feasible pairs are supplied without spatial geometries, action
+  areas default to the full planning-unit area when this can be derived
+  from the problem object.
+
+If `action_area` is supplied as a `data.frame`, it must contain columns
+`pu`, `action`, and `action_area`. A column named `area` is also
+accepted and renamed internally to `action_area`. Supplied areas must be
+finite and non-negative. User-supplied values override automatically
+derived values for matching feasible pairs. Rows referring to
+non-feasible pairs are ignored with a warning.
+
+If full planning-unit areas cannot be derived for some feasible pairs,
+`action_area` is left as `NA` for those pairs. Area-based action
+constraints should check for missing `action_area` values before model
+construction.
 
 **Feasibility versus decision fixing.**
 
@@ -210,7 +259,8 @@ before calling
 # ------------------------------------------------------
 pu <- data.frame(
   id = 1:4,
-  cost = c(2, 3, 1, 4)
+  cost = c(2, 3, 1, 4),
+  area = c(100, 100, 100, 100)
 )
 
 features <- data.frame(
@@ -272,13 +322,13 @@ print(p1)
 #> │└─checks: incomplete (no objective registered)
 #> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 utils::head(p1$data$dist_actions)
-#>   pu       action cost status internal_pu internal_action
-#> 1  1 conservation    5      0           1               1
-#> 5  1  restoration   12      0           1               2
-#> 2  2 conservation    5      0           2               1
-#> 6  2  restoration   12      0           2               2
-#> 3  3 conservation    5      0           3               1
-#> 7  3  restoration   12      0           3               2
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation    5      0           1               1         100
+#> 5  1  restoration   12      0           1               2         100
+#> 2  2 conservation    5      0           2               1         100
+#> 6  2  restoration   12      0           2               2         100
+#> 3  3 conservation    5      0           3               1         100
+#> 7  3  restoration   12      0           3               2         100
 
 # Example 2: specify feasible pairs explicitly
 include_df <- data.frame(
@@ -294,11 +344,11 @@ p2 <- add_actions(
 )
 
 p2$data$dist_actions
-#>   pu       action cost status internal_pu internal_action
-#> 1  1 conservation   10      0           1               1
-#> 2  2 conservation   10      0           2               1
-#> 3  3  restoration   10      0           3               2
-#> 4  4  restoration   10      0           4               2
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation   10      0           1               1         100
+#> 2  2 conservation   10      0           2               1         100
+#> 3  3  restoration   10      0           3               2         100
+#> 4  4  restoration   10      0           4               2         100
 
 # Example 3: remove selected pairs after full expansion
 exclude_df <- data.frame(
@@ -314,11 +364,33 @@ p3 <- add_actions(
 )
 
 p3$data$dist_actions
-#>   pu       action cost status internal_pu internal_action
-#> 1  1 conservation    3      0           1               1
-#> 5  1  restoration    8      0           1               2
-#> 2  2 conservation    3      0           2               1
-#> 3  3 conservation    3      0           3               1
-#> 7  3  restoration    8      0           3               2
-#> 8  4  restoration    8      0           4               2
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation    3      0           1               1         100
+#> 5  1  restoration    8      0           1               2         100
+#> 2  2 conservation    3      0           2               1         100
+#> 3  3 conservation    3      0           3               1         100
+#> 7  3  restoration    8      0           3               2         100
+#> 8  4  restoration    8      0           4               2         100
+
+# Example 4: provide action-specific areas manually
+action_area <- data.frame(
+  pu = c(1, 2, 3, 4),
+  action = c("conservation", "conservation", "restoration", "restoration"),
+  action_area = c(100, 50, 80, 100)
+)
+
+p4 <- add_actions(
+  x = p,
+  actions = actions,
+  include_pairs = include_df,
+  action_area = action_area,
+  cost = 10
+)
+
+p4$data$dist_actions
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation   10      0           1               1         100
+#> 2  2 conservation   10      0           2               1          50
+#> 3  3  restoration   10      0           3               2          80
+#> 4  4  restoration   10      0           4               2         100
 ```

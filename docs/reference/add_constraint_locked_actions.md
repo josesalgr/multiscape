@@ -163,15 +163,15 @@ p <- add_constraint_locked_actions(
 )
 
 p$data$dist_actions
-#>   pu       action cost status internal_pu internal_action
-#> 1  1 conservation    3      2           1               1
-#> 5  1  restoration    8      0           1               2
-#> 2  2 conservation    3      0           2               1
-#> 6  2  restoration    8      2           2               2
-#> 3  3 conservation    3      0           3               1
-#> 7  3  restoration    8      0           3               2
-#> 4  4 conservation    3      3           4               1
-#> 8  4  restoration    8      0           4               2
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation    3      2           1               1          NA
+#> 5  1  restoration    8      0           1               2          NA
+#> 2  2 conservation    3      0           2               1          NA
+#> 6  2  restoration    8      2           2               2          NA
+#> 3  3 conservation    3      0           3               1          NA
+#> 7  3  restoration    8      0           3               2          NA
+#> 4  4 conservation    3      3           4               1          NA
+#> 8  4  restoration    8      0           4               2          NA
 
 # Named-list interface
 p2 <- add_constraint_locked_actions(
@@ -185,13 +185,13 @@ p2 <- add_constraint_locked_actions(
 )
 
 p2$data$dist_actions
-#>   pu       action cost status internal_pu internal_action
-#> 1  1 conservation    3      2           1               1
-#> 5  1  restoration    8      0           1               2
-#> 2  2 conservation    3      0           2               1
-#> 6  2  restoration    8      3           2               2
-#> 3  3 conservation    3      2           3               1
-#> 7  3  restoration    8      0           3               2
-#> 4  4 conservation    3      3           4               1
-#> 8  4  restoration    8      0           4               2
+#>   pu       action cost status internal_pu internal_action action_area
+#> 1  1 conservation    3      2           1               1          NA
+#> 5  1  restoration    8      0           1               2          NA
+#> 2  2 conservation    3      0           2               1          NA
+#> 6  2  restoration    8      3           2               2          NA
+#> 3  3 conservation    3      2           3               1          NA
+#> 7  3  restoration    8      0           3               2          NA
+#> 4  4 conservation    3      3           4               1          NA
+#> 8  4  restoration    8      0           4               2          NA
 ```

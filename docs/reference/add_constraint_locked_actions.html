@@ -191,15 +191,15 @@ ensuring consistency with planning-unit exclusions.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      2           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration    8      2           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      0           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4 conservation    3      3           4               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      2           1               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration    8      2           2               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      0           3               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4 conservation    3      3           4               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2          NA</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Named-list interface</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_locked_actions</span><span class="op">(</span></span></span>
@@ -213,15 +213,15 @@ ensuring consistency with planning-unit exclusions.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      2           1               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration    8      3           2               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      2           3               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4 conservation    3      3           4               1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action cost status internal_pu internal_action action_area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation    3      2           1               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  1  restoration    8      0           1               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 conservation    3      0           2               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  2  restoration    8      3           2               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 conservation    3      2           3               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  3  restoration    8      0           3               2          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4 conservation    3      3           4               1          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration    8      0           4               2          NA</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

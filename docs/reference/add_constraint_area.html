@@ -8,14 +8,20 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add area constraint — add_constraint_area"><meta name="description" content="Add an area constraint to a planning problem.
 This function stores one area-constraint specification in the
 Problem object so that it can later be incorporated when the
-optimization model is assembled. Multiple area constraints can be added by
-calling this function repeatedly, provided that no duplicated combination of
-action subset and constraint sense is introduced."><meta property="og:description" content="Add an area constraint to a planning problem.
+optimization model is assembled. Area constraints can be imposed either on
+the total selected planning-unit area or on the effective area of selected
+actions.
+Multiple area constraints can be added by calling this function repeatedly,
+provided that no duplicated combination of action subset and constraint sense
+is introduced."><meta property="og:description" content="Add an area constraint to a planning problem.
 This function stores one area-constraint specification in the
 Problem object so that it can later be incorporated when the
-optimization model is assembled. Multiple area constraints can be added by
-calling this function repeatedly, provided that no duplicated combination of
-action subset and constraint sense is introduced."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+optimization model is assembled. Area constraints can be imposed either on
+the total selected planning-unit area or on the effective area of selected
+actions.
+Multiple area constraints can be added by calling this function repeatedly,
+provided that no duplicated combination of action subset and constraint sense
+is introduced."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -58,9 +64,12 @@ action subset and constraint sense is introduced."><meta property="og:image" con
     <p>Add an area constraint to a planning problem.</p>
 <p>This function stores one area-constraint specification in the
 <code>Problem</code> object so that it can later be incorporated when the
-optimization model is assembled. Multiple area constraints can be added by
-calling this function repeatedly, provided that no duplicated combination of
-action subset and constraint sense is introduced.</p>
+optimization model is assembled. Area constraints can be imposed either on
+the total selected planning-unit area or on the effective area of selected
+actions.</p>
+<p>Multiple area constraints can be added by calling this function repeatedly,
+provided that no duplicated combination of action subset and constraint sense
+is introduced.</p>
     </div>
 
     <div class="section level2">
@@ -102,9 +111,12 @@ around <code>area</code> with half-width <code>tolerance</code>. Ignored otherwi
 
 
 <dt id="arg-area-col">area_col<a class="anchor" aria-label="anchor" href="#arg-area-col"></a></dt>
-<dd><p>Optional character string giving the name of the area column
-in <code>x$data$pu</code>. If <code>NULL</code>, the area source is resolved later by
-the model builder.</p></dd>
+<dd><p>Optional character string giving the name of the planning-unit
+area column. When <code>actions = NULL</code>, this column is used as the source
+of planning-unit areas. When <code>actions</code> is not <code>NULL</code>, the
+constraint uses <code>x$data$dist_actions$action_area</code>; <code>area_col</code> can
+still be used by the model builder as a fallback if action areas are missing
+and full planning-unit areas can be derived.</p></dd>
 
 
 <dt id="arg-area-unit">area_unit<a class="anchor" aria-label="anchor" href="#arg-area-unit"></a></dt>
@@ -115,11 +127,12 @@ the model builder.</p></dd>
 
 <dt id="arg-actions">actions<a class="anchor" aria-label="anchor" href="#arg-actions"></a></dt>
 <dd><p>Optional subset of actions to which the constraint applies.
-If <code>NULL</code>, the constraint applies to the total selected area in the
-problem through the planning-unit selection variables. Otherwise, it applies
-to the selected decision variables associated with the specified subset of
-actions. This argument is resolved using the package's standard action
-subset parser.</p></dd>
+If <code>NULL</code>, the constraint applies to the total selected planning-unit
+area through the planning-unit selection variables. Otherwise, it applies to
+the effective area of the selected decision variables associated with the
+specified subset of actions, using
+<code>x$data$dist_actions$action_area</code>. This argument is resolved using the
+package's standard action subset parser.</p></dd>
 
 
 <dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
@@ -136,17 +149,17 @@ specification appended to <code>x$data$constraints$area</code>.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Use this function when area requirements must be imposed either on the total
-selected landscape or on the subset of selected decisions associated with
-specific actions.</p>
+selected landscape or on the effective area allocated to specific actions.</p>
+<p><strong>Total selected area.</strong></p>
 <p>Let \(\mathcal{I}\) denote the set of planning units and let
 \(a_i \ge 0\) be the area associated with planning unit
-\(i \in \mathcal{I}\)</p>
+\(i \in \mathcal{I}\).</p>
 <p>When <code>actions = NULL</code>, the constraint refers to the total selected area
 in the problem. In that case, let \(w_i \in \{0,1\}\) denote the binary
 variable indicating whether planning unit \(i\) is selected by at least one
 decision in the model.</p>
 <p>Depending on <code>sense</code>, this function stores one of the following
-constraints:</p>
+constraints.</p>
 <p>If <code>sense = "min"</code>:
 $$
 \sum_{i \in \mathcal{I}} a_i w_i \ge A
@@ -165,26 +178,46 @@ $$
 A - \tau \le \sum_{i \in \mathcal{I}} a_i w_i \le A + \tau
 $$
 where \(\tau\) is the value supplied through <code>tolerance</code>.</p>
-<p>When <code>actions</code> is not <code>NULL</code>, the constraint is applied only to the
-selected decisions associated with the specified subset of actions. Let
-\(\mathcal{A}^\star \subseteq \mathcal{A}\) denote that subset and let
-\(x_{ia} \in \{0,1\}\) denote the binary variable indicating whether action
-\(a \in \mathcal{A}^\star\) is selected in planning unit
-\(i \in \mathcal{I}\). In that case, the constrained quantity is
+<p><strong>Action-specific effective area.</strong></p>
+<p>When <code>actions</code> is not <code>NULL</code>, the constraint refers to the
+effective area of the selected decisions associated with the specified subset
+of actions.</p>
+<p>Let \(\mathcal{A}^\star \subseteq \mathcal{A}\) denote the specified
+action subset and let \(x_{ia} \in \{0,1\}\) denote the binary variable
+indicating whether action \(a \in \mathcal{A}^\star\) is selected in
+planning unit \(i \in \mathcal{I}\). Let \(b_{ia} \ge 0\) denote the
+effective action area associated with feasible pair \((i,a)\), as stored in
+<code>x$data$dist_actions$action_area</code>. In that case, the constrained
+quantity is:
 $$
-\sum_{i \in \mathcal{I}} \sum_{a \in \mathcal{A}^\star} a_i x_{ia}.
+\sum_{i \in \mathcal{I}} \sum_{a \in \mathcal{A}^\star} b_{ia} x_{ia}.
 $$</p>
-<p>Under formulations where at most one action can be selected per planning
-unit, this coincides with the area allocated to that subset of actions.</p>
-<p>Areas are obtained from the planning-unit table. If <code>area_col</code> is
-provided, that column is used. Otherwise, the model builder later determines
-the default area source according to the internal rules of the package. The
-value of <code>area_unit</code> indicates the unit in which <code>area</code> and
-<code>tolerance</code> are expressed and therefore how the stored threshold should
-be interpreted.</p>
+<p>Effective action areas are defined in <code><a href="add_actions.html">add_actions</a></code>. They can be
+supplied manually through the <code>action_area</code> argument, derived from
+spatial <code>include_pairs</code>, or default to full planning-unit areas when
+these can be derived from the problem.</p>
+<p>Consequently, if no partial action areas are supplied and each feasible action
+is assumed to apply to the full planning unit, then an action-specific area
+constraint is numerically equivalent to using planning-unit areas for those
+action decisions. If partial action areas are supplied, the constraint uses
+those effective areas instead.</p>
+<p><strong>Area units and area sources.</strong></p>
+<p>The value of <code>area_unit</code> indicates the unit in which <code>area</code> and
+<code>tolerance</code> are expressed.</p>
+<p>When <code>actions = NULL</code>, areas are obtained from the planning-unit table or
+planning-unit geometry. If <code>area_col</code> is provided, that column is used.
+Otherwise, the model builder determines the default area source according to
+the internal rules of the package.</p>
+<p>When <code>actions</code> is not <code>NULL</code>, the model builder uses
+<code>x$data$dist_actions$action_area</code>. These values are stored internally in
+square metres and are converted to <code>area_unit</code> when the model is built.
+If action areas are missing for relevant feasible <code>(pu, action)</code> pairs,
+the model builder may use <code>area_col</code> as a fallback to derive full
+planning-unit areas. If valid action areas still cannot be obtained, model
+construction fails with an error.</p>
 <p>This function only stores the constraint specification; it does not validate
-the feasibility of the threshold against the available planning units at this
-stage.</p>
+the feasibility of the threshold against the available planning units or
+actions at this stage.</p>
 <p>Multiple area constraints can be stored in a <code>Problem</code> object. However,
 at most one can be stored for the same combination of action subset and
 constraint sense. Attempting to add a duplicated
@@ -192,7 +225,8 @@ constraint sense. Attempting to add a duplicated
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="create_problem.html">create_problem</a></code></p></div>
+    <div class="dont-index"><p><code><a href="create_problem.html">create_problem</a></code>,
+<code><a href="add_actions.html">add_actions</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -230,6 +264,7 @@ constraint sense. Attempting to add a duplicated
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>conservation <span class="op">=</span> <span class="fl">1</span>, restoration <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Constrain the total selected planning-unit area.</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_area</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
 <span class="r-in"><span>  area <span class="op">=</span> <span class="fl">25</span>,</span></span>
@@ -238,6 +273,9 @@ constraint sense. Attempting to add a duplicated
 <span class="r-in"><span>  area_unit <span class="op">=</span> <span class="st">"ha"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Constrain the effective area allocated to restoration.</span></span></span>
+<span class="r-in"><span><span class="co"># Because add_actions() can derive full planning-unit areas here,</span></span></span>
+<span class="r-in"><span><span class="co"># restoration action areas default to the full area of each feasible PU.</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_area</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
 <span class="r-in"><span>  area <span class="op">=</span> <span class="fl">15</span>,</span></span>
@@ -247,20 +285,10 @@ constraint sense. Attempting to add a duplicated
 <span class="r-in"><span>  actions <span class="op">=</span> <span class="st">"restoration"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_area</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  area <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>  sense <span class="op">=</span> <span class="st">"min"</span>,</span></span>
-<span class="r-in"><span>  area_col <span class="op">=</span> <span class="st">"area_ha"</span>,</span></span>
-<span class="r-in"><span>  area_unit <span class="op">=</span> <span class="st">"ha"</span>,</span></span>
-<span class="r-in"><span>  actions <span class="op">=</span> <span class="st">"restoration"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">constraints</span><span class="op">$</span><span class="va">area</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   type sense value tolerance unit area_col     actions                 name</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 area   min    25         0   ha  area_ha        &lt;NA&gt;             area_min</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 area   max    15         0   ha  area_ha restoration area_max_restoration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 area   min     5         0   ha  area_ha restoration area_min_restoration</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

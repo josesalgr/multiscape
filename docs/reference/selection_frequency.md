@@ -74,7 +74,7 @@ retained.
 [`solution_filter`](https://josesalgr.github.io/multiscape/reference/solution_filter.md),
 [`solution_unique`](https://josesalgr.github.io/multiscape/reference/solution_unique.md),
 [`get_actions`](https://josesalgr.github.io/multiscape/reference/get_actions.md),
-[`get_pu`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
+[`get_planning_units`](https://josesalgr.github.io/multiscape/reference/get_planning_units.md)
 
 ## Examples
 

@@ -144,13 +144,13 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     solution = solution_ids[1]
   )
 }
-#>   solution_id pu       action cost status selected
-#> 1           1  1 conservation    1      0        1
-#> 2           1  1  restoration    2      0        0
-#> 3           1  2 conservation    1      0        0
-#> 4           1  2  restoration    2      0        0
-#> 5           1  3 conservation    1      0        0
-#> 6           1  3  restoration    2      0        0
-#> 7           1  4 conservation    1      0        0
-#> 8           1  4  restoration    2      0        0
+#>   solution_id pu       action cost status action_area selected
+#> 1           1  1 conservation    1      0          NA        1
+#> 2           1  1  restoration    2      0          NA        0
+#> 3           1  2 conservation    1      0          NA        0
+#> 4           1  2  restoration    2      0          NA        0
+#> 5           1  3 conservation    1      0          NA        0
+#> 6           1  3  restoration    2      0          NA        0
+#> 7           1  4 conservation    1      0          NA        0
+#> 8           1  4  restoration    2      0          NA        0
 ```
