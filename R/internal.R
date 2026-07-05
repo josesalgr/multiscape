@@ -946,7 +946,29 @@ available_to_solve <- function(package = ""){
   }
 
   # ------------------------------------------------------------------
-  # 4) Apply each row as a separate constraint
+  # 4) Map external feature ids in targets to internal feature ids
+  # ------------------------------------------------------------------
+  feature_map <- x$data$features[, c("id", "internal_id"), drop = FALSE]
+  feature_map$id <- as.integer(feature_map$id)
+  feature_map$internal_id <- as.integer(feature_map$internal_id)
+
+  t$internal_feature <- feature_map$internal_id[
+    match(as.integer(t$feature), feature_map$id)
+  ]
+
+  if (anyNA(t$internal_feature)) {
+    missing_features <- unique(t$feature[is.na(t$internal_feature)])
+
+    stop(
+      "Some target features could not be mapped to internal feature ids: ",
+      paste(missing_features, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  # ------------------------------------------------------------------
+  # 5) Apply each row as a separate constraint
   # ------------------------------------------------------------------
   n_applied <- 0L
 
@@ -957,22 +979,37 @@ available_to_solve <- function(package = ""){
     dbm_sub <- .filter_effects_by_actions(dbm, actions_string)
 
     if (nrow(dbm_sub) == 0) {
-      actions_lab <- if (is.na(actions_string) || !nzchar(actions_string)) "ALL actions" else actions_string
+      actions_lab <- if (is.na(actions_string) || !nzchar(actions_string)) {
+        "ALL actions"
+      } else {
+        actions_string
+      }
+
       stop(
-        "Target for feature ", tt$feature[1], " and actions subset '", actions_lab,
+        "Target for feature ", tt$feature[1],
+        " and actions subset '", actions_lab,
         "' cannot be applied because no matching effect rows remain after filtering.",
         call. = FALSE
       )
     }
 
-    .check_feature_present_in_df(tt$feature, dbm_sub, "feature", what = "actions")
+    .check_feature_present_in_df(
+      tt$internal_feature,
+      dbm_sub,
+      "internal_feature",
+      what = "actions"
+    )
 
     rcpp_add_target_recovery(
       op,
-      features_data     = .mk_targets_df(tt$feature, tt$target_value, "target_actions"),
+      features_data = .mk_targets_df(
+        tt$internal_feature,
+        tt$target_value,
+        "target_actions"
+      ),
       dist_actions_data = x$data$dist_actions_model,
       dist_benefit_data = dbm_sub,
-      target_col        = "target_actions"
+      target_col = "target_actions"
     )
 
     n_applied <- n_applied + 1L
