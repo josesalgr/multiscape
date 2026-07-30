@@ -104,7 +104,8 @@ jobs:
             any::sessioninfo
             any::testthat
             any::pak
-            knitr
+            any::knitr
+            any::rmarkdown
           needs: check
 
       - name: Install rcbc on Linux
@@ -148,7 +149,6 @@ jobs:
             args = c(
               "--no-manual",
               "--as-cran",
-              "--no-build-vignettes"
             ),
             error_on = "warning",
             check_dir = "check"

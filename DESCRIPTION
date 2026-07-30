@@ -129,4 +129,4 @@ Collate:
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
-VignetteBuilder: knitr
+VignetteBuilder: knitr, rmarkdown
