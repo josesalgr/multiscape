@@ -163,11 +163,19 @@ test_that("build_model validation helpers catch missing dependencies", {
   p <- make_round4_problem()
   p$data$model_args <- list(model_type = "minimizeCosts")
   p$data$targets <- NULL
-  expect_error(
+  expect_warning(
     multiscape:::.pa_build_model_validate_pipeline_state(p, input_format = "new"),
-    "requires targets"
+    "all-zero solution may therefore be optimal"
   )
 
+  p_area <- p
+  p_area$data$constraints <- list(
+    area = data.frame(sense = "min", value = 1)
+  )
+  expect_warning(
+    multiscape:::.pa_build_model_validate_pipeline_state(p_area, input_format = "new"),
+    NA
+  )
   p_legacy <- p
   expect_error(
     multiscape:::.pa_build_model_validate_pipeline_state(p_legacy, input_format = "legacy"),

@@ -1,6 +1,47 @@
 # Changelog
 
+## multiscape 1.1.3
+
+### Documentation and examples
+
+- Replaced the extended README case study with a concise, spatially
+  structured example of multi-objective, multi-action planning.
+- Added
+  [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
+  and its associated simulated planning units, features, action costs,
+  and action-specific effects for examples, tests, and introductory
+  documentation.
+- Added a detailed vignette on multi-objective forest-restoration
+  planning in a highly productive landscape with an existing
+  conservation network.
+- Formulated restoration cost and four ecosystem-service
+  opportunity-cost objectives specifically for the `restoration` action,
+  while retaining fixed conservation commitments as spatial context.
+- Demonstrated an a posteriori AUGMECON workflow with 81 threshold
+  configurations, non-dominance filtering, removal of repeated decision
+  vectors, objective extremes, closest-to-ideal compromise selection,
+  and decision-space comparisons.
+- Added a compressed, precomputed `SolutionSet` to support reproducible
+  vignette and pkgdown builds without requiring Gurobi or rerunning the
+  full optimization.
+- Added visual summaries for additional cost versus ecosystem-service
+  opportunity cost, normalized objective performance, joint
+  ecosystem-service regret, representative spatial allocations, and
+  Jaccard similarity among efficient plans.
+- Linked objective-space and map diagnostics through consistent solution
+  identifiers and colours for the least-cost plan, the five-objective
+  compromise, and service-specific extremes.
+
 ## multiscape 1.1.2
+
+- Relaxed model validation so feature targets are no longer mandatory
+  when another substantive constraint or locked-in decision defines a
+  non-empty planning problem.
+- Added an informative warning for minimum-cost problems that have no
+  feature targets, positive area requirement, or locked-in decisions,
+  instead of stopping model construction unconditionally.
+
+### Result tables and maintenance
 
 - Standardized user-facing result tables so `solution_id` is shown as
   the first column.

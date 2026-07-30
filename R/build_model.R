@@ -223,22 +223,58 @@
 
 .pa_build_model_validate_pipeline_state <- function(x, input_format) {
 
-  .pa_abort <- function(...) stop(paste0(...), call. = FALSE)
-
   mtype_check <- x$data$model_args$model_type %||% "minimizeCosts"
 
   if (!identical(input_format, "legacy") && identical(mtype_check, "minimizeCosts")) {
-    if (is.null(x$data$targets) || !inherits(x$data$targets, "data.frame") || nrow(x$data$targets) == 0) {
-      .pa_abort(
-        "model_type='minimizeCosts' requires targets, but x$data$targets is empty.\n",
-        "Run add_constraint_target_*() before solve()."
+    has_targets <- !is.null(x$data$targets) &&
+      inherits(x$data$targets, "data.frame") &&
+      nrow(x$data$targets) > 0L
+
+    area_constraints <- x$data$constraints$area %||% NULL
+    has_selection_area <- !is.null(area_constraints) &&
+      inherits(area_constraints, "data.frame") &&
+      nrow(area_constraints) > 0L &&
+      all(c("sense", "value") %in% names(area_constraints)) &&
+      any(
+        area_constraints$sense %in% c("min", "equal") &
+          is.finite(area_constraints$value) &
+          area_constraints$value > 0,
+        na.rm = TRUE
+      )
+
+    pu <- x$data$pu %||% NULL
+    has_locked_in_pu <- !is.null(pu) &&
+      inherits(pu, "data.frame") &&
+      "locked_in" %in% names(pu) &&
+      any(as.logical(pu$locked_in), na.rm = TRUE)
+
+    dist_actions <- x$data$dist_actions %||% NULL
+    has_locked_in_action <- !is.null(dist_actions) &&
+      inherits(dist_actions, "data.frame") &&
+      "status" %in% names(dist_actions) &&
+      any(dist_actions$status %in% c(1L, 2L), na.rm = TRUE)
+
+    has_selection_requirement <- any(c(
+      has_targets,
+      has_selection_area,
+      has_locked_in_pu,
+      has_locked_in_action
+    ))
+
+    if (!isTRUE(has_selection_requirement)) {
+      warning(
+        paste0(
+          "The minimum-cost problem has no feature targets, positive minimum/equality area constraint, ",
+          "or locked-in decisions. The all-zero solution may therefore be optimal. ",
+          "Add a selection requirement if an empty solution is not intended."
+        ),
+        call. = FALSE
       )
     }
   }
 
   x
 }
-
 .pa_build_model_prepare_tables <- function(x) {
 
   .pa_abort <- function(...) stop(paste0(...), call. = FALSE)

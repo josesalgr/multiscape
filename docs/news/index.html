@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,6 +28,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective method</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -44,7 +49,25 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.3" id="multiscape-113">multiscape 1.1.3<a class="anchor" aria-label="anchor" href="#multiscape-113"></a></h2>
+<div class="section level3">
+<h3 id="documentation-and-examples-1-1-3">Documentation and examples<a class="anchor" aria-label="anchor" href="#documentation-and-examples-1-1-3"></a></h3>
+<ul><li>Replaced the extended README case study with a concise, spatially structured example of multi-objective, multi-action planning.</li>
+<li>Added <code><a href="../reference/load_sim_multiaction.html">load_sim_multiaction()</a></code> and its associated simulated planning units, features, action costs, and action-specific effects for examples, tests, and introductory documentation.</li>
+<li>Added a detailed vignette on multi-objective forest-restoration planning in a highly productive landscape with an existing conservation network.</li>
+<li>Formulated restoration cost and four ecosystem-service opportunity-cost objectives specifically for the <code>restoration</code> action, while retaining fixed conservation commitments as spatial context.</li>
+<li>Demonstrated an a posteriori AUGMECON workflow with 81 threshold configurations, non-dominance filtering, removal of repeated decision vectors, objective extremes, closest-to-ideal compromise selection, and decision-space comparisons.</li>
+<li>Added a compressed, precomputed <code>SolutionSet</code> to support reproducible vignette and pkgdown builds without requiring Gurobi or rerunning the full optimization.</li>
+<li>Added visual summaries for additional cost versus ecosystem-service opportunity cost, normalized objective performance, joint ecosystem-service regret, representative spatial allocations, and Jaccard similarity among efficient plans.</li>
+<li>Linked objective-space and map diagnostics through consistent solution identifiers and colours for the least-cost plan, the five-objective compromise, and service-specific extremes.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.2" id="multiscape-112">multiscape 1.1.2<a class="anchor" aria-label="anchor" href="#multiscape-112"></a></h2>
+<ul><li>Relaxed model validation so feature targets are no longer mandatory when another substantive constraint or locked-in decision defines a non-empty planning problem.</li>
+<li>Added an informative warning for minimum-cost problems that have no feature targets, positive area requirement, or locked-in decisions, instead of stopping model construction unconditionally.</li>
+</ul><div class="section level3">
+<h3 id="result-tables-and-maintenance-1-1-2">Result tables and maintenance<a class="anchor" aria-label="anchor" href="#result-tables-and-maintenance-1-1-2"></a></h3>
 <ul><li>Standardized user-facing result tables so <code>solution_id</code> is shown as the first column.</li>
 <li>Removed <code>run_id</code> from user-facing solution extractors and frontier outputs; it is now kept for <code><a href="../reference/get_runs.html">get_runs()</a></code> and internal matching only.</li>
 <li>Removed internal columns such as <code>internal_id</code> from planning-unit outputs.</li>
@@ -53,6 +76,7 @@
 <li>Added an example for <code><a href="../reference/get_runs.html">get_runs()</a></code>.</li>
 <li>Fixed Rd warnings from missing cross-references and undocumented deprecated arguments.</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.1" id="multiscape-111">multiscape 1.1.1<a class="anchor" aria-label="anchor" href="#multiscape-111"></a></h2>
 <div class="section level3">

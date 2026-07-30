@@ -210,12 +210,16 @@ Simulated datasets distributed with the package.
   : Simulated feature distribution
 - [`sim_features`](https://josesalgr.github.io/multiscape/reference/sim_features.md)
   : Simulated features
+- [`sim_multiaction`](https://josesalgr.github.io/multiscape/reference/sim_multiaction.md)
+  : Simulated spatial multi-action planning inputs
 - [`sim_pu`](https://josesalgr.github.io/multiscape/reference/sim_pu.md)
   : Simulated planning units
 - [`sim_pu_sf`](https://josesalgr.github.io/multiscape/reference/sim_pu_sf.md)
   : Simulated planning units
 - [`load_sim_features_raster()`](https://josesalgr.github.io/multiscape/reference/load_sim_features_raster.md)
   : Example feature raster
+- [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
+  : Load the simulated spatial multi-action example
 
 ## Deprecated functions
 

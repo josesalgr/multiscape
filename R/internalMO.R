@@ -729,7 +729,7 @@
 
   spec <- .pamo_compile_superset_spec(base, ir_list)
 
-  # elegir un objetivo "semilla" válido para que el core del modelo se materialice.
+  # elegir un objetivo "semilla" vÃ¡lido para que el core del modelo se materialice.
   # preferimos min_cost si existe; si no, el primero.
   pick_seed_ir <- function(ir_list) {
     idx_cost <- which(vapply(
@@ -749,7 +749,7 @@
   b$data$model_args <- b$data$model_args %||% list()
   b$data$model_args$mo_mode <- TRUE
 
-  # la clave del superset: needs estructurales, independientes del método
+  # la clave del superset: needs estructurales, independientes del mÃ©todo
   b$data$model_args$needs <- utils::modifyList(
     b$data$model_args$needs %||% list(),
     spec$needs
@@ -766,7 +766,7 @@
     stop("Superset build failed: model_ptr is NULL.", call. = FALSE)
   }
 
-  # sanity check mínimo: si hay objetivos de representación, el modelo debe tener z
+  # sanity check mÃ­nimo: si hay objetivos de representaciÃ³n, el modelo debe tener z
   if (isTRUE(spec$needs$z)) {
     op_list <- .pa_model_from_ptr(
       op,
@@ -1692,7 +1692,7 @@
     df[df$internal_feature %in% feat_int, , drop = FALSE]
   }
 
-  # Convención MO: motor en MIN; luego en R se invierte signo para objetivos max
+  # ConvenciÃ³n MO: motor en MIN; luego en R se invierte signo para objetivos max
   rcpp_reset_objective(op, "min")
 
   terms <- ir$terms %||% list()
@@ -2020,8 +2020,8 @@
   for (i in seq_along(ir_list)) {
     v <- .pamo_objvec_from_ir(base2, ir_list[[i]])
 
-    # convención: todo se resuelve como MIN en el motor;
-    # si IR es "max", flipa signo acá.
+    # convenciÃ³n: todo se resuelve como MIN en el motor;
+    # si IR es "max", flipa signo acÃ¡.
     if (identical(ir_list[[i]]$sense, "max")) v <- -v
 
     objvecs[[i]] <- v
@@ -2054,7 +2054,7 @@
   # 4) combinar pesos -> objetivo final
   obj_w <- Reduce(`+`, Map(`*`, objvecs, as.list(weights)))
 
-  # 5) IMPORTANTÍSIMO: inyectar runtime update para que multiscape lo use en solve()
+  # 5) IMPORTANTÃSIMO: inyectar runtime update para que multiscape lo use en solve()
   base2$data$runtime_updates <- list(
     obj = obj_w,
     modelsense = "min"
@@ -2064,7 +2064,7 @@
   base2$data$meta$model_dirty <- FALSE
   base2$data$has_model <- TRUE
 
-  # 7) guarda cache para evaluación posterior (opcional pero muy útil)
+  # 7) guarda cache para evaluaciÃ³n posterior (opcional pero muy Ãºtil)
   base2$data$mo_cache <- list(
     ir_list = ir_list,
     weights = weights,
@@ -2137,11 +2137,18 @@
         stop("epsilon_constraint: eps_tol for '", a, "' must be finite and >= 0.", call. = FALSE)
       }
 
+      sec_sense <- as.character(sp_sec$sense %||% "min")[1]
+      eps_relaxed <- if (identical(sec_sense, "max")) {
+        eps_val - tol_a
+      } else {
+        eps_val + tol_a
+      }
+
       base <- .pamo_apply_epsilon_constraint(
         base = base,
         ir = ir_sec,
-        eps = eps_val + tol_a,
-        sense = as.character(sp_sec$sense %||% "min")[1],
+        eps = eps_relaxed,
+        sense = sec_sense,
         name = paste0("eps_", a),
         block_name = "epsilon_constraint"
       )
@@ -2756,7 +2763,7 @@
   #   return(as.numeric(val))
   # }
 
-  # resto de objetivos: evaluación por objvec
+  # resto de objetivos: evaluaciÃ³n por objvec
   base_eval <- .pamo_prepare_superset_model(x, list(ir))
 
   obj_vec <- .pamo_objvec_from_ir(base_eval, ir)
@@ -2867,7 +2874,7 @@
   }
 
   # ------------------------------------------------------------
-  # Caso simple (no lexicográfico)
+  # Caso simple (no lexicogrÃ¡fico)
   # ------------------------------------------------------------
   if (!isTRUE(do_lexi)) {
 
@@ -2935,7 +2942,7 @@
   }
 
   # ------------------------------------------------------------
-  # Caso lexicográfico
+  # Caso lexicogrÃ¡fico
   # ------------------------------------------------------------
 
   # 1) resolver primary puro
@@ -3157,14 +3164,14 @@
 
   v <- .pamo_objvec_from_ir(base, ir)
 
-  # El motor trabaja siempre en minimización
+  # El motor trabaja siempre en minimizaciÃ³n
   if (identical(sense, "max")) {
     v <- -as.numeric(v)
   } else {
     v <- as.numeric(v)
   }
 
-  # Si existe un setter C++ del objetivo, úsalo
+  # Si existe un setter C++ del objetivo, Ãºsalo
   if (exists("rcpp_model_set_objective_vector", mode = "function")) {
     rcpp_model_set_objective_vector(
       x = base$data$model_ptr,
@@ -3172,7 +3179,7 @@
       model_sense = "min"
     )
   } else {
-    # fallback temporal: deja la actualización pendiente
+    # fallback temporal: deja la actualizaciÃ³n pendiente
     base$data$runtime_updates <- list(
       obj = v,
       modelsense = "min"
@@ -3435,7 +3442,7 @@
 
   act_ids <- unique(as.character(act_subset$id))
 
-  # tabla de acciones de la solución
+  # tabla de acciones de la soluciÃ³n
   act_tbl <- solution$summary$actions %||% NULL
   if (is.null(act_tbl) || !inherits(act_tbl, "data.frame")) {
     stop("No actions table found in solution while evaluating intervention_impact.", call. = FALSE)
@@ -4583,7 +4590,7 @@
 
   k <- length(secondary_aliases)
 
-  # necesitamos una helper de bajo nivel para añadir columnas al modelo ya construido
+  # necesitamos una helper de bajo nivel para aÃ±adir columnas al modelo ya construido
   if (!exists("rcpp_model_add_columns", mode = "function")) {
     stop(
       "AUGMECON with explicit slacks requires a low-level helper `rcpp_model_add_columns()`.\n",
@@ -4594,8 +4601,8 @@
 
   slack_names <- paste0(prefix, "_", secondary_aliases)
 
-  # Añadir k columnas continuas:
-  # obj = 0 por ahora (el objetivo aumentado se define después)
+  # AÃ±adir k columnas continuas:
+  # obj = 0 por ahora (el objetivo aumentado se define despuÃ©s)
   # lb = 0
   # ub = ub
   # vtype = "C"
@@ -4603,7 +4610,7 @@
   # Se asume que rcpp_model_add_columns():
   # - modifica el modelo en sitio
   # - acepta vectores de obj/lb/ub/vtype/names
-  # - deja el modelo consistente para luego añadir restricciones
+  # - deja el modelo consistente para luego aÃ±adir restricciones
   rcpp_model_add_columns(
     x = base$data$model_ptr,
     obj = rep(0, k),
@@ -4613,7 +4620,7 @@
     names = slack_names
   )
 
-  # refrescar snapshot/model_list tras añadir columnas
+  # refrescar snapshot/model_list tras aÃ±adir columnas
   base <- .pa_refresh_model_snapshot(base)
 
   m1 <- .pa_model_from_ptr(
@@ -4631,11 +4638,11 @@
     )
   }
 
-  # columnas nuevas en índice 0-based
+  # columnas nuevas en Ã­ndice 0-based
   slack_cols_0based <- seq.int(from = n_old, length.out = k)
   names(slack_cols_0based) <- secondary_aliases
 
-  # guardar metadata útil
+  # guardar metadata Ãºtil
   base$data$mo_cache <- base$data$mo_cache %||% list()
   base$data$mo_cache$augmecon <- utils::modifyList(
     base$data$mo_cache$augmecon %||% list(),

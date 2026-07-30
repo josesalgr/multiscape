@@ -160,6 +160,7 @@ reference:
     contents:
       - starts_with("sim_")
       - load_sim_features_raster
+      - load_sim_multiaction
 
   - title: Deprecated functions
     desc: Deprecated functions kept for backwards compatibility.

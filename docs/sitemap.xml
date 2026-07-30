@@ -1,5 +1,9 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://josesalgr.github.io/multiscape/404.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/choosing_multi_objective_method.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/index.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Integrated_planning.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/multiscape.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/authors.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/CONTRIBUTING.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/index.html</loc></url>
@@ -54,6 +58,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_targets.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/index.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/load_sim_features_raster.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/mo_control.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/pipe.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/plot_spatial.html</loc></url>
@@ -85,6 +90,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/show.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/sim_dist_features.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/sim_features.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/sim_multiaction.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/sim_pu.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/sim_pu_sf.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/solution-class.html</loc></url>
