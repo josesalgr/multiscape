@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# multiscape: Multi-objective spatial planning in R <img src="man/figures/logo.png" align="right" width="15%" />
+# Multi-objective spatial planning in R <img src="man/figures/logo.png" align="right" width="13%" />
 
 <!-- badges: start -->
 
@@ -15,13 +15,13 @@ downloads](https://cranlogs.r-pkg.org/badges/grand-total/multiscape)](https://cr
 coverage](https://codecov.io/gh/josesalgr/multiscape/graph/badge.svg)](https://app.codecov.io/gh/josesalgr/multiscape)
 <!-- badges: end -->
 
-`multiscape` is an exact optimisation framework for **multi-objective
-spatial planning** in R. It is designed for planning problems in which
+`multiscape` is an exact optimisation framework for multi-objective
+spatial planning in R. It is designed for planning problems in which
 spatial data, ecological or socioeconomic features, constraints, and
 multiple competing objectives must be considered simultaneously within a
 single decision-support workflow. The package is built around
-**mixed-integer linear programming (MILP)** formulations, allowing users
-to represent spatial planning problems explicitly as optimisation models
+mixed-integer linear programming (MILP) formulations, allowing users to
+represent spatial planning problems explicitly as optimisation models
 and solve them with exact methods. This makes `multiscape` especially
 suitable for applications where transparent model structure,
 reproducibility, and rigorous trade-off analysis are important.
@@ -36,13 +36,15 @@ weighted-sum, epsilon-constraint, and AUGMECON.
 
 ## Installation
 
-Install the stable version from CRAN:
+Install the stable version from [Comprehensive R Archive Network
+(CRAN)](https://cran.r-project.org/):
 
 ``` r
 install.packages("multiscape")
 ```
 
-Or install the development version from GitHub:
+Or install the lastest development version from
+[GitHub](https://github.com/josesalgr/multiscape):
 
 ``` r
 if (!requireNamespace("remotes", quietly = TRUE)) {
@@ -51,15 +53,22 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 remotes::install_github("josesalgr/multiscape")
 ```
 
-## Example usage
+## Getting started
 
 ### The planning problem
 
-The following example represents a stylised **multi-use spatial planning
-problem**. The landscape is divided into 64 planning units and contains
-two ecological features: woodland and riparian habitat. Each planning
-unit can remain unmanaged or be assigned to one of two mutually
-exclusive management actions: **protection** or **restoration**.
+The following example represents a stylised **multi-objective multi-use
+spatial planning problem**. The landscape is divided into 64 planning
+units and contains two ecological features: woodland and riparian
+habitat. Each planning unit can remain unmanaged or be assigned to one
+of two mutually exclusive management actions: **protection** or
+**restoration**.
+
+``` r
+# load packages
+library(multiscape)
+library(dplyr)
+```
 
 For every planning unit $i$ and action $a$, the model defines a binary
 decision variable $x_{ia}$. The variable equals 1 when action $a$ is
@@ -116,17 +125,7 @@ The object contains the following linked tables:
 
 The simulated baseline feature amounts are shown below.
 
-<div class="figure">
-
-<img src="man/figures/README-example-features-1.png" alt="Baseline relative amounts of woodland and riparian habitat in each planning unit. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor." width="100%" />
-<p class="caption">
-
-Baseline relative amounts of woodland and riparian habitat in each
-planning unit. Woodland forms a north-western hotspot, whereas riparian
-habitat follows a diagonal corridor.
-</p>
-
-</div>
+<img src="man/figures/README-example-features-1.png" alt="" width="100%" />
 
 ### Assumptions of the illustrative model
 
@@ -406,12 +405,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.003999949   0
-#> 2      2           2 optimal 0.003999949   0
-#> 3      3           3 optimal 0.006999969   0
-#> 4      4           4 optimal 0.003000021   0
-#> 5      5           5 optimal 0.004999876   0
-#> 6      6           6 optimal 0.002999783   0
+#> 1      1           1 optimal 0.006000042   0
+#> 2      2           2 optimal 0.006000042   0
+#> 3      3           3 optimal 0.008000135   0
+#> 4      4           4 optimal 0.002000093   0
+#> 5      5           5 optimal 0.005000114   0
+#> 6      6           6 optimal 0.002000093   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies
@@ -469,18 +468,7 @@ plot_tradeoff(
   )
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-example-tradeoff-1.png" alt="Observed cost--benefit frontier generated using six epsilon-constraint runs. Each point represents one stored spatial solution. Point labels identify run IDs; the run registry reported by get_runs() links them to solution IDs." width="100%" />
-<p class="caption">
-
-Observed cost–benefit frontier generated using six epsilon-constraint
-runs. Each point represents one stored spatial solution. Point labels
-identify run IDs; the run registry reported by get_runs() links them to
-solution IDs.
-</p>
-
-</div>
+<img src="man/figures/README-example-tradeoff-1.png" alt="" width="100%" />
 
 The curve rises rapidly at first and becomes flatter near its
 high-benefit end. In this region, substantial increases in
@@ -512,17 +500,7 @@ plot_spatial_actions(
 )
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-example-maps-1.png" alt="Spatial allocation of protection and restoration across the six epsilon-constraint solutions. Planning units shown only through the base layer receive no management action." width="100%" />
-<p class="caption">
-
-Spatial allocation of protection and restoration across the six
-epsilon-constraint solutions. Planning units shown only through the base
-layer receive no management action.
-</p>
-
-</div>
+<img src="man/figures/README-example-maps-1.png" alt="" width="100%" />
 
 The sequence of maps should be interpreted together with the baseline
 feature patterns. Protection and restoration may expand into new
@@ -545,11 +523,9 @@ knee <- frontier_knee(
   solutions,
   objectives = c("cost", "benefit")
 )
-knee
-#>   solution_id  cost  benefit norm_cost norm_benefit distance_to_extreme_line
-#> 1           3 41.91 24.53516 0.3983583    0.1838844                 0.295399
-#>   knee_score knee_rank   method
-#> 1   0.295399         1 distance
+knee |> dplyr::select(solution_id, cost, benefit, knee_score, method)
+#>   solution_id  cost  benefit knee_score   method
+#> 1           3 41.91 24.53516   0.295399 distance
 ```
 
 The knee is a decision aid rather than a universally optimal answer. Its

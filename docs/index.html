@@ -75,19 +75,19 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="multiscape-multi-objective-spatial-planning-in-r-">multiscape: Multi-objective spatial planning in R <a class="anchor" aria-label="anchor" href="#multiscape-multi-objective-spatial-planning-in-r-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="multi-objective-spatial-planning-in-r-">Multi-objective spatial planning in R <a class="anchor" aria-label="anchor" href="#multi-objective-spatial-planning-in-r-"></a>
 </h1>
 </div>
 <!-- badges: start -->
 
-<p><code>multiscape</code> is an exact optimisation framework for <strong>multi-objective spatial planning</strong> in R. It is designed for planning problems in which spatial data, ecological or socioeconomic features, constraints, and multiple competing objectives must be considered simultaneously within a single decision-support workflow. The package is built around <strong>mixed-integer linear programming (MILP)</strong> formulations, allowing users to represent spatial planning problems explicitly as optimisation models and solve them with exact methods. This makes <code>multiscape</code> especially suitable for applications where transparent model structure, reproducibility, and rigorous trade-off analysis are important. <code>multiscape</code> supports both general spatial planning formulations and action-based formulations in which decisions are expressed as <strong>management actions</strong> applied across planning units. With it, users can build planning problems from tabular or spatial inputs, define feasible actions and their effects, add targets and other constraints, register multiple objectives such as cost, benefit, profit, or fragmentation, and explore exact trade-offs using multi-objective methods such as weighted-sum, epsilon-constraint, and AUGMECON.</p>
+<p><code>multiscape</code> is an exact optimisation framework for multi-objective spatial planning in R. It is designed for planning problems in which spatial data, ecological or socioeconomic features, constraints, and multiple competing objectives must be considered simultaneously within a single decision-support workflow. The package is built around mixed-integer linear programming (MILP) formulations, allowing users to represent spatial planning problems explicitly as optimisation models and solve them with exact methods. This makes <code>multiscape</code> especially suitable for applications where transparent model structure, reproducibility, and rigorous trade-off analysis are important. <code>multiscape</code> supports both general spatial planning formulations and action-based formulations in which decisions are expressed as <strong>management actions</strong> applied across planning units. With it, users can build planning problems from tabular or spatial inputs, define feasible actions and their effects, add targets and other constraints, register multiple objectives such as cost, benefit, profit, or fragmentation, and explore exact trade-offs using multi-objective methods such as weighted-sum, epsilon-constraint, and AUGMECON.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Install the stable version from CRAN:</p>
+<p>Install the stable version from <a href="https://cran.r-project.org/" class="external-link">Comprehensive R Archive Network (CRAN)</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"multiscape"</span><span class="op">)</span></span></code></pre></div>
-<p>Or install the development version from GitHub:</p>
+<p>Or install the lastest development version from <a href="https://github.com/josesalgr/multiscape" class="external-link">GitHub</a>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
@@ -95,12 +95,16 @@
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"josesalgr/multiscape"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example-usage">Example usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
+<h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
 <div class="section level3">
 <h3 id="the-planning-problem">The planning problem<a class="anchor" aria-label="anchor" href="#the-planning-problem"></a>
 </h3>
-<p>The following example represents a stylised <strong>multi-use spatial planning problem</strong>. The landscape is divided into 64 planning units and contains two ecological features: woodland and riparian habitat. Each planning unit can remain unmanaged or be assigned to one of two mutually exclusive management actions: <strong>protection</strong> or <strong>restoration</strong>.</p>
+<p>The following example represents a stylised <strong>multi-objective multi-use spatial planning problem</strong>. The landscape is divided into 64 planning units and contains two ecological features: woodland and riparian habitat. Each planning unit can remain unmanaged or be assigned to one of two mutually exclusive management actions: <strong>protection</strong> or <strong>restoration</strong>.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># load packages</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
 <p>For every planning unit <span class="math inline">\(i\)</span> and action <span class="math inline">\(a\)</span>, the model defines a binary decision variable <span class="math inline">\(x_{ia}\)</span>. The variable equals 1 when action <span class="math inline">\(a\)</span> is assigned to planning unit <span class="math inline">\(i\)</span>, and 0 otherwise. Because the actions are mutually exclusive, at most one action can be selected in each planning unit. A planning unit may also remain without intervention.</p>
 <p>The analysis asks:</p>
 <blockquote>
@@ -109,7 +113,7 @@
 <p>For each planning unit, <code>amount</code> is a synthetic <strong>relative feature amount</strong>. Baseline values range from 0 to 1: a value of 0 represents no local amount of the feature, whereas 1 is the largest baseline amount represented in the simulated landscape. Intermediate values are continuous relative amounts, not probabilities of occurrence or binary presence–absence observations. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor.</p>
 <p>The 0–1 scale applies to the baseline values only. Because these are relative indices rather than probabilities or proportions, action-induced final amounts may exceed 1. For example, doubling a baseline amount of 0.6 produces a final relative amount of 1.2.</p>
 <p>All inputs are included with <code>multiscape</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Load a complete simulated planning problem with spatial units, features,</span></span>
@@ -138,11 +142,7 @@
 <code>effect_assumptions</code>: the coefficients used to generate the simulated effects.</li>
 </ul>
 <p>The simulated baseline feature amounts are shown below.</p>
-<div class="figure">
-<img src="reference/figures/README-example-features-1.png" alt="Baseline relative amounts of woodland and riparian habitat in each planning unit. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor." width="100%"><p class="caption">
-Baseline relative amounts of woodland and riparian habitat in each planning unit. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor.
-</p>
-</div>
+<p><img src="reference/figures/README-example-features-1.png" alt="" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="assumptions-of-the-illustrative-model">Assumptions of the illustrative model<a class="anchor" aria-label="anchor" href="#assumptions-of-the-illustrative-model"></a>
@@ -161,7 +161,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <h3 id="stage-1-create-the-base-problem">Stage 1: Create the base problem<a class="anchor" aria-label="anchor" href="#stage-1-create-the-base-problem"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/create_problem.html"><code>create_problem()</code></a> establishes the spatial domain and the ecological features being planned. Here, <code>planning_units</code> contains the 64 geometries, <code>features</code> defines the feature catalogue, and <code>dist_features</code> links every planning unit to its woodland and riparian amounts. The planning-unit <code>cost</code> column is retained in the problem, although the objective used below includes only action-specific implementation costs.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Initialise the problem using planning-unit geometries and baseline feature</span></span>
 <span><span class="co"># amounts. The planning-unit cost is stored in the model but is not included</span></span>
 <span><span class="co"># in the cost objective defined later in this example.</span></span>
@@ -186,7 +186,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <p>where <span class="math inline">\(\Delta_{iaf}\)</span> is the value supplied in the <code>delta</code> column. The choice between <code>after</code> and <code>delta</code> therefore depends on how ecological responses were estimated, not on the optimisation method.</p>
 <p>This example uses explicit delta values. Protection is assumed to increase woodland and riparian amounts by 100% and 30% of their respective local baselines, whereas restoration increases them by 25% and 130%. These percentages are used only to generate the simulated data. The table passed to <code><a href="reference/add_effects.html">add_effects()</a></code> already contains the resulting absolute change for every planning-unit–action–feature combination.</p>
 <p>For example, a woodland baseline of 0.6 combined with a 100% relative increase produces <code>delta = 0.6</code> and a final relative amount of 1.2. The coefficient representing the relative increase must therefore not be confused with either the delta value or the final feature amount.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Inspect the available actions, the assumptions used to generate their</span></span>
 <span><span class="co"># ecological effects, and the first planning-unit--action--feature records.</span></span>
 <span><span class="va">example_data</span><span class="op">$</span><span class="va">actions</span></span>
@@ -224,7 +224,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <h3 id="stage-3-define-the-constraints">Stage 3: Define the constraints<a class="anchor" aria-label="anchor" href="#stage-3-define-the-constraints"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html"><code>add_constraint_targets_relative()</code></a> requires the selected actions to generate gains equivalent to at least 10% of the total baseline amount of <strong>each feature separately</strong>. Targets restrict the feasible set; they are not additional objectives. Other applications could introduce budgets, area requirements, locked decisions, or spatial constraints at this stage.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Require action-induced gains of at least 10% of the total baseline amount of</span></span>
 <span><span class="co"># woodland and at least 10% of the total baseline amount of riparian habitat.</span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
@@ -235,7 +235,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 </h3>
 <p>Objectives are registered independently so they can later be combined using different multi-objective methods. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html"><code>add_objective_min_cost()</code></a> minimises the total implementation cost of the selected actions. Planning-unit costs are excluded because the example defines economic expenditure through the action-specific cost table. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code></a> maximises total ecological benefit, calculated as the sum of action-induced gains across selected planning units and features.</p>
 <p>Because woodland and riparian effects use the same relative scale and no feature-specific weights are supplied, the example gives both features equal weight in the benefit objective. See the <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code> reference</a> for the complete definition of the objective, its available arguments, and how feature contributions are aggregated.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Minimise action-specific implementation costs. Planning-unit costs are</span></span>
 <span>  <span class="co"># excluded because expenditure is represented by the action-cost table.</span></span>
@@ -288,7 +288,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 </h3>
 <p>The registered objectives define what the plans should achieve; the multi-objective method determines how the trade-off between them is explored. Here, <a href="https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.html"><code>set_method_epsilon_constraint()</code></a> treats ecological benefit as the primary objective and evaluates six increasingly permissive limits on total cost. For each cost limit, the model identifies the feasible plan with the greatest ecological benefit.</p>
 <p>With <code>lexicographic = TRUE</code>, solutions tied on the primary benefit objective are refined by minimising cost. This prevents the method from returning an unnecessarily expensive plan when a less costly plan attains the same benefit. The six limits are generated by <a href="https://josesalgr.github.io/multiscape/reference/set_runs_grid.html"><code>set_runs_grid()</code></a>. The example uses Gurobi through <a href="https://josesalgr.github.io/multiscape/reference/set_solver_gurobi.html"><code>set_solver_gurobi()</code></a>, which requires the Gurobi R package and a valid licence.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Maximise benefit under six alternative limits on total cost.</span></span>
 <span>  <span class="co"># Lexicographic refinement selects the least-cost plan among solutions tied</span></span>
@@ -306,7 +306,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <h3 id="solve-the-problem">Solve the problem<a class="anchor" aria-label="anchor" href="#solve-the-problem"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/solve.html"><code>solve()</code></a> returns a <code>SolutionSet</code> containing the solver status, objective values, selected action assignments, and run-level information for every epsilon-constraint problem. <a href="https://josesalgr.github.io/multiscape/reference/get_objectives.html"><code>get_objectives()</code></a> extracts the resulting objective values, with one row per stored solution and one column per objective.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   solution_id   benefit   cost</span></span>
@@ -321,16 +321,16 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <h3 id="link-run-configurations-to-stored-solutions">Link run configurations to stored solutions<a class="anchor" aria-label="anchor" href="#link-run-configurations-to-stored-solutions"></a>
 </h3>
 <p>A multi-objective method evaluates a sequence of optimisation configurations. <a href="https://josesalgr.github.io/multiscape/reference/get_runs.html"><code>get_runs()</code></a> returns the registry of these configurations together with their solver outcomes and, when available, the identifier of the solution they produced.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="va">runs</span></span>
 <span><span class="co">#&gt;   run_id solution_id  status     runtime gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal 0.003999949   0</span></span>
-<span><span class="co">#&gt; 2      2           2 optimal 0.003999949   0</span></span>
-<span><span class="co">#&gt; 3      3           3 optimal 0.006999969   0</span></span>
-<span><span class="co">#&gt; 4      4           4 optimal 0.003000021   0</span></span>
-<span><span class="co">#&gt; 5      5           5 optimal 0.004999876   0</span></span>
-<span><span class="co">#&gt; 6      6           6 optimal 0.002999783   0</span></span></code></pre></div>
+<span><span class="co">#&gt; 1      1           1 optimal 0.006000042   0</span></span>
+<span><span class="co">#&gt; 2      2           2 optimal 0.006000042   0</span></span>
+<span><span class="co">#&gt; 3      3           3 optimal 0.008000135   0</span></span>
+<span><span class="co">#&gt; 4      4           4 optimal 0.002000093   0</span></span>
+<span><span class="co">#&gt; 5      5           5 optimal 0.005000114   0</span></span>
+<span><span class="co">#&gt; 6      6           6 optimal 0.002000093   0</span></span></code></pre></div>
 <p>Each row records one attempted run configuration. <code>run_id</code> identifies the configuration, including its epsilon limit and solver outcome. A run is not itself a solution: an infeasible configuration, a run that terminates without a feasible solution, or a run affected by a solver error may have no associated <code>solution_id</code>. When a run does produce a solution that is retained in the <code>SolutionSet</code>, <code>solution_id</code> identifies that stored solution for subsequent extraction, comparison, and mapping. In this example, all configured runs produce stored solutions.</p>
 <p>The treatment of infeasible runs, runs without a solution, and unexpected errors can be controlled with <a href="https://josesalgr.github.io/multiscape/reference/set_runs_control.html"><code>set_runs_control()</code></a>. Depending on these settings, solving can stop when a failed configuration is encountered or retain the failed run in the run history without an associated solution.</p>
 <p>This distinction is important when reading the figures below. With <code>label_runs = TRUE</code>, <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code> labels points using <code>run_id</code>, whereas functions that extract or map stored plans generally use <code>solution_id</code>. <code><a href="reference/get_runs.html">get_runs()</a></code> provides the link between the run configurations and the solutions that were successfully stored.</p>
@@ -344,7 +344,7 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 </h3>
 <p>Each point below represents a stored spatial solution generated by one epsilon-constraint run. The plot is produced with <a href="https://josesalgr.github.io/multiscape/reference/plot_tradeoff.html"><code>plot_tradeoff()</code></a>. With lexicographic refinement, the returned plans are intended to lie on the <strong>observed efficient frontier</strong>. This is the frontier represented by the six runs evaluated here, not necessarily every attainable trade-off in the complete discrete solution space.</p>
 <p>The horizontal axis shows the cost actually incurred by each solution, which may be lower than the upper cost limit imposed in its run. The vertical axis shows total ecological benefit, obtained by summing the action-induced gains across both features and all selected planning units. Moving from left to right therefore reveals how the maximum observed ecological benefit changes as more expensive plans become available.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/plot_tradeoff.html">plot_tradeoff</a></span><span class="op">(</span></span>
 <span>  <span class="va">solutions</span>,</span>
 <span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
@@ -355,18 +355,14 @@ Baseline relative amounts of woodland and riparian habitat in each planning unit
 <span>    x <span class="op">=</span> <span class="st">"Total implementation cost (cost units)"</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Total ecological gain (relative-amount units)"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="reference/figures/README-example-tradeoff-1.png" alt="Observed cost--benefit frontier generated using six epsilon-constraint runs. Each point represents one stored spatial solution. Point labels identify run IDs; the run registry reported by get_runs() links them to solution IDs." width="100%"><p class="caption">
-Observed cost–benefit frontier generated using six epsilon-constraint runs. Each point represents one stored spatial solution. Point labels identify run IDs; the run registry reported by get_runs() links them to solution IDs.
-</p>
-</div>
+<p><img src="reference/figures/README-example-tradeoff-1.png" alt="" width="100%"></p>
 <p>The curve rises rapidly at first and becomes flatter near its high-benefit end. In this region, substantial increases in implementation cost produce only small additional ecological gains. The result illustrates declining marginal returns and helps identify where further expenditure has comparatively little effect.</p>
 </div>
 <div class="section level3">
 <h3 id="decision-space-the-spatial-allocation-of-actions">Decision space: the spatial allocation of actions<a class="anchor" aria-label="anchor" href="#decision-space-the-spatial-allocation-of-actions"></a>
 </h3>
 <p>Plans that are close in objective space can still prescribe different actions in different locations. <a href="https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.html"><code>plot_spatial_actions()</code></a> complements the trade-off plot by showing how protection and restoration are reallocated as the cost limit is relaxed. Planning units shown only through the base layer receive no management action in the corresponding solution. In the call below, <code>solutions = 1:6</code> selects <strong>solution IDs</strong>, not run IDs; the preceding run registry provides the link between the two identifiers.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span></span>
 <span>  <span class="va">solutions</span>,</span>
 <span>  solutions <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">6</span>,</span>
@@ -376,30 +372,24 @@ Observed cost–benefit frontier generated using six epsilon-constraint runs. Ea
 <span>  <span class="op">)</span>,</span>
 <span>  base_alpha <span class="op">=</span> <span class="fl">0.12</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="reference/figures/README-example-maps-1.png" alt="Spatial allocation of protection and restoration across the six epsilon-constraint solutions. Planning units shown only through the base layer receive no management action." width="100%"><p class="caption">
-Spatial allocation of protection and restoration across the six epsilon-constraint solutions. Planning units shown only through the base layer receive no management action.
-</p>
-</div>
+<p><img src="reference/figures/README-example-maps-1.png" alt="" width="100%"></p>
 <p>The sequence of maps should be interpreted together with the baseline feature patterns. Protection and restoration may expand into new planning units as larger budgets become available, but actions can also be substituted or relocated when a different spatial combination produces greater benefit under the active cost limit.</p>
 </div>
 <div class="section level3">
 <h3 id="identify-a-compromise-solution">Identify a compromise solution<a class="anchor" aria-label="anchor" href="#identify-a-compromise-solution"></a>
 </h3>
 <p>A multi-objective analysis should consider both <strong>objective space</strong>, which describes how well each plan performs, and <strong>decision space</strong>, which describes where actions are allocated. <a href="https://josesalgr.github.io/multiscape/reference/frontier_knee.html"><code>frontier_knee()</code></a> identifies an empirical compromise on the observed frontier: a solution near the point where additional ecological gains begin to require comparatively large increases in cost.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">knee</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_knee.html">frontier_knee</a></span><span class="op">(</span></span>
 <span>  <span class="va">solutions</span>,</span>
 <span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">knee</span></span>
-<span><span class="co">#&gt;   solution_id  cost  benefit norm_cost norm_benefit distance_to_extreme_line</span></span>
-<span><span class="co">#&gt; 1           3 41.91 24.53516 0.3983583    0.1838844                 0.295399</span></span>
-<span><span class="co">#&gt;   knee_score knee_rank   method</span></span>
-<span><span class="co">#&gt; 1   0.295399         1 distance</span></span></code></pre></div>
+<span><span class="va">knee</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">solution_id</span>, <span class="va">cost</span>, <span class="va">benefit</span>, <span class="va">knee_score</span>, <span class="va">method</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   solution_id  cost  benefit knee_score   method</span></span>
+<span><span class="co">#&gt; 1           3 41.91 24.53516   0.295399 distance</span></span></code></pre></div>
 <p>The knee is a decision aid rather than a universally optimal answer. Its location depends on the solutions included in the observed frontier, the normalisation of the objectives, and the geometric criterion used to calculate the knee score. It should therefore be interpreted alongside policy preferences and the spatial characteristics of the selected plan.</p>
 <p><a href="https://josesalgr.github.io/multiscape/reference/frontier_extremes.html"><code>frontier_extremes()</code></a> and <a href="https://josesalgr.github.io/multiscape/reference/frontier_distances.html"><code>frontier_distances()</code></a> provide complementary views of the observed objective space. They identify the objective-wise extremes and calculate each solution’s normalised distance from the observed ideal and nadir points.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/frontier_extremes.html">frontier_extremes</a></span><span class="op">(</span></span>
 <span>  <span class="va">solutions</span>,</span>
 <span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
@@ -435,7 +425,7 @@ Spatial allocation of protection and restoration across the six epsilon-constrai
 </h3>
 <p>Similar objective values do not necessarily imply similar spatial prescriptions. <a href="https://josesalgr.github.io/multiscape/reference/selection_similarity.html"><code>selection_similarity()</code></a> compares the sets of selected planning-unit–action pairs for every pair of solutions. Jaccard similarity is useful here because it focuses on jointly selected assignments and does not inflate similarity through planning units that remain unmanaged in both plans.</p>
 <p>A value of 1 indicates identical sets of selected assignments, whereas 0 indicates that the two solutions share no selected planning-unit–action pair. Rows and columns correspond to solution identifiers, and the diagonal is always 1 because every solution is identical to itself.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/selection_similarity.html">selection_similarity</a></span><span class="op">(</span></span>
 <span>  <span class="va">solutions</span>,</span>
 <span>  metric <span class="op">=</span> <span class="st">"jaccard"</span>,</span>
@@ -455,7 +445,7 @@ Spatial allocation of protection and restoration across the six epsilon-constrai
 <h3 id="identify-recurrent-action-assignments">Identify recurrent action assignments<a class="anchor" aria-label="anchor" href="#identify-recurrent-action-assignments"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/selection_frequency.html"><code>selection_frequency()</code></a> calculates how often each planning-unit–action pair is selected across the solution set. In this example, frequency is the proportion of the six solutions containing a particular assignment. High frequency indicates stability across the explored trade-offs, but it should not, on its own, be interpreted as ecological irreplaceability.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">action_frequency</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/selection_frequency.html">selection_frequency</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span></span>
 <span>  <span class="va">action_frequency</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">action_frequency</span><span class="op">$</span><span class="va">frequency</span><span class="op">)</span>, <span class="op">]</span>,</span>
