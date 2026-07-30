@@ -23,7 +23,7 @@ planning. The landscape contains 64 square planning units, two spatially
 structured features, and two mutually exclusive candidate actions.
 }
 \examples{
-toy <- get_sim_multiaction()
+toy <- load_sim_multiaction()
 names(toy)
 toy$planning_units
 

@@ -190,8 +190,8 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_runs(epsilon_solutions)
 }
 #>   run_id solution_id  status runtime gap
-#> 1      1           1 optimal       0   0
-#> 2      2           2 optimal       0   0
-#> 3      3           3 optimal       0   0
-#> 4      4           4 optimal       0   0
+#> 1      1           1 optimal    0.02   0
+#> 2      2           2 optimal    0.00   0
+#> 3      3           3 optimal    0.00   0
+#> 4      4           4 optimal    0.00   0
 ```

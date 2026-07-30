@@ -28,7 +28,7 @@ load_sim_features_raster <- function() {
 #' }
 #'
 #' @examples
-#' toy <- get_sim_multiaction()
+#' toy <- load_sim_multiaction()
 #' names(toy)
 #' toy$planning_units
 #'
