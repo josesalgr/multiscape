@@ -148,7 +148,7 @@ jobs:
           rcmdcheck::rcmdcheck(
             args = c(
               "--no-manual",
-              "--as-cran",
+              "--as-cran"
             ),
             error_on = "warning",
             check_dir = "check"
