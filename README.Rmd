@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Multi-objective spatial planning in R <img src="man/figures/logo.png" align="right" width="13%" /> 
+# Multi-objective spatial planning in R <img src="man/figures/logo.png" align="right" width="15%" /> 
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/multiscape)](https://CRAN.R-project.org/package=multiscape)
@@ -73,12 +73,6 @@ ecological features: woodland and riparian habitat. Each planning unit can
 remain unmanaged or be assigned to one of two mutually exclusive management
 actions: **protection** or **restoration**.
 
-```{r, eval = FALSE}
-# load packages
-library(multiscape)
-library(dplyr)
-```
-
 For every planning unit \(i\) and action \(a\), the model defines a binary
 decision variable \(x_{ia}\). The variable equals 1 when action \(a\) is
 assigned to planning unit \(i\), and 0 otherwise. Because the actions are
@@ -107,13 +101,12 @@ relative amount of 1.2.
 All inputs are included with `multiscape`:
 
 ```{r example-data}
+# load packages
 library(multiscape)
+library(dplyr)
 
-# Load a complete simulated planning problem with spatial units, features,
-# management actions, costs, and ecological effects.
+# Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
-
-names(example_data)
 ```
 
 The object contains the following linked tables:
@@ -182,23 +175,6 @@ ggplot2::ggplot(feature_map) +
   )
 ```
 
-### Assumptions of the illustrative model
-
-The example is deliberately simple so that the complete workflow can be
-examined. It assumes that:
-
-1. action effects and costs are deterministic and known before optimisation;
-2. action-induced gains are additive across planning units and features;
-3. actions do not generate interactions between neighbouring planning units;
-4. decisions are made for a single planning period; and
-5. woodland and riparian gains can be aggregated because both are expressed on
-   the same relative scale and receive equal implicit weight.
-
-The fifth assumption is especially important. In applications where features
-use different units or differ in policy importance, users should standardise
-effects, define explicit weights, or formulate the features as separate
-objectives rather than summing them directly.
-
 ### Stage 1: Create the base problem
 
 [`create_problem()`](https://josesalgr.github.io/multiscape/reference/create_problem.html)
@@ -211,8 +187,7 @@ action-specific implementation costs.
 
 ```{r example-stage-1}
 # Initialise the problem using planning-unit geometries and baseline feature
-# amounts. The planning-unit cost is stored in the model but is not included
-# in the cost objective defined later in this example.
+# amounts.
 problem <- create_problem(
   pu = example_data$planning_units,
   features = example_data$features,
@@ -257,27 +232,24 @@ woodland and riparian amounts by 100% and 30% of their respective local
 baselines, whereas restoration increases them by 25% and 130%. These
 percentages are used only to generate the simulated data. The table passed to
 `add_effects()` already contains the resulting absolute change for every
-planning-unit--action--feature combination.
-
-For example, a woodland baseline of 0.6 combined with a 100% relative increase
+planning-unit--action--feature combination. For example, a woodland baseline of 
+0.6 combined with a 100% relative increase
 produces `delta = 0.6` and a final relative amount of 1.2. The coefficient
 representing the relative increase must therefore not be confused with either
 the delta value or the final feature amount.
 
 ```{r example-stage-2}
-# Inspect the available actions, the assumptions used to generate their
+# Inspect the assumptions used to generate their
 # ecological effects, and the first planning-unit--action--feature records.
-example_data$actions
 example_data$effect_assumptions
+
 head(example_data$effects)
 
 problem <- problem |>
-  # Register the feasible actions and their local implementation costs.
   add_actions(
     actions = example_data$actions,
     cost = example_data$action_costs
   ) |>
-  # Interpret each effect as a signed change from the baseline amount.
   add_effects(
     effects = example_data$effects,
     effect_type = "delta"
@@ -331,15 +303,17 @@ problem <- problem |>
   ) |>
   # Maximise the sum of action-induced ecological gains across both features.
   add_objective_max_benefit(alias = "benefit")
-
-# Print the complete formulation before selecting a multi-objective method
-# and optimisation solver.
-problem
 ```
 
 The summary confirms that the spatial inputs, actions, effects, constraints,
 and two objectives are present. It also shows that the multi-objective method
 and solver have not yet been selected.
+
+````{r example-stage-4-1, message=TRUE}
+# Print the complete formulation before selecting a multi-objective method
+# and optimisation solver.
+problem
+````
 
 ### Configure the multi-objective method
 
@@ -371,8 +345,6 @@ problem <- problem |>
     runs = set_runs_grid(6),
     lexicographic = TRUE
   ) |>
-  # Request proven optimal solutions by setting the relative MIP-gap tolerance
-  # to zero.
   set_solver_gurobi(gap_limit = 0)
 ```
 

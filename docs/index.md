@@ -51,13 +51,6 @@ habitat. Each planning unit can remain unmanaged or be assigned to one
 of two mutually exclusive management actions: **protection** or
 **restoration**.
 
-``` r
-
-# load packages
-library(multiscape)
-library(dplyr)
-```
-
 For every planning unit \\i\\ and action \\a\\, the model defines a
 binary decision variable \\x\_{ia}\\. The variable equals 1 when action
 \\a\\ is assigned to planning unit \\i\\, and 0 otherwise. Because the
@@ -88,16 +81,12 @@ All inputs are included with `multiscape`:
 
 ``` r
 
+# load packages
 library(multiscape)
+library(dplyr)
 
-# Load a complete simulated planning problem with spatial units, features,
-# management actions, costs, and ecological effects.
+# Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
-
-names(example_data)
-#> [1] "planning_units"     "features"           "dist_features"     
-#> [4] "actions"            "action_costs"       "effect_assumptions"
-#> [7] "effects"
 ```
 
 The object contains the following linked tables:
@@ -117,27 +106,6 @@ The simulated baseline feature amounts are shown below.
 
 ![](reference/figures/README-example-features-1.png)
 
-### Assumptions of the illustrative model
-
-The example is deliberately simple so that the complete workflow can be
-examined. It assumes that:
-
-1.  action effects and costs are deterministic and known before
-    optimisation;
-2.  action-induced gains are additive across planning units and
-    features;
-3.  actions do not generate interactions between neighbouring planning
-    units;
-4.  decisions are made for a single planning period; and
-5.  woodland and riparian gains can be aggregated because both are
-    expressed on the same relative scale and receive equal implicit
-    weight.
-
-The fifth assumption is especially important. In applications where
-features use different units or differ in policy importance, users
-should standardise effects, define explicit weights, or formulate the
-features as separate objectives rather than summing them directly.
-
 ### Stage 1: Create the base problem
 
 [`create_problem()`](https://josesalgr.github.io/multiscape/reference/create_problem.html)
@@ -151,8 +119,7 @@ includes only action-specific implementation costs.
 ``` r
 
 # Initialise the problem using planning-unit geometries and baseline feature
-# amounts. The planning-unit cost is stored in the model but is not included
-# in the cost objective defined later in this example.
+# amounts.
 problem <- create_problem(
   pu = example_data$planning_units,
   features = example_data$features,
@@ -199,27 +166,23 @@ and 130%. These percentages are used only to generate the simulated
 data. The table passed to
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
 already contains the resulting absolute change for every
-planning-unit–action–feature combination.
-
-For example, a woodland baseline of 0.6 combined with a 100% relative
-increase produces `delta = 0.6` and a final relative amount of 1.2. The
-coefficient representing the relative increase must therefore not be
-confused with either the delta value or the final feature amount.
+planning-unit–action–feature combination. For example, a woodland
+baseline of 0.6 combined with a 100% relative increase produces
+`delta = 0.6` and a final relative amount of 1.2. The coefficient
+representing the relative increase must therefore not be confused with
+either the delta value or the final feature amount.
 
 ``` r
 
-# Inspect the available actions, the assumptions used to generate their
+# Inspect the assumptions used to generate their
 # ecological effects, and the first planning-unit--action--feature records.
-example_data$actions
-#>        id    name
-#> 1 protect Protect
-#> 2 restore Restore
 example_data$effect_assumptions
 #>    action feature relative_change
 #> 1 protect       1            1.00
 #> 2 protect       2            0.30
 #> 3 restore       1            0.25
 #> 4 restore       2            1.30
+
 head(example_data$effects)
 #>   pu  action feature        delta
 #> 1  1 protect       1 0.0016615573
@@ -230,12 +193,10 @@ head(example_data$effects)
 #> 6  2 protect       2 0.0132913814
 
 problem <- problem |>
-  # Register the feasible actions and their local implementation costs.
   add_actions(
     actions = example_data$actions,
     cost = example_data$action_costs
   ) |>
-  # Interpret each effect as a signed change from the baseline amount.
   add_effects(
     effects = example_data$effects,
     effect_type = "delta"
@@ -291,6 +252,13 @@ problem <- problem |>
   ) |>
   # Maximise the sum of action-induced ecological gains across both features.
   add_objective_max_benefit(alias = "benefit")
+```
+
+The summary confirms that the spatial inputs, actions, effects,
+constraints, and two objectives are present. It also shows that the
+multi-objective method and solver have not yet been selected.
+
+``` r
 
 # Print the complete formulation before selecting a multi-objective method
 # and optimisation solver.
@@ -328,10 +296,6 @@ problem
 #> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 ```
 
-The summary confirms that the spatial inputs, actions, effects,
-constraints, and two objectives are present. It also shows that the
-multi-objective method and solver have not yet been selected.
-
 ### Configure the multi-objective method
 
 The registered objectives define what the plans should achieve; the
@@ -362,8 +326,6 @@ problem <- problem |>
     runs = set_runs_grid(6),
     lexicographic = TRUE
   ) |>
-  # Request proven optimal solutions by setting the relative MIP-gap tolerance
-  # to zero.
   set_solver_gurobi(gap_limit = 0)
 ```
 
@@ -403,13 +365,13 @@ produced.
 
 runs <- get_runs(solutions)
 runs
-#>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.006000042   0
-#> 2      2           2 optimal 0.006000042   0
-#> 3      3           3 optimal 0.008000135   0
-#> 4      4           4 optimal 0.002000093   0
-#> 5      5           5 optimal 0.005000114   0
-#> 6      6           6 optimal 0.002000093   0
+#>   run_id solution_id  status      runtime gap
+#> 1      1           1 optimal 0.0040001869   0
+#> 2      2           2 optimal 0.0030000210   0
+#> 3      3           3 optimal 0.0080001354   0
+#> 4      4           4 optimal 0.0009999275   0
+#> 5      5           5 optimal 0.0049998760   0
+#> 6      6           6 optimal 0.0020000935   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies

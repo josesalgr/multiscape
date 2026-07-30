@@ -89,5 +89,5 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   get_runs(solutions)
 }
 #>   run_id solution_id  status runtime gap objective
-#> 1      1           1 optimal       0   0         1
+#> 1      1           1 optimal    0.01   0         1
 ```

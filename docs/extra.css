@@ -310,7 +310,7 @@ main blockquote code {
   align-items: center;
   column-gap: 2rem;
 
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;
   padding-top: 0.0rem;
   padding-bottom: 0.0rem;
 
@@ -327,7 +327,7 @@ main blockquote code {
 
   font-size: clamp(2rem, 2.5vw, 2.35rem);
   line-height: 1.1;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
@@ -531,4 +531,9 @@ main blockquote p:last-child {
     margin-top: 2rem;
     font-size: 1.45rem;
   }
+}
+
+
+html {
+  font-size: 15px;
 }

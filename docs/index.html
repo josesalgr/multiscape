@@ -101,10 +101,6 @@
 <h3 id="the-planning-problem">The planning problem<a class="anchor" aria-label="anchor" href="#the-planning-problem"></a>
 </h3>
 <p>The following example represents a stylised <strong>multi-objective multi-use spatial planning problem</strong>. The landscape is divided into 64 planning units and contains two ecological features: woodland and riparian habitat. Each planning unit can remain unmanaged or be assigned to one of two mutually exclusive management actions: <strong>protection</strong> or <strong>restoration</strong>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load packages</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
 <p>For every planning unit <span class="math inline">\(i\)</span> and action <span class="math inline">\(a\)</span>, the model defines a binary decision variable <span class="math inline">\(x_{ia}\)</span>. The variable equals 1 when action <span class="math inline">\(a\)</span> is assigned to planning unit <span class="math inline">\(i\)</span>, and 0 otherwise. Because the actions are mutually exclusive, at most one action can be selected in each planning unit. A planning unit may also remain without intervention.</p>
 <p>The analysis asks:</p>
 <blockquote>
@@ -113,17 +109,13 @@
 <p>For each planning unit, <code>amount</code> is a synthetic <strong>relative feature amount</strong>. Baseline values range from 0 to 1: a value of 0 represents no local amount of the feature, whereas 1 is the largest baseline amount represented in the simulated landscape. Intermediate values are continuous relative amounts, not probabilities of occurrence or binary presence–absence observations. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor.</p>
 <p>The 0–1 scale applies to the baseline values only. Because these are relative indices rather than probabilities or proportions, action-induced final amounts may exceed 1. For example, doubling a baseline amount of 0.6 produces a final relative amount of 1.2.</p>
 <p>All inputs are included with <code>multiscape</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># load packages</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load a complete simulated planning problem with spatial units, features,</span></span>
-<span><span class="co"># management actions, costs, and ecological effects.</span></span>
-<span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">example_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "planning_units"     "features"           "dist_features"     </span></span>
-<span><span class="co">#&gt; [4] "actions"            "action_costs"       "effect_assumptions"</span></span>
-<span><span class="co">#&gt; [7] "effects"</span></span></code></pre></div>
+<span><span class="co"># Load a complete simulated planning problem.</span></span>
+<span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The object contains the following linked tables:</p>
 <ul>
 <li>
@@ -145,26 +137,12 @@
 <p><img src="reference/figures/README-example-features-1.png" alt="" width="100%"></p>
 </div>
 <div class="section level3">
-<h3 id="assumptions-of-the-illustrative-model">Assumptions of the illustrative model<a class="anchor" aria-label="anchor" href="#assumptions-of-the-illustrative-model"></a>
-</h3>
-<p>The example is deliberately simple so that the complete workflow can be examined. It assumes that:</p>
-<ol style="list-style-type: decimal">
-<li>action effects and costs are deterministic and known before optimisation;</li>
-<li>action-induced gains are additive across planning units and features;</li>
-<li>actions do not generate interactions between neighbouring planning units;</li>
-<li>decisions are made for a single planning period; and</li>
-<li>woodland and riparian gains can be aggregated because both are expressed on the same relative scale and receive equal implicit weight.</li>
-</ol>
-<p>The fifth assumption is especially important. In applications where features use different units or differ in policy importance, users should standardise effects, define explicit weights, or formulate the features as separate objectives rather than summing them directly.</p>
-</div>
-<div class="section level3">
 <h3 id="stage-1-create-the-base-problem">Stage 1: Create the base problem<a class="anchor" aria-label="anchor" href="#stage-1-create-the-base-problem"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/create_problem.html"><code>create_problem()</code></a> establishes the spatial domain and the ecological features being planned. Here, <code>planning_units</code> contains the 64 geometries, <code>features</code> defines the feature catalogue, and <code>dist_features</code> links every planning unit to its woodland and riparian amounts. The planning-unit <code>cost</code> column is retained in the problem, although the objective used below includes only action-specific implementation costs.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Initialise the problem using planning-unit geometries and baseline feature</span></span>
-<span><span class="co"># amounts. The planning-unit cost is stored in the model but is not included</span></span>
-<span><span class="co"># in the cost objective defined later in this example.</span></span>
+<span><span class="co"># amounts.</span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
 <span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span>
 <span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span>
@@ -184,21 +162,17 @@
 <p>With the delta interpretation, positive values represent gains, negative values represent losses, and zero indicates no change. If <span class="math inline">\(b_{if}\)</span> is the baseline amount of feature <span class="math inline">\(f\)</span> in planning unit <span class="math inline">\(i\)</span>, the final amount after selecting action <span class="math inline">\(a\)</span> is</p>
 <p><span class="math display">\[\text{final amount}_{iaf} = b_{if} + \Delta_{iaf},\]</span></p>
 <p>where <span class="math inline">\(\Delta_{iaf}\)</span> is the value supplied in the <code>delta</code> column. The choice between <code>after</code> and <code>delta</code> therefore depends on how ecological responses were estimated, not on the optimisation method.</p>
-<p>This example uses explicit delta values. Protection is assumed to increase woodland and riparian amounts by 100% and 30% of their respective local baselines, whereas restoration increases them by 25% and 130%. These percentages are used only to generate the simulated data. The table passed to <code><a href="reference/add_effects.html">add_effects()</a></code> already contains the resulting absolute change for every planning-unit–action–feature combination.</p>
-<p>For example, a woodland baseline of 0.6 combined with a 100% relative increase produces <code>delta = 0.6</code> and a final relative amount of 1.2. The coefficient representing the relative increase must therefore not be confused with either the delta value or the final feature amount.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Inspect the available actions, the assumptions used to generate their</span></span>
+<p>This example uses explicit delta values. Protection is assumed to increase woodland and riparian amounts by 100% and 30% of their respective local baselines, whereas restoration increases them by 25% and 130%. These percentages are used only to generate the simulated data. The table passed to <code><a href="reference/add_effects.html">add_effects()</a></code> already contains the resulting absolute change for every planning-unit–action–feature combination. For example, a woodland baseline of 0.6 combined with a 100% relative increase produces <code>delta = 0.6</code> and a final relative amount of 1.2. The coefficient representing the relative increase must therefore not be confused with either the delta value or the final feature amount.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Inspect the assumptions used to generate their</span></span>
 <span><span class="co"># ecological effects, and the first planning-unit--action--feature records.</span></span>
-<span><span class="va">example_data</span><span class="op">$</span><span class="va">actions</span></span>
-<span><span class="co">#&gt;        id    name</span></span>
-<span><span class="co">#&gt; 1 protect Protect</span></span>
-<span><span class="co">#&gt; 2 restore Restore</span></span>
 <span><span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span>
 <span><span class="co">#&gt;    action feature relative_change</span></span>
 <span><span class="co">#&gt; 1 protect       1            1.00</span></span>
 <span><span class="co">#&gt; 2 protect       2            0.30</span></span>
 <span><span class="co">#&gt; 3 restore       1            0.25</span></span>
 <span><span class="co">#&gt; 4 restore       2            1.30</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">example_data</span><span class="op">$</span><span class="va">effects</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   pu  action feature        delta</span></span>
 <span><span class="co">#&gt; 1  1 protect       1 0.0016615573</span></span>
@@ -209,12 +183,10 @@
 <span><span class="co">#&gt; 6  2 protect       2 0.0132913814</span></span>
 <span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Register the feasible actions and their local implementation costs.</span></span>
 <span>  <span class="fu"><a href="reference/add_actions.html">add_actions</a></span><span class="op">(</span></span>
 <span>    actions <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span>
 <span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Interpret each effect as a signed change from the baseline amount.</span></span>
 <span>  <span class="fu"><a href="reference/add_effects.html">add_effects</a></span><span class="op">(</span></span>
 <span>    effects <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">effects</span>,</span>
 <span>    effect_type <span class="op">=</span> <span class="st">"delta"</span></span>
@@ -224,7 +196,7 @@
 <h3 id="stage-3-define-the-constraints">Stage 3: Define the constraints<a class="anchor" aria-label="anchor" href="#stage-3-define-the-constraints"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html"><code>add_constraint_targets_relative()</code></a> requires the selected actions to generate gains equivalent to at least 10% of the total baseline amount of <strong>each feature separately</strong>. Targets restrict the feasible set; they are not additional objectives. Other applications could introduce budgets, area requirements, locked decisions, or spatial constraints at this stage.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Require action-induced gains of at least 10% of the total baseline amount of</span></span>
 <span><span class="co"># woodland and at least 10% of the total baseline amount of riparian habitat.</span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
@@ -235,7 +207,7 @@
 </h3>
 <p>Objectives are registered independently so they can later be combined using different multi-objective methods. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html"><code>add_objective_min_cost()</code></a> minimises the total implementation cost of the selected actions. Planning-unit costs are excluded because the example defines economic expenditure through the action-specific cost table. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code></a> maximises total ecological benefit, calculated as the sum of action-induced gains across selected planning units and features.</p>
 <p>Because woodland and riparian effects use the same relative scale and no feature-specific weights are supplied, the example gives both features equal weight in the benefit objective. See the <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code> reference</a> for the complete definition of the objective, its available arguments, and how feature contributions are aggregated.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Minimise action-specific implementation costs. Planning-unit costs are</span></span>
 <span>  <span class="co"># excluded because expenditure is represented by the action-cost table.</span></span>
@@ -245,9 +217,10 @@
 <span>    include_action_cost <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Maximise the sum of action-induced ecological gains across both features.</span></span>
-<span>  <span class="fu"><a href="reference/add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Print the complete formulation before selecting a multi-objective method</span></span>
+<span>  <span class="fu"><a href="reference/add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span></span></code></pre></div>
+<p>The summary confirms that the spatial inputs, actions, effects, constraints, and two objectives are present. It also shows that the multi-objective method and solver have not yet been selected.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Print the complete formulation before selecting a multi-objective method</span></span>
 <span><span class="co"># and optimisation solver.</span></span>
 <span><span class="va">problem</span></span>
 <span><span class="co">#&gt; A multiscape object (&lt;Problem&gt;)</span></span>
@@ -281,7 +254,6 @@
 <span><span class="co">#&gt; │└─checks: incomplete (multiple objectives registered but no MO method</span></span>
 <span><span class="co">#&gt; selected)</span></span>
 <span><span class="co">#&gt; # ℹ Use `x$data` to inspect stored tables and model snapshots.</span></span></code></pre></div>
-<p>The summary confirms that the spatial inputs, actions, effects, constraints, and two objectives are present. It also shows that the multi-objective method and solver have not yet been selected.</p>
 </div>
 <div class="section level3">
 <h3 id="configure-the-multi-objective-method">Configure the multi-objective method<a class="anchor" aria-label="anchor" href="#configure-the-multi-objective-method"></a>
@@ -298,8 +270,6 @@
 <span>    runs <span class="op">=</span> <span class="fu"><a href="reference/set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span><span class="fl">6</span><span class="op">)</span>,</span>
 <span>    lexicographic <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Request proven optimal solutions by setting the relative MIP-gap tolerance</span></span>
-<span>  <span class="co"># to zero.</span></span>
 <span>  <span class="fu"><a href="reference/set_solver_gurobi.html">set_solver_gurobi</a></span><span class="op">(</span>gap_limit <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -324,13 +294,13 @@
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="va">runs</span></span>
-<span><span class="co">#&gt;   run_id solution_id  status     runtime gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal 0.006000042   0</span></span>
-<span><span class="co">#&gt; 2      2           2 optimal 0.006000042   0</span></span>
-<span><span class="co">#&gt; 3      3           3 optimal 0.008000135   0</span></span>
-<span><span class="co">#&gt; 4      4           4 optimal 0.002000093   0</span></span>
-<span><span class="co">#&gt; 5      5           5 optimal 0.005000114   0</span></span>
-<span><span class="co">#&gt; 6      6           6 optimal 0.002000093   0</span></span></code></pre></div>
+<span><span class="co">#&gt;   run_id solution_id  status      runtime gap</span></span>
+<span><span class="co">#&gt; 1      1           1 optimal 0.0040001869   0</span></span>
+<span><span class="co">#&gt; 2      2           2 optimal 0.0030000210   0</span></span>
+<span><span class="co">#&gt; 3      3           3 optimal 0.0080001354   0</span></span>
+<span><span class="co">#&gt; 4      4           4 optimal 0.0009999275   0</span></span>
+<span><span class="co">#&gt; 5      5           5 optimal 0.0049998760   0</span></span>
+<span><span class="co">#&gt; 6      6           6 optimal 0.0020000935   0</span></span></code></pre></div>
 <p>Each row records one attempted run configuration. <code>run_id</code> identifies the configuration, including its epsilon limit and solver outcome. A run is not itself a solution: an infeasible configuration, a run that terminates without a feasible solution, or a run affected by a solver error may have no associated <code>solution_id</code>. When a run does produce a solution that is retained in the <code>SolutionSet</code>, <code>solution_id</code> identifies that stored solution for subsequent extraction, comparison, and mapping. In this example, all configured runs produce stored solutions.</p>
 <p>The treatment of infeasible runs, runs without a solution, and unexpected errors can be controlled with <a href="https://josesalgr.github.io/multiscape/reference/set_runs_control.html"><code>set_runs_control()</code></a>. Depending on these settings, solving can stop when a failed configuration is encountered or retain the failed run in the run history without an associated solution.</p>
 <p>This distinction is important when reading the figures below. With <code>label_runs = TRUE</code>, <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code> labels points using <code>run_id</code>, whereas functions that extract or map stored plans generally use <code>solution_id</code>. <code><a href="reference/get_runs.html">get_runs()</a></code> provides the link between the run configurations and the solutions that were successfully stored.</p>
