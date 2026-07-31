@@ -1,3 +1,6 @@
+ignore:
+  - "^R/zzz\\.R$"
+
 comment: false
 
 coverage:
