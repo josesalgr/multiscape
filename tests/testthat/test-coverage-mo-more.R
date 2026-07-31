@@ -85,6 +85,7 @@ test_that("MO objective vector builder reports unsupported subsets and terms", {
 
 
 test_that("canonical alias evaluation validates aliases and objective senses", {
+  skip_if_no_cbc()
   evaluate <- getFromNamespace(
     ".pamo_eval_alias_canonical_on_solution", "multiscape"
   )

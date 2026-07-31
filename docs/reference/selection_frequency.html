@@ -121,60 +121,29 @@ and whether duplicate or dominated solutions have been retained.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span></span>
-<span class="r-in"><span>    <span class="fl">1.5</span>, <span class="fl">1.5</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      conservation <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>      restoration <span class="op">=</span> <span class="fl">2</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    effects <span class="op">=</span> <span class="va">effects</span>,</span></span>
-<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">effects</span>,</span></span>
+<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"delta"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span>, include_pu_cost <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span>,</span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -213,15 +182,135 @@ and whether duplicate or dominated solutions have been retained.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">unique_frequency</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pu       action n_selected n_solutions frequency</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 conservation          1           4      0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  1  restoration          3           4      0.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  2 conservation          0           4      0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  2  restoration          2           4      0.50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  3 conservation          0           4      0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  3  restoration          2           4      0.50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  4 conservation          0           4      0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  4  restoration          1           4      0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     pu  action n_selected n_solutions frequency</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   10 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   10 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   11 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   11 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   12 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8   12 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9   13 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10  13 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  14 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12  14 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13  15 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14  15 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15  16 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16  16 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17  17 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18  17 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19  18 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20  18 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21  19 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22  19 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23   2 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24   2 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25  20 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26  20 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27  21 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28  21 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29  22 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30  22 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31  23 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32  23 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33  24 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34  24 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35  25 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36  25 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37  26 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38  26 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39  27 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40  27 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41  28 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42  28 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43  29 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44  29 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45   3 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46   3 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47  30 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48  30 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49  31 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50  31 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51  32 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52  32 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53  33 protect          2           3 0.6666667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54  33 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55  34 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56  34 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57  35 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58  35 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59  36 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 60  36 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 61  37 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62  37 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63  38 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64  38 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 65  39 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66  39 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67   4 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 68   4 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 69  40 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70  40 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71  41 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 72  41 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73  42 protect          2           3 0.6666667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74  42 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75  43 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 76  43 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 77  44 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78  44 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79  45 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 80  45 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81  46 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82  46 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83  47 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84  47 restore          2           3 0.6666667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85  48 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86  48 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87  49 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88  49 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89   5 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 90   5 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91  50 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92  50 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93  51 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 94  51 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95  52 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96  52 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97  53 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 98  53 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 99  54 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100 54 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101 55 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 102 55 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 103 56 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104 56 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105 57 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 106 57 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 107 58 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108 58 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109 59 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 110 59 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 111  6 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112  6 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 113 60 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114 60 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115 61 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 116 61 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 117 62 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118 62 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119 63 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 120 63 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 121 64 protect          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122 64 restore          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123  7 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 124  7 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 125  8 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126  8 restore          0           3 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127  9 protect          1           3 0.3333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 128  9 restore          1           3 0.3333333</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

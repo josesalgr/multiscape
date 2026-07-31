@@ -81,37 +81,36 @@ structured features, and two mutually exclusive candidate actions.</p>
 <dt><code>action_costs</code></dt>
 <dd><p>Action costs by planning unit and action.</p></dd>
 
+<dt><code>effect_assumptions</code></dt>
+<dd><p>Relative-change assumptions by action and feature.</p></dd>
+
 <dt><code>effects</code></dt>
-<dd><p>Action effects by action and feature.</p></dd>
+<dd><p>Explicit signed changes by planning unit, action, and feature.</p></dd>
 
 
 </dl></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu">load_sim_multiaction</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">toy</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu">load_sim_multiaction</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">example_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "planning_units"     "features"           "dist_features"     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4] "actions"            "action_costs"       "effect_assumptions"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [7] "effects"           </span>
-<span class="r-in"><span><span class="va">toy</span><span class="op">$</span><span class="va">planning_units</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 64 features and 4 fields</span>
+<span class="r-in"><span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 6 features and 4 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 0 ymin: 0 xmax: 8 ymax: 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 0 ymin: 0 xmax: 6 ymax: 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> CRS:           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> First 10 features:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    id                       geometry   x   y cost</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1 POLYGON ((0 0, 1 0, 1 1, 0 ... 0.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2 POLYGON ((1 0, 2 0, 2 1, 1 ... 1.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3 POLYGON ((2 0, 3 0, 3 1, 2 ... 2.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4 POLYGON ((3 0, 4 0, 4 1, 3 ... 3.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5 POLYGON ((4 0, 5 0, 5 1, 4 ... 4.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6 POLYGON ((5 0, 6 0, 6 1, 5 ... 5.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7   7 POLYGON ((6 0, 7 0, 7 1, 6 ... 6.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8   8 POLYGON ((7 0, 8 0, 8 1, 7 ... 7.5 0.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9   9 POLYGON ((0 1, 1 1, 1 2, 0 ... 0.5 1.5    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 10 POLYGON ((1 1, 2 1, 2 2, 1 ... 1.5 1.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   id                       geometry   x   y cost</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 POLYGON ((0 0, 1 0, 1 1, 0 ... 0.5 0.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2 POLYGON ((1 0, 2 0, 2 1, 1 ... 1.5 0.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 POLYGON ((2 0, 3 0, 3 1, 2 ... 2.5 0.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4 POLYGON ((3 0, 4 0, 4 1, 3 ... 3.5 0.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  5 POLYGON ((4 0, 5 0, 5 1, 4 ... 4.5 0.5    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  6 POLYGON ((5 0, 6 0, 6 1, 5 ... 5.5 0.5    0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

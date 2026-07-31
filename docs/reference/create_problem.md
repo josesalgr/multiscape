@@ -299,45 +299,30 @@ solving the resulting problem.
 ## Examples
 
 ``` r
-# ------------------------------------------------------
-# 1) Tabular mode
-# ------------------------------------------------------
-pu_tbl <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
-feat_tbl <- data.frame(
-  id = 1:2,
-  name = c("feature_1", "feature_2")
-)
-
-dist_feat_tbl <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
+# Spatial mode: keep planning-unit geometries.
 p1 <- create_problem(
-  pu = pu_tbl,
-  features = feat_tbl,
-  dist_features = dist_feat_tbl
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
 )
-
 print(p1)
 #> A multiscape object (<Problem>)
 #> ├─data
-#> │├─planning units: <data.frame> (4 total)
-#> │├─costs: min: 1, max: 4
-#> │└─features: 2 total ("feature_1", "feature_2")
+#> │├─planning units: <data.frame> (64 total)
+#> │├─costs: min: 0, max: 0
+#> │└─features: 2 total ("woodland", "riparian")
 #> └─actions and effects
 #> │├─actions: none
 #> │├─feasible action pairs: none
 #> │├─effect data: none
 #> │└─profit data: none
 #> └─spatial
-#> │├─geometry: none
-#> │├─coordinates: none
+#> │├─geometry: sf (64 rows)
+#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
 #> │└─relations: none
 #> └─targets and constraints
 #> │├─targets: none
@@ -353,32 +338,27 @@ print(p1)
 #> │└─checks: incomplete (no objective registered)
 #> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 
-# ------------------------------------------------------
-# 2) Hybrid sf + tabular mode using package data
-# ------------------------------------------------------
-
+# Tabular mode: use the same data without geometry.
 p2 <- create_problem(
-  pu = sim_pu,
-  features = sim_features,
-  dist_features = sim_dist_features,
+  pu = sf::st_drop_geometry(example_data$planning_units),
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 )
-#> Warning: The following pu's do not contain features: 8012 8033 8147 8263
-
 print(p2)
 #> A multiscape object (<Problem>)
 #> ├─data
-#> │├─planning units: <tbl_df> (11109 total)
-#> │├─costs: min: 1, max: 1
-#> │└─features: 155 total ("ACCGENT", "ACCNISU", "ACRARUN", ...)
+#> │├─planning units: <data.frame> (64 total)
+#> │├─costs: min: 0, max: 0
+#> │└─features: 2 total ("woodland", "riparian")
 #> └─actions and effects
 #> │├─actions: none
 #> │├─feasible action pairs: none
 #> │├─effect data: none
 #> │└─profit data: none
 #> └─spatial
-#> │├─geometry: sf (11109 rows)
-#> │├─coordinates: 11109 rows (x: 2868900..3007900, y: 2110700..2280700)
+#> │├─geometry: none
+#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
 #> │└─relations: none
 #> └─targets and constraints
 #> │├─targets: none

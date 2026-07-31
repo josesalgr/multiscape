@@ -83,29 +83,19 @@
 #'   the stored target table.
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(data.frame(id = "conservation", name = "conservation"), cost = 0)
+#'   add_actions(
+#'     example_data$actions,
+#'     cost = example_data$action_costs
+#'   )
 #'
 #' # Same absolute target for all features
 #' p1 <- add_constraint_targets_absolute(p, 3)
@@ -122,7 +112,7 @@
 #' p3 <- add_constraint_targets_absolute(
 #'   p,
 #'   2,
-#'   actions = "conservation"
+#'   actions = "protect"
 #' )
 #' p3$data$targets
 #'
@@ -267,29 +257,19 @@ add_constraint_targets_absolute <- function(x, targets,
 #'   the stored target table.
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(data.frame(id = "conservation", name = "conservation"), cost = 0)
+#'   add_actions(
+#'     example_data$actions,
+#'     cost = example_data$action_costs
+#'   )
 #'
 #' # Require 30% of the baseline total for all features
 #' p1 <- add_constraint_targets_relative(p, 0.3)
@@ -307,7 +287,7 @@ add_constraint_targets_absolute <- function(x, targets,
 #' p3 <- add_constraint_targets_relative(
 #'   p,
 #'   0.2,
-#'   actions = "conservation"
+#'   actions = "protect"
 #' )
 #' p3$data$targets
 #'

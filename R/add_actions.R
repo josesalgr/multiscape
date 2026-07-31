@@ -219,30 +219,14 @@
 #' \code{\link{add_constraint_locked_actions}}
 #'
 #' @examples
-#' # ------------------------------------------------------
-#' # Minimal planning problem
-#' # ------------------------------------------------------
-#' pu <- data.frame(
-#'   id = 1:4,
-#'   cost = c(2, 3, 1, 4),
-#'   area = c(100, 100, 100, 100)
-#' )
-#'
-#' features <- data.frame(
-#'   id = 1:2,
-#'   name = c("sp1", "sp2")
-#' )
-#'
-#' dist_features <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4, 4),
-#'   feature = c(1, 2, 1, 2, 1, 2),
-#'   amount = c(1, 2, 1, 3, 2, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu,
-#'   features = features,
-#'   dist_features = dist_features
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
+#'   cost = "cost"
 #' )
 #'
 #' actions <- data.frame(
@@ -288,7 +272,7 @@
 #'   cost = c(conservation = 3, restoration = 8)
 #' )
 #'
-#' p3$data$dist_actions
+#' utils::head(p3$data$dist_actions)
 #'
 #' # Example 4: provide action-specific areas manually
 #' action_area <- data.frame(

@@ -69,34 +69,31 @@ if (
   requireNamespace("ggplot2", quietly = TRUE) &&
   requireNamespace("rcbc", quietly = TRUE)
 ) {
-  data("sim_pu_sf", package = "multiscape")
-
-  pu <- sim_pu_sf[
-    seq_len(min(4L, nrow(sim_pu_sf))),
-  ]
-
-  pu$id <- seq_len(nrow(pu))
-  pu$cost <- seq_len(nrow(pu))
-
-  features <- data.frame(
-    id = 1L,
-    name = "feature_1"
-  )
-
-  dist_features <- data.frame(
-    pu = pu$id,
-    feature = 1L,
-    amount = rep(1, nrow(pu))
-  )
+  # Load a complete simulated planning problem.
+  example_data <- load_sim_multiaction()
 
   problem <- create_problem(
-    pu = pu,
-    features = features,
-    dist_features = dist_features,
+    pu = example_data$planning_units,
+    features = example_data$features,
+    dist_features = example_data$dist_features,
     cost = "cost"
   ) |>
-    add_constraint_targets_relative(0.25) |>
-    add_objective_min_cost(alias = "cost") |>
+    add_actions(
+      example_data$actions,
+      cost = example_data$action_costs
+    ) |>
+    add_effects(
+      example_data$effects,
+      effect_type = "delta"
+    ) |>
+    add_constraint_targets_relative(0.05) |>
+    add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+    add_objective_max_benefit(alias = "benefit") |>
+    set_method_weighted_sum(
+      aliases = c("cost", "benefit"),
+      runs = set_runs_grid(n = 3),
+      normalize_weights = TRUE
+    ) |>
     set_solver_cbc(verbose = FALSE)
 
   solutions <- solve(problem)

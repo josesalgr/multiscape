@@ -152,58 +152,30 @@ represent the frontier.
 ## Examples
 
 ``` r
-pu <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration")
-)
-
-effects <- data.frame(
-  action = rep(actions$id, each = 2),
-  feature = rep(features$id, times = 2),
-  multiplier = c(
-    1.0, 1.0,
-    1.5, 1.5
-  )
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 problem <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 ) |>
   add_actions(
-    actions = actions,
-    cost = c(
-      conservation = 1,
-      restoration = 2
-    )
+    example_data$actions,
+    cost = example_data$action_costs
   ) |>
   add_effects(
-    effects = effects,
-    effect_type = "after"
+    example_data$effects,
+    effect_type = "delta"
   ) |>
   add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost") |>
+  add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
   add_objective_max_benefit(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
-    runs = set_runs_grid(n = 5)
+    runs = set_runs_grid(n = 3),
+    normalize_weights = TRUE
   )
 
 if (requireNamespace("rcbc", quietly = TRUE)) {
@@ -235,8 +207,8 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     method = "angle"
   )
 }
-#>   solution_id cost benefit norm_cost norm_benefit turning_angle angle_change
-#> 1           2    3     3.5    0.0625    0.5333333      2.396481    0.7451115
+#>   solution_id cost  benefit   norm_cost norm_benefit turning_angle angle_change
+#> 1           2 2.73 2.297378 0.006352087     0.947106      2.451736    0.6898564
 #>   knee_score knee_rank method
-#> 1  0.7451115         1  angle
+#> 1  0.6898564         1  angle
 ```

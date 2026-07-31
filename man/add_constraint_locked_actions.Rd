@@ -104,44 +104,30 @@ the feasible action table. Afterwards, any planning-unit-level
 ensuring consistency with planning-unit exclusions.
 }
 \examples{
-pu <- data.frame(
-  id = 1:4,
-  cost = c(2, 3, 1, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-p <- add_actions(
-  x = p,
-  actions = data.frame(id = c("conservation", "restoration")),
-  cost = c(conservation = 3, restoration = 8)
-)
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  )
 
 # Lock a few feasible decisions
 p <- add_constraint_locked_actions(
   x = p,
   locked_in = data.frame(
     pu = c(1, 2),
-    action = c("conservation", "restoration")
+    action = c("protect", "restore")
   ),
   locked_out = data.frame(
     pu = c(4),
-    action = c("conservation")
+    action = c("protect")
   )
 )
 
@@ -151,10 +137,10 @@ p$data$dist_actions
 p2 <- add_constraint_locked_actions(
   x = p,
   locked_in = list(
-    conservation = c(1, 3)
+    protect = c(1, 3)
   ),
   locked_out = list(
-    restoration = c(2)
+    restore = c(2)
   )
 )
 

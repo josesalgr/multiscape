@@ -97,28 +97,18 @@ NULL
 #'   contains logical columns \code{locked_in} and \code{locked_out}.
 #'
 #' @examples
-#' pu <- data.frame(
-#'   id = 1:5,
-#'   cost = c(2, 3, 1, 4, 2),
-#'   lock_col = c(TRUE, FALSE, FALSE, TRUE, FALSE),
-#'   out_col = c(FALSE, FALSE, FALSE, FALSE, TRUE)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
-#' features <- data.frame(
-#'   id = 1:2,
-#'   name = c("sp1", "sp2")
-#' )
-#'
-#' dist_features <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4, 4),
-#'   feature = c(1, 2, 1, 2, 1, 2),
-#'   amount = c(1, 2, 1, 3, 2, 1)
-#' )
+#' pu <- example_data$planning_units
+#' pu$lock_col <- pu$id %in% c(1, 4)
+#' pu$out_col <- pu$id == 5
 #'
 #' p <- create_problem(
 #'   pu = pu,
-#'   features = features,
-#'   dist_features = dist_features
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
+#'   cost = "cost"
 #' )
 #'
 #' # 1) Lock by planning-unit ids
@@ -142,8 +132,8 @@ NULL
 #' # 3) Use logical vectors
 #' p3 <- add_constraint_locked_planning_units(
 #'   x = p,
-#'   locked_in = c(TRUE, FALSE, TRUE, FALSE, FALSE),
-#'   locked_out = c(FALSE, FALSE, FALSE, TRUE, FALSE)
+#'   locked_in = pu$id %in% c(1, 3),
+#'   locked_out = pu$id == 4
 #' )
 #'
 #' p3$data$pu[, c("id", "locked_in", "locked_out")]

@@ -137,46 +137,32 @@ typically takes the form
 }
 }
 \examples{
-# Minimal problem
-pu <- data.frame(
-  id = 1:4,
-  cost = c(2, 3, 1, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-p <- add_actions(
-  x = p,
-  actions = data.frame(id = c("harvest", "restoration"))
-)
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  )
 
 # 1) Constant profit for every feasible (pu, action)
 p1 <- add_profit(p, profit = 10)
 p1$data$dist_profit
 
 # 2) Profit per action using a named vector
-pr <- c(harvest = 50, restoration = -5)
+pr <- c(protect = 50, restore = -5)
 p2 <- add_profit(p, profit = pr)
 p2$data$dist_profit
 
 # 3) Profit per action using a data frame
 pr_df <- data.frame(
-  action = c("harvest", "restoration"),
+  action = c("protect", "restore"),
   profit = c(40, 15)
 )
 p3 <- add_profit(p, profit = pr_df)
@@ -185,7 +171,7 @@ p3$data$dist_profit
 # 4) Profit per (pu, action) pair
 pr_pair <- data.frame(
   pu = c(1, 2, 3),
-  action = c("harvest", "harvest", "restoration"),
+  action = c("protect", "protect", "restore"),
   profit = c(100, 80, 30)
 )
 p4 <- add_profit(p, profit = pr_pair)

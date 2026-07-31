@@ -197,44 +197,25 @@ NULL
 #'   contain aligned spatial metadata depending on the input mode.
 #'
 #' @examples
-#' # ------------------------------------------------------
-#' # 1) Tabular mode
-#' # ------------------------------------------------------
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
-#'
+#' # Spatial mode: keep planning-unit geometries.
 #' p1 <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl
-#' )
-#'
-#' print(p1)
-#'
-#' # ------------------------------------------------------
-#' # 2) Hybrid sf + tabular mode using package data
-#' # ------------------------------------------------------
-#'
-#' p2 <- create_problem(
-#'   pu = sim_pu,
-#'   features = sim_features,
-#'   dist_features = sim_dist_features,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
+#' print(p1)
 #'
+#' # Tabular mode: use the same data without geometry.
+#' p2 <- create_problem(
+#'   pu = sf::st_drop_geometry(example_data$planning_units),
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
+#'   cost = "cost"
+#' )
 #' print(p2)
 #'
 #' @seealso

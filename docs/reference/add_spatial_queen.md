@@ -67,33 +67,30 @@ The resulting relation is stored as an undirected spatial relation.
 
 ``` r
 # \donttest{
-library(terra)
-#> Warning: package 'terra' was built under R version 4.4.3
-#> terra 1.8.80
-
-data("sim_pu_sf", package = "multiscape")
-sim_features <- load_sim_features_raster()
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = sim_pu_sf,
-  features = sim_features,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 )
 
 p <- add_spatial_queen(
   x = p,
-  geometry = sim_pu_sf,
+  geometry = example_data$planning_units,
   name = "queen",
   weight = 1
 )
 
 head(p$data$spatial_relations$queen)
-#>       internal_pu1 internal_pu2 weight   pu1   pu2   source relation_name
-#> 27430        10000        10001      1 10000 10001 queen_sf         queen
-#> 27431        10000        10132      1 10000 10132 queen_sf         queen
-#> 27432        10000        10133      1 10000 10133 queen_sf         queen
-#> 27433        10001        10002      1 10001 10002 queen_sf         queen
-#> 27434        10001        10133      1 10001 10133 queen_sf         queen
-#> 27435        10001        10134      1 10001 10134 queen_sf         queen
+#>    internal_pu1 internal_pu2 weight pu1 pu2   source relation_name
+#> 33           10           11      1  10  11 queen_sf         queen
+#> 34           10           17      1  10  17 queen_sf         queen
+#> 35           10           18      1  10  18 queen_sf         queen
+#> 36           10           19      1  10  19 queen_sf         queen
+#> 37           11           12      1  11  12 queen_sf         queen
+#> 38           11           18      1  11  18 queen_sf         queen
 # }
 ```

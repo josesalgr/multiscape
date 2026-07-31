@@ -52,20 +52,19 @@ The resulting relation is stored as an undirected spatial relation.
 }
 \examples{
 \donttest{
-library(terra)
-
-data("sim_pu_sf", package = "multiscape")
-sim_features <- load_sim_features_raster()
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = sim_pu_sf,
-  features = sim_features,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 )
 
 p <- add_spatial_queen(
   x = p,
-  geometry = sim_pu_sf,
+  geometry = example_data$planning_units,
   name = "queen",
   weight = 1
 )

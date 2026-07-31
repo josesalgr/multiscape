@@ -179,62 +179,378 @@ typically as an undirected relation with optional diagonal entries.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pu_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">feat_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"feature_1"</span>, <span class="st">"feature_2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_feat_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">bound_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  id2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  boundary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">1</span>, <span class="fl">4</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu_tbl</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">feat_tbl</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_feat_tbl</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_spatial_boundary</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  boundary <span class="op">=</span> <span class="va">bound_df</span>,</span></span>
 <span class="r-in"><span>  name <span class="op">=</span> <span class="st">"boundary"</span>,</span></span>
 <span class="r-in"><span>  include_self <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  edge_factor <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">spatial_relations</span><span class="op">$</span><span class="va">boundary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_pu1 internal_pu2 weight pu1 pu2                        source</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            1            2      1   1   2         boundary_table_shared</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            1            3      1   1   3         boundary_table_shared</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            2            4      1   2   4         boundary_table_shared</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            3            4      1   3   4         boundary_table_shared</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            1            1      2   1   1 boundary_table_diag_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            2            2      2   2   2 boundary_table_diag_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7            3            3     -2   3   3 boundary_table_diag_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8            4            4      2   4   4 boundary_table_diag_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   relation_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7      boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     internal_pu1 internal_pu2 weight pu1 pu2                     source</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18            10           11      1  10  11  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19            10           18      1  10  18  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20            11           12      1  11  12  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21            11           19      1  11  19  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22            12           13      1  12  13  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23            12           20      1  12  20  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24            13           14      1  13  14  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25            13           21      1  13  21  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26            14           15      1  14  15  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27            14           22      1  14  22  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28            15           16      1  15  16  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29            15           23      1  15  23  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30            16           24      1  16  24  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31            17           18      1  17  18  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32            17           25      1  17  25  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33            18           19      1  18  19  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34            18           26      1  18  26  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35            19           20      1  19  20  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36            19           27      1  19  27  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              1            2      1   1   2  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              1            9      1   1   9  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37            20           21      1  20  21  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38            20           28      1  20  28  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39            21           22      1  21  22  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40            21           29      1  21  29  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41            22           23      1  22  23  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42            22           30      1  22  30  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43            23           24      1  23  24  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44            23           31      1  23  31  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45            24           32      1  24  32  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46            25           26      1  25  26  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47            25           33      1  25  33  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48            26           27      1  26  27  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49            26           34      1  26  34  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50            27           28      1  27  28  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51            27           35      1  27  35  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52            28           29      1  28  29  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53            28           36      1  28  36  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54            29           30      1  29  30  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55            29           37      1  29  37  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              2           10      1   2  10  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              2            3      1   2   3  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56            30           31      1  30  31  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57            30           38      1  30  38  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58            31           32      1  31  32  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59            31           39      1  31  39  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 60            32           40      1  32  40  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 61            33           34      1  33  34  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62            33           41      1  33  41  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63            34           35      1  34  35  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64            34           42      1  34  42  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 65            35           36      1  35  36  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66            35           43      1  35  43  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67            36           37      1  36  37  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 68            36           44      1  36  44  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 69            37           38      1  37  38  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70            37           45      1  37  45  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71            38           39      1  38  39  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 72            38           46      1  38  46  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73            39           40      1  39  40  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74            39           47      1  39  47  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              3           11      1   3  11  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              3            4      1   3   4  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75            40           48      1  40  48  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 76            41           42      1  41  42  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 77            41           49      1  41  49  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78            42           43      1  42  43  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79            42           50      1  42  50  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 80            43           44      1  43  44  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81            43           51      1  43  51  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82            44           45      1  44  45  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83            44           52      1  44  52  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84            45           46      1  45  46  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85            45           53      1  45  53  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86            46           47      1  46  47  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87            46           54      1  46  54  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88            47           48      1  47  48  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89            47           55      1  47  55  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 90            48           56      1  48  56  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91            49           50      1  49  50  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92            49           57      1  49  57  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8              4           12      1   4  12  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              4            5      1   4   5  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93            50           51      1  50  51  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 94            50           58      1  50  58  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95            51           52      1  51  52  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96            51           59      1  51  59  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97            52           53      1  52  53  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 98            52           60      1  52  60  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 99            53           54      1  53  54  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100           53           61      1  53  61  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101           54           55      1  54  55  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 102           54           62      1  54  62  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 103           55           56      1  55  56  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104           55           63      1  55  63  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105           56           64      1  56  64  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 106           57           58      1  57  58  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 107           58           59      1  58  59  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108           59           60      1  59  60  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10             5           13      1   5  13  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9              5            6      1   5   6  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109           60           61      1  60  61  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 110           61           62      1  61  62  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 111           62           63      1  62  63  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112           63           64      1  63  64  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12             6           14      1   6  14  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11             6            7      1   6   7  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14             7           15      1   7  15  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13             7            8      1   7   8  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15             8           16      1   8  16  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16             9           10      1   9  10  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17             9           17      1   9  17  boundary_sf_shared_length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 113            1            1      2   1   1 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122           10           10      0  10  10 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123           11           11      0  11  11 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 124           12           12      0  12  12 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 125           13           13      0  13  13 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126           14           14      0  14  14 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127           15           15      0  15  15 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 128           16           16      1  16  16 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129           17           17      1  17  17 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130           18           18      0  18  18 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131           19           19      0  19  19 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114            2            2      1   2   2 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 132           20           20      0  20  20 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 133           21           21      0  21  21 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134           22           22      0  22  22 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135           23           23      0  23  23 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 136           24           24      1  24  24 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 137           25           25      1  25  25 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138           26           26      0  26  26 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139           27           27      0  27  27 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 140           28           28      0  28  28 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 141           29           29      0  29  29 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115            3            3      1   3   3 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142           30           30      0  30  30 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 143           31           31      0  31  31 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144           32           32      1  32  32 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145           33           33      1  33  33 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 146           34           34      0  34  34 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 147           35           35      0  35  35 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148           36           36      0  36  36 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149           37           37      0  37  37 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 150           38           38      0  38  38 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 151           39           39      0  39  39 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 116            4            4      1   4   4 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152           40           40      1  40  40 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153           41           41      1  41  41 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 154           42           42      0  42  42 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 155           43           43      0  43  43 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156           44           44      0  44  44 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157           45           45      0  45  45 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 158           46           46      0  46  46 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 159           47           47      0  47  47 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160           48           48      1  48  48 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161           49           49      1  49  49 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 117            5            5      1   5   5 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 162           50           50      0  50  50 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 163           51           51      0  51  51 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164           52           52      0  52  52 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165           53           53      0  53  53 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 166           54           54      0  54  54 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 167           55           55      0  55  55 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168           56           56      1  56  56 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169           57           57      2  57  57 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 170           58           58      1  58  58 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 171           59           59      1  59  59 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118            6            6      1   6   6 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172           60           60      1  60  60 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 173           61           61      1  61  61 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174           62           62      1  62  62 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175           63           63      1  63  63 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 176           64           64      2  64  64 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119            7            7      1   7   7 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 120            8            8      2   8   8 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 121            9            9      1   9   9 boundary_sf_diag_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     relation_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 60       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 61       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 65       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 68       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 69       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 72       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 76       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 77       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 80       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 90       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 94       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 98       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 99       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 102      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 103      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 106      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 107      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 110      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 111      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17       boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 113      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 124      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 125      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 128      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 132      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 133      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 136      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 137      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 140      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 141      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 143      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 146      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 147      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 150      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 151      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 116      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 154      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 155      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 158      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 159      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 117      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 162      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 163      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 166      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 167      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 170      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 171      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 173      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 176      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 120      boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 121      boundary</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -82,40 +82,23 @@ separately through additional objectives or constraints.
 ## Examples
 
 ``` r
-pu_tbl <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-feat_tbl <- data.frame(
-  id = 1:2,
-  name = c("feature_1", "feature_2")
-)
-dist_feat_tbl <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-actions_df <- data.frame(
-  id = c("conservation", "restoration"),
-  name = c("conservation", "restoration")
-)
-effects_df <- data.frame(
-  pu = c(1, 2, 3, 4, 1, 2, 3, 4),
-  action = c("conservation", "conservation", "conservation", "conservation",
-             "restoration", "restoration", "restoration", "restoration"),
-  feature = c(1, 1, 1, 1, 2, 2, 2, 2),
-  benefit = c(2, 1, 0, 1, 3, 0, 1, 2),
-  loss = c(0, 0, 1, 0, 0, 1, 0, 0)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu_tbl,
-  features = feat_tbl,
-  dist_features = dist_feat_tbl,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 ) |>
-  add_actions(actions_df, cost = c(conservation = 1, restoration = 2)) |>
-  add_effects(effects_df)
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  ) |>
+  add_effects(
+    example_data$effects,
+    effect_type = "delta"
+  )
 
 p1 <- add_objective_max_benefit(p)
 p1$data$model_args
@@ -136,7 +119,7 @@ p1$data$model_args
 
 p2 <- add_objective_max_benefit(
   p,
-  actions = "restoration"
+  actions = "restore"
 )
 p2$data$model_args
 #> $model_type

@@ -154,37 +154,19 @@ subset and constraint sense. Attempting to add a duplicated
 ## Examples
 
 ``` r
-pu <- data.frame(
-  id = 1:4,
-  cost = c(2, 3, 1, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration")
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-p <- add_actions(
-  p,
-  actions = actions,
-  cost = c(conservation = 1, restoration = 2)
-)
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  )
 
 p <- add_constraint_budget(
   x = p,
@@ -198,7 +180,7 @@ p <- add_constraint_budget(
   x = p,
   budget = 4,
   sense = "max",
-  actions = "restoration",
+  actions = "restore",
   include_pu_cost = FALSE,
   include_action_cost = TRUE
 )
@@ -207,18 +189,18 @@ p <- add_constraint_budget(
   x = p,
   budget = 1,
   sense = "min",
-  actions = "restoration",
+  actions = "restore",
   include_pu_cost = FALSE,
   include_action_cost = TRUE
 )
 
 p$data$constraints$budget
-#>     type sense value tolerance     actions include_pu_cost include_action_cost
-#> 1 budget   max    10         0        <NA>            TRUE                TRUE
-#> 2 budget   max     4         0 restoration           FALSE                TRUE
-#> 3 budget   min     1         0 restoration           FALSE                TRUE
-#>                            name
-#> 1              budget_total_max
-#> 2 budget_action_max_restoration
-#> 3 budget_action_min_restoration
+#>     type sense value tolerance actions include_pu_cost include_action_cost
+#> 1 budget   max    10         0    <NA>            TRUE                TRUE
+#> 2 budget   max     4         0 restore           FALSE                TRUE
+#> 3 budget   min     1         0 restore           FALSE                TRUE
+#>                        name
+#> 1          budget_total_max
+#> 2 budget_action_max_restore
+#> 3 budget_action_min_restore
 ```

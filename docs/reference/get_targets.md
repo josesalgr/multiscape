@@ -94,30 +94,31 @@ present, it typically represents: \$\$ \mathrm{gap} =
 ## Examples
 
 ``` r
-pu <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 problem <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 ) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  ) |>
+  add_effects(
+    example_data$effects,
+    effect_type = "delta"
+  ) |>
   add_constraint_targets_relative(0.05) |>
-  add_objective_min_cost(alias = "cost")
+  add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = set_runs_grid(n = 3),
+    normalize_weights = TRUE
+  )
 
 if (requireNamespace("rcbc", quietly = TRUE)) {
   problem <- set_solver_cbc(
@@ -138,10 +139,10 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
     solution = solution_ids[1]
   )
 }
-#>   solution_id feature feature_name target_level total_available target achieved
-#> 1           1       1          sp1         0.05               9   0.45        5
-#> 2           1       2          sp2         0.05               6   0.30        2
-#>    gap  met
-#> 1 4.55 TRUE
-#> 2 1.70 TRUE
+#>   solution_id feature feature_name target_level total_available    target
+#> 1           1       1     woodland         0.05        14.08761 0.7043806
+#> 2           1       2     riparian         0.05        13.44903 0.6724515
+#>    achieved       gap  met
+#> 1 0.9232126 0.2188321 TRUE
+#> 2 1.3000697 0.6276182 TRUE
 ```

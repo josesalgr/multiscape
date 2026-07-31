@@ -176,62 +176,41 @@ combination results in an error.
 ## Examples
 
 ``` r
-pu <- data.frame(
-  id = 1:4,
-  cost = c(2, 3, 1, 4),
-  area_ha = c(10, 15, 8, 20)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
-
-actions <- data.frame(
-  id = c("conservation", "restoration")
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
-
-p <- add_actions(
-  p,
-  actions = actions,
-  cost = c(conservation = 1, restoration = 2)
-)
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  )
 
 # Constrain the total selected planning-unit area.
 p <- add_constraint_area(
   x = p,
   area = 25,
   sense = "min",
-  area_col = "area_ha",
   area_unit = "ha"
 )
 
-# Constrain the effective area allocated to restoration.
-# Because add_actions() can derive full planning-unit areas here,
-# restoration action areas default to the full area of each feasible PU.
+# Constrain the effective area allocated to the restore action.
+# Action areas are derived from the planning-unit geometries.
+
 p <- add_constraint_area(
   x = p,
   area = 15,
   sense = "max",
-  area_col = "area_ha",
   area_unit = "ha",
-  actions = "restoration"
+  actions = "restore"
 )
 
 p$data$constraints$area
-#>   type sense value tolerance unit area_col     actions                 name
-#> 1 area   min    25         0   ha  area_ha        <NA>             area_min
-#> 2 area   max    15         0   ha  area_ha restoration area_max_restoration
+#>   type sense value tolerance unit area_col actions             name
+#> 1 area   min    25         0   ha     <NA>    <NA>         area_min
+#> 2 area   max    15         0   ha     <NA> restore area_max_restore
 ```

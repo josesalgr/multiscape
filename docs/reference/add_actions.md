@@ -254,30 +254,14 @@ before calling
 ## Examples
 
 ``` r
-# ------------------------------------------------------
-# Minimal planning problem
-# ------------------------------------------------------
-pu <- data.frame(
-  id = 1:4,
-  cost = c(2, 3, 1, 4),
-  area = c(100, 100, 100, 100)
-)
-
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
 )
 
 actions <- data.frame(
@@ -295,18 +279,18 @@ p1 <- add_actions(
 print(p1)
 #> A multiscape object (<Problem>)
 #> ├─data
-#> │├─planning units: <data.frame> (4 total)
-#> │├─costs: min: 1, max: 4
-#> │└─features: 2 total ("sp1", "sp2")
+#> │├─planning units: <data.frame> (64 total)
+#> │├─costs: min: 0, max: 0
+#> │└─features: 2 total ("woodland", "riparian")
 #> └─actions and effects
 #> │├─actions: 2 total ("Conservation", "Restoration")
-#> │├─feasible action pairs: 8 feasible rows
+#> │├─feasible action pairs: 128 feasible rows
 #> │├─action costs: min: 5, max: 12
 #> │├─effect data: none
 #> │└─profit data: none
 #> └─spatial
-#> │├─geometry: none
-#> │├─coordinates: none
+#> │├─geometry: sf (64 rows)
+#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
 #> │└─relations: none
 #> └─targets and constraints
 #> │├─targets: none
@@ -322,13 +306,13 @@ print(p1)
 #> │└─checks: incomplete (no objective registered)
 #> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 utils::head(p1$data$dist_actions)
-#>   pu       action cost status internal_pu internal_action action_area
-#> 1  1 conservation    5      0           1               1         100
-#> 5  1  restoration   12      0           1               2         100
-#> 2  2 conservation    5      0           2               1         100
-#> 6  2  restoration   12      0           2               2         100
-#> 3  3 conservation    5      0           3               1         100
-#> 7  3  restoration   12      0           3               2         100
+#>    pu       action cost status internal_pu internal_action action_area
+#> 1   1 conservation    5      0           1               1           1
+#> 65  1  restoration   12      0           1               2           1
+#> 2   2 conservation    5      0           2               1           1
+#> 66  2  restoration   12      0           2               2           1
+#> 3   3 conservation    5      0           3               1           1
+#> 67  3  restoration   12      0           3               2           1
 
 # Example 2: specify feasible pairs explicitly
 include_df <- data.frame(
@@ -345,10 +329,10 @@ p2 <- add_actions(
 
 p2$data$dist_actions
 #>   pu       action cost status internal_pu internal_action action_area
-#> 1  1 conservation   10      0           1               1         100
-#> 2  2 conservation   10      0           2               1         100
-#> 3  3  restoration   10      0           3               2         100
-#> 4  4  restoration   10      0           4               2         100
+#> 1  1 conservation   10      0           1               1           1
+#> 2  2 conservation   10      0           2               1           1
+#> 3  3  restoration   10      0           3               2           1
+#> 4  4  restoration   10      0           4               2           1
 
 # Example 3: remove selected pairs after full expansion
 exclude_df <- data.frame(
@@ -363,14 +347,14 @@ p3 <- add_actions(
   cost = c(conservation = 3, restoration = 8)
 )
 
-p3$data$dist_actions
-#>   pu       action cost status internal_pu internal_action action_area
-#> 1  1 conservation    3      0           1               1         100
-#> 5  1  restoration    8      0           1               2         100
-#> 2  2 conservation    3      0           2               1         100
-#> 3  3 conservation    3      0           3               1         100
-#> 7  3  restoration    8      0           3               2         100
-#> 8  4  restoration    8      0           4               2         100
+utils::head(p3$data$dist_actions)
+#>    pu       action cost status internal_pu internal_action action_area
+#> 1   1 conservation    3      0           1               1           1
+#> 65  1  restoration    8      0           1               2           1
+#> 2   2 conservation    3      0           2               1           1
+#> 3   3 conservation    3      0           3               1           1
+#> 67  3  restoration    8      0           3               2           1
+#> 68  4  restoration    8      0           4               2           1
 
 # Example 4: provide action-specific areas manually
 action_area <- data.frame(

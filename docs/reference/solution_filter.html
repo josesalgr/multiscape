@@ -169,60 +169,29 @@ the original problem.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span></span>
-<span class="r-in"><span>    <span class="fl">1.5</span>, <span class="fl">1.5</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      conservation <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>      restoration <span class="op">=</span> <span class="fl">2</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    effects <span class="op">=</span> <span class="va">effects</span>,</span></span>
-<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">effects</span>,</span></span>
+<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"delta"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span>, include_pu_cost <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      n <span class="op">=</span> <span class="fl">5</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span>,</span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu"><a href="set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -260,7 +229,7 @@ the original problem.</p>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Keep only optimal runs</span></span></span>
-<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="st">"optimal"</span> <span class="op"><a href="https://rspatial.github.io/terra/reference/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">runs</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="st">"optimal"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">runs</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>    <span class="va">optimal_solutions</span> <span class="op">&lt;-</span> <span class="fu">solution_filter</span><span class="op">(</span></span></span>
 <span class="r-in"><span>      <span class="va">solutions</span>,</span></span>
 <span class="r-in"><span>      status <span class="op">=</span> <span class="st">"optimal"</span></span></span>

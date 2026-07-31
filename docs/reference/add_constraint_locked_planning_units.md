@@ -127,30 +127,19 @@ is raised.
 ## Examples
 
 ``` r
-pu <- data.frame(
-  id = 1:5,
-  cost = c(2, 3, 1, 4, 2),
-  lock_col = c(TRUE, FALSE, FALSE, TRUE, FALSE),
-  out_col = c(FALSE, FALSE, FALSE, FALSE, TRUE)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
-features <- data.frame(
-  id = 1:2,
-  name = c("sp1", "sp2")
-)
-
-dist_features <- data.frame(
-  pu = c(1, 1, 2, 3, 4, 4),
-  feature = c(1, 2, 1, 2, 1, 2),
-  amount = c(1, 2, 1, 3, 2, 1)
-)
+pu <- example_data$planning_units
+pu$lock_col <- pu$id %in% c(1, 4)
+pu$out_col <- pu$id == 5
 
 p <- create_problem(
   pu = pu,
-  features = features,
-  dist_features = dist_features
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
 )
-#> Warning: The following pu's do not contain features: 5
 
 # 1) Lock by planning-unit ids
 p1 <- add_constraint_locked_planning_units(
@@ -160,12 +149,71 @@ p1 <- add_constraint_locked_planning_units(
 )
 
 p1$data$pu[, c("id", "locked_in", "locked_out")]
-#>   id locked_in locked_out
-#> 1  1      TRUE      FALSE
-#> 2  2     FALSE      FALSE
-#> 3  3      TRUE      FALSE
-#> 4  4     FALSE      FALSE
-#> 5  5     FALSE       TRUE
+#>    id locked_in locked_out
+#> 1   1      TRUE      FALSE
+#> 2   2     FALSE      FALSE
+#> 3   3      TRUE      FALSE
+#> 4   4     FALSE      FALSE
+#> 5   5     FALSE       TRUE
+#> 6   6     FALSE      FALSE
+#> 7   7     FALSE      FALSE
+#> 8   8     FALSE      FALSE
+#> 9   9     FALSE      FALSE
+#> 10 10     FALSE      FALSE
+#> 11 11     FALSE      FALSE
+#> 12 12     FALSE      FALSE
+#> 13 13     FALSE      FALSE
+#> 14 14     FALSE      FALSE
+#> 15 15     FALSE      FALSE
+#> 16 16     FALSE      FALSE
+#> 17 17     FALSE      FALSE
+#> 18 18     FALSE      FALSE
+#> 19 19     FALSE      FALSE
+#> 20 20     FALSE      FALSE
+#> 21 21     FALSE      FALSE
+#> 22 22     FALSE      FALSE
+#> 23 23     FALSE      FALSE
+#> 24 24     FALSE      FALSE
+#> 25 25     FALSE      FALSE
+#> 26 26     FALSE      FALSE
+#> 27 27     FALSE      FALSE
+#> 28 28     FALSE      FALSE
+#> 29 29     FALSE      FALSE
+#> 30 30     FALSE      FALSE
+#> 31 31     FALSE      FALSE
+#> 32 32     FALSE      FALSE
+#> 33 33     FALSE      FALSE
+#> 34 34     FALSE      FALSE
+#> 35 35     FALSE      FALSE
+#> 36 36     FALSE      FALSE
+#> 37 37     FALSE      FALSE
+#> 38 38     FALSE      FALSE
+#> 39 39     FALSE      FALSE
+#> 40 40     FALSE      FALSE
+#> 41 41     FALSE      FALSE
+#> 42 42     FALSE      FALSE
+#> 43 43     FALSE      FALSE
+#> 44 44     FALSE      FALSE
+#> 45 45     FALSE      FALSE
+#> 46 46     FALSE      FALSE
+#> 47 47     FALSE      FALSE
+#> 48 48     FALSE      FALSE
+#> 49 49     FALSE      FALSE
+#> 50 50     FALSE      FALSE
+#> 51 51     FALSE      FALSE
+#> 52 52     FALSE      FALSE
+#> 53 53     FALSE      FALSE
+#> 54 54     FALSE      FALSE
+#> 55 55     FALSE      FALSE
+#> 56 56     FALSE      FALSE
+#> 57 57     FALSE      FALSE
+#> 58 58     FALSE      FALSE
+#> 59 59     FALSE      FALSE
+#> 60 60     FALSE      FALSE
+#> 61 61     FALSE      FALSE
+#> 62 62     FALSE      FALSE
+#> 63 63     FALSE      FALSE
+#> 64 64     FALSE      FALSE
 
 # 2) Read lock information from raw planning-unit data columns
 p2 <- add_constraint_locked_planning_units(
@@ -175,25 +223,143 @@ p2 <- add_constraint_locked_planning_units(
 )
 
 p2$data$pu[, c("id", "locked_in", "locked_out")]
-#>   id locked_in locked_out
-#> 1  1      TRUE      FALSE
-#> 2  2     FALSE      FALSE
-#> 3  3     FALSE      FALSE
-#> 4  4      TRUE      FALSE
-#> 5  5     FALSE       TRUE
+#>    id locked_in locked_out
+#> 1   1      TRUE      FALSE
+#> 2   2     FALSE      FALSE
+#> 3   3     FALSE      FALSE
+#> 4   4      TRUE      FALSE
+#> 5   5     FALSE       TRUE
+#> 6   6     FALSE      FALSE
+#> 7   7     FALSE      FALSE
+#> 8   8     FALSE      FALSE
+#> 9   9     FALSE      FALSE
+#> 10 10     FALSE      FALSE
+#> 11 11     FALSE      FALSE
+#> 12 12     FALSE      FALSE
+#> 13 13     FALSE      FALSE
+#> 14 14     FALSE      FALSE
+#> 15 15     FALSE      FALSE
+#> 16 16     FALSE      FALSE
+#> 17 17     FALSE      FALSE
+#> 18 18     FALSE      FALSE
+#> 19 19     FALSE      FALSE
+#> 20 20     FALSE      FALSE
+#> 21 21     FALSE      FALSE
+#> 22 22     FALSE      FALSE
+#> 23 23     FALSE      FALSE
+#> 24 24     FALSE      FALSE
+#> 25 25     FALSE      FALSE
+#> 26 26     FALSE      FALSE
+#> 27 27     FALSE      FALSE
+#> 28 28     FALSE      FALSE
+#> 29 29     FALSE      FALSE
+#> 30 30     FALSE      FALSE
+#> 31 31     FALSE      FALSE
+#> 32 32     FALSE      FALSE
+#> 33 33     FALSE      FALSE
+#> 34 34     FALSE      FALSE
+#> 35 35     FALSE      FALSE
+#> 36 36     FALSE      FALSE
+#> 37 37     FALSE      FALSE
+#> 38 38     FALSE      FALSE
+#> 39 39     FALSE      FALSE
+#> 40 40     FALSE      FALSE
+#> 41 41     FALSE      FALSE
+#> 42 42     FALSE      FALSE
+#> 43 43     FALSE      FALSE
+#> 44 44     FALSE      FALSE
+#> 45 45     FALSE      FALSE
+#> 46 46     FALSE      FALSE
+#> 47 47     FALSE      FALSE
+#> 48 48     FALSE      FALSE
+#> 49 49     FALSE      FALSE
+#> 50 50     FALSE      FALSE
+#> 51 51     FALSE      FALSE
+#> 52 52     FALSE      FALSE
+#> 53 53     FALSE      FALSE
+#> 54 54     FALSE      FALSE
+#> 55 55     FALSE      FALSE
+#> 56 56     FALSE      FALSE
+#> 57 57     FALSE      FALSE
+#> 58 58     FALSE      FALSE
+#> 59 59     FALSE      FALSE
+#> 60 60     FALSE      FALSE
+#> 61 61     FALSE      FALSE
+#> 62 62     FALSE      FALSE
+#> 63 63     FALSE      FALSE
+#> 64 64     FALSE      FALSE
 
 # 3) Use logical vectors
 p3 <- add_constraint_locked_planning_units(
   x = p,
-  locked_in = c(TRUE, FALSE, TRUE, FALSE, FALSE),
-  locked_out = c(FALSE, FALSE, FALSE, TRUE, FALSE)
+  locked_in = pu$id %in% c(1, 3),
+  locked_out = pu$id == 4
 )
 
 p3$data$pu[, c("id", "locked_in", "locked_out")]
-#>   id locked_in locked_out
-#> 1  1      TRUE      FALSE
-#> 2  2     FALSE      FALSE
-#> 3  3      TRUE      FALSE
-#> 4  4     FALSE       TRUE
-#> 5  5     FALSE      FALSE
+#>    id locked_in locked_out
+#> 1   1      TRUE      FALSE
+#> 2   2     FALSE      FALSE
+#> 3   3      TRUE      FALSE
+#> 4   4     FALSE       TRUE
+#> 5   5     FALSE      FALSE
+#> 6   6     FALSE      FALSE
+#> 7   7     FALSE      FALSE
+#> 8   8     FALSE      FALSE
+#> 9   9     FALSE      FALSE
+#> 10 10     FALSE      FALSE
+#> 11 11     FALSE      FALSE
+#> 12 12     FALSE      FALSE
+#> 13 13     FALSE      FALSE
+#> 14 14     FALSE      FALSE
+#> 15 15     FALSE      FALSE
+#> 16 16     FALSE      FALSE
+#> 17 17     FALSE      FALSE
+#> 18 18     FALSE      FALSE
+#> 19 19     FALSE      FALSE
+#> 20 20     FALSE      FALSE
+#> 21 21     FALSE      FALSE
+#> 22 22     FALSE      FALSE
+#> 23 23     FALSE      FALSE
+#> 24 24     FALSE      FALSE
+#> 25 25     FALSE      FALSE
+#> 26 26     FALSE      FALSE
+#> 27 27     FALSE      FALSE
+#> 28 28     FALSE      FALSE
+#> 29 29     FALSE      FALSE
+#> 30 30     FALSE      FALSE
+#> 31 31     FALSE      FALSE
+#> 32 32     FALSE      FALSE
+#> 33 33     FALSE      FALSE
+#> 34 34     FALSE      FALSE
+#> 35 35     FALSE      FALSE
+#> 36 36     FALSE      FALSE
+#> 37 37     FALSE      FALSE
+#> 38 38     FALSE      FALSE
+#> 39 39     FALSE      FALSE
+#> 40 40     FALSE      FALSE
+#> 41 41     FALSE      FALSE
+#> 42 42     FALSE      FALSE
+#> 43 43     FALSE      FALSE
+#> 44 44     FALSE      FALSE
+#> 45 45     FALSE      FALSE
+#> 46 46     FALSE      FALSE
+#> 47 47     FALSE      FALSE
+#> 48 48     FALSE      FALSE
+#> 49 49     FALSE      FALSE
+#> 50 50     FALSE      FALSE
+#> 51 51     FALSE      FALSE
+#> 52 52     FALSE      FALSE
+#> 53 53     FALSE      FALSE
+#> 54 54     FALSE      FALSE
+#> 55 55     FALSE      FALSE
+#> 56 56     FALSE      FALSE
+#> 57 57     FALSE      FALSE
+#> 58 58     FALSE      FALSE
+#> 59 59     FALSE      FALSE
+#> 60 60     FALSE      FALSE
+#> 61 61     FALSE      FALSE
+#> 62 62     FALSE      FALSE
+#> 63 63     FALSE      FALSE
+#> 64 64     FALSE      FALSE
 ```

@@ -102,23 +102,14 @@ If a relation with the same `name` already exists, it is replaced.
 ## Examples
 
 ``` r
-pu <- data.frame(id = 1:3, cost = c(1, 2, 3))
-
-features <- data.frame(
-  id = 1,
-  name = "sp1"
-)
-
-dist_features <- data.frame(
-  pu = 1:3,
-  feature = 1,
-  amount = c(1, 1, 1)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
 )
 
 rel <- data.frame(

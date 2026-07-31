@@ -152,26 +152,13 @@
 #' \code{\link{set_solver_symphony}}
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' x <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
@@ -491,26 +478,13 @@ set_solver <- function(
 #' \code{\link{solve}}
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' x <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
@@ -562,26 +536,13 @@ set_solver_gurobi <- function(x, ..., solver_params = list(), gap_limit = NULL, 
 #' \code{\link{solve}}
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' x <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
@@ -629,26 +590,13 @@ set_solver_cbc <- function(x, ..., solver_params = list(), gap_limit = NULL, tim
 #' \code{\link{solve}}
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' x <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
@@ -699,26 +647,13 @@ set_solver_cplex <- function(x, ..., solver_params = list(), gap_limit = NULL, t
 #' \code{\link{solve}}
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' x <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'

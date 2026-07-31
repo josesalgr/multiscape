@@ -165,59 +165,29 @@ must be supplied explicitly.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RunGrid"   "RunDesign"</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Use the automatic grid in a weighted-sum workflow</span></span></span>
-<span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  multiplier <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span></span>
-<span class="r-in"><span>    <span class="fl">1.5</span>, <span class="fl">1.5</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Use the automatic grid with a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>      conservation <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>      restoration <span class="op">=</span> <span class="fl">2</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    effects <span class="op">=</span> <span class="va">effects</span>,</span></span>
-<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">effects</span>,</span></span>
+<span class="r-in"><span>    effect_type <span class="op">=</span> <span class="st">"delta"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span>, include_pu_cost <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    runs <span class="op">=</span> <span class="fu">set_runs_grid</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    runs <span class="op">=</span> <span class="va">grid</span>,</span></span>
 <span class="r-in"><span>    normalize_weights <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -236,12 +206,12 @@ must be supplied explicitly.</p>
 <span class="r-in"><span>    format <span class="op">=</span> <span class="st">"wide"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id cost benefit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1    2     0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           2    3     3.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           3    3     3.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           4   12     7.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5           5   18     7.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   solution_id   cost    benefit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1   2.10  0.7616224</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           2   2.20  1.3122773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           3   2.73  2.2973781</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           4  42.11 24.7340291</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           5 101.28 29.7962175</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

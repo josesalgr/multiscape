@@ -260,7 +260,7 @@ and
 
   Return a short one-line representation of the solution set.
 
-- [`getMethod()`](https://rdrr.io/r/methods/getMethod.html):
+- `getMethod()`:
 
   Return the method specification stored in `self$method`.
 

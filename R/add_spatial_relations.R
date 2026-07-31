@@ -150,23 +150,14 @@ NULL
 #'   \code{x$data$spatial_relations[[name]]}.
 #'
 #' @examples
-#' pu <- data.frame(id = 1:3, cost = c(1, 2, 3))
-#'
-#' features <- data.frame(
-#'   id = 1,
-#'   name = "sp1"
-#' )
-#'
-#' dist_features <- data.frame(
-#'   pu = 1:3,
-#'   feature = 1,
-#'   amount = c(1, 1, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu,
-#'   features = features,
-#'   dist_features = dist_features
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
+#'   cost = "cost"
 #' )
 #'
 #' rel <- data.frame(
@@ -427,38 +418,18 @@ add_spatial_relations <- function(x,
 #'   \code{x$data$spatial_relations[[name]]}.
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
-#'
-#' bound_df <- data.frame(
-#'   id1 = c(1, 1, 2, 1, 2, 3, 4),
-#'   id2 = c(1, 2, 2, 3, 4, 4, 4),
-#'   boundary = c(4, 1, 4, 1, 1, 1, 4)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
 #' p <- add_spatial_boundary(
 #'   x = p,
-#'   boundary = bound_df,
 #'   name = "boundary",
 #'   include_self = TRUE,
 #'   edge_factor = 1
@@ -795,20 +766,19 @@ add_spatial_boundary <- function(x,
 #'
 #' @examples
 #' \donttest{
-#' library(terra)
-#'
-#' data("sim_pu_sf", package = "multiscape")
-#' sim_features <- load_sim_features_raster()
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = sim_pu_sf,
-#'   features = sim_features,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
 #' p <- add_spatial_rook(
 #'   x = p,
-#'   geometry = sim_pu_sf,
+#'   geometry = example_data$planning_units,
 #'   name = "rook",
 #'   weight = 1
 #' )
@@ -903,20 +873,19 @@ add_spatial_rook <- function(x,
 #'
 #' @examples
 #' \donttest{
-#' library(terra)
-#'
-#' data("sim_pu_sf", package = "multiscape")
-#' sim_features <- load_sim_features_raster()
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = sim_pu_sf,
-#'   features = sim_features,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
 #' p <- add_spatial_queen(
 #'   x = p,
-#'   geometry = sim_pu_sf,
+#'   geometry = example_data$planning_units,
 #'   name = "queen",
 #'   weight = 1
 #' )
@@ -1033,28 +1002,13 @@ add_spatial_queen <- function(x,
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4),
-#'   x = c(0, 1, 0, 1),
-#'   y = c(0, 0, 1, 1)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'
@@ -1185,28 +1139,13 @@ add_spatial_knn <- function(x,
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' pu_tbl <- data.frame(
-#'   id = 1:4,
-#'   cost = c(1, 2, 3, 4),
-#'   x = c(0, 1, 0, 1),
-#'   y = c(0, 0, 1, 1)
-#' )
-#'
-#' feat_tbl <- data.frame(
-#'   id = 1:2,
-#'   name = c("feature_1", "feature_2")
-#' )
-#'
-#' dist_feat_tbl <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4),
-#'   feature = c(1, 2, 2, 1, 2),
-#'   amount = c(5, 2, 3, 4, 1)
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu_tbl,
-#'   features = feat_tbl,
-#'   dist_features = dist_feat_tbl,
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
 #'   cost = "cost"
 #' )
 #'

@@ -277,34 +277,31 @@ NULL
 #'   requireNamespace("ggplot2", quietly = TRUE) &&
 #'   requireNamespace("rcbc", quietly = TRUE)
 #' ) {
-#'   data("sim_pu_sf", package = "multiscape")
-#'
-#'   pu <- sim_pu_sf[
-#'     seq_len(min(4L, nrow(sim_pu_sf))),
-#'   ]
-#'
-#'   pu$id <- seq_len(nrow(pu))
-#'   pu$cost <- seq_len(nrow(pu))
-#'
-#'   features <- data.frame(
-#'     id = 1L,
-#'     name = "feature_1"
-#'   )
-#'
-#'   dist_features <- data.frame(
-#'     pu = pu$id,
-#'     feature = 1L,
-#'     amount = rep(1, nrow(pu))
-#'   )
+#'   # Load a complete simulated planning problem.
+#'   example_data <- load_sim_multiaction()
 #'
 #'   problem <- create_problem(
-#'     pu = pu,
-#'     features = features,
-#'     dist_features = dist_features,
+#'     pu = example_data$planning_units,
+#'     features = example_data$features,
+#'     dist_features = example_data$dist_features,
 #'     cost = "cost"
 #'   ) |>
-#'     add_constraint_targets_relative(0.25) |>
-#'     add_objective_min_cost(alias = "cost") |>
+#'     add_actions(
+#'       example_data$actions,
+#'       cost = example_data$action_costs
+#'     ) |>
+#'     add_effects(
+#'       example_data$effects,
+#'       effect_type = "delta"
+#'     ) |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+#'     add_objective_max_benefit(alias = "benefit") |>
+#'     set_method_weighted_sum(
+#'       aliases = c("cost", "benefit"),
+#'       runs = set_runs_grid(n = 3),
+#'       normalize_weights = TRUE
+#'     ) |>
 #'     set_solver_cbc(verbose = FALSE)
 #'
 #'   solutions <- solve(problem)
@@ -445,34 +442,31 @@ plot_spatial <- function(
 #'   requireNamespace("ggplot2", quietly = TRUE) &&
 #'   requireNamespace("rcbc", quietly = TRUE)
 #' ) {
-#'   data("sim_pu_sf", package = "multiscape")
-#'
-#'   pu <- sim_pu_sf[
-#'     seq_len(min(4L, nrow(sim_pu_sf))),
-#'   ]
-#'
-#'   pu$id <- seq_len(nrow(pu))
-#'   pu$cost <- seq_len(nrow(pu))
-#'
-#'   features <- data.frame(
-#'     id = 1L,
-#'     name = "feature_1"
-#'   )
-#'
-#'   dist_features <- data.frame(
-#'     pu = pu$id,
-#'     feature = 1L,
-#'     amount = rep(1, nrow(pu))
-#'   )
+#'   # Load a complete simulated planning problem.
+#'   example_data <- load_sim_multiaction()
 #'
 #'   problem <- create_problem(
-#'     pu = pu,
-#'     features = features,
-#'     dist_features = dist_features,
+#'     pu = example_data$planning_units,
+#'     features = example_data$features,
+#'     dist_features = example_data$dist_features,
 #'     cost = "cost"
 #'   ) |>
-#'     add_constraint_targets_relative(0.25) |>
-#'     add_objective_min_cost(alias = "cost") |>
+#'     add_actions(
+#'       example_data$actions,
+#'       cost = example_data$action_costs
+#'     ) |>
+#'     add_effects(
+#'       example_data$effects,
+#'       effect_type = "delta"
+#'     ) |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+#'     add_objective_max_benefit(alias = "benefit") |>
+#'     set_method_weighted_sum(
+#'       aliases = c("cost", "benefit"),
+#'       runs = set_runs_grid(n = 3),
+#'       normalize_weights = TRUE
+#'     ) |>
 #'     set_solver_cbc(verbose = FALSE)
 #'
 #'   solutions <- solve(problem)
@@ -691,55 +685,31 @@ plot_spatial_pu <- function(
 #'   requireNamespace("ggplot2", quietly = TRUE) &&
 #'   requireNamespace("rcbc", quietly = TRUE)
 #' ) {
-#'   data("sim_pu_sf", package = "multiscape")
-#'
-#'   pu <- sim_pu_sf[
-#'     seq_len(min(4L, nrow(sim_pu_sf))),
-#'   ]
-#'
-#'   pu$id <- seq_len(nrow(pu))
-#'   pu$cost <- seq_len(nrow(pu))
-#'
-#'   features <- data.frame(
-#'     id = 1L,
-#'     name = "feature_1"
-#'   )
-#'
-#'   dist_features <- data.frame(
-#'     pu = pu$id,
-#'     feature = 1L,
-#'     amount = rep(1, nrow(pu))
-#'   )
-#'
-#'   actions <- data.frame(
-#'     id = c("conservation", "restoration")
-#'   )
-#'
-#'   effects <- data.frame(
-#'     action = actions$id,
-#'     feature = 1L,
-#'     multiplier = c(1.0, 1.5)
-#'   )
+#'   # Load a complete simulated planning problem.
+#'   example_data <- load_sim_multiaction()
 #'
 #'   problem <- create_problem(
-#'     pu = pu,
-#'     features = features,
-#'     dist_features = dist_features,
+#'     pu = example_data$planning_units,
+#'     features = example_data$features,
+#'     dist_features = example_data$dist_features,
 #'     cost = "cost"
 #'   ) |>
 #'     add_actions(
-#'       actions = actions,
-#'       cost = c(
-#'         conservation = 1,
-#'         restoration = 2
-#'       )
+#'       example_data$actions,
+#'       cost = example_data$action_costs
 #'     ) |>
 #'     add_effects(
-#'       effects = effects,
-#'       effect_type = "after"
+#'       example_data$effects,
+#'       effect_type = "delta"
 #'     ) |>
-#'     add_constraint_targets_relative(0.25) |>
-#'     add_objective_min_cost(alias = "cost") |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+#'     add_objective_max_benefit(alias = "benefit") |>
+#'     set_method_weighted_sum(
+#'       aliases = c("cost", "benefit"),
+#'       runs = set_runs_grid(n = 3),
+#'       normalize_weights = TRUE
+#'     ) |>
 #'     set_solver_cbc(verbose = FALSE)
 #'
 #'   solutions <- solve(problem)
@@ -1070,70 +1040,38 @@ plot_spatial_actions <- function(
 #'   requireNamespace("ggplot2", quietly = TRUE) &&
 #'   requireNamespace("rcbc", quietly = TRUE)
 #' ) {
-#'   data("sim_pu_sf", package = "multiscape")
-#'
-#'   pu <- sim_pu_sf[
-#'     seq_len(min(4L, nrow(sim_pu_sf))),
-#'   ]
-#'
-#'   pu$id <- seq_len(nrow(pu))
-#'   pu$cost <- seq_len(nrow(pu))
-#'
-#'   features <- data.frame(
-#'     id = 1:2,
-#'     name = c("feature_1", "feature_2")
-#'   )
-#'
-#'   dist_features <- data.frame(
-#'     pu = rep(pu$id, each = 2),
-#'     feature = rep(features$id, times = nrow(pu)),
-#'     amount = c(
-#'       4, 1,
-#'       3, 2,
-#'       2, 3,
-#'       1, 4
-#'     )
-#'   )
-#'
-#'   actions <- data.frame(
-#'     id = c("conservation", "restoration")
-#'   )
-#'
-#'   effects <- data.frame(
-#'     action = rep(actions$id, each = 2),
-#'     feature = rep(features$id, times = 2),
-#'     multiplier = c(
-#'       1.0, 1.0,
-#'       1.5, 1.5
-#'     )
-#'   )
+#'   # Load a complete simulated planning problem.
+#'   example_data <- load_sim_multiaction()
 #'
 #'   problem <- create_problem(
-#'     pu = pu,
-#'     features = features,
-#'     dist_features = dist_features,
+#'     pu = example_data$planning_units,
+#'     features = example_data$features,
+#'     dist_features = example_data$dist_features,
 #'     cost = "cost"
 #'   ) |>
 #'     add_actions(
-#'       actions = actions,
-#'       cost = c(
-#'         conservation = 1,
-#'         restoration = 2
-#'       )
+#'       example_data$actions,
+#'       cost = example_data$action_costs
 #'     ) |>
 #'     add_effects(
-#'       effects = effects,
-#'       effect_type = "after"
+#'       example_data$effects,
+#'       effect_type = "delta"
 #'     ) |>
-#'     add_constraint_targets_relative(0.25) |>
-#'     add_objective_min_cost(alias = "cost") |>
+#'     add_constraint_targets_relative(0.05) |>
+#'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+#'     add_objective_max_benefit(alias = "benefit") |>
+#'     set_method_weighted_sum(
+#'       aliases = c("cost", "benefit"),
+#'       runs = set_runs_grid(n = 3),
+#'       normalize_weights = TRUE
+#'     ) |>
 #'     set_solver_cbc(verbose = FALSE)
 #'
 #'   solutions <- solve(problem)
 #'
 #'   plot_spatial_features(
 #'     solutions,
-#'     features = "feature_1",
+#'     features = 1,
 #'     value = "final"
 #'   )
 #' }
@@ -1441,60 +1379,29 @@ plot_spatial_features <- function(
 #'   requireNamespace("ggplot2", quietly = TRUE) &&
 #'   requireNamespace("rcbc", quietly = TRUE)
 #' ) {
-#'   pu <- data.frame(
-#'     id = 1:4,
-#'     cost = c(1, 2, 3, 4)
-#'   )
-#'
-#'   features <- data.frame(
-#'     id = 1:2,
-#'     name = c("sp1", "sp2")
-#'   )
-#'
-#'   dist_features <- data.frame(
-#'     pu = c(1, 1, 2, 3, 4),
-#'     feature = c(1, 2, 2, 1, 2),
-#'     amount = c(5, 2, 3, 4, 1)
-#'   )
-#'
-#'   actions <- data.frame(
-#'     id = c("conservation", "restoration")
-#'   )
-#'
-#'   effects <- data.frame(
-#'     action = rep(actions$id, each = 2),
-#'     feature = rep(features$id, times = 2),
-#'     multiplier = c(
-#'       1.0, 1.0,
-#'       1.5, 1.5
-#'     )
-#'   )
+#'   # Load a complete simulated planning problem.
+#'   example_data <- load_sim_multiaction()
 #'
 #'   problem <- create_problem(
-#'     pu = pu,
-#'     features = features,
-#'     dist_features = dist_features,
+#'     pu = example_data$planning_units,
+#'     features = example_data$features,
+#'     dist_features = example_data$dist_features,
 #'     cost = "cost"
 #'   ) |>
 #'     add_actions(
-#'       actions = actions,
-#'       cost = c(
-#'         conservation = 1,
-#'         restoration = 2
-#'       )
+#'       example_data$actions,
+#'       cost = example_data$action_costs
 #'     ) |>
 #'     add_effects(
-#'       effects = effects,
-#'       effect_type = "after"
+#'       example_data$effects,
+#'       effect_type = "delta"
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
-#'     add_objective_min_cost(alias = "cost") |>
+#'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
 #'     add_objective_max_benefit(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
-#'       runs = set_runs_grid(
-#'         n = 3
-#'       ),
+#'       runs = set_runs_grid(n = 3),
 #'       normalize_weights = TRUE
 #'     ) |>
 #'     set_solver_cbc(verbose = FALSE)

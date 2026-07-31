@@ -108,44 +108,22 @@ instead.
 ## Examples
 
 ``` r
-pu_tbl <- data.frame(
-  id = 1:4,
-  cost = c(1, 2, 3, 4)
-)
-
-feat_tbl <- data.frame(
-  id = 1:2,
-  name = c("feature_1", "feature_2")
-)
-
-dist_feat_tbl <- data.frame(
-  pu = c(1, 1, 2, 3, 4),
-  feature = c(1, 2, 2, 1, 2),
-  amount = c(5, 2, 3, 4, 1)
-)
-
-actions_df <- data.frame(
-  id = c("conservation", "restoration"),
-  name = c("conservation", "restoration")
-)
-
-bound_df <- data.frame(
-  id1 = c(1, 1, 2, 1, 2, 3, 4),
-  id2 = c(1, 2, 2, 3, 4, 4, 4),
-  boundary = c(4, 1, 4, 1, 1, 1, 4)
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = pu_tbl,
-  features = feat_tbl,
-  dist_features = dist_feat_tbl,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 ) |>
-  add_actions(actions_df, cost = c(conservation = 1, restoration = 2))
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  )
 
 p <- add_spatial_boundary(
   x = p,
-  boundary = bound_df,
   name = "boundary",
   include_self = TRUE,
   edge_factor = 1

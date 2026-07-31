@@ -63,31 +63,30 @@ The resulting relation is stored as an undirected spatial relation.
 
 ``` r
 # \donttest{
-library(terra)
-
-data("sim_pu_sf", package = "multiscape")
-sim_features <- load_sim_features_raster()
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = sim_pu_sf,
-  features = sim_features,
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
   cost = "cost"
 )
 
 p <- add_spatial_rook(
   x = p,
-  geometry = sim_pu_sf,
+  geometry = example_data$planning_units,
   name = "rook",
   weight = 1
 )
 
 head(p$data$spatial_relations$rook)
-#>       internal_pu1 internal_pu2 weight   pu1   pu2  source relation_name
-#> 54596        10000        10001      1 10000 10001 rook_sf          rook
-#> 54597        10000        10132      1 10000 10132 rook_sf          rook
-#> 54598        10000        10133      1 10000 10133 rook_sf          rook
-#> 54602        10001        10002      1 10001 10002 rook_sf          rook
-#> 54603        10001        10133      1 10001 10133 rook_sf          rook
-#> 54604        10001        10134      1 10001 10134 rook_sf          rook
+#>    internal_pu1 internal_pu2 weight pu1 pu2  source relation_name
+#> 28           10           11      1  10  11 rook_sf          rook
+#> 29           10           18      1  10  18 rook_sf          rook
+#> 32           11           12      1  11  12 rook_sf          rook
+#> 33           11           19      1  11  19 rook_sf          rook
+#> 36           12           13      1  12  13 rook_sf          rook
+#> 37           12           20      1  12  20 rook_sf          rook
 # }
 ```

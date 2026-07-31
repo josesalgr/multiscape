@@ -14,7 +14,8 @@ A named list containing:
 \item{\code{dist_features}}{Feature amounts by planning unit.}
 \item{\code{actions}}{The action catalogue.}
 \item{\code{action_costs}}{Action costs by planning unit and action.}
-\item{\code{effects}}{Action effects by action and feature.}
+\item{\code{effect_assumptions}}{Relative-change assumptions by action and feature.}
+\item{\code{effects}}{Explicit signed changes by planning unit, action, and feature.}
 }
 }
 \description{
@@ -23,8 +24,9 @@ planning. The landscape contains 64 square planning units, two spatially
 structured features, and two mutually exclusive candidate actions.
 }
 \examples{
-toy <- load_sim_multiaction()
-names(toy)
-toy$planning_units
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
+names(example_data)
+utils::head(example_data$planning_units)
 
 }

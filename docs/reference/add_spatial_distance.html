@@ -144,28 +144,13 @@ problems, <code><a href="add_spatial_knn.html">add_spatial_knn</a></code> is oft
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pu_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">feat_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"feature_1"</span>, <span class="st">"feature_2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_feat_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu_tbl</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">feat_tbl</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_feat_tbl</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
 <span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -177,16 +162,232 @@ problems, <code><a href="add_spatial_knn.html">add_spatial_knn</a></code> is oft
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">spatial_relations</span><span class="op">$</span><span class="va">within_1</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   internal_pu1 internal_pu2 weight pu1 pu2 distance            source</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            1            2      1   2   1        1 distance_constant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            1            3      1   3   1        1 distance_constant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            2            4      1   4   2        1 distance_constant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            3            4      1   4   3        1 distance_constant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   relation_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      within_1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      within_1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      within_1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     internal_pu1 internal_pu2 weight pu1 pu2 distance            source</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28            10           11      1  11  10        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29            10           18      1  18  10        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32            11           12      1  12  11        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33            11           19      1  19  11        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36            12           13      1  13  12        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37            12           20      1  20  12        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40            13           14      1  14  13        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41            13           21      1  21  13        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44            14           15      1  15  14        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45            14           22      1  22  14        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48            15           16      1  16  15        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49            15           23      1  23  15        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52            16           24      1  24  16        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54            17           18      1  18  17        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55            17           25      1  25  17        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58            18           19      1  19  18        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59            18           26      1  26  18        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62            19           20      1  20  19        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63            19           27      1  27  19        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              1            2      1   2   1        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              1            9      1   9   1        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66            20           21      1  21  20        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67            20           28      1  28  20        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70            21           22      1  22  21        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71            21           29      1  29  21        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74            22           23      1  23  22        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75            22           30      1  30  22        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78            23           24      1  24  23        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79            23           31      1  31  23        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82            24           32      1  32  24        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84            25           26      1  26  25        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85            25           33      1  33  25        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88            26           27      1  27  26        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89            26           34      1  34  26        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92            27           28      1  28  27        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93            27           35      1  35  27        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96            28           29      1  29  28        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97            28           36      1  36  28        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100           29           30      1  30  29        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101           29           37      1  37  29        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              2           10      1  10   2        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              2            3      1   3   2        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104           30           31      1  31  30        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105           30           38      1  38  30        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108           31           32      1  32  31        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109           31           39      1  39  31        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112           32           40      1  40  32        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114           33           34      1  34  33        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115           33           41      1  41  33        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118           34           35      1  35  34        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119           34           42      1  42  34        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122           35           36      1  36  35        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123           35           43      1  43  35        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126           36           37      1  37  36        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127           36           44      1  44  36        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130           37           38      1  38  37        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131           37           45      1  45  37        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134           38           39      1  39  38        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135           38           46      1  46  38        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138           39           40      1  40  39        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139           39           47      1  47  39        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8              3           11      1  11   3        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              3            4      1   4   3        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142           40           48      1  48  40        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144           41           42      1  42  41        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145           41           49      1  49  41        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148           42           43      1  43  42        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149           42           50      1  50  42        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152           43           44      1  44  43        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153           43           51      1  51  43        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156           44           45      1  45  44        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157           44           52      1  52  44        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160           45           46      1  46  45        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161           45           53      1  53  45        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164           46           47      1  47  46        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165           46           54      1  54  46        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168           47           48      1  48  47        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169           47           55      1  55  47        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172           48           56      1  56  48        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174           49           50      1  50  49        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175           49           57      1  57  49        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11             4           12      1  12   4        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10             4            5      1   5   4        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 178           50           51      1  51  50        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 179           50           58      1  58  50        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 182           51           52      1  52  51        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 183           51           59      1  59  51        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 186           52           53      1  53  52        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 187           52           60      1  60  52        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 190           53           54      1  54  53        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 191           53           61      1  61  53        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194           54           55      1  55  54        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195           54           62      1  62  54        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198           55           56      1  56  55        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 199           55           63      1  63  55        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 202           56           64      1  64  56        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 204           57           58      1  58  57        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 207           58           59      1  59  58        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 210           59           60      1  60  59        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14             5           13      1  13   5        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13             5            6      1   6   5        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 213           60           61      1  61  60        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 216           61           62      1  62  61        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 219           62           63      1  63  62        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 222           63           64      1  64  63        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17             6           14      1  14   6        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16             6            7      1   7   6        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20             7           15      1  15   7        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19             7            8      1   8   7        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22             8           16      1  16   8        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24             9           10      1  10   9        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25             9           17      1  17   9        1 distance_constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     relation_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 178      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 179      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 182      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 183      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 186      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 187      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 190      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 191      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 199      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 202      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 204      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 207      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 210      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 213      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 216      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 219      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 222      within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24       within_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25       within_1</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

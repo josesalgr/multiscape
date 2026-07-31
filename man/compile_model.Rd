@@ -49,13 +49,23 @@ otherwise fail during solver execution.
 }
 \examples{
 \dontrun{
-x <- create_problem(
-  pu = pu,
-  features = features,
-  dist_features = dist_features
-)
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
 
-x <- x |>
+x <- create_problem(
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+) |>
+  add_actions(
+    example_data$actions,
+    cost = example_data$action_costs
+  ) |>
+  add_effects(
+    example_data$effects,
+    effect_type = "delta"
+  ) |>
   add_constraint_targets_relative(0.3) |>
   add_objective_min_cost(alias = "cost")
 

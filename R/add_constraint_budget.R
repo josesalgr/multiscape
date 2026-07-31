@@ -139,37 +139,19 @@
 #' \code{\link{create_problem}}
 #'
 #' @examples
-#' pu <- data.frame(
-#'   id = 1:4,
-#'   cost = c(2, 3, 1, 4)
-#' )
-#'
-#' features <- data.frame(
-#'   id = 1:2,
-#'   name = c("sp1", "sp2")
-#' )
-#'
-#' dist_features <- data.frame(
-#'   pu = c(1, 1, 2, 3, 4, 4),
-#'   feature = c(1, 2, 1, 2, 1, 2),
-#'   amount = c(1, 2, 1, 3, 2, 1)
-#' )
-#'
-#' actions <- data.frame(
-#'   id = c("conservation", "restoration")
-#' )
+#' # Load a complete simulated planning problem.
+#' example_data <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = pu,
-#'   features = features,
-#'   dist_features = dist_features
-#' )
-#'
-#' p <- add_actions(
-#'   p,
-#'   actions = actions,
-#'   cost = c(conservation = 1, restoration = 2)
-#' )
+#'   pu = example_data$planning_units,
+#'   features = example_data$features,
+#'   dist_features = example_data$dist_features,
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(
+#'     example_data$actions,
+#'     cost = example_data$action_costs
+#'   )
 #'
 #' p <- add_constraint_budget(
 #'   x = p,
@@ -183,7 +165,7 @@
 #'   x = p,
 #'   budget = 4,
 #'   sense = "max",
-#'   actions = "restoration",
+#'   actions = "restore",
 #'   include_pu_cost = FALSE,
 #'   include_action_cost = TRUE
 #' )
@@ -192,7 +174,7 @@
 #'   x = p,
 #'   budget = 1,
 #'   sense = "min",
-#'   actions = "restoration",
+#'   actions = "restore",
 #'   include_pu_cost = FALSE,
 #'   include_action_cost = TRUE
 #' )

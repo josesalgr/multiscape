@@ -236,64 +236,43 @@ constraint sense. Attempting to add a duplicated
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  area_ha <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">8</span>, <span class="fl">20</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp1"</span>, <span class="st">"sp2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">dist_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  feature <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conservation"</span>, <span class="st">"restoration"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
+<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">pu</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">dist_features</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  actions <span class="op">=</span> <span class="va">actions</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>conservation <span class="op">=</span> <span class="fl">1</span>, restoration <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
+<span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Constrain the total selected planning-unit area.</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_area</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
 <span class="r-in"><span>  area <span class="op">=</span> <span class="fl">25</span>,</span></span>
 <span class="r-in"><span>  sense <span class="op">=</span> <span class="st">"min"</span>,</span></span>
-<span class="r-in"><span>  area_col <span class="op">=</span> <span class="st">"area_ha"</span>,</span></span>
 <span class="r-in"><span>  area_unit <span class="op">=</span> <span class="st">"ha"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Constrain the effective area allocated to restoration.</span></span></span>
-<span class="r-in"><span><span class="co"># Because add_actions() can derive full planning-unit areas here,</span></span></span>
-<span class="r-in"><span><span class="co"># restoration action areas default to the full area of each feasible PU.</span></span></span>
+<span class="r-in"><span><span class="co"># Constrain the effective area allocated to the restore action.</span></span></span>
+<span class="r-in"><span><span class="co"># Action areas are derived from the planning-unit geometries.</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_area</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  x <span class="op">=</span> <span class="va">p</span>,</span></span>
 <span class="r-in"><span>  area <span class="op">=</span> <span class="fl">15</span>,</span></span>
 <span class="r-in"><span>  sense <span class="op">=</span> <span class="st">"max"</span>,</span></span>
-<span class="r-in"><span>  area_col <span class="op">=</span> <span class="st">"area_ha"</span>,</span></span>
 <span class="r-in"><span>  area_unit <span class="op">=</span> <span class="st">"ha"</span>,</span></span>
-<span class="r-in"><span>  actions <span class="op">=</span> <span class="st">"restoration"</span></span></span>
+<span class="r-in"><span>  actions <span class="op">=</span> <span class="st">"restore"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">constraints</span><span class="op">$</span><span class="va">area</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   type sense value tolerance unit area_col     actions                 name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 area   min    25         0   ha  area_ha        &lt;NA&gt;             area_min</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 area   max    15         0   ha  area_ha restoration area_max_restoration</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   type sense value tolerance unit area_col actions             name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 area   min    25         0   ha     &lt;NA&gt;    &lt;NA&gt;         area_min</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 area   max    15         0   ha     &lt;NA&gt; restore area_max_restore</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
