@@ -1,0 +1,28 @@
+﻿Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 14 physical cores, 20 logical processors, using up to 2 threads
+
+Non-default parameters:
+TimeLimit  2147483647
+MIPGap  0
+NodefileStart  0.5
+LogToConsole  0
+Threads  2
+
+Optimize a model with 30736 rows, 12787 columns and 81271 nonzeros
+Model fingerprint: 0xf08b2aba
+Variable types: 7561 continuous, 5226 integer (5226 binary)
+...
+Solution count 10: 1.47127e+06 1.47127e+06 1.47128e+06 ... 1.47136e+06
+
+Optimal solution found (tolerance 0.00e+00)
+Best objective 1.471272000000e+06, best bound 1.471272000000e+06, gap 0.0000%
+Set parameter Username
+Set parameter LicenseID to value 2844238
+Set parameter TimeLimit to value 2147483647
+Set parameter MIPGap to value 0
+Set parameter NodefileStart to value 0.5
+Set parameter LogFile to value "output_log.txt"
+Set parameter Threads to value 2
+Academic license - for non-commercial use only - expires 2027-07-14

@@ -23,5 +23,8 @@ src/.*\.dll$
 src/.*\.gcda$
 src/.*\.gcno$
 tests/testthat/Rplots\.pdf$
+data-raw/rwanda/rwanda-reserve-inputs.rds
+data-raw/rwanda/rwanda-reserve-results.rds
+data-raw/rwanda/gurobi-full.log
 \.Rhistory$
 \.git$

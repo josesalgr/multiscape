@@ -161,7 +161,6 @@ reference:
       - starts_with("sim_")
       - load_sim_features_raster
       - load_sim_multiaction
-      - rwanda_reserve
 
   - title: Deprecated functions
     desc: Deprecated functions kept for backwards compatibility.

@@ -661,6 +661,7 @@ plot_spatial_pu <- function(
 #'   \code{"single"}.
 #' @param max_facets Maximum number of action facets shown when \code{actions}
 #'   is \code{NULL} and faceting would otherwise create many panels.
+#' @param nrow,ncol Optional numbers of rows and columns used to arrange facets.
 #' @param ... Reserved for future extensions.
 #' @param base_alpha Numeric value in \eqn{[0,1]} giving the alpha of the base
 #'   planning-unit layer.
@@ -732,6 +733,8 @@ plot_spatial_actions <- function(
     actions = NULL,
     layout = NULL,
     max_facets = 4L,
+    nrow = NULL,
+    ncol = NULL,
     ...,
     base_alpha = 0.08,
     selected_alpha = 0.95,
@@ -861,7 +864,7 @@ plot_spatial_actions <- function(
         color = selected_color,
         alpha = selected_alpha
       ) +
-      ggplot2::facet_wrap(~action) +
+      ggplot2::facet_wrap(~action, nrow = nrow, ncol = ncol) +
       ggplot2::labs(title = "Selected actions", fill = "") +
       ggplot2::coord_sf(datum = NA) +
       base_theme
@@ -938,6 +941,8 @@ plot_spatial_actions <- function(
     p <- p +
       ggplot2::facet_wrap(
         ~solution_id,
+        nrow = nrow,
+        ncol = ncol,
         labeller = ggplot2::labeller(solution_id = function(x) paste("Solution", x))
       ) +
       ggplot2::theme(

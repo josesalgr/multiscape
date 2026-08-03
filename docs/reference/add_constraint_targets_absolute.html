@@ -44,6 +44,7 @@ with different action subsets."><meta property="og:image" content="https://joses
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective method</a></li>
     <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -186,9 +187,9 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   feature    type sense target_unit target_raw basis_total target_value actions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          3          NA            3    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          3          NA            3    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-07-31 16:25:36.898205     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-07-31 16:25:36.898205     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   label                created_at feature_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-08-03 10:27:57.08775     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-08-03 10:27:57.08775     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Different targets by feature</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_absolute</span><span class="op">(</span></span></span>
@@ -200,8 +201,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          4          NA            4    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          2          NA            2    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-07-31 16:25:36.902474     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-07-31 16:25:36.902474     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-08-03 10:27:57.091629     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-08-03 10:27:57.091629     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Restrict which actions count toward target achievement</span></span></span>
 <span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_absolute</span><span class="op">(</span></span></span>
@@ -214,8 +215,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          2          NA            2 protect</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          2          NA            2 protect</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-07-31 16:25:36.906199     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-07-31 16:25:36.906199     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-08-03 10:27:57.095307     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-08-03 10:27:57.095307     riparian</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

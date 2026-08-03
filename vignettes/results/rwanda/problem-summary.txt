@@ -1,0 +1,34 @@
+A multiscape object (<Problem>)
+├─data
+│├─planning units: <data.frame> (2613 total)
+│├─costs: min: 3, max: 10000
+│└─features: 13 total ("Albertine Rift montane forests", "Banded mongoose",
+"Black rhinoceros", ...)
+└─actions and effects
+│├─actions: 1 total ("Reserve")
+│├─feasible action pairs: 2613 feasible rows
+│├─action costs: min: 0, max: 0
+│├─effect data: 15078 rows
+│├─effect mode: all zero
+│└─profit data: none
+└─spatial
+│├─geometry: sf (2613 rows)
+│├─coordinates: 2613 rows (x: 709263.1037..933932.07251, y:
+9687210.70178..9884930.00179)
+│└─relations: boundary (10174 edges, w: 0..4840.11063)
+└─targets and constraints
+│├─targets: 13 rows
+│├─target preview: "Albertine Rift montane forests" >= 3.246e+09, "Banded
+mongoose" >= 6.925e+09, "Black rhinoceros" >= 7.06e+09
+│├─area constraints: none
+│├─budget constraints: none
+│├─planning-unit locks: 201 units (201 locked-in, 0 locked-out)
+│└─action locks: none
+└─model
+│├─status: not built yet (will build in solve())
+│├─objectives: 2 registered (cost, fragmentation)
+│├─method: not set
+│├─solver: not set (auto)
+│└─checks: incomplete (multiple objectives registered but no MO method
+selected)
+# i Use `x$data` to inspect stored tables and model snapshots.

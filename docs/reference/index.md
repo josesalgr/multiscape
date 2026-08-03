@@ -220,8 +220,6 @@ Simulated datasets distributed with the package.
   : Example feature raster
 - [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
   : Load the simulated spatial multi-action example
-- [`rwanda_reserve`](https://josesalgr.github.io/multiscape/reference/rwanda_reserve.md)
-  : MaPP Rwanda reserve-planning example
 
 ## Deprecated functions
 

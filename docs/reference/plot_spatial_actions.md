@@ -19,6 +19,8 @@ plot_spatial_actions(
   actions = NULL,
   layout = NULL,
   max_facets = 4L,
+  nrow = NULL,
+  ncol = NULL,
   ...,
   base_alpha = 0.08,
   selected_alpha = 0.95,
@@ -61,6 +63,10 @@ plot_spatial_actions(
 
   Maximum number of action facets shown when `actions` is `NULL` and
   faceting would otherwise create many panels.
+
+- nrow, ncol:
+
+  Optional numbers of rows and columns used to arrange facets.
 
 - ...:
 

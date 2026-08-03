@@ -10,6 +10,8 @@ plot_spatial_actions(
   actions = NULL,
   layout = NULL,
   max_facets = 4L,
+  nrow = NULL,
+  ncol = NULL,
   ...,
   base_alpha = 0.08,
   selected_alpha = 0.95,
@@ -39,6 +41,8 @@ ids or action-set labels.}
 
 \item{max_facets}{Maximum number of action facets shown when \code{actions}
 is \code{NULL} and faceting would otherwise create many panels.}
+
+\item{nrow, ncol}{Optional numbers of rows and columns used to arrange facets.}
 
 \item{...}{Reserved for future extensions.}
 

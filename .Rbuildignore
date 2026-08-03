@@ -17,3 +17,5 @@ CRAN-RELEASE
 ^\.positai$
 ^\.claude$
 ^codecov\.yml$
+^data-raw/rwanda/rwanda-reserve-inputs\.rds$
+^data-raw/rwanda/rwanda-reserve-results\.rds$
