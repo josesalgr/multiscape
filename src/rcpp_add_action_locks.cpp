@@ -54,7 +54,9 @@ Rcpp::List rcpp_add_action_locks(SEXP x, Rcpp::DataFrame dist_actions_data) {
       Rcpp::stop("x column out of bounds: x_offset + (internal_row-1) exceeds number of variables.");
 
     if (st == 2) { // locked-in
-      op->addRow({col_x}, {1.0}, "==", 1.0, "action_lock_in");
+      // Lock-in requires a positive quantity, not exactly one allocated unit.
+      op->addRow({col_x}, {1.0}, op->_vtype[col_x] == "I" ? ">=" : "==",
+                 1.0, "action_lock_in");
       ++n_lock_in;
       ++n_added;
     } else {       // st == 3 locked-out

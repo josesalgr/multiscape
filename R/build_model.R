@@ -254,11 +254,18 @@
       "status" %in% names(dist_actions) &&
       any(dist_actions$status %in% c(1L, 2L), na.rm = TRUE)
 
+    has_required_quantity <- !is.null(dist_actions) &&
+      inherits(dist_actions, "data.frame") &&
+      all(c("decision_type", "lower", "status") %in% names(dist_actions)) &&
+      any(dist_actions$decision_type == "integer" & dist_actions$lower > 0 &
+            dist_actions$status != 3L, na.rm = TRUE)
+
     has_selection_requirement <- any(c(
       has_targets,
       has_selection_area,
       has_locked_in_pu,
-      has_locked_in_action
+      has_locked_in_action,
+      has_required_quantity
     ))
 
     if (!isTRUE(has_selection_requirement)) {

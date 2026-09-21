@@ -201,7 +201,7 @@ Rcpp::List rcpp_prepare_objective_min_intervention_impact(
       vals.push_back(1.0);
 
       cols.push_back(ui);
-      vals.push_back(-1.0);
+      vals.push_back(-op->_ub[xs[k]]);
 
       op->addRow(cols, vals, "<=", 0.0, block_name + "::x_le_u");
       ++n_link_rows;

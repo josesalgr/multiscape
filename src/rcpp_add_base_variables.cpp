@@ -1,5 +1,6 @@
 #include "Package.h"
 #include "OptimizationProblem.h"
+#include <cmath>
 
 // [[Rcpp::export]]
 Rcpp::List rcpp_add_base_variables(SEXP x,
@@ -65,11 +66,25 @@ Rcpp::List rcpp_add_base_variables(SEXP x,
   }
 
   // x
+  const bool quantities = dist_actions_data.containsElementNamed("decision_type");
+  Rcpp::CharacterVector types = quantities ?
+  Rcpp::as<Rcpp::CharacterVector>(dist_actions_data["decision_type"]) :
+    Rcpp::CharacterVector(n_x, "binary");
+  Rcpp::NumericVector lower = quantities ?
+  Rcpp::as<Rcpp::NumericVector>(dist_actions_data["lower"]) : Rcpp::NumericVector(n_x, 0.0);
+  Rcpp::NumericVector upper = quantities ?
+  Rcpp::as<Rcpp::NumericVector>(dist_actions_data["upper"]) : Rcpp::NumericVector(n_x, 1.0);
   for (int r = 0; r < n_x; ++r) {
+    const bool integer = Rcpp::as<std::string>(types[r]) == "integer";
+    if (!R_finite(lower[r]) || !R_finite(upper[r]) || lower[r] < 0 ||
+        lower[r] > upper[r] || lower[r] != std::floor(lower[r]) ||
+        upper[r] != std::floor(upper[r])) {
+      Rcpp::stop("Invalid action decision bounds.");
+    }
     op->_obj.push_back(0.0);
-    op->_vtype.push_back("B");
-    op->_lb.push_back(0.0);
-    op->_ub.push_back(1.0);
+    op->_vtype.push_back(integer ? "I" : "B");
+    op->_lb.push_back(lower[r]);
+    op->_ub.push_back(upper[r]);
   }
 
   // z

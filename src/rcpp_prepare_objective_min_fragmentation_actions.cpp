@@ -31,6 +31,12 @@ Rcpp::List rcpp_prepare_objective_min_fragmentation_actions(
 ) {
   Rcpp::XPtr<OptimizationProblem> op = Rcpp::as<Rcpp::XPtr<OptimizationProblem>>(x);
 
+  for (int r = 0; r < op->_n_x; ++r) {
+    if (op->_vtype[op->_x_offset + r] == "I") {
+      Rcpp::stop("Action fragmentation is not supported for integer decisions.");
+    }
+  }
+
   if (op->ncol_used() == 0) {
     Rcpp::stop("Model has zero variables. Build base variables first.");
   }

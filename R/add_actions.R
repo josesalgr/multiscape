@@ -201,6 +201,31 @@
 #'   when available, otherwise they default to full planning-unit areas when
 #'   these can be derived from the problem.
 #'
+#' @param decision_type Either \code{"binary"} (default) or \code{"integer"}.
+#'   Integer actions allocate quantities rather than select alternatives.
+#' @param lower Non-negative whole-number lower bound for integer decisions,
+#'   default zero. Supply a scalar, named numeric vector by action, or a
+#'   data.frame with \code{pu}, \code{action}, and \code{lower}. Bounds must
+#'   cover every feasible pair. A positive bound requires that allocation.
+#' @param upper Required finite whole-number upper bound for integer decisions.
+#'   Accepts the same formats as \code{lower}, with column \code{upper}.
+#'
+#' @details
+#' With integer decisions, action costs, effects, profits, and action-specific
+#' areas are coefficients per allocated unit. They are multiplied by the
+#' quantity in the existing linear objectives and constraints. Baseline feature
+#' data remain reference data; relative targets retain their baseline denominator.
+#' Multiple integer actions may coexist in a planning unit: the binary
+#' at-most-one-action constraint does not apply to quantities. Planning-unit
+#' costs and areas still apply once when any quantity is positive. Locked-in
+#' actions require at least one unit; locked-out actions are excluded.
+#' \code{get_actions()} returns a numeric \code{quantity} column as well as the
+#' binary \code{selected} indicator. Selection plots and similarity analyses
+#' continue to describe presence/absence, not allocation magnitude.
+#' Action fragmentation is not supported for integer decisions.
+#' Use \code{effect_type = "delta"} for explicit per-unit gains/losses;
+#' \code{"after"} is still converted to a per-unit change from the baseline.
+#'
 #' @return An updated \code{Problem} object with:
 #' \describe{
 #'   \item{\code{actions}}{The action catalogue, including a unique integer
@@ -298,8 +323,13 @@ add_actions <- function(
     include_pairs = NULL,
     exclude_pairs = NULL,
     cost = NULL,
-    action_area = NULL
+    action_area = NULL,
+    decision_type = c("binary", "integer"),
+    lower = 0,
+    upper = NULL
 ) {
+
+  decision_type <- match.arg(decision_type)
 
   .as_int_id <- function(v, what) {
     if (is.factor(v)) v <- as.character(v)
@@ -1439,6 +1469,20 @@ add_actions <- function(
   ]
 
   x$data$actions <- actions
+  if (decision_type == "integer") {
+    if (is.null(upper)) {
+      stop("Integer decisions require an explicit finite `upper` bound.", call. = FALSE)
+    }
+    dist_actions$decision_type <- "integer"
+    dist_actions$lower <- .pa_action_quantity_bound(dist_actions, lower, "lower")
+    dist_actions$upper <- .pa_action_quantity_bound(dist_actions, upper, "upper")
+    if (any(dist_actions$lower > dist_actions$upper)) {
+      stop("Each `lower` bound must be <= its `upper` bound.", call. = FALSE)
+    }
+  } else if ((!identical(lower, 0) && !identical(lower, 0L)) ||
+             (!is.null(upper) && !identical(upper, 1) && !identical(upper, 1L))) {
+    stop("Custom bounds require decision_type = 'integer'.", call. = FALSE)
+  }
   x$data$dist_actions <- dist_actions
 
   x

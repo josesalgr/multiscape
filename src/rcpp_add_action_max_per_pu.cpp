@@ -62,6 +62,9 @@ Rcpp::List rcpp_add_action_max_per_pu(
     if (filter_pu && pu_set.find(ipu) == pu_set.end()) continue;
     if (filter_act && act_set.find(ia) == act_set.end()) continue;
 
+    // Quantities are additive allocations, not mutually exclusive selections.
+    if (op->_vtype[op->_x_offset + irow - 1] == "I") continue;
+
     cols_by_pu[ipu].push_back((int)(op->_x_offset + (irow - 1)));
   }
 

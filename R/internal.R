@@ -266,7 +266,7 @@ available_to_solve <- function(package = ""){
 
     sol <- invisible(try(rcbc::cbc_solve(obj = model$obj,
                                          mat = model$A,
-                                         is_integer = ifelse(model$vtype == "B", TRUE, FALSE),
+                                         is_integer = model$vtype %in% c("B", "I"),
                                          row_ub = row_ub,
                                          row_lb = row_lb,
                                          col_lb = rep(0, length(model$vtype)),
@@ -2078,6 +2078,10 @@ available_to_solve <- function(package = ""){
       da_out$selected <- rep(NA_integer_, nrow(da_out))
     } else {
       da_out$selected <- as.integer(xv > threshold)
+      if ("decision_type" %in% names(da_out) &&
+          any(da_out$decision_type == "integer")) {
+        da_out$quantity <- round(xv)
+      }
     }
 
     if (all(c("internal_pu", "internal_action") %in% names(da_out))) {
@@ -4470,7 +4474,7 @@ NULL
       sol_cbc <- rcbc::cbc_solve(
         obj = model$obj,
         mat = model$A,
-        is_integer = ifelse(model$vtype == "B", TRUE, FALSE),
+        is_integer = model$vtype %in% c("B", "I"),
         row_ub = row_ub,
         row_lb = row_lb,
         col_lb = model$bounds$lower$val,

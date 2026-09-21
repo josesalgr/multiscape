@@ -89,6 +89,7 @@ URL: https://josesalgr.github.io/multiscape/
 BugReports: https://github.com/josesalgr/multiscape/issues
 Collate:
     'RcppExports.R'
+    'action_quantity_bounds.R'
     'internal.R'
     'add_action_max_per_pu.R'
     'add_actions.R'

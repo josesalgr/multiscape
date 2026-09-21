@@ -66,7 +66,7 @@ Rcpp::List rcpp_add_linking_x_le_w(SEXP x,
     // x - w <= 0
     op->addRow(
         std::vector<int>{col_x, col_w},
-        std::vector<double>{1.0, -1.0},
+        std::vector<double>{1.0, -op->_ub[col_x]},
         "<=",
         0.0,
         "x_le_w"

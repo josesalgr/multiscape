@@ -10,7 +10,10 @@ add_actions(
   include_pairs = NULL,
   exclude_pairs = NULL,
   cost = NULL,
-  action_area = NULL
+  action_area = NULL,
+  decision_type = c("binary", "integer"),
+  lower = 0,
+  upper = NULL
 )
 }
 \arguments{
@@ -41,6 +44,17 @@ with columns \code{pu}, \code{action}, and \code{action_area}. If
 \code{NULL}, action areas are derived from spatial \code{include_pairs}
 when available, otherwise they default to full planning-unit areas when
 these can be derived from the problem.}
+
+\item{decision_type}{Either \code{"binary"} (default) or \code{"integer"}.
+Integer actions allocate quantities rather than select alternatives.}
+
+\item{lower}{Non-negative whole-number lower bound for integer decisions,
+default zero. Supply a scalar, named numeric vector by action, or a
+data.frame with \code{pu}, \code{action}, and \code{lower}. Bounds must
+cover every feasible pair. A positive bound requires that allocation.}
+
+\item{upper}{Required finite whole-number upper bound for integer decisions.
+Accepts the same formats as \code{lower}, with column \code{upper}.}
 }
 \value{
 An updated \code{Problem} object with:
@@ -226,6 +240,21 @@ feasible action table stored in the problem object.
 After defining actions, typical next steps include adding effects, optional
 decision-fixing constraints, objectives, and solver settings before calling
 \code{solve()}.
+
+With integer decisions, action costs, effects, profits, and action-specific
+areas are coefficients per allocated unit. They are multiplied by the
+quantity in the existing linear objectives and constraints. Baseline feature
+data remain reference data; relative targets retain their baseline denominator.
+Multiple integer actions may coexist in a planning unit: the binary
+at-most-one-action constraint does not apply to quantities. Planning-unit
+costs and areas still apply once when any quantity is positive. Locked-in
+actions require at least one unit; locked-out actions are excluded.
+\code{get_actions()} returns a numeric \code{quantity} column as well as the
+binary \code{selected} indicator. Selection plots and similarity analyses
+continue to describe presence/absence, not allocation magnitude.
+Action fragmentation is not supported for integer decisions.
+Use \code{effect_type = "delta"} for explicit per-unit gains/losses;
+\code{"after"} is still converted to a per-unit change from the baseline.
 }
 \examples{
 # Load a complete simulated planning problem.
