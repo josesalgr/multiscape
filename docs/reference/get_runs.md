@@ -67,8 +67,7 @@ problem <- create_problem(
     cost = example_data$action_costs
   ) |>
   add_effects(
-    example_data$effects,
-    effect_type = "delta"
+    example_data$effect_assumptions
   ) |>
   add_constraint_targets_relative(0.05) |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -91,6 +90,6 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 }
 #>   run_id solution_id  status runtime gap
 #> 1      1           1 optimal    0.02   0
-#> 2      2           2 optimal    0.01   0
-#> 3      3           3 optimal    0.00   0
+#> 2      2           2 optimal    0.00   0
+#> 3      3           3 optimal    0.02   0
 ```

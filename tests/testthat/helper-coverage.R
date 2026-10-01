@@ -37,16 +37,15 @@ make_round2_action_problem <- function(with_effects = TRUE,
     effects <- data.frame(
       action = rep(actions$id, each = 2),
       feature = rep(features$id, times = 2),
-      multiplier = c(
-        1.0, 0.8,
-        1.2, 1.8
+      relative_change = c(
+        0, -0.2,
+        0.2, 0.8
       )
     )
 
     x <- multiscape::add_effects(
       x,
-      effects = effects,
-      effect_type = "after"
+      effects = effects
     )
   }
 
@@ -143,7 +142,7 @@ make_round2_spatial_problem <- function(action_based = FALSE) {
     effects <- data.frame(
       action = rep(actions$id, each = 2),
       feature = rep(features$id, times = 2),
-      multiplier = c(1, 1, 1.5, 1.5)
+      relative_change = c(0, 0, 0.5, 0.5)
     )
 
     x <- x |>
@@ -152,8 +151,7 @@ make_round2_spatial_problem <- function(action_based = FALSE) {
         cost = c(conservation = 1, restoration = 2)
       ) |>
       multiscape::add_effects(
-        effects = effects,
-        effect_type = "after"
+        effects = effects
       )
   }
 
@@ -209,16 +207,15 @@ make_round3_action_problem <- function(with_effects = TRUE) {
     effects <- data.frame(
       action = rep(actions$id, each = 2),
       feature = rep(1:2, times = 2),
-      multiplier = c(
-        1.0, 0.8,
-        1.4, 1.8
+      relative_change = c(
+        0, -0.2,
+        0.4, 0.8
       )
     )
 
     x <- multiscape::add_effects(
       x,
-      effects = effects,
-      effect_type = "after"
+      effects = effects
     )
   }
 
@@ -294,9 +291,8 @@ make_round3_spatial_problem <- function(action_based = FALSE) {
       effects = data.frame(
         action = rep(c("conservation", "restoration"), each = 2),
         feature = rep(1:2, times = 2),
-        multiplier = c(1, 1, 1.5, 1.5)
-      ),
-      effect_type = "after"
+        relative_change = c(0, 0, 0.5, 0.5)
+      )
     )
   }
 
@@ -381,9 +377,9 @@ make_round4_mo_problem <- function() {
   effects <- data.frame(
     action = rep(d$actions$id, each = 2),
     feature = rep(d$features$id, times = 2),
-    multiplier = c(
-      1.0, 1.0,
-      1.5, 1.5
+    relative_change = c(
+      0, 0,
+      0.5, 0.5
     )
   )
 
@@ -401,8 +397,7 @@ make_round4_mo_problem <- function() {
       )
     ) |>
     multiscape::add_effects(
-      effects = effects,
-      effect_type = "after"
+      effects = effects
     ) |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost") |>

@@ -266,7 +266,6 @@ combinations should be explored.
 For example, with one primary objective and two secondary objectives, a
 manual run design may contain:
 
-
     data.frame(
       eps_cost = c(4, 6, 8),
       eps_loss = c(0, 1, 1)
@@ -382,8 +381,7 @@ x <- create_problem(
     cost = example_data$action_costs
   ) |>
   add_effects(
-    example_data$effects,
-    effect_type = "delta"
+    example_data$effect_assumptions
   ) |>
   add_objective_min_cost(alias = "cost") |>
   add_objective_max_benefit(alias = "benefit") |>

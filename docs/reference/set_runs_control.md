@@ -105,7 +105,6 @@ conceal modelling or implementation errors.
 The default settings favour completing the requested run design while
 still stopping on unexpected errors:
 
-
     stop_on_infeasible = FALSE
     stop_on_no_solution = FALSE
     stop_on_error = TRUE

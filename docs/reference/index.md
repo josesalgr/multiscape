@@ -248,16 +248,17 @@ documentation.
 Functions retained temporarily for backward compatibility.
 
 - [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
-  **\[obsoleta\]** : Add locked planning units to a problem
+  **\[deprecated\]** : Add locked planning units to a problem
 - [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)
-  **\[obsoleta\]** : Add objective: minimize planning-unit fragmentation
+  **\[deprecated\]** : Add objective: minimize planning-unit
+  fragmentation
 - [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
-  **\[obsoleta\]** : Get planning-unit results from a solution set
+  **\[deprecated\]** : Get planning-unit results from a solution set
 - [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
-  **\[obsoleta\]** : Plot selected planning units in space
+  **\[deprecated\]** : Plot selected planning units in space
 - [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
-  **\[obsoleta\]** : Define an automatic multi-objective run grid
+  **\[deprecated\]** : Define an automatic multi-objective run grid
 - [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
-  **\[obsoleta\]** : Define a manual multi-objective run design
+  **\[deprecated\]** : Define a manual multi-objective run design
 - [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
-  **\[obsoleta\]** : Control multi-objective run behavior
+  **\[deprecated\]** : Control multi-objective run behavior

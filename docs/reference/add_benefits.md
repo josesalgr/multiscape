@@ -19,11 +19,10 @@ add_benefits(
 
 - x:
 
-  A `Problem` object created with
-  [`create_problem`](https://josesalgr.github.io/multiscape/reference/create_problem.md).
-  It must already contain feasible actions; run
-  [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md)
-  first.
+  A `Problem` object created by
+  [`create_problem`](https://josesalgr.github.io/multiscape/reference/create_problem.md)
+  with feasible actions defined by
+  [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md).
 
 - benefits:
 
@@ -31,18 +30,14 @@ add_benefits(
 
 - effect_type:
 
-  Character string indicating how supplied effect values are
-  interpreted. Must be one of:
-
-  - `"delta"`: values represent signed net changes,
-
-  - `"after"`: values represent after-action amounts and are converted
-    to net changes relative to baseline feature amounts.
+  Deprecated interpretation argument: `"delta"` for changes or `"after"`
+  for action amounts. With historical multipliers, delta means reference
+  times multiplier; after means an outcome equal to reference times
+  multiplier. Omit for new table inputs.
 
 - effect_aggregation:
 
-  Character string giving the aggregation used when converting raster
-  values to planning-unit level. Must be one of `"sum"` or `"mean"`.
+  Deprecated raster aggregation argument; use `raster_aggregation`.
 
 ## Value
 

@@ -15,28 +15,37 @@ downloads](https://cranlogs.r-pkg.org/badges/grand-total/multiscape)](https://cr
 coverage](https://codecov.io/gh/josesalgr/multiscape/graph/badge.svg)](https://app.codecov.io/gh/josesalgr/multiscape)
 <!-- badges: end -->
 
-`multiscape` is an exact optimisation framework for multi-objective
-spatial planning in R. It is designed for planning problems in which
-spatial data, ecological or socioeconomic features, constraints, and
-multiple competing objectives must be considered simultaneously within a
-single decision-support workflow. The package is built around
-mixed-integer linear programming (MILP) formulations, allowing users to
-represent spatial planning problems explicitly as optimisation models
-and solve them with exact methods. This makes `multiscape` especially
-suitable for applications where transparent model structure,
-reproducibility, and rigorous trade-off analysis are important.
-`multiscape` supports both general spatial planning formulations and
-action-based formulations in which decisions are expressed as
-**management actions** applied across planning units. With it, users can
-build planning problems from tabular or spatial inputs, define feasible
-actions and their effects, add targets and other constraints, register
-multiple objectives such as cost, benefit, profit, or fragmentation, and
-explore exact trade-offs using multi-objective methods such as
-weighted-sum, epsilon-constraint, and AUGMECON. Each retained solution
-preserves the correspondence between its objective values and spatial
-decisions, allowing alternatives to be analysed in objective space
-(`frontier_*()`), decision space (`selection_*()`), and jointly through
-objective–decision linkage (`linkage_*()`).
+`multiscape` is an exact optimisation framework for **multi-action,
+multi-objective spatial planning in R**. It is designed for problems in
+which decisions involve allocating alternative management actions across
+planning units while balancing multiple competing objectives. Building
+on the transition from place-based prioritisation towards spatially
+explicit action planning ([Tallis et al.,
+2021](https://doi.org/10.1111/nyas.14651); [Salgado-Rojas et al.,
+2023](https://doi.org/10.1111/2041-210X.14220)), `multiscape` represents
+explicitly **what can be done, where it can be done, and what
+consequences those actions are expected to produce**.
+
+Users define feasible management actions, their costs, and their
+expected effects on ecological or socioeconomic features relative to a
+reference scenario. These action-based decisions are represented as
+mixed-integer linear programming (MILP) models together with targets,
+budgets, spatial requirements, locked decisions, and other constraints.
+Multiple objectives, including cost, benefit, profit, and fragmentation,
+can be registered independently and explored using weighted-sum,
+epsilon-constraint, and AUGMECON methods. This formulation also provides
+a basis for multiple-use spatial planning, where alternative actions and
+uses may need to be evaluated against competing ecological, economic,
+and social objectives ([Neubert et al.,
+2025](https://doi.org/10.1016/j.tree.2025.09.007)).
+
+Each retained solution preserves the correspondence between its
+objective values and its spatial allocation of actions. Alternative
+plans can therefore be examined in **objective space** (`frontier_*()`),
+**decision space** (`selection_*()`), and jointly through
+**objective–decision linkage** (`linkage_*()`), allowing users to relate
+changes in performance directly to changes in the actions implemented
+across space.
 
 ## Installation
 
@@ -152,37 +161,27 @@ available throughout this landscape. The model permits at most one
 selected action per planning unit, while leaving a unit unmanaged
 remains feasible.
 
-Effects describe how an ecological feature changes when an action is
-selected.
+Effects describe changes relative to the reference scenario in
+`dist_features`.
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.html)
-supports two interpretations:
+accepts exactly one of three columns:
 
-- with `effect_type = "after"`, the input specifies the expected **final
-  feature amount** under the action;
-- with `effect_type = "delta"`, the input specifies the signed **change
-  from the baseline**.
+- `effect`: signed absolute change;
+- `outcome`: expected amount under the action;
+- `relative_change`: proportional change (`0.25` means +25%).
 
-With the delta interpretation, positive values represent gains, negative
-values represent losses, and zero indicates no change. If $b_{if}$ is
-the baseline amount of feature $f$ in planning unit $i$, the final
-amount after selecting action $a$ is
+With a reference amount of 100, `effect = 30`, `outcome = 130`, and
+`relative_change = 0.30` all describe the same result. A positive effect
+means an increase; whether that is desirable depends on the feature and
+objective. The reference may represent current conditions, a future
+without intervention, or existing management. Outcomes and references
+must share units and horizon.
 
-$$\text{final amount}_{iaf} = b_{if} + \Delta_{iaf},$$
-
-where $\Delta_{iaf}$ is the value supplied in the `delta` column. The
-choice between `after` and `delta` therefore depends on how ecological
-responses were estimated, not on the optimisation method.
-
-This example uses explicit delta values. Protection is assumed to
-increase woodland and riparian amounts by 100% and 30% of their
-respective local baselines, whereas restoration increases them by 25%
-and 130%. These percentages are used only to generate the simulated
-data. The table passed to `add_effects()` already contains the resulting
-absolute change for every planning-unit–action–feature combination. For
-example, a woodland baseline of 0.6 combined with a 100% relative
-increase produces `delta = 0.6` and a final relative amount of 1.2. The
-coefficient representing the relative increase must therefore not be
-confused with either the delta value or the final feature amount.
+This example supplies relative changes by action and feature. The
+package expands them over feasible planning units. A reference of 0.6
+and `relative_change = 1` produce an effect of 0.6 and an outcome of
+1.2. Legacy `effect_type`, `multiplier`, and `delta` inputs remain
+supported with a lifecycle deprecation warning.
 
 ``` r
 # Inspect the assumptions used to generate their
@@ -194,23 +193,13 @@ example_data$effect_assumptions
 #> 3 restore       1            0.25
 #> 4 restore       2            1.30
 
-head(example_data$effects)
-#>   pu  action feature        delta
-#> 1  1 protect       1 0.0016615573
-#> 2  1 protect       2 0.0934209672
-#> 3  1 restore       1 0.0004153893
-#> 4  1 restore       2 0.4048241911
-#> 5  2 protect       1 0.0024787522
-#> 6  2 protect       2 0.0132913814
-
 problem <- problem |>
   add_actions(
     actions = example_data$actions,
     cost = example_data$action_costs
   ) |>
   add_effects(
-    effects = example_data$effects,
-    effect_type = "delta"
+    effects = example_data$effect_assumptions
   )
 ```
 
@@ -272,36 +261,37 @@ multi-objective method and solver have not yet been selected.
 # and optimisation solver.
 problem
 #> A multiscape object (<Problem>)
-#> ├─data
-#> │├─planning units: <data.frame> (64 total)
-#> │├─costs: min: 0, max: 0
-#> │└─features: 2 total ("woodland", "riparian")
-#> └─actions and effects
-#> │├─actions: 2 total ("Protect", "Restore")
-#> │├─feasible action pairs: 128 feasible rows
-#> │├─action costs: min: 1.05, max: 2.3
-#> │├─effect data: 256 rows
-#> │├─effect mode: benefit only
-#> │└─profit data: none
-#> └─spatial
-#> │├─geometry: sf (64 rows)
-#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
-#> │└─relations: none
-#> └─targets and constraints
-#> │├─targets: 2 rows
-#> │├─target preview: "woodland" >= 1.409, "riparian" >= 1.345
-#> │├─area constraints: none
-#> │├─budget constraints: none
-#> │├─planning-unit locks: none
-#> │└─action locks: none
-#> └─model
-#> │├─status: not built yet (will build in solve())
-#> │├─objectives: 2 registered (benefit, cost)
-#> │├─method: not set
-#> │├─solver: not set (auto)
-#> │└─checks: incomplete (multiple objectives registered but no MO method
+#> +-data
+#> |+-planning units: <data.frame> (64 total)
+#> |+-costs: min: 0, max: 0
+#> |\-features: 2 total ("woodland", "riparian")
+#> \-actions and effects
+#> |+-actions: 2 total ("Protect", "Restore")
+#> |+-feasible action pairs: 128 feasible rows
+#> |+-action costs: min: 1.05, max: 2.3
+#> |+-effect data: 256 rows
+#> |+-effect input: relative change
+#> |+-effect signs: 256 positive, 0 negative, 0 zero
+#> |\-profit data: none
+#> \-spatial
+#> |+-geometry: sf (64 rows)
+#> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
+#> |\-relations: none
+#> \-targets and constraints
+#> |+-targets: 2 rows
+#> |+-target preview: "woodland" >= 1.409, "riparian" >= 1.345
+#> |+-area constraints: none
+#> |+-budget constraints: none
+#> |+-planning-unit locks: none
+#> |\-action locks: none
+#> \-model
+#> |+-status: not built yet (will build in solve())
+#> |+-objectives: 2 registered (benefit, cost)
+#> |+-method: not set
+#> |+-solver: not set (auto)
+#> |\-checks: incomplete (multiple objectives registered but no MO method
 #> selected)
-#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
+#> # i Use `x$data` to inspect stored tables and model snapshots.
 ```
 
 ### Configure the multi-objective method
@@ -371,12 +361,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.005000114   0
-#> 2      2           2 optimal 0.003999949   0
-#> 3      3           3 optimal 0.008000135   0
+#> 1      1           1 optimal 0.006000042   0
+#> 2      2           2 optimal 0.012000084   0
+#> 3      3           3 optimal 0.016999960   0
 #> 4      4           4 optimal 0.003000021   0
-#> 5      5           5 optimal 0.005000114   0
-#> 6      6           6 optimal 0.002000093   0
+#> 5      5           5 optimal 0.012000084   0
+#> 6      6           6 optimal 0.003000021   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies
@@ -666,12 +656,9 @@ transition <- linkage_transition(
 )
 
 transition
-#> Objective--decision transition
+#> Spatial solution transition
 #> From solution: 3 
 #> To solution:   4 
-#> 
-#> Objective distance: 0.2519 
-#> Decision distance:  0.3 
 #> 
 #> Planning units changed: 12 of 64 (18.8%)
 #> Activated:            12 
@@ -800,3 +787,20 @@ families.
 
 If you find a bug or would like to suggest an improvement, please open
 an [issue](https://github.com/josesalgr/multiscape/issues).
+
+## References
+
+Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions:
+spatial action maps for conservation. *Annals of the New York Academy of
+Sciences*, **1505**(1), 118–141.
+[doi:10.1111/nyas.14651](https://doi.org/10.1111/nyas.14651).
+
+Salgado-Rojas, J., Hermoso, V., & Álvarez-Miranda, E. (2023).
+prioriactions: Multi-action management planning in R. *Methods in
+Ecology and Evolution*.
+[doi:10.1111/2041-210X.14220](https://doi.org/10.1111/2041-210X.14220).
+
+Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use
+spatial planning for sustainable development and conservation. *Trends
+in Ecology & Evolution*, **40**(11), 1126–1142.
+[doi:10.1016/j.tree.2025.09.007](https://doi.org/10.1016/j.tree.2025.09.007).

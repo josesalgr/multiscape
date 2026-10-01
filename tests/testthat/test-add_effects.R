@@ -1,11 +1,11 @@
-test_that("add_effects with delta separates benefit and loss correctly", {
+test_that("add_effects with effect separates benefit and loss correctly", {
   toy <- toy_equivalent_basic()
 
-  effects_delta <- data.frame(
+  effects_change <- data.frame(
     pu = c(1, 2, 3, 4),
     action = c("conservation", "conservation", "conservation", "conservation"),
     feature = c(1, 1, 2, 2),
-    delta = c(5, -2, 0, -7)
+    effect = c(5, -2, 0, -7)
   )
 
   p <- multiscape::create_problem(
@@ -15,7 +15,7 @@ test_that("add_effects with delta separates benefit and loss correctly", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = effects_delta, effect_type = "delta")
+    multiscape::add_effects(effects = effects_change)
 
   de <- p$data$dist_effects
 
@@ -35,18 +35,18 @@ test_that("add_effects with delta separates benefit and loss correctly", {
   expect_equal(row4$loss, 7)
 })
 
-test_that("add_effects with after computes delta from baseline amounts", {
+test_that("add_effects with outcome computes signed effects from reference amounts", {
   toy <- toy_equivalent_basic()
 
-  effects_after <- data.frame(
+  effects_outcome <- data.frame(
     pu = c(1, 2),
     action = c("conservation", "conservation"),
     feature = c(1, 2),
-    after = c(10, 1)
+    outcome = c(10, 1)
   )
 
   # baseline: pu1-feature1 = 8 ; pu2-feature2 = 2
-  # delta esperado: +2 y -1
+  # expected effects: +2 and -1
 
   p <- multiscape::create_problem(
     pu = toy$pu,
@@ -55,7 +55,7 @@ test_that("add_effects with after computes delta from baseline amounts", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = effects_after, effect_type = "after")
+    multiscape::add_effects(effects = effects_outcome)
 
   de <- p$data$dist_effects
 
@@ -69,7 +69,7 @@ test_that("add_effects with after computes delta from baseline amounts", {
   expect_equal(r2$loss, 1)
 })
 
-test_that("multiplier effects respect effect_type = 'after'", {
+test_that("relative changes reproduce action outcomes", {
   pu <- data.frame(id = 1, cost = 1)
   features <- data.frame(id = 1, name = "carbon")
   dist_features <- data.frame(pu = 1, feature = 1, amount = 100)
@@ -88,13 +88,12 @@ test_that("multiplier effects respect effect_type = 'after'", {
   eff <- data.frame(
     action = "harvest",
     feature = 1,
-    multiplier = 0.3
+    relative_change = -0.7
   )
 
   p2 <- add_effects(
     p,
-    effects = eff,
-    effect_type = "after"
+    effects = eff
   )
 
   expect_equal(nrow(p2$data$dist_effects), 1)
@@ -102,7 +101,7 @@ test_that("multiplier effects respect effect_type = 'after'", {
   expect_equal(p2$data$dist_effects$loss, 70)
 })
 
-test_that("multiplier effects respect effect_type = 'delta'", {
+test_that("relative changes reproduce signed effects", {
   pu <- data.frame(id = 1, cost = 1)
   features <- data.frame(id = 1, name = "carbon")
   dist_features <- data.frame(pu = 1, feature = 1, amount = 100)
@@ -121,13 +120,12 @@ test_that("multiplier effects respect effect_type = 'delta'", {
   eff <- data.frame(
     action = "restoration",
     feature = 1,
-    multiplier = 0.3
+    relative_change = 0.3
   )
 
   p2 <- add_effects(
     p,
-    effects = eff,
-    effect_type = "delta"
+    effects = eff
   )
 
   expect_equal(nrow(p2$data$dist_effects), 1)
@@ -135,7 +133,8 @@ test_that("multiplier effects respect effect_type = 'delta'", {
   expect_equal(p2$data$dist_effects$loss, 0)
 })
 
-test_that("after column requires effect_type = 'after'", {
+
+test_that("explicit action outcomes are converted to losses", {
   pu <- data.frame(id = 1, cost = 1)
   features <- data.frame(id = 1, name = "carbon")
   dist_features <- data.frame(pu = 1, feature = 1, amount = 100)
@@ -155,46 +154,12 @@ test_that("after column requires effect_type = 'after'", {
     pu = 1,
     action = "harvest",
     feature = 1,
-    after = 30
-  )
-
-  expect_error(
-    add_effects(
-      p,
-      effects = eff,
-      effect_type = "delta"
-    ),
-    "Column 'after' was provided"
-  )
-})
-
-test_that("explicit after-action amounts are converted to losses", {
-  pu <- data.frame(id = 1, cost = 1)
-  features <- data.frame(id = 1, name = "carbon")
-  dist_features <- data.frame(pu = 1, feature = 1, amount = 100)
-
-  p <- create_problem(
-    pu = pu,
-    features = features,
-    dist_features = dist_features
-  )
-
-  p <- add_actions(
-    p,
-    actions = data.frame(id = "harvest")
-  )
-
-  eff <- data.frame(
-    pu = 1,
-    action = "harvest",
-    feature = 1,
-    after = 30
+    outcome = 30
   )
 
   p2 <- add_effects(
     p,
-    effects = eff,
-    effect_type = "after"
+    effects = eff
   )
 
   expect_equal(p2$data$dist_effects$benefit, 0)
@@ -202,7 +167,7 @@ test_that("explicit after-action amounts are converted to losses", {
 })
 
 
-test_that("after multipliers store amount_after for neutral conservation actions", {
+test_that("relative changes store amount_after for neutral conservation actions", {
   pu <- data.frame(id = 1, cost = 1)
 
   features <- data.frame(id = 1, name = "carbon")
@@ -227,13 +192,12 @@ test_that("after multipliers store amount_after for neutral conservation actions
   eff <- data.frame(
     action = "conservation",
     feature = 1,
-    multiplier = 1
+    relative_change = 0
   )
 
   p2 <- add_effects(
     p,
-    effects = eff,
-    effect_type = "after"
+    effects = eff
   )
 
   expect_equal(nrow(p2$data$dist_effects), 1)
@@ -243,7 +207,7 @@ test_that("after multipliers store amount_after for neutral conservation actions
 })
 
 
-test_that("after multipliers store amount_after for neutral conservation actions", {
+test_that("relative changes store amount_after for neutral conservation actions", {
   pu <- data.frame(id = 1, cost = 1)
 
   features <- data.frame(id = 1, name = "carbon")
@@ -268,13 +232,12 @@ test_that("after multipliers store amount_after for neutral conservation actions
   eff <- data.frame(
     action = "conservation",
     feature = 1,
-    multiplier = 1
+    relative_change = 0
   )
 
   p2 <- add_effects(
     p,
-    effects = eff,
-    effect_type = "after"
+    effects = eff
   )
 
   expect_equal(nrow(p2$data$dist_effects), 1)
@@ -284,44 +247,41 @@ test_that("after multipliers store amount_after for neutral conservation actions
 })
 
 
-
-test_that("add_effects accepts after multipliers by action and feature", {
+test_that("add_effects accepts relative changes by action and feature", {
   d <- make_round4_base_data()
   p <- make_round4_problem(with_actions = TRUE)
 
   effects <- data.frame(
     action = rep(d$actions$id, each = 2),
     feature = rep(d$features$id, times = 2),
-    multiplier = c(
-      1.0, 1.0,
-      1.5, 1.5
+    relative_change = c(
+      0, 0,
+      0.5, 0.5
     )
   )
 
   out <- multiscape::add_effects(
     p,
-    effects = effects,
-    effect_type = "after"
+    effects = effects
   )
 
   expect_s3_class(out, "Problem")
 })
 
 
-test_that("add_effects accepts explicit pu-action-feature delta rows", {
+test_that("add_effects accepts explicit pu-action-feature effect rows", {
   p <- make_round4_problem(with_actions = TRUE)
 
   effects <- data.frame(
     pu = c(1L, 2L),
     action = c("restoration", "restoration"),
     feature = c(1L, 2L),
-    delta = c(1, -0.5)
+    effect = c(1, -0.5)
   )
 
   out <- multiscape::add_effects(
     p,
-    effects = effects,
-    effect_type = "delta"
+    effects = effects
   )
 
   expect_s3_class(out, "Problem")
@@ -334,14 +294,13 @@ test_that("add_effects rejects duplicate keys", {
   duplicated <- data.frame(
     action = c("restoration", "restoration"),
     feature = c(1L, 1L),
-    multiplier = c(1.5, 1.5)
+    relative_change = c(0.5, 0.5)
   )
 
   expect_error(
     multiscape::add_effects(
       p,
-      effects = duplicated,
-      effect_type = "after"
+      effects = duplicated
     ),
     "duplicated combination"
   )
@@ -354,14 +313,13 @@ test_that("add_effects rejects non-finite values", {
   non_finite <- data.frame(
     action = "restoration",
     feature = 1L,
-    multiplier = Inf
+    relative_change = Inf
   )
 
   expect_error(
     multiscape::add_effects(
       p,
-      effects = non_finite,
-      effect_type = "after"
+      effects = non_finite
     ),
     "finite"
   )
@@ -377,9 +335,8 @@ test_that("add_effects rejects unknown actions, features, and planning units", {
       effects = data.frame(
         action = "unknown",
         feature = 1L,
-        multiplier = 1.5
-      ),
-      effect_type = "after"
+        relative_change = 0.5
+      )
     )
   )
 
@@ -389,9 +346,8 @@ test_that("add_effects rejects unknown actions, features, and planning units", {
       effects = data.frame(
         action = "restoration",
         feature = 999L,
-        multiplier = 1.5
-      ),
-      effect_type = "after"
+        relative_change = 0.5
+      )
     )
   )
 
@@ -402,37 +358,8 @@ test_that("add_effects rejects unknown actions, features, and planning units", {
         pu = 999L,
         action = "restoration",
         feature = 1L,
-        delta = 1
-      ),
-      effect_type = "delta"
+        effect = 1
+      )
     )
   )
-})
-
-
-test_that("add_benefits and add_losses use benefit and loss columns", {
-  p <- make_round4_problem(with_actions = TRUE)
-
-  b <- multiscape::add_benefits(
-    p,
-    benefits = data.frame(
-      pu = 1L,
-      action = "restoration",
-      feature = 1L,
-      benefit = 2
-    )
-  )
-
-  l <- multiscape::add_losses(
-    p,
-    losses = data.frame(
-      pu = 1L,
-      action = "restoration",
-      feature = 1L,
-      loss = 0.5
-    )
-  )
-
-  expect_s3_class(b, "Problem")
-  expect_s3_class(l, "Problem")
 })

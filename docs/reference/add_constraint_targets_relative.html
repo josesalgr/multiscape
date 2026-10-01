@@ -35,7 +35,7 @@ with different action subsets."><meta property="og:image" content="https://joses
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,8 +46,8 @@ with different action subsets."><meta property="og:image" content="https://joses
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -127,10 +127,10 @@ the stored target table.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Use this function when target requirements are naturally expressed as
-proportions of current baseline feature totals rather than in original
+proportions of reference-scenario feature totals rather than in original
 feature units.</p>
 <p>Let \(\mathcal{F}\) denote the set of features. For each targeted feature
-\(f \in \mathcal{F}\), let \(B_f\) denote the current baseline total
+\(f \in \mathcal{F}\), let \(B_f\) denote the reference-scenario total
 amount of that feature in the landscape, as computed by
 <code>.pa_feature_totals()</code>.</p>
 <p>If the user supplies a relative target \(r_f \in [0,1]\), then this
@@ -156,7 +156,7 @@ pairs allowed to count toward the target for feature \(f\).</p></li>
 </ul><p>The <code>actions</code> argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \(B_f\) used
 to compute the threshold. In other words, relative targets are always scaled
-against the current full landscape baseline.</p>
+against the full landscape reference scenario.</p>
 <p>Therefore, <code>actions</code> changes who may satisfy the target, but not how the
 threshold itself is scaled.</p>
 <p>The <code>targets</code> argument is parsed by <code>.pa_parse_targets()</code> and may be
@@ -200,8 +200,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.3    14.08761     4.226283</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge relative_baseline        0.3    13.44903     4.034709</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-08-14 19:53:36.491236     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    &lt;NA&gt;  &lt;NA&gt; 2026-08-14 19:53:36.491236     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.807187     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.807187     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Require 20% for one selected feature</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_relative</span><span class="op">(</span></span></span>
@@ -213,7 +213,7 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   feature    type sense       target_unit target_raw basis_total target_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-08-14 19:53:36.494903     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.811556     woodland</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Restrict which actions count toward target achievement</span></span></span>
 <span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_relative</span><span class="op">(</span></span></span>
@@ -226,8 +226,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge relative_baseline        0.2    13.44903     2.689806</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 protect  &lt;NA&gt; 2026-08-14 19:53:36.499765     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 protect  &lt;NA&gt; 2026-08-14 19:53:36.499765     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 protect  &lt;NA&gt; 2026-10-01 11:05:58.815776     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 protect  &lt;NA&gt; 2026-10-01 11:05:58.815776     riparian</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

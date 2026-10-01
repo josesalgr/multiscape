@@ -24,7 +24,6 @@ No return value. This page documents the `SolutionSet` class.
 
 The `SolutionSet` class represents the result of a solving workflow:
 
-
     Problem -> solve() -> SolutionSet
 
 Single-objective workflows are represented as `SolutionSet` objects with

@@ -93,8 +93,7 @@ p <- create_problem(
     cost = example_data$action_costs
   ) |>
   add_effects(
-    example_data$effects,
-    effect_type = "delta"
+    example_data$effect_assumptions
   )
 
 p1 <- add_objective_min_loss(p)

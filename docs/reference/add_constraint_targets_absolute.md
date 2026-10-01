@@ -60,7 +60,7 @@ target table.
 
 Use this function when target requirements are naturally expressed in
 the original units of the modelled feature contributions, rather than as
-proportions of current baseline totals.
+proportions of reference-scenario totals.
 
 Let \\\mathcal{F}\\ denote the set of features. For each targeted
 feature \\f \in \mathcal{F}\\, this function stores an absolute target
@@ -139,9 +139,9 @@ p1$data$targets
 #>   feature    type sense target_unit target_raw basis_total target_value actions
 #> 1       1 actions    ge    absolute          3          NA            3    <NA>
 #> 2       2 actions    ge    absolute          3          NA            3    <NA>
-#>   label                 created_at feature_name
-#> 1  <NA> 2026-08-14 19:53:36.179439     woodland
-#> 2  <NA> 2026-08-14 19:53:36.179439     riparian
+#>   label                created_at feature_name
+#> 1  <NA> 2026-10-01 11:05:58.35701     woodland
+#> 2  <NA> 2026-10-01 11:05:58.35701     riparian
 
 # Different targets by feature
 p2 <- add_constraint_targets_absolute(
@@ -153,8 +153,8 @@ p2$data$targets
 #> 1       1 actions    ge    absolute          4          NA            4    <NA>
 #> 2       2 actions    ge    absolute          2          NA            2    <NA>
 #>   label                 created_at feature_name
-#> 1  <NA> 2026-08-14 19:53:36.183372     woodland
-#> 2  <NA> 2026-08-14 19:53:36.183372     riparian
+#> 1  <NA> 2026-10-01 11:05:58.427627     woodland
+#> 2  <NA> 2026-10-01 11:05:58.427627     riparian
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_absolute(
@@ -167,6 +167,6 @@ p3$data$targets
 #> 1       1 actions    ge    absolute          2          NA            2 protect
 #> 2       2 actions    ge    absolute          2          NA            2 protect
 #>   label                 created_at feature_name
-#> 1  <NA> 2026-08-14 19:53:36.187469     woodland
-#> 2  <NA> 2026-08-14 19:53:36.187469     riparian
+#> 1  <NA> 2026-10-01 11:05:58.432282     woodland
+#> 2  <NA> 2026-10-01 11:05:58.432282     riparian
 ```

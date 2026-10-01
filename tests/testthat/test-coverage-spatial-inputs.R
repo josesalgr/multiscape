@@ -101,6 +101,7 @@ test_that("sf zones can lock action pairs in and out", {
 test_that("raster effects are extracted over vector planning units", {
   skip_if_not_installed("terra")
   skip_if_not_installed("sf")
+  withr::local_options(lifecycle_verbosity = "error")
   p <- make_round3_spatial_problem(action_based = TRUE)
 
   template <- terra::rast(
@@ -119,17 +120,17 @@ test_that("raster effects are extracted over vector planning units", {
   )
 
   expect_error(
-    multiscape::add_effects(p, list(unknown = effects[[1]])),
+    multiscape::add_effects(p, list(unknown = effects[[1]]), raster_type = "effect"),
     "unknown action ids"
   )
   expect_error(
-    multiscape::add_effects(p, list(conservation = data.frame(x = 1))),
+    multiscape::add_effects(p, list(conservation = data.frame(x = 1)), raster_type = "effect"),
     "SpatRaster"
   )
   malformed <- effects
   malformed$conservation <- template
   expect_error(
-    multiscape::add_effects(p, malformed),
+    multiscape::add_effects(p, malformed, raster_type = "effect"),
     "layers"
   )
 })

@@ -53,8 +53,7 @@
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -218,8 +217,7 @@ get_pu <- function(x, solution = NULL, ...) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -398,8 +396,7 @@ get_actions <- function(x, solution = NULL, ...) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -667,8 +664,7 @@ get_features <- function(x, solution = NULL, ...) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -825,8 +821,7 @@ get_targets <- function(x, solution = NULL, ...) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -939,8 +934,7 @@ get_solution_vector <- function(x, solution = NULL, ...) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -1072,8 +1066,7 @@ get_runs <- function(x) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -1180,8 +1173,7 @@ get_objectives <- function(x,
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -1445,8 +1437,7 @@ get_objective_specs <- function(x) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(

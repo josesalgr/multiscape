@@ -5,43 +5,9 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add action effects to a planning problem — add_effects"><meta name="description" content="Define the effects of management actions on features across planning units.
-Effects are stored in a canonical representation in an effects table, with one
-row per (pu, action, feature) triple and three main effect columns:
-amount_after: the feature amount expected after applying the action,
-benefit: the positive component of the net change,
-loss: the magnitude of the negative component of the net change.
-
-
-Let \(i\) index planning units, \(a\) index actions, and \(f\) index
-features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
-planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
-applying action \(a\). The after-action amount is:
-$$
-\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
-$$
-Under the semantics adopted by this package, each
-(pu, action, feature) triple represents a single net effect.
-Consequently, after validation and aggregation, a stored row cannot have both
-benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:description" content="Define the effects of management actions on features across planning units.
-Effects are stored in a canonical representation in an effects table, with one
-row per (pu, action, feature) triple and three main effect columns:
-amount_after: the feature amount expected after applying the action,
-benefit: the positive component of the net change,
-loss: the magnitude of the negative component of the net change.
-
-
-Let \(i\) index planning units, \(a\) index actions, and \(f\) index
-features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
-planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
-applying action \(a\). The after-action amount is:
-$$
-\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
-$$
-Under the semantics adopted by this package, each
-(pu, action, feature) triple represents a single net effect.
-Consequently, after validation and aggregation, a stored row cannot have both
-benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add action effects to a planning problem — add_effects"><meta name="description" content="Describe how feasible actions change feature amounts relative to a
+user-defined reference scenario."><meta property="og:description" content="Describe how feasible actions change feature amounts relative to a
+user-defined reference scenario."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -55,7 +21,7 @@ benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,8 +32,8 @@ benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:ima
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -87,22 +53,8 @@ benefit &amp;gt; 0 and loss &amp;gt; 0 at the same time."><meta property="og:ima
     </div>
 
     <div class="ref-description section level2">
-    <p>Define the effects of management actions on features across planning units.</p>
-<p>Effects are stored in a canonical representation in an effects table, with one
-row per <code>(pu, action, feature)</code> triple and three main effect columns:</p><ul><li><p><code>amount_after</code>: the feature amount expected after applying the action,</p></li>
-<li><p><code>benefit</code>: the positive component of the net change,</p></li>
-<li><p><code>loss</code>: the magnitude of the negative component of the net change.</p></li>
-</ul><p>Let \(i\) index planning units, \(a\) index actions, and \(f\) index
-features. Let \(b_{if}\) denote the baseline amount of feature \(f\) in
-planning unit \(i\), and let \(\Delta_{iaf}\) denote the net effect of
-applying action \(a\). The after-action amount is:
-$$
-\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
-$$</p>
-<p>Under the semantics adopted by this package, each
-<code>(pu, action, feature)</code> triple represents a single net effect.
-Consequently, after validation and aggregation, a stored row cannot have both
-<code>benefit &gt; 0</code> and <code>loss &gt; 0</code> at the same time.</p>
+    <p>Describe how feasible actions change feature amounts relative to a
+user-defined reference scenario.</p>
     </div>
 
     <div class="section level2">
@@ -112,7 +64,9 @@ Consequently, after validation and aggregation, a stored row cannot have both
 <span>  effects <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  effect_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"delta"</span>, <span class="st">"after"</span><span class="op">)</span>,</span>
 <span>  effect_aggregation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sum"</span>, <span class="st">"mean"</span><span class="op">)</span>,</span>
-<span>  component <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"any"</span>, <span class="st">"benefit"</span>, <span class="st">"loss"</span><span class="op">)</span></span>
+<span>  component <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"any"</span>, <span class="st">"benefit"</span>, <span class="st">"loss"</span><span class="op">)</span>,</span>
+<span>  raster_aggregation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sum"</span>, <span class="st">"mean"</span><span class="op">)</span>,</span>
+<span>  raster_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"effect"</span>, <span class="st">"outcome"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -121,194 +75,156 @@ Consequently, after validation and aggregation, a stored row cannot have both
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>Problem</code> object created with <code><a href="create_problem.html">create_problem</a></code>. It
-must already contain feasible actions; run <code><a href="add_actions.html">add_actions</a></code> first.</p></dd>
+<dd><p>A <code>Problem</code> object created by <code><a href="create_problem.html">create_problem</a></code>
+with feasible actions defined by <code><a href="add_actions.html">add_actions</a></code>.</p></dd>
 
 
 <dt id="arg-effects">effects<a class="anchor" aria-label="anchor" href="#arg-effects"></a></dt>
-<dd><p>Effect specification. One of:</p><ul><li><p><code>NULL</code>, to store an empty effects table,</p></li>
-<li><p>a <code>data.frame(action, feature, multiplier)</code>,</p></li>
-<li><p>a <code>data.frame(pu, action, feature, ...)</code> with explicit effects,</p></li>
-<li><p>a named list of <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code> objects, one per action.</p></li>
-</ul></dd>
+<dd><p>A table with <code>action</code>, <code>feature</code>, optional
+<code>pu</code>, and exactly one of <code>effect</code>, <code>outcome</code>, or
+<code>relative_change</code>; a named list of action rasters; or <code>NULL</code>
+to store an empty effects table. Historical input formats remain supported.</p></dd>
 
 
 <dt id="arg-effect-type">effect_type<a class="anchor" aria-label="anchor" href="#arg-effect-type"></a></dt>
-<dd><p>Character string indicating how supplied effect values are
-interpreted. Must be one of:</p><ul><li><p><code>"delta"</code>: values represent signed net changes,</p></li>
-<li><p><code>"after"</code>: values represent after-action amounts and are
-converted to net changes relative to baseline feature amounts.</p></li>
-</ul></dd>
+<dd><p>Deprecated interpretation argument: <code>"delta"</code>
+for changes or <code>"after"</code> for action amounts. With historical
+multipliers, delta means reference times multiplier; after means an outcome
+equal to reference times multiplier. Omit for new table inputs.</p></dd>
 
 
 <dt id="arg-effect-aggregation">effect_aggregation<a class="anchor" aria-label="anchor" href="#arg-effect-aggregation"></a></dt>
-<dd><p>Character string giving the aggregation used when
-converting raster values to planning-unit level. Must be one of
-<code>"sum"</code> or <code>"mean"</code>.</p></dd>
+<dd><p>Deprecated raster aggregation argument; use
+<code>raster_aggregation</code>.</p></dd>
 
 
 <dt id="arg-component">component<a class="anchor" aria-label="anchor" href="#arg-component"></a></dt>
-<dd><p>Character string controlling which component of the
-canonical effects table is retained. Must be one of:</p><ul><li><p><code>"any"</code>: keep all stored effect rows,</p></li>
-<li><p><code>"benefit"</code>: keep only rows with <code>benefit &gt; 0</code>,</p></li>
-<li><p><code>"loss"</code>: keep only rows with <code>loss &gt; 0</code>.</p></li>
-</ul></dd>
+<dd><p>Deprecated filtering argument: <code>"any"</code> retains all
+rows, <code>"benefit"</code> retains positive changes, and <code>"loss"</code>
+retains negative changes. New calls retain all components.</p></dd>
+
+
+<dt id="arg-raster-aggregation">raster_aggregation<a class="anchor" aria-label="anchor" href="#arg-raster-aggregation"></a></dt>
+<dd><p>Raster aggregation within planning units:
+<code>"sum"</code> (default) or <code>"mean"</code>.</p></dd>
+
+
+<dt id="arg-raster-type">raster_type<a class="anchor" aria-label="anchor" href="#arg-raster-type"></a></dt>
+<dd><p>Raster interpretation: <code>"effect"</code> (default) or
+<code>"outcome"</code>. Explicitly supply this or <code>raster_aggregation</code>
+to select the new raster interface.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An updated <code>Problem</code> object containing:</p><dl><dt><code>dist_effects</code></dt>
-<dd><p>A canonical effects table with columns
-<code>pu</code>, <code>action</code>, <code>feature</code>, <code>amount_after</code>,
-<code>benefit</code>, <code>loss</code>, <code>internal_pu</code>,
-<code>internal_action</code>, <code>internal_feature</code>, and optional labels such
-as <code>feature_name</code> and <code>action_name</code>.</p></dd>
-
-<dt><code>effects_meta</code></dt>
-<dd><p>Metadata describing how effects were
-interpreted and stored.</p></dd>
-
-
-</dl></div>
+    <p>An updated <code>Problem</code> containing <code>dist_effects</code> and
+<code>effects_meta</code>. Existing model coefficients remain available.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>When to use <code>add_effects()</code>.</strong></p>
-<p>Use this function when you want to specify what feasible actions do to
-features. It is the stage at which an action-based decision space is linked
-to feature-level ecological or functional consequences.</p>
-<p>This function provides a unified interface for specifying action effects from
-several input formats while enforcing a single internal representation.
-Regardless of how the user supplies the effects, the stored output always
-follows the same canonical structure based on <code>amount_after</code> and
-non-negative <code>benefit</code>/<code>loss</code> components.</p>
-<p>Let \(i \in \mathcal{I}\) index planning units,
-\(a \in \mathcal{A}\) index actions, and
-\(f \in \mathcal{F}\) index features.
-Let \(b_{if}\) denote the baseline amount of feature \(f\) in planning
-unit \(i\), as given by the feature-distribution table. Let
-\(\Delta_{iaf}\) denote the net change caused by applying action
-\(a\) in planning unit \(i\) to feature \(f\). The canonical stored
-representation is:</p>
-<p>$$
-\mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf},
-$$</p>
-<p>$$
-\mathrm{benefit}_{iaf} = \max(\Delta_{iaf}, 0),
-$$</p>
-<p>$$
-\mathrm{loss}_{iaf} = \max(-\Delta_{iaf}, 0).
-$$</p>
-<p>Hence:</p><ul><li><p>if \(\Delta_{iaf} &gt; 0\), then <code>benefit &gt; 0</code> and <code>loss = 0</code>,</p></li>
-<li><p>if \(\Delta_{iaf} &lt; 0\), then <code>benefit = 0</code> and <code>loss &gt; 0</code>,</p></li>
-<li><p>if \(\Delta_{iaf} = 0\), then both are zero and
-<code>amount_after</code> equals the baseline amount.</p></li>
-</ul><p>Thus, <code>benefit</code> and <code>loss</code> describe the net change relative to the
-baseline, whereas <code>amount_after</code> describes the final feature amount under
-the action. This distinction is important for actions that maintain baseline
-values. For example, if an action preserves a feature unchanged, then
-<code>benefit = 0</code>, <code>loss = 0</code>, and <code>amount_after</code> equals the
-baseline amount.</p>
-<p><strong>Why split effects into benefit and loss?</strong></p>
-<p>This representation avoids ambiguity in downstream optimization models. It
-allows the package to support, for example, objectives that maximize
-beneficial effects, minimize damages, impose no-net-loss conditions, or
-combine both components differently in multi-objective formulations.</p>
-<p><strong>Supported effect specifications</strong></p>
-<p>The <code>effects</code> argument may be provided in one of the following forms:</p>
-<ol><li><p><code>NULL</code>. An empty effects table is stored.</p></li>
-<li><p>A <code>data.frame(action, feature, multiplier)</code>. In this case,
-effects are constructed by multiplying baseline feature amounts by the
-supplied multiplier. The interpretation depends on <code>effect_type</code>.</p>
-<p>If <code>effect_type = "delta"</code>, the multiplier represents a relative net
-change:
-$$
-  \Delta_{iaf} = b_{if} \times m_{af}.
-  $$</p>
-<p>If <code>effect_type = "after"</code>, the multiplier represents the
-after-action amount relative to the baseline:
-$$
-  \mathrm{amount\_after}_{iaf} = b_{if} \times m_{af},
-  $$
-and the net effect is:
-$$
-  \Delta_{iaf} = \mathrm{amount\_after}_{iaf} - b_{if}
-               = b_{if}(m_{af} - 1).
-  $$</p>
-<p>Thus, under <code>effect_type = "after"</code>, a multiplier of <code>1</code>
-means no change, a multiplier below <code>1</code> means a loss, and a multiplier
-above <code>1</code> means a gain. This specification is expanded over all
-feasible <code>(pu, action)</code> pairs.</p></li>
-<li><p>A <code>data.frame(pu, action, feature, ...)</code> giving explicit effects
-for individual triples. The table may contain:</p><ul><li><p><code>delta</code> or <code>effect</code>: interpreted as signed net changes,</p></li>
-<li><p><code>after</code>: interpreted as after-action amounts and requiring
-<code>effect_type = "after"</code>,</p></li>
-<li><p><code>benefit</code> and/or <code>loss</code>: explicit non-negative split
-components,</p></li>
-<li><p>legacy signed <code>benefit</code> without <code>loss</code>: interpreted as a
-signed net effect for backwards compatibility.</p></li>
-</ul></li>
-<li><p>A named list of <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code> objects, one per action. In
-this case, names must match action ids, and each raster must contain one
-layer per feature. Raster values are aggregated to planning-unit level
-using <code>effect_aggregation</code>.</p></li>
-</ol><p><strong>Interpretation of <code>effect_type</code></strong></p>
-<p>If <code>effect_type = "delta"</code>, supplied values are interpreted as net
-changes directly. For explicit <code>delta</code> or <code>effect</code> columns, values
-are used as signed changes. For <code>multiplier</code> inputs, values are
-interpreted as relative net changes:</p>
-<p>$$
-\Delta_{iaf} = b_{if} \times m_{af}.
-$$</p>
-<p>If <code>effect_type = "after"</code>, supplied values are interpreted as
-after-action amounts and converted internally to net effects using:</p>
-<p>$$
-\Delta_{iaf} = \mathrm{after}_{iaf} - b_{if}.
-$$</p>
-<p>For <code>multiplier</code> inputs under <code>effect_type = "after"</code>, the
-after-action amount is computed as \(b_{if} \times m_{af}\), so that:</p>
-<p>$$
-\Delta_{iaf} = b_{if}(m_{af} - 1).
-$$</p>
-<p>Missing baseline values are treated as zero.</p>
-<p><strong>Feasibility and locked-out decisions</strong></p>
-<p>Effects are only retained for feasible <code>(pu, action)</code> pairs. Thus,
-<code><a href="add_actions.html">add_actions()</a></code> must be called first. Pairs marked as locked out
-(<code>status == 3</code>) are removed before storing the final effects table.</p>
-<p>This function does not define the action-decision layer itself; it builds on
-the feasible <code>(pu, action)</code> pairs already stored in the problem.</p>
-<p><strong>Duplicate rows and semantic validation</strong></p>
-<p>If multiple rows are supplied for the same <code>(pu, action, feature)</code>
-triple, they are aggregated by summing <code>benefit</code> and <code>loss</code>
-separately. The resulting triple must still respect the package semantics,
-namely that both components cannot be strictly positive simultaneously.
-Inputs violating this rule are rejected.</p>
-<p><strong>Component filtering</strong></p>
-<p>After canonicalization and validation, rows can be restricted to:</p><ul><li><p><code>component = "any"</code>: keep all stored effect rows, including
-neutral effects,</p></li>
-<li><p><code>component = "benefit"</code>: keep only rows with <code>benefit &gt; 0</code>,</p></li>
-<li><p><code>component = "loss"</code>: keep only rows with <code>loss &gt; 0</code>.</p></li>
-</ul><p>Zero-effect rows are retained by default because they may encode valid
-neutral effects. They are removed only when using
-<code>component = "benefit"</code> or <code>component = "loss"</code>.</p>
-<p><strong>Raster handling</strong></p>
-<p>When effects are supplied as rasters, they are automatically aligned to the
-planning-unit raster or geometry when needed before extraction or zonal
-aggregation.</p>
-<p><strong>Stored output</strong></p>
-<p>The resulting effects table contains user-facing ids, internal integer ids,
-and optional labels for actions and features. Metadata describing the stored
-representation and input interpretation are written to an effects metadata
-field.</p>
-<p>After defining effects, typical next steps include adding objectives that use
-beneficial or harmful effects, and then solving the configured problem.</p>
+    <p>The feature distribution supplied to <code><a href="create_problem.html">create_problem()</a></code> defines the
+reference amounts. The reference can describe current conditions, a future
+without intervention, or existing management. Action outcomes and references
+must share units and, for future scenarios, the same time horizon.</p>
+<p><strong>Tabular inputs</strong></p>
+<p>Supply a table with <code>action</code>, <code>feature</code>, optional <code>pu</code>, and
+exactly one of these numeric columns:</p><ul><li><p><code>effect</code>: signed absolute change relative to the reference.</p></li>
+<li><p><code>outcome</code>: feature amount under the action.</p></li>
+<li><p><code>relative_change</code>: proportional change; 0.25 means +25 percent,
+zero means no change, and -0.25 means a 25 percent decrease.</p></li>
+</ul><p>If <code>pu</code> is omitted, each action/feature specification is expanded over
+feasible planning-unit/action pairs. Actions must be defined first using
+<code><a href="add_actions.html">add_actions()</a></code>; locked-out pairs are excluded. Features may be supplied
+as numeric identifiers or names. Duplicate keys and ambiguous columns are
+rejected. Values must be numeric, finite, and non-missing. Computed outcomes
+must be non-negative. Missing reference amounts are zero, so relative change
+cannot create an amount from a zero reference; use <code>effect</code> or
+<code>outcome</code> in that case.</p>
+<p><strong>Canonical representation</strong></p>
+<p>For reference amount \(r_{if}\) and action outcome \(q_{iaf}\), the signed
+effect is \(e_{iaf} = q_{iaf} - r_{if}\). Relative-change inputs \(c_{iaf}\)
+are converted using \(e_{iaf} = r_{if} c_{iaf}\). The stored table exposes
+<code>reference_amount</code>, <code>action_outcome</code>, and <code>effect</code>. It also
+retains <code>amount_after</code> as an alias of <code>action_outcome</code>, plus
+\(\mathrm{benefit} = \max(e, 0)\) and \(\mathrm{loss} = \max(-e, 0)\).
+These components cannot both be positive for a single triple.
+A positive effect denotes an increase, not necessarily an improvement:
+whether increasing a feature is desirable depends on the objective.
+Zero effects are retained and have an outcome equal to the reference amount.</p>
+<p><strong>Raster inputs</strong></p>
+<p>Supply a named list of <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code> objects, one per action.
+Names must match action identifiers. Each raster must have one layer per
+feature, in the order of the problem's feature catalogue; layer names do not
+reorder features. The problem must contain planning-unit geometry or a
+planning-unit raster. Rasters are aligned to the planning-unit raster when
+needed. Use <code>raster_type = "effect"</code> for signed changes or
+<code>raster_type = "outcome"</code> for feature amounts under the action.
+<code>raster_aggregation</code> specifies <code>"sum"</code> or <code>"mean"</code> within
+each planning unit. Aggregated values must be comparable with the reference:
+do not compare a mean outcome with a reference total. Relative-change rasters
+are not accepted directly; prepare a tabular relative-change specification
+or a raster of effects/outcomes first.</p>
+<p><strong>Compatibility with earlier versions</strong></p>
+<p>Explicit legacy arguments <code>effect_type</code>, <code>effect_aggregation</code>, and
+<code>component</code>, and historical <code>delta</code>, <code>after</code>,
+<code>multiplier</code>, <code>benefit</code>, and <code>loss</code> inputs remain supported
+with their existing behavior. They emit a <span class="pkg">lifecycle</span> deprecation warning
+announcing removal in a future release. Positional legacy arguments keep
+their original order. New table inputs need no interpretation argument.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="add_actions.html">add_actions</a></code>,
-<code><a href="add_benefits.html">add_benefits</a></code>,
+    <div class="dont-index"><p><code><a href="add_actions.html">add_actions</a></code>, <code><a href="add_benefits.html">add_benefits</a></code>,
 <code><a href="add_losses.html">add_losses</a></code></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, cost <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, name <span class="op">=</span> <span class="st">"habitat"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span>, feature <span class="op">=</span> <span class="fl">1</span>, amount <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span>actions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"restore"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Equivalent ways to specify an increase from 100 to 150.</span></span></span>
+<span class="r-in"><span><span class="va">p_effect</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fl">1</span>, action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, effect <span class="op">=</span> <span class="fl">50</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_outcome</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fl">1</span>, action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, outcome <span class="op">=</span> <span class="fl">150</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_relative</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, relative_change <span class="op">=</span> <span class="fl">0.50</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_effect</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reference_amount"</span>, <span class="st">"effect"</span>, <span class="st">"action_outcome"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   reference_amount effect action_outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              100     50            150</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Raster example: one polygon contains two cells with reference amounts 40, 60.</span></span></span>
+<span class="r-in"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span>nrows <span class="op">=</span> <span class="fl">1</span>, ncols <span class="op">=</span> <span class="fl">2</span>, xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>                 ymin <span class="op">=</span> <span class="fl">0</span>, ymax <span class="op">=</span> <span class="fl">1</span>, crs <span class="op">=</span> <span class="st">"EPSG:3857"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">60</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"habitat"</span></span></span>
+<span class="r-in"><span><span class="va">polygon</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_polygon</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">st_sf</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1L</span>, cost <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                geometry <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span><span class="va">polygon</span>, crs <span class="op">=</span> <span class="fl">3857</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_spatial</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="va">pu</span>, features <span class="op">=</span> <span class="va">r</span>, cost <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span>actions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"restore"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_raster</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p_spatial</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>restore <span class="op">=</span> <span class="va">r</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                       raster_type <span class="op">=</span> <span class="st">"effect"</span>, raster_aggregation <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">60</span>, <span class="fl">90</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_raster_outcome</span> <span class="op">&lt;-</span> <span class="fu">add_effects</span><span class="op">(</span><span class="va">p_spatial</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>restore <span class="op">=</span> <span class="va">r</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                               raster_type <span class="op">=</span> <span class="st">"outcome"</span>, raster_aggregation <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_raster</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reference_amount"</span>, <span class="st">"effect"</span>, <span class="st">"action_outcome"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   reference_amount effect action_outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              100     50            150</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

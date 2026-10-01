@@ -60,11 +60,11 @@ target table.
 ## Details
 
 Use this function when target requirements are naturally expressed as
-proportions of current baseline feature totals rather than in original
+proportions of reference-scenario feature totals rather than in original
 feature units.
 
 Let \\\mathcal{F}\\ denote the set of features. For each targeted
-feature \\f \in \mathcal{F}\\, let \\B_f\\ denote the current baseline
+feature \\f \in \mathcal{F}\\, let \\B_f\\ denote the reference-scenario
 total amount of that feature in the landscape, as computed by
 `.pa_feature_totals()`.
 
@@ -98,7 +98,7 @@ x\_{ia} \ge T_f, \$\$ where:
 The `actions` argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \\B_f\\
 used to compute the threshold. In other words, relative targets are
-always scaled against the current full landscape baseline.
+always scaled against the full landscape reference scenario.
 
 Therefore, `actions` changes who may satisfy the target, but not how the
 threshold itself is scaled.
@@ -155,8 +155,8 @@ p1$data$targets
 #> 1       1 actions    ge relative_baseline        0.3    14.08761     4.226283
 #> 2       2 actions    ge relative_baseline        0.3    13.44903     4.034709
 #>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-08-14 19:53:36.491236     woodland
-#> 2    <NA>  <NA> 2026-08-14 19:53:36.491236     riparian
+#> 1    <NA>  <NA> 2026-10-01 11:05:58.807187     woodland
+#> 2    <NA>  <NA> 2026-10-01 11:05:58.807187     riparian
 
 # Require 20% for one selected feature
 p2 <- add_constraint_targets_relative(
@@ -168,7 +168,7 @@ p2$data$targets
 #>   feature    type sense       target_unit target_raw basis_total target_value
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
 #>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-08-14 19:53:36.494903     woodland
+#> 1    <NA>  <NA> 2026-10-01 11:05:58.811556     woodland
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_relative(
@@ -181,6 +181,6 @@ p3$data$targets
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
 #> 2       2 actions    ge relative_baseline        0.2    13.44903     2.689806
 #>   actions label                 created_at feature_name
-#> 1 protect  <NA> 2026-08-14 19:53:36.499765     woodland
-#> 2 protect  <NA> 2026-08-14 19:53:36.499765     riparian
+#> 1 protect  <NA> 2026-10-01 11:05:58.815776     woodland
+#> 2 protect  <NA> 2026-10-01 11:05:58.815776     riparian
 ```

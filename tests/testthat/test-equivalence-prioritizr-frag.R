@@ -15,7 +15,7 @@ test_that("multiscape matches prioritizr on a one-action boundary-penalized prob
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = FALSE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>

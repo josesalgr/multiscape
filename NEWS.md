@@ -1,3 +1,19 @@
+# multiscape 1.3.0
+
+- `add_effects()` now accepts exactly one of `effect`, `outcome`, or
+  `relative_change`. Tables without `pu` expand over feasible action pairs.
+- Feature distributions describe a user-defined reference scenario. Effect
+  tables expose `reference_amount`, `action_outcome`, and signed `effect`,
+  while retaining `amount_after`, `benefit`, and `loss` for compatibility.
+- Added `raster_aggregation` and `raster_type` for spatial effect inputs.
+- Legacy effects arguments and columns retain their existing behavior and
+  emit a lifecycle deprecation warning announcing removal in a future release.
+- Migrated reference examples, the README, and the Rwanda reserve-design
+  workflow to semantic effect inputs. Added runnable table and raster examples
+  to `add_effects()` and removed legacy syntax from implicit reserve-model setup.
+- Problem summaries distinguish effect input format from counts of positive,
+  negative, and zero effects, replacing the ambiguous "effect mode" label.
+
 # multiscape 1.2.1
 
 ## Spatial relations

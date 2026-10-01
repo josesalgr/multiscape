@@ -236,8 +236,7 @@ test_that("compile_model works with stored budget constraints", {
       cost = c(conservation = 1, restoration = 2)
     ) |>
     multiscape::add_effects(
-      effects = toy$effects,
-      effect_type = "after"
+      effects = toy$effects
     ) |>
     multiscape::add_constraint_targets_relative(0.2) |>
     multiscape::add_constraint_budget(

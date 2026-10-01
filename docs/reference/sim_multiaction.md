@@ -12,7 +12,7 @@ data(sim_multiaction)
 
 ## Format
 
-A named list with six components:
+A named list with seven components:
 
 - `planning_units`:
 
@@ -34,6 +34,12 @@ A named list with six components:
 
   A data frame of spatially varying action costs.
 
+- `effect_assumptions`:
+
+  Relative changes by action and feature, ready to pass to
+  [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md).
+
 - `effects`:
 
-  A data frame of action-specific feature multipliers.
+  Explicit signed changes in the historical `delta` column, retained for
+  compatibility. New examples use `effect_assumptions`.

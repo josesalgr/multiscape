@@ -71,8 +71,7 @@ test_that("the internal maximum-one-action constraint is compiled", {
       )
     ) |>
     multiscape::add_effects(
-      effects = toy$effects,
-      effect_type = "after"
+      effects = toy$effects
     ) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_objective_min_cost(alias = "cost")

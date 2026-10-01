@@ -59,7 +59,6 @@ transparent preparation script supplied in
 it does not add the tutorial data to the installed package.
 
 ``` r
-
 library(multiscape)
 library(dplyr)
 library(ggplot2)
@@ -88,7 +87,6 @@ protected units are locked into every solution and contribute toward the
 representation targets.
 
 ``` r
-
 planning_map <- rwanda_reserve$planning_units |>
   mutate(
     protection_status = if_else(
@@ -136,7 +134,6 @@ planning unit, so targets are based on represented area rather than
 simple presence or absence.
 
 ``` r
-
 feature_map <- rwanda_reserve$feature_distribution |>
   left_join(rwanda_reserve$features, by = c("feature" = "id")) |>
   group_by(feature) |>
@@ -184,14 +181,14 @@ reduces to the classical binary site-selection problem.
 
 The table supplied to
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
-uses `effect_type = "after"`. Its multiplier of one means that selecting
-the reserve action represents the baseline amount of each feature
-contained in that unit. It does not describe a 100% ecological increase:
-it describes the amount expected to be represented after the unit is
-assigned to the reserve network.
+specifies `effect = 0` for each feature. The reference scenario is the
+current feature distribution, and the reserve action leaves that amount
+unchanged. Its outcome therefore equals the reference amount.
+Representation targets count this outcome in selected units; zero effect
+does not mean zero represented habitat. This is classical reserve
+selection as a special case of the action-based formulation.
 
 ``` r
-
 problem <- create_problem(
   pu = rwanda_reserve$planning_units,
   features = rwanda_reserve$features,
@@ -204,8 +201,11 @@ problem <- create_problem(
     cost = 0
   ) |>
   add_effects(
-    effects = rwanda_reserve$effects,
-    effect_type = "after"
+    effects = data.frame(
+      action = "reserve",
+      feature = rwanda_reserve$features$id,
+      effect = 0
+    )
   ) |>
   add_constraint_targets_relative(0.30) |>
   add_constraint_locked_planning_units(
@@ -227,37 +227,37 @@ problem
 
 ``` text
 A multiscape object (<Problem>)
-├─data
-│├─planning units: <data.frame> (2613 total)
-│├─costs: min: 3, max: 10000
-│└─features: 13 total ("Albertine Rift montane forests", "Banded mongoose",
+<U+251C><U+2500>data
+<U+2502><U+251C><U+2500>planning units: <data.frame> (2613 total)
+<U+2502><U+251C><U+2500>costs: min: 3, max: 10000
+<U+2502><U+2514><U+2500>features: 13 total ("Albertine Rift montane forests", "Banded mongoose",
 "Black rhinoceros", ...)
-└─actions and effects
-│├─actions: 1 total ("Reserve")
-│├─feasible action pairs: 2613 feasible rows
-│├─action costs: min: 0, max: 0
-│├─effect data: 15078 rows
-│├─effect mode: all zero
-│└─profit data: none
-└─spatial
-│├─geometry: sf (2613 rows)
-│├─coordinates: 2613 rows (x: 709263.1037..933932.07251, y:
+<U+2514><U+2500>actions and effects
+<U+2502><U+251C><U+2500>actions: 1 total ("Reserve")
+<U+2502><U+251C><U+2500>feasible action pairs: 2613 feasible rows
+<U+2502><U+251C><U+2500>action costs: min: 0, max: 0
+<U+2502><U+251C><U+2500>effect data: 15078 rows
+<U+2502><U+251C><U+2500>effect mode: all zero
+<U+2502><U+2514><U+2500>profit data: none
+<U+2514><U+2500>spatial
+<U+2502><U+251C><U+2500>geometry: sf (2613 rows)
+<U+2502><U+251C><U+2500>coordinates: 2613 rows (x: 709263.1037..933932.07251, y:
 9687210.70178..9884930.00179)
-│└─relations: boundary (10174 edges, w: 0..4840.11063)
-└─targets and constraints
-│├─targets: 13 rows
-│├─target preview: "Albertine Rift montane forests" >= 3.246e+09, "Banded
+<U+2502><U+2514><U+2500>relations: boundary (10174 edges, w: 0..4840.11063)
+<U+2514><U+2500>targets and constraints
+<U+2502><U+251C><U+2500>targets: 13 rows
+<U+2502><U+251C><U+2500>target preview: "Albertine Rift montane forests" >= 3.246e+09, "Banded
 mongoose" >= 6.925e+09, "Black rhinoceros" >= 7.06e+09
-│├─area constraints: none
-│├─budget constraints: none
-│├─planning-unit locks: 201 units (201 locked-in, 0 locked-out)
-│└─action locks: none
-└─model
-│├─status: not built yet (will build in solve())
-│├─objectives: 2 registered (cost, fragmentation)
-│├─method: not set
-│├─solver: not set (auto)
-│└─checks: incomplete (multiple objectives registered but no MO method
+<U+2502><U+251C><U+2500>area constraints: none
+<U+2502><U+251C><U+2500>budget constraints: none
+<U+2502><U+251C><U+2500>planning-unit locks: 201 units (201 locked-in, 0 locked-out)
+<U+2502><U+2514><U+2500>action locks: none
+<U+2514><U+2500>model
+<U+2502><U+251C><U+2500>status: not built yet (will build in solve())
+<U+2502><U+251C><U+2500>objectives: 2 registered (cost, fragmentation)
+<U+2502><U+251C><U+2500>method: not set
+<U+2502><U+251C><U+2500>solver: not set (auto)
+<U+2502><U+2514><U+2500>checks: incomplete (multiple objectives registered but no MO method
 selected)
 # i Use `x$data` to inspect stored tables and model snapshots.
 ```
@@ -307,7 +307,6 @@ and objective scaling are deliberately disabled so that the optimized
 expression has the traditional BLM interpretation.
 
 ``` r
-
 blm_values <- c(0, 1e-5, 1e-4, 1e-3, 1e-2, 2e-2, 5e-2, 1e-1, 1)
 
 blm_problem <- problem |>
@@ -338,7 +337,6 @@ locally, the complete analysis can be regenerated by running
 `data-raw/build_rwanda_vignette_results.R` from the package source tree.
 
 ``` r
-
 if (!requireNamespace("gurobi", quietly = TRUE)) {
   stop("Reproducing this analysis requires Gurobi and a valid licence.")
 }
@@ -352,7 +350,7 @@ termination status, and final zero MIP gap; the remaining runs are
 summarized in the table below.
 
 ``` text
-Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
+o;<bf>Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
 
 CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
 Thread count: 14 physical cores, 20 logical processors, using up to 2 threads
@@ -388,7 +386,6 @@ vignette. The reported gap is the final relative MIP gap returned by
 Gurobi.
 
 ``` r
-
 blm_run_summary <- get_runs(blm_solutions) |>
   left_join(get_objectives(blm_solutions), by = "solution_id") |>
   mutate(blm = blm_values[run_id]) |>
@@ -409,7 +406,7 @@ blm_run_summary
 |      8 |           6 | 1e-01 | optimal |   4.481 |   0 | 1537824 |       1447814 |
 |      9 |           7 | 1e+00 | optimal |  73.295 |   0 | 1743047 |        710325 |
 
-Stored run metadata and objective values for the BLM analysis. {.table}
+Stored run metadata and objective values for the BLM analysis.
 
 The resulting curve shows what is gained by increasing the BLM. Points
 that overlap or are very close indicate ranges of coefficients that
@@ -419,7 +416,6 @@ transferred unchanged to a landscape with a different cost surface,
 projection, resolution, or boundary units.
 
 ``` r
-
 ggplot(
   blm_results,
   aes(boundary_km, additional_cost)
@@ -472,7 +468,6 @@ progressively more compact reserve designs. Epsilon-constraint does not
 require cost and boundary to be expressed on a common numerical scale.
 
 ``` r
-
 epsilon_limits <- seq(
   min(blm_results$fragmentation),
   max(blm_results$fragmentation),
@@ -502,7 +497,7 @@ without requiring the models to be solved again during website
 construction.
 
 ``` text
-Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
+o;<bf>Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
 
 CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
 Thread count: 14 physical cores, 20 logical processors, using up to 2 threads
@@ -548,7 +543,6 @@ gap. Here `epsilon_fragmentation` is the imposed upper bound, whereas
 plan.
 
 ``` r
-
 epsilon_run_summary <- get_runs(epsilon_solutions) |>
   left_join(get_objectives(epsilon_solutions), by = "solution_id") |>
   mutate(epsilon_fragmentation = epsilon_limits[run_id]) |>
@@ -578,10 +572,9 @@ epsilon_run_summary
 | 8 | 8 | 3132887 | optimal | 0.790 | 0 | 1471272 | 3132887 |
 
 Stored run metadata, epsilon limits, and objective values for the
-epsilon-constraint analysis. {.table}
+epsilon-constraint analysis.
 
 ``` r
-
 comparison_data <- bind_rows(
   blm_results |>
     transmute(
@@ -666,7 +659,6 @@ distinguishing inherited protection from additions chosen by the
 optimizer.
 
 ``` r
-
 action_plot <- plot_spatial_actions(
   epsilon_solutions,
   solutions = unname(representative_ids),
@@ -715,7 +707,6 @@ it is the number or proportion of analyzed planning scenarios in which a
 unit was selected.
 
 ``` r
-
 frequency_data <- action_results |>
   filter(selected == 1) |>
   count(pu, name = "selected_runs") |>

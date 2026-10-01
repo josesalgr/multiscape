@@ -18,8 +18,7 @@ test_that("augmecon returns a SolutionSet with runs", {
       cost = 0
     ) |>
     multiscape::add_effects(
-      effects = toy$effects,
-      effect_type = "after"
+      effects = toy$effects
     ) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(

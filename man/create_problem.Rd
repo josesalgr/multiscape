@@ -121,6 +121,13 @@ such as coordinates, geometry, raster references, or raw planning-unit
 attributes.
 }
 \details{
+Feature amounts describe a user-defined reference scenario, which can be
+current conditions, a future business-as-usual scenario, or existing
+management. The term baseline in older interfaces refers to these reference
+amounts. Action outcomes and reference amounts must share units and, for
+future scenarios, the same time horizon. The package optimizes supplied
+effects; it does not estimate causal effects or simulate reference scenarios.
+
 A \code{Problem} object created by \code{create_problem()} is the basic input
 structure used throughout downstream \code{multiscape} workflows.
 
