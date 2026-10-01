@@ -127,8 +127,8 @@
   # model internally:
   #
   #   one implicit conservation action per planning unit
-  #   effect_type = "after"
-  #   amount_after = baseline feature amount
+  #   effect = 0
+  #   action outcome = reference feature amount
   #
   # This must happen before ensure_tables(), prepare_tables(), targets, and
   # objective validation.
@@ -1550,17 +1550,16 @@
   )
 
   effects <- data.frame(
+    pu = x$data$dist_features$pu,
     action = action_id,
-    feature = x$data$features$id,
-    multiplier = 1,
+    feature = x$data$dist_features$feature,
+    effect = 0,
     stringsAsFactors = FALSE
   )
 
   x <- add_effects(
     x = x,
-    effects = effects,
-    effect_type = "after",
-    component = "any"
+    effects = effects
   )
 
   x$data$meta <- x$data$meta %||% list()

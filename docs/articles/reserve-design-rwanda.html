@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,8 +52,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+<li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul>
 </li>
@@ -255,12 +255,13 @@ planning units and <span class="math inline">\(j \in
 <code>reserve</code> action. Because there is only one candidate action,
 the action-assignment model reduces to the classical binary
 site-selection problem.</p>
-<p>The table supplied to <code><a href="../reference/add_effects.html">add_effects()</a></code> uses
-<code>effect_type = "after"</code>. Its multiplier of one means that
-selecting the reserve action represents the baseline amount of each
-feature contained in that unit. It does not describe a 100% ecological
-increase: it describes the amount expected to be represented after the
-unit is assigned to the reserve network.</p>
+<p>The table supplied to <code><a href="../reference/add_effects.html">add_effects()</a></code> specifies
+<code>effect = 0</code> for each feature. The reference scenario is the
+current feature distribution, and the reserve action leaves that amount
+unchanged. Its outcome therefore equals the reference amount.
+Representation targets count this outcome in selected units; zero effect
+does not mean zero represented habitat. This is classical reserve
+selection as a special case of the action-based formulation.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
 <span>  pu <span class="op">=</span> <span class="va">rwanda_reserve</span><span class="op">$</span><span class="va">planning_units</span>,</span>
@@ -274,8 +275,11 @@ unit is assigned to the reserve network.</p>
 <span>    cost <span class="op">=</span> <span class="fl">0</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/add_effects.html">add_effects</a></span><span class="op">(</span></span>
-<span>    effects <span class="op">=</span> <span class="va">rwanda_reserve</span><span class="op">$</span><span class="va">effects</span>,</span>
-<span>    effect_type <span class="op">=</span> <span class="st">"after"</span></span>
+<span>    effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      action <span class="op">=</span> <span class="st">"reserve"</span>,</span>
+<span>      feature <span class="op">=</span> <span class="va">rwanda_reserve</span><span class="op">$</span><span class="va">features</span><span class="op">$</span><span class="va">id</span>,</span>
+<span>      effect <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.30</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/add_constraint_locked_planning_units.html">add_constraint_locked_planning_units</a></span><span class="op">(</span></span>
@@ -294,37 +298,37 @@ unit is assigned to the reserve network.</p>
 <span></span>
 <span><span class="va">problem</span></span></code></pre></div>
 <pre class="text"><code>A multiscape object (&lt;Problem&gt;)
-├─data
-│├─planning units: &lt;data.frame&gt; (2613 total)
-│├─costs: min: 3, max: 10000
-│└─features: 13 total ("Albertine Rift montane forests", "Banded mongoose",
+&lt;U+251C&gt;&lt;U+2500&gt;data
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;planning units: &lt;data.frame&gt; (2613 total)
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;costs: min: 3, max: 10000
+&lt;U+2502&gt;&lt;U+2514&gt;&lt;U+2500&gt;features: 13 total ("Albertine Rift montane forests", "Banded mongoose",
 "Black rhinoceros", ...)
-└─actions and effects
-│├─actions: 1 total ("Reserve")
-│├─feasible action pairs: 2613 feasible rows
-│├─action costs: min: 0, max: 0
-│├─effect data: 15078 rows
-│├─effect mode: all zero
-│└─profit data: none
-└─spatial
-│├─geometry: sf (2613 rows)
-│├─coordinates: 2613 rows (x: 709263.1037..933932.07251, y:
+&lt;U+2514&gt;&lt;U+2500&gt;actions and effects
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;actions: 1 total ("Reserve")
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;feasible action pairs: 2613 feasible rows
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;action costs: min: 0, max: 0
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;effect data: 15078 rows
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;effect mode: all zero
+&lt;U+2502&gt;&lt;U+2514&gt;&lt;U+2500&gt;profit data: none
+&lt;U+2514&gt;&lt;U+2500&gt;spatial
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;geometry: sf (2613 rows)
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;coordinates: 2613 rows (x: 709263.1037..933932.07251, y:
 9687210.70178..9884930.00179)
-│└─relations: boundary (10174 edges, w: 0..4840.11063)
-└─targets and constraints
-│├─targets: 13 rows
-│├─target preview: "Albertine Rift montane forests" &gt;= 3.246e+09, "Banded
+&lt;U+2502&gt;&lt;U+2514&gt;&lt;U+2500&gt;relations: boundary (10174 edges, w: 0..4840.11063)
+&lt;U+2514&gt;&lt;U+2500&gt;targets and constraints
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;targets: 13 rows
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;target preview: "Albertine Rift montane forests" &gt;= 3.246e+09, "Banded
 mongoose" &gt;= 6.925e+09, "Black rhinoceros" &gt;= 7.06e+09
-│├─area constraints: none
-│├─budget constraints: none
-│├─planning-unit locks: 201 units (201 locked-in, 0 locked-out)
-│└─action locks: none
-└─model
-│├─status: not built yet (will build in solve())
-│├─objectives: 2 registered (cost, fragmentation)
-│├─method: not set
-│├─solver: not set (auto)
-│└─checks: incomplete (multiple objectives registered but no MO method
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;area constraints: none
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;budget constraints: none
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;planning-unit locks: 201 units (201 locked-in, 0 locked-out)
+&lt;U+2502&gt;&lt;U+2514&gt;&lt;U+2500&gt;action locks: none
+&lt;U+2514&gt;&lt;U+2500&gt;model
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;status: not built yet (will build in solve())
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;objectives: 2 registered (cost, fragmentation)
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;method: not set
+&lt;U+2502&gt;&lt;U+251C&gt;&lt;U+2500&gt;solver: not set (auto)
+&lt;U+2502&gt;&lt;U+2514&gt;&lt;U+2500&gt;checks: incomplete (multiple objectives registered but no MO method
 selected)
 # i Use `x$data` to inspect stored tables and model snapshots.</code></pre>
 <p>For every feature, the required amount is 30% of its amount across
@@ -412,7 +416,7 @@ source tree.</p>
 BLM runs. It shows the solver version, exact optimality requirement,
 termination status, and final zero MIP gap; the remaining runs are
 summarized in the table below.</p>
-<pre class="text"><code>Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
+<pre class="text"><code>o;&lt;bf&gt;Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
 
 CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
 Thread count: 14 physical cores, 20 logical processors, using up to 2 threads
@@ -650,7 +654,7 @@ solving the exact epsilon-constraint analysis. It documents the
 optimizer, termination status, objective value, and final optimality gap
 without requiring the models to be solved again during website
 construction.</p>
-<pre class="text"><code>Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
+<pre class="text"><code>o;&lt;bf&gt;Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 10.0 (19045.2))
 
 CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
 Thread count: 14 physical cores, 20 logical processors, using up to 2 threads

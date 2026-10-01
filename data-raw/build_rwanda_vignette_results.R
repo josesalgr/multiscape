@@ -32,8 +32,11 @@ problem <- create_problem(
     cost = 0
   ) |>
   add_effects(
-    effects = rwanda_reserve$effects,
-    effect_type = "after"
+    effects = data.frame(
+      action = "reserve",
+      feature = rwanda_reserve$features$id,
+      effect = 0
+    )
   ) |>
   add_constraint_targets_relative(0.30) |>
   add_constraint_locked_planning_units(

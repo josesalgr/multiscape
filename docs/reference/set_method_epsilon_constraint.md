@@ -202,7 +202,6 @@ that have already been registered under aliases. These aliases are
 typically created by calling objective setters with an `alias` argument,
 for example:
 
-
     x <- x |>
       add_objective_max_benefit(alias = "benefit") |>
       add_objective_min_cost(alias = "cost") |>
@@ -242,7 +241,6 @@ are involved.
 
 For example, with one primary objective and two constrained objectives,
 a manual run design may contain:
-
 
     data.frame(
       eps_cost = c(4, 6, 8),
@@ -320,8 +318,7 @@ x <- create_problem(
     cost = example_data$action_costs
   ) |>
   add_effects(
-    example_data$effects,
-    effect_type = "delta"
+    example_data$effect_assumptions
   ) |>
   add_objective_min_cost(alias = "cost") |>
   add_objective_max_benefit(alias = "benefit") |>

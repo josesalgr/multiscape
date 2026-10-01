@@ -15,7 +15,7 @@ problem <- create_problem(
   pu_id_col = "id"
 ) |>
   add_actions(inputs$actions, cost = 0) |>
-  add_effects(inputs$effects, effect_type = "after") |>
+  add_effects(data.frame(action = "reserve", feature = inputs$features$id, effect = 0)) |>
   add_constraint_targets_relative(0.30) |>
   add_constraint_locked_planning_units(
     locked_in = inputs$planning_units$protected

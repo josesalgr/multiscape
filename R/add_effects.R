@@ -1,285 +1,137 @@
 #' @include internal.R
 #'
 #' @title Add action effects to a planning problem
-#'
 #' @description
-#' Define the effects of management actions on features across planning units.
-#'
-#' Effects are stored in a canonical representation in an effects table, with one
-#' row per \code{(pu, action, feature)} triple and three main effect columns:
-#' \itemize{
-#'   \item \code{amount_after}: the feature amount expected after applying the action,
-#'   \item \code{benefit}: the positive component of the net change,
-#'   \item \code{loss}: the magnitude of the negative component of the net change.
-#' }
-#'
-#' Let \eqn{i} index planning units, \eqn{a} index actions, and \eqn{f} index
-#' features. Let \eqn{b_{if}} denote the baseline amount of feature \eqn{f} in
-#' planning unit \eqn{i}, and let \eqn{\Delta_{iaf}} denote the net effect of
-#' applying action \eqn{a}. The after-action amount is:
-#' \deqn{
-#' \mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf}.
-#' }
-#'
-#' Under the semantics adopted by this package, each
-#' \code{(pu, action, feature)} triple represents a single net effect.
-#' Consequently, after validation and aggregation, a stored row cannot have both
-#' \code{benefit > 0} and \code{loss > 0} at the same time.
+#' Describe how feasible actions change feature amounts relative to a
+#' user-defined reference scenario.
 #'
 #' @details
-#' \strong{Reference-based interface (since 1.3.0).}
-#' The amounts in \code{dist_features} describe a user-defined reference
-#' scenario: current conditions, a business-as-usual future, or existing
-#' management. Supply exactly one numeric column in an effects table:
-#' \code{effect} (signed absolute change), \code{outcome} (amount under the
-#' action), or \code{relative_change} (proportional change, so 0.25 means +25 percent).
-#' Tables require \code{action} and \code{feature}; omitting \code{pu} expands
-#' each row over feasible planning-unit/action pairs. Missing reference amounts
-#' are zero; relative change therefore cannot create an amount from zero.
-#' All resulting outcomes must be finite and non-negative. Positive effects
-#' are increases, not necessarily improvements (for example, fire risk).
-#' Stored tables also expose \code{reference_amount}, \code{action_outcome},
-#' and signed \code{effect}; \code{amount_after} remains a compatibility alias.
-#' Legacy columns and explicitly supplied legacy arguments retain their
-#' behavior but issue a \pkg{lifecycle} deprecation warning. They will be removed
-#' in a future release. Positional legacy arguments keep their original order.
+#' The feature distribution supplied to \code{create_problem()} defines the
+#' reference amounts. The reference can describe current conditions, a future
+#' without intervention, or existing management. Action outcomes and references
+#' must share units and, for future scenarios, the same time horizon.
 #'
-#' \strong{When to use \code{add_effects()}.}
+#' \strong{Tabular inputs}
 #'
-#' Use this function when you want to specify what feasible actions do to
-#' features. It is the stage at which an action-based decision space is linked
-#' to feature-level ecological or functional consequences.
-#'
-#' This function provides a unified interface for specifying action effects from
-#' several input formats while enforcing a single internal representation.
-#' Regardless of how the user supplies the effects, the stored output always
-#' follows the same canonical structure based on \code{amount_after} and
-#' non-negative \code{benefit}/\code{loss} components.
-#'
-#' Let \eqn{i \in \mathcal{I}} index planning units,
-#' \eqn{a \in \mathcal{A}} index actions, and
-#' \eqn{f \in \mathcal{F}} index features.
-#' Let \eqn{b_{if}} denote the baseline amount of feature \eqn{f} in planning
-#' unit \eqn{i}, as given by the feature-distribution table. Let
-#' \eqn{\Delta_{iaf}} denote the net change caused by applying action
-#' \eqn{a} in planning unit \eqn{i} to feature \eqn{f}. The canonical stored
-#' representation is:
-#'
-#' \deqn{
-#' \mathrm{amount\_after}_{iaf} = b_{if} + \Delta_{iaf},
-#' }
-#'
-#' \deqn{
-#' \mathrm{benefit}_{iaf} = \max(\Delta_{iaf}, 0),
-#' }
-#'
-#' \deqn{
-#' \mathrm{loss}_{iaf} = \max(-\Delta_{iaf}, 0).
-#' }
-#'
-#' Hence:
+#' Supply a table with \code{action}, \code{feature}, optional \code{pu}, and
+#' exactly one of these numeric columns:
 #' \itemize{
-#'   \item if \eqn{\Delta_{iaf} > 0}, then \code{benefit > 0} and \code{loss = 0},
-#'   \item if \eqn{\Delta_{iaf} < 0}, then \code{benefit = 0} and \code{loss > 0},
-#'   \item if \eqn{\Delta_{iaf} = 0}, then both are zero and
-#'   \code{amount_after} equals the baseline amount.
+#'   \item \code{effect}: signed absolute change relative to the reference.
+#'   \item \code{outcome}: feature amount under the action.
+#'   \item \code{relative_change}: proportional change; 0.25 means +25 percent,
+#'   zero means no change, and -0.25 means a 25 percent decrease.
 #' }
+#' If \code{pu} is omitted, each action/feature specification is expanded over
+#' feasible planning-unit/action pairs. Actions must be defined first using
+#' \code{add_actions()}; locked-out pairs are excluded. Features may be supplied
+#' as numeric identifiers or names. Duplicate keys and ambiguous columns are
+#' rejected. Values must be numeric, finite, and non-missing. Computed outcomes
+#' must be non-negative. Missing reference amounts are zero, so relative change
+#' cannot create an amount from a zero reference; use \code{effect} or
+#' \code{outcome} in that case.
 #'
-#' Thus, \code{benefit} and \code{loss} describe the net change relative to the
-#' baseline, whereas \code{amount_after} describes the final feature amount under
-#' the action. This distinction is important for actions that maintain baseline
-#' values. For example, if an action preserves a feature unchanged, then
-#' \code{benefit = 0}, \code{loss = 0}, and \code{amount_after} equals the
-#' baseline amount.
+#' \strong{Canonical representation}
 #'
-#' \strong{Why split effects into benefit and loss?}
+#' For reference amount \eqn{r_{if}} and action outcome \eqn{q_{iaf}}, the signed
+#' effect is \eqn{e_{iaf} = q_{iaf} - r_{if}}. Relative-change inputs \eqn{c_{iaf}}
+#' are converted using \eqn{e_{iaf} = r_{if} c_{iaf}}. The stored table exposes
+#' \code{reference_amount}, \code{action_outcome}, and \code{effect}. It also
+#' retains \code{amount_after} as an alias of \code{action_outcome}, plus
+#' \eqn{\mathrm{benefit} = \max(e, 0)} and \eqn{\mathrm{loss} = \max(-e, 0)}.
+#' These components cannot both be positive for a single triple.
+#' A positive effect denotes an increase, not necessarily an improvement:
+#' whether increasing a feature is desirable depends on the objective.
+#' Zero effects are retained and have an outcome equal to the reference amount.
 #'
-#' This representation avoids ambiguity in downstream optimization models. It
-#' allows the package to support, for example, objectives that maximize
-#' beneficial effects, minimize damages, impose no-net-loss conditions, or
-#' combine both components differently in multi-objective formulations.
+#' \strong{Raster inputs}
 #'
-#' \strong{Supported effect specifications}
+#' Supply a named list of \code{terra::SpatRaster} objects, one per action.
+#' Names must match action identifiers. Each raster must have one layer per
+#' feature, in the order of the problem's feature catalogue; layer names do not
+#' reorder features. The problem must contain planning-unit geometry or a
+#' planning-unit raster. Rasters are aligned to the planning-unit raster when
+#' needed. Use \code{raster_type = "effect"} for signed changes or
+#' \code{raster_type = "outcome"} for feature amounts under the action.
+#' \code{raster_aggregation} specifies \code{"sum"} or \code{"mean"} within
+#' each planning unit. Aggregated values must be comparable with the reference:
+#' do not compare a mean outcome with a reference total. Relative-change rasters
+#' are not accepted directly; prepare a tabular relative-change specification
+#' or a raster of effects/outcomes first.
 #'
-#' The \code{effects} argument may be provided in one of the following forms:
+#' \strong{Compatibility with earlier versions}
 #'
-#' \enumerate{
-#'   \item \code{NULL}. An empty effects table is stored.
+#' Explicit legacy arguments \code{effect_type}, \code{effect_aggregation}, and
+#' \code{component}, and historical \code{delta}, \code{after},
+#' \code{multiplier}, \code{benefit}, and \code{loss} inputs remain supported
+#' with their existing behavior. They emit a \pkg{lifecycle} deprecation warning
+#' announcing removal in a future release. Positional legacy arguments keep
+#' their original order. New table inputs need no interpretation argument.
 #'
-#'   \item A \code{data.frame(action, feature, multiplier)}. In this case,
-#'   effects are constructed by multiplying baseline feature amounts by the
-#'   supplied multiplier. The interpretation depends on \code{effect_type}.
+#' @param x A \code{Problem} object created by \code{\link{create_problem}}
+#'   with feasible actions defined by \code{\link{add_actions}}.
+#' @param effects A table with \code{action}, \code{feature}, optional
+#'   \code{pu}, and exactly one of \code{effect}, \code{outcome}, or
+#'   \code{relative_change}; a named list of action rasters; or \code{NULL}
+#'   to store an empty effects table. Historical input formats remain supported.
+#' @param effect_type Deprecated interpretation argument: \code{"delta"}
+#'   for changes or \code{"after"} for action amounts. With historical
+#'   multipliers, delta means reference times multiplier; after means an outcome
+#'   equal to reference times multiplier. Omit for new table inputs.
+#' @param effect_aggregation Deprecated raster aggregation argument; use
+#'   \code{raster_aggregation}.
+#' @param component Deprecated filtering argument: \code{"any"} retains all
+#'   rows, \code{"benefit"} retains positive changes, and \code{"loss"}
+#'   retains negative changes. New calls retain all components.
+#' @param raster_aggregation Raster aggregation within planning units:
+#'   \code{"sum"} (default) or \code{"mean"}.
+#' @param raster_type Raster interpretation: \code{"effect"} (default) or
+#'   \code{"outcome"}. Explicitly supply this or \code{raster_aggregation}
+#'   to select the new raster interface.
+#' @return An updated \code{Problem} containing \code{dist_effects} and
+#'   \code{effects_meta}. Existing model coefficients remain available.
 #'
-#'   If \code{effect_type = "delta"}, the multiplier represents a relative net
-#'   change:
-#'   \deqn{
-#'   \Delta_{iaf} = b_{if} \times m_{af}.
-#'   }
+#' @examples
+#' p <- create_problem(
+#'   pu = data.frame(id = 1, cost = 1),
+#'   features = data.frame(id = 1, name = "habitat"),
+#'   dist_features = data.frame(pu = 1, feature = 1, amount = 100)
+#' ) |>
+#'   add_actions(actions = data.frame(id = "restore"))
 #'
-#'   If \code{effect_type = "after"}, the multiplier represents the
-#'   after-action amount relative to the baseline:
-#'   \deqn{
-#'   \mathrm{amount\_after}_{iaf} = b_{if} \times m_{af},
-#'   }
-#'   and the net effect is:
-#'   \deqn{
-#'   \Delta_{iaf} = \mathrm{amount\_after}_{iaf} - b_{if}
-#'                = b_{if}(m_{af} - 1).
-#'   }
+#' # Equivalent ways to specify an increase from 100 to 150.
+#' p_effect <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore", feature = "habitat", effect = 50
+#' ))
+#' p_outcome <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore", feature = "habitat", outcome = 150
+#' ))
+#' p_relative <- add_effects(p, data.frame(
+#'   action = "restore", feature = "habitat", relative_change = 0.50
+#' ))
+#' p_effect$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
 #'
-#'   Thus, under \code{effect_type = "after"}, a multiplier of \code{1}
-#'   means no change, a multiplier below \code{1} means a loss, and a multiplier
-#'   above \code{1} means a gain. This specification is expanded over all
-#'   feasible \code{(pu, action)} pairs.
+#' # Raster example: one polygon contains two cells with reference amounts 40, 60.
+#' r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,
+#'                  ymin = 0, ymax = 1, crs = "EPSG:3857")
+#' terra::values(r) <- c(40, 60)
+#' names(r) <- "habitat"
+#' polygon <- sf::st_polygon(list(matrix(
+#'   c(0, 0, 2, 0, 2, 1, 0, 1, 0, 0), ncol = 2, byrow = TRUE
+#' )))
+#' pu <- sf::st_sf(id = 1L, cost = 1,
+#'                 geometry = sf::st_sfc(polygon, crs = 3857))
+#' p_spatial <- create_problem(pu = pu, features = r, cost = "cost") |>
+#'   add_actions(actions = data.frame(id = "restore"))
+#' terra::values(r) <- c(20, 30)
+#' p_raster <- add_effects(p_spatial, list(restore = r),
+#'                        raster_type = "effect", raster_aggregation = "sum")
+#' terra::values(r) <- c(60, 90)
+#' p_raster_outcome <- add_effects(p_spatial, list(restore = r),
+#'                                raster_type = "outcome", raster_aggregation = "sum")
+#' p_raster$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
 #'
-#'   \item A \code{data.frame(pu, action, feature, ...)} giving explicit effects
-#'   for individual triples. The table may contain:
-#'   \itemize{
-#'     \item \code{delta} or \code{effect}: interpreted as signed net changes,
-#'     \item \code{after}: interpreted as after-action amounts and requiring
-#'     \code{effect_type = "after"},
-#'     \item \code{benefit} and/or \code{loss}: explicit non-negative split
-#'     components,
-#'     \item legacy signed \code{benefit} without \code{loss}: interpreted as a
-#'     signed net effect for backwards compatibility.
-#'   }
-#'
-#'   \item A named list of \code{terra::SpatRaster} objects, one per action. In
-#'   this case, names must match action ids, and each raster must contain one
-#'   layer per feature. Raster values are aggregated to planning-unit level
-#'   using \code{effect_aggregation}.
-#' }
-#'
-#' \strong{Interpretation of \code{effect_type}}
-#'
-#' If \code{effect_type = "delta"}, supplied values are interpreted as net
-#' changes directly. For explicit \code{delta} or \code{effect} columns, values
-#' are used as signed changes. For \code{multiplier} inputs, values are
-#' interpreted as relative net changes:
-#'
-#' \deqn{
-#' \Delta_{iaf} = b_{if} \times m_{af}.
-#' }
-#'
-#' If \code{effect_type = "after"}, supplied values are interpreted as
-#' after-action amounts and converted internally to net effects using:
-#'
-#' \deqn{
-#' \Delta_{iaf} = \mathrm{after}_{iaf} - b_{if}.
-#' }
-#'
-#' For \code{multiplier} inputs under \code{effect_type = "after"}, the
-#' after-action amount is computed as \eqn{b_{if} \times m_{af}}, so that:
-#'
-#' \deqn{
-#' \Delta_{iaf} = b_{if}(m_{af} - 1).
-#' }
-#'
-#' Missing baseline values are treated as zero.
-#'
-#' \strong{Feasibility and locked-out decisions}
-#'
-#' Effects are only retained for feasible \code{(pu, action)} pairs. Thus,
-#' \code{add_actions()} must be called first. Pairs marked as locked out
-#' (\code{status == 3}) are removed before storing the final effects table.
-#'
-#' This function does not define the action-decision layer itself; it builds on
-#' the feasible \code{(pu, action)} pairs already stored in the problem.
-#'
-#' \strong{Duplicate rows and semantic validation}
-#'
-#' If multiple rows are supplied for the same \code{(pu, action, feature)}
-#' triple, they are aggregated by summing \code{benefit} and \code{loss}
-#' separately. The resulting triple must still respect the package semantics,
-#' namely that both components cannot be strictly positive simultaneously.
-#' Inputs violating this rule are rejected.
-#'
-#' \strong{Component filtering}
-#'
-#' After canonicalization and validation, rows can be restricted to:
-#' \itemize{
-#'   \item \code{component = "any"}: keep all stored effect rows, including
-#'   neutral effects,
-#'   \item \code{component = "benefit"}: keep only rows with \code{benefit > 0},
-#'   \item \code{component = "loss"}: keep only rows with \code{loss > 0}.
-#' }
-#'
-#' Zero-effect rows are retained by default because they may encode valid
-#' neutral effects. They are removed only when using
-#' \code{component = "benefit"} or \code{component = "loss"}.
-#'
-#' \strong{Raster handling}
-#'
-#' When effects are supplied as rasters, they are automatically aligned to the
-#' planning-unit raster or geometry when needed before extraction or zonal
-#' aggregation.
-#'
-#' \strong{Stored output}
-#'
-#' The resulting effects table contains user-facing ids, internal integer ids,
-#' and optional labels for actions and features. Metadata describing the stored
-#' representation and input interpretation are written to an effects metadata
-#' field.
-#'
-#' After defining effects, typical next steps include adding objectives that use
-#' beneficial or harmful effects, and then solving the configured problem.
-#'
-#' @param x A \code{Problem} object created with \code{\link{create_problem}}. It
-#'   must already contain feasible actions; run \code{\link{add_actions}} first.
-#'
-#' @param effects Effect specification. One of:
-#' \itemize{
-#'   \item \code{NULL}, to store an empty effects table,
-#'   \item a table with \code{action}, \code{feature}, optional \code{pu}, and
-#'   exactly one of \code{effect}, \code{outcome}, or \code{relative_change},
-#'   \item a \code{data.frame(action, feature, multiplier)},
-#'   \item a \code{data.frame(pu, action, feature, ...)} with explicit effects,
-#'   \item a named list of \code{terra::SpatRaster} objects, one per action.
-#' }
-#'
-#' @param effect_type Character string indicating how supplied effect values are
-#'   interpreted in the deprecated interface. Omit for new table inputs. Must be one of:
-#'   \itemize{
-#'     \item \code{"delta"}: values represent signed net changes,
-#'     \item \code{"after"}: values represent after-action amounts and are
-#'     converted to net changes relative to baseline feature amounts.
-#'   }
-#'
-#' @param effect_aggregation Character string giving the aggregation used when
-#'   converting raster values to planning-unit level (deprecated; use
-#'   \code{raster_aggregation}). Must be one of
-#'   \code{"sum"} or \code{"mean"}.
-#'
-#' @param component Character string controlling which component of the
-#'   canonical effects table is retained (deprecated; new calls keep all
-#'   components). Must be one of:
-#'   \itemize{
-#'     \item \code{"any"}: keep all stored effect rows,
-#'     \item \code{"benefit"}: keep only rows with \code{benefit > 0},
-#'     \item \code{"loss"}: keep only rows with \code{loss > 0}.
-#'   }
-#' @param raster_aggregation Aggregation of raster values within planning units:
-#'   \code{"sum"} or \code{"mean"}. Replaces \code{effect_aggregation}.
-#' @param raster_type Meaning of raster values: \code{"effect"} for signed
-#'   changes (default), or \code{"outcome"} for amounts under the action.
-#'   Raster outcome and reference amounts must use matching units and aggregation.
-#'
-#' @return An updated \code{Problem} object containing:
-#' \describe{
-#'   \item{\code{dist_effects}}{A canonical effects table with columns
-#'   \code{pu}, \code{action}, \code{feature}, \code{amount_after},
-#'   \code{benefit}, \code{loss}, \code{internal_pu},
-#'   \code{internal_action}, \code{internal_feature}, and optional labels such
-#'   as \code{feature_name} and \code{action_name}.}
-#'   \item{\code{effects_meta}}{Metadata describing how effects were
-#'   interpreted and stored.}
-#' }
-#'
-#' @seealso
-#' \code{\link{add_actions}},
-#' \code{\link{add_benefits}},
-#' \code{\link{add_losses}}
-#'
+#' @seealso \code{\link{add_actions}}, \code{\link{add_benefits}},
+#'   \code{\link{add_losses}}
 #' @export
 add_effects <- function(
     x,

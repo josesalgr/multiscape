@@ -36,14 +36,17 @@
 #' multi-objective spatial planning problem with protection and restoration as
 #' mutually exclusive candidate actions.
 #'
-#' @format A named list with six components:
+#' @format A named list with seven components:
 #' \describe{
 #'   \item{\code{planning_units}}{An \code{sf} object with 64 square planning units.}
 #'   \item{\code{features}}{A data frame with two feature identifiers and names.}
 #'   \item{\code{dist_features}}{A data frame of feature amounts by planning unit.}
 #'   \item{\code{actions}}{A data frame describing protection and restoration.}
 #'   \item{\code{action_costs}}{A data frame of spatially varying action costs.}
-#'   \item{\code{effects}}{A data frame of action-specific feature multipliers.}
+#'   \item{\code{effect_assumptions}}{Relative changes by action and feature,
+#'   ready to pass to \code{\link{add_effects}}.}
+#'   \item{\code{effects}}{Explicit signed changes in the historical \code{delta}
+#'   column, retained for compatibility. New examples use \code{effect_assumptions}.}
 #' }
 #' @usage data(sim_multiaction)
 "sim_multiaction"

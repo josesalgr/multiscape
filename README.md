@@ -152,7 +152,8 @@ available throughout this landscape. The model permits at most one
 selected action per planning unit, while leaving a unit unmanaged
 remains feasible.
 
-Effects describe changes relative to the reference scenario in `dist_features`.
+Effects describe changes relative to the reference scenario in
+`dist_features`.
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.html)
 accepts exactly one of three columns:
 
@@ -161,16 +162,17 @@ accepts exactly one of three columns:
 - `relative_change`: proportional change (`0.25` means +25%).
 
 With a reference amount of 100, `effect = 30`, `outcome = 130`, and
-`relative_change = 0.30` all describe the same result. A positive effect means
-an increase; whether that is desirable depends on the feature and objective.
-The reference may represent current conditions, a future without intervention,
-or existing management. Outcomes and references must share units and horizon.
+`relative_change = 0.30` all describe the same result. A positive effect
+means an increase; whether that is desirable depends on the feature and
+objective. The reference may represent current conditions, a future
+without intervention, or existing management. Outcomes and references
+must share units and horizon.
 
-This example supplies relative changes by action and feature. The package
-expands them over feasible planning units. A reference of 0.6 and
-`relative_change = 1` produce an effect of 0.6 and an outcome of 1.2.
-Legacy `effect_type`, `multiplier`, and `delta` inputs remain supported with
-a lifecycle deprecation warning.
+This example supplies relative changes by action and feature. The
+package expands them over feasible planning units. A reference of 0.6
+and `relative_change = 1` produce an effect of 0.6 and an outcome of
+1.2. Legacy `effect_type`, `multiplier`, and `delta` inputs remain
+supported with a lifecycle deprecation warning.
 
 ``` r
 # Inspect the assumptions used to generate their
@@ -181,15 +183,6 @@ example_data$effect_assumptions
 #> 2 protect       2            0.30
 #> 3 restore       1            0.25
 #> 4 restore       2            1.30
-
-head(example_data$effects)
-#>   pu  action feature        delta
-#> 1  1 protect       1 0.0016615573
-#> 2  1 protect       2 0.0934209672
-#> 3  1 restore       1 0.0004153893
-#> 4  1 restore       2 0.4048241911
-#> 5  2 protect       1 0.0024787522
-#> 6  2 protect       2 0.0132913814
 
 problem <- problem |>
   add_actions(
@@ -259,36 +252,36 @@ multi-objective method and solver have not yet been selected.
 # and optimisation solver.
 problem
 #> A multiscape object (<Problem>)
-#> ├─data
-#> │├─planning units: <data.frame> (64 total)
-#> │├─costs: min: 0, max: 0
-#> │└─features: 2 total ("woodland", "riparian")
-#> └─actions and effects
-#> │├─actions: 2 total ("Protect", "Restore")
-#> │├─feasible action pairs: 128 feasible rows
-#> │├─action costs: min: 1.05, max: 2.3
-#> │├─effect data: 256 rows
-#> │├─effect mode: benefit only
-#> │└─profit data: none
-#> └─spatial
-#> │├─geometry: sf (64 rows)
-#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
-#> │└─relations: none
-#> └─targets and constraints
-#> │├─targets: 2 rows
-#> │├─target preview: "woodland" >= 1.409, "riparian" >= 1.345
-#> │├─area constraints: none
-#> │├─budget constraints: none
-#> │├─planning-unit locks: none
-#> │└─action locks: none
-#> └─model
-#> │├─status: not built yet (will build in solve())
-#> │├─objectives: 2 registered (benefit, cost)
-#> │├─method: not set
-#> │├─solver: not set (auto)
-#> │└─checks: incomplete (multiple objectives registered but no MO method
+#> +-data
+#> |+-planning units: <data.frame> (64 total)
+#> |+-costs: min: 0, max: 0
+#> |\-features: 2 total ("woodland", "riparian")
+#> \-actions and effects
+#> |+-actions: 2 total ("Protect", "Restore")
+#> |+-feasible action pairs: 128 feasible rows
+#> |+-action costs: min: 1.05, max: 2.3
+#> |+-effect data: 256 rows
+#> |+-effect mode: benefit only
+#> |\-profit data: none
+#> \-spatial
+#> |+-geometry: sf (64 rows)
+#> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
+#> |\-relations: none
+#> \-targets and constraints
+#> |+-targets: 2 rows
+#> |+-target preview: "woodland" >= 1.409, "riparian" >= 1.345
+#> |+-area constraints: none
+#> |+-budget constraints: none
+#> |+-planning-unit locks: none
+#> |\-action locks: none
+#> \-model
+#> |+-status: not built yet (will build in solve())
+#> |+-objectives: 2 registered (benefit, cost)
+#> |+-method: not set
+#> |+-solver: not set (auto)
+#> |\-checks: incomplete (multiple objectives registered but no MO method
 #> selected)
-#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
+#> # i Use `x$data` to inspect stored tables and model snapshots.
 ```
 
 ### Configure the multi-objective method
@@ -358,12 +351,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.005000114   0
-#> 2      2           2 optimal 0.003999949   0
-#> 3      3           3 optimal 0.008000135   0
-#> 4      4           4 optimal 0.003000021   0
-#> 5      5           5 optimal 0.005000114   0
-#> 6      6           6 optimal 0.002000093   0
+#> 1      1           1 optimal 0.009000063   0
+#> 2      2           2 optimal 0.016000032   0
+#> 3      3           3 optimal 0.019999981   0
+#> 4      4           4 optimal 0.004000187   0
+#> 5      5           5 optimal 0.014000177   0
+#> 6      6           6 optimal 0.003999949   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies
@@ -653,12 +646,9 @@ transition <- linkage_transition(
 )
 
 transition
-#> Objective--decision transition
+#> Spatial solution transition
 #> From solution: 3 
 #> To solution:   4 
-#> 
-#> Objective distance: 0.2519 
-#> Decision distance:  0.3 
 #> 
 #> Planning units changed: 12 of 64 (18.8%)
 #> Activated:            12 

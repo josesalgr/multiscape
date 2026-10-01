@@ -23,7 +23,7 @@ mutually exclusive candidate actions."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,8 +34,8 @@ mutually exclusive candidate actions."><meta property="og:image" content="https:
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -67,7 +67,7 @@ mutually exclusive candidate actions.</p>
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>A named list with six components:</p><dl><dt><code>planning_units</code></dt>
+    <p>A named list with seven components:</p><dl><dt><code>planning_units</code></dt>
 <dd><p>An <code>sf</code> object with 64 square planning units.</p></dd>
 
 <dt><code>features</code></dt>
@@ -82,8 +82,13 @@ mutually exclusive candidate actions.</p>
 <dt><code>action_costs</code></dt>
 <dd><p>A data frame of spatially varying action costs.</p></dd>
 
+<dt><code>effect_assumptions</code></dt>
+<dd><p>Relative changes by action and feature,
+ready to pass to <code><a href="add_effects.html">add_effects</a></code>.</p></dd>
+
 <dt><code>effects</code></dt>
-<dd><p>A data frame of action-specific feature multipliers.</p></dd>
+<dd><p>Explicit signed changes in the historical <code>delta</code>
+column, retained for compatibility. New examples use <code>effect_assumptions</code>.</p></dd>
 
 
 </dl></div>

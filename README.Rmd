@@ -234,8 +234,6 @@ a lifecycle deprecation warning.
 # ecological effects, and the first planning-unit--action--feature records.
 example_data$effect_assumptions
 
-head(example_data$effects)
-
 problem <- problem |>
   add_actions(
     actions = example_data$actions,

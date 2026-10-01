@@ -42,7 +42,7 @@
 
     <a class="navbar-brand me-2" href="index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,8 +55,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+<li><a class="dropdown-item" href="articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul>
 </li>
@@ -155,15 +155,17 @@
 <h3 id="stage-2-define-actions-and-their-effects">Stage 2: Define actions and their effects<a class="anchor" aria-label="anchor" href="#stage-2-define-actions-and-their-effects"></a>
 </h3>
 <p><a href="https://josesalgr.github.io/multiscape/reference/add_actions.html"><code>add_actions()</code></a> registers protection and restoration as alternative management uses, associates each action with its local implementation cost, and defines the feasible planning-unit–action combinations. Both actions are available throughout this landscape. The model permits at most one selected action per planning unit, while leaving a unit unmanaged remains feasible.</p>
-<p>Effects describe how an ecological feature changes when an action is selected. <a href="https://josesalgr.github.io/multiscape/reference/add_effects.html"><code>add_effects()</code></a> supports two interpretations:</p>
+<p>Effects describe changes relative to the reference scenario in <code>dist_features</code>. <a href="https://josesalgr.github.io/multiscape/reference/add_effects.html"><code>add_effects()</code></a> accepts exactly one of three columns:</p>
 <ul>
-<li>with <code>effect_type = "after"</code>, the input specifies the expected <strong>final feature amount</strong> under the action;</li>
-<li>with <code>effect_type = "delta"</code>, the input specifies the signed <strong>change from the baseline</strong>.</li>
+<li>
+<code>effect</code>: signed absolute change;</li>
+<li>
+<code>outcome</code>: expected amount under the action;</li>
+<li>
+<code>relative_change</code>: proportional change (<code>0.25</code> means +25%).</li>
 </ul>
-<p>With the delta interpretation, positive values represent gains, negative values represent losses, and zero indicates no change. If <span class="math inline">\(b_{if}\)</span> is the baseline amount of feature <span class="math inline">\(f\)</span> in planning unit <span class="math inline">\(i\)</span>, the final amount after selecting action <span class="math inline">\(a\)</span> is</p>
-<p><span class="math display">\[\text{final amount}_{iaf} = b_{if} + \Delta_{iaf},\]</span></p>
-<p>where <span class="math inline">\(\Delta_{iaf}\)</span> is the value supplied in the <code>delta</code> column. The choice between <code>after</code> and <code>delta</code> therefore depends on how ecological responses were estimated, not on the optimisation method.</p>
-<p>This example uses explicit delta values. Protection is assumed to increase woodland and riparian amounts by 100% and 30% of their respective local baselines, whereas restoration increases them by 25% and 130%. These percentages are used only to generate the simulated data. The table passed to <code><a href="reference/add_effects.html">add_effects()</a></code> already contains the resulting absolute change for every planning-unit–action–feature combination. For example, a woodland baseline of 0.6 combined with a 100% relative increase produces <code>delta = 0.6</code> and a final relative amount of 1.2. The coefficient representing the relative increase must therefore not be confused with either the delta value or the final feature amount.</p>
+<p>With a reference amount of 100, <code>effect = 30</code>, <code>outcome = 130</code>, and <code>relative_change = 0.30</code> all describe the same result. A positive effect means an increase; whether that is desirable depends on the feature and objective. The reference may represent current conditions, a future without intervention, or existing management. Outcomes and references must share units and horizon.</p>
+<p>This example supplies relative changes by action and feature. The package expands them over feasible planning units. A reference of 0.6 and <code>relative_change = 1</code> produce an effect of 0.6 and an outcome of 1.2. Legacy <code>effect_type</code>, <code>multiplier</code>, and <code>delta</code> inputs remain supported with a lifecycle deprecation warning.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Inspect the assumptions used to generate their</span></span>
 <span><span class="co"># ecological effects, and the first planning-unit--action--feature records.</span></span>
@@ -174,23 +176,13 @@
 <span><span class="co">#&gt; 3 restore       1            0.25</span></span>
 <span><span class="co">#&gt; 4 restore       2            1.30</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">example_data</span><span class="op">$</span><span class="va">effects</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   pu  action feature        delta</span></span>
-<span><span class="co">#&gt; 1  1 protect       1 0.0016615573</span></span>
-<span><span class="co">#&gt; 2  1 protect       2 0.0934209672</span></span>
-<span><span class="co">#&gt; 3  1 restore       1 0.0004153893</span></span>
-<span><span class="co">#&gt; 4  1 restore       2 0.4048241911</span></span>
-<span><span class="co">#&gt; 5  2 protect       1 0.0024787522</span></span>
-<span><span class="co">#&gt; 6  2 protect       2 0.0132913814</span></span>
-<span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/add_actions.html">add_actions</a></span><span class="op">(</span></span>
 <span>    actions <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span>
 <span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/add_effects.html">add_effects</a></span><span class="op">(</span></span>
-<span>    effects <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">effects</span>,</span>
-<span>    effect_type <span class="op">=</span> <span class="st">"delta"</span></span>
+<span>    effects <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -225,36 +217,36 @@
 <span><span class="co"># and optimisation solver.</span></span>
 <span><span class="va">problem</span></span>
 <span><span class="co">#&gt; A multiscape object (&lt;Problem&gt;)</span></span>
-<span><span class="co">#&gt; ├─data</span></span>
-<span><span class="co">#&gt; │├─planning units: &lt;data.frame&gt; (64 total)</span></span>
-<span><span class="co">#&gt; │├─costs: min: 0, max: 0</span></span>
-<span><span class="co">#&gt; │└─features: 2 total ("woodland", "riparian")</span></span>
-<span><span class="co">#&gt; └─actions and effects</span></span>
-<span><span class="co">#&gt; │├─actions: 2 total ("Protect", "Restore")</span></span>
-<span><span class="co">#&gt; │├─feasible action pairs: 128 feasible rows</span></span>
-<span><span class="co">#&gt; │├─action costs: min: 1.05, max: 2.3</span></span>
-<span><span class="co">#&gt; │├─effect data: 256 rows</span></span>
-<span><span class="co">#&gt; │├─effect mode: benefit only</span></span>
-<span><span class="co">#&gt; │└─profit data: none</span></span>
-<span><span class="co">#&gt; └─spatial</span></span>
-<span><span class="co">#&gt; │├─geometry: sf (64 rows)</span></span>
-<span><span class="co">#&gt; │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span></span>
-<span><span class="co">#&gt; │└─relations: none</span></span>
-<span><span class="co">#&gt; └─targets and constraints</span></span>
-<span><span class="co">#&gt; │├─targets: 2 rows</span></span>
-<span><span class="co">#&gt; │├─target preview: "woodland" &gt;= 1.409, "riparian" &gt;= 1.345</span></span>
-<span><span class="co">#&gt; │├─area constraints: none</span></span>
-<span><span class="co">#&gt; │├─budget constraints: none</span></span>
-<span><span class="co">#&gt; │├─planning-unit locks: none</span></span>
-<span><span class="co">#&gt; │└─action locks: none</span></span>
-<span><span class="co">#&gt; └─model</span></span>
-<span><span class="co">#&gt; │├─status: not built yet (will build in solve())</span></span>
-<span><span class="co">#&gt; │├─objectives: 2 registered (benefit, cost)</span></span>
-<span><span class="co">#&gt; │├─method: not set</span></span>
-<span><span class="co">#&gt; │├─solver: not set (auto)</span></span>
-<span><span class="co">#&gt; │└─checks: incomplete (multiple objectives registered but no MO method</span></span>
+<span><span class="co">#&gt; +-data</span></span>
+<span><span class="co">#&gt; |+-planning units: &lt;data.frame&gt; (64 total)</span></span>
+<span><span class="co">#&gt; |+-costs: min: 0, max: 0</span></span>
+<span><span class="co">#&gt; |\-features: 2 total ("woodland", "riparian")</span></span>
+<span><span class="co">#&gt; \-actions and effects</span></span>
+<span><span class="co">#&gt; |+-actions: 2 total ("Protect", "Restore")</span></span>
+<span><span class="co">#&gt; |+-feasible action pairs: 128 feasible rows</span></span>
+<span><span class="co">#&gt; |+-action costs: min: 1.05, max: 2.3</span></span>
+<span><span class="co">#&gt; |+-effect data: 256 rows</span></span>
+<span><span class="co">#&gt; |+-effect mode: benefit only</span></span>
+<span><span class="co">#&gt; |\-profit data: none</span></span>
+<span><span class="co">#&gt; \-spatial</span></span>
+<span><span class="co">#&gt; |+-geometry: sf (64 rows)</span></span>
+<span><span class="co">#&gt; |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span></span>
+<span><span class="co">#&gt; |\-relations: none</span></span>
+<span><span class="co">#&gt; \-targets and constraints</span></span>
+<span><span class="co">#&gt; |+-targets: 2 rows</span></span>
+<span><span class="co">#&gt; |+-target preview: "woodland" &gt;= 1.409, "riparian" &gt;= 1.345</span></span>
+<span><span class="co">#&gt; |+-area constraints: none</span></span>
+<span><span class="co">#&gt; |+-budget constraints: none</span></span>
+<span><span class="co">#&gt; |+-planning-unit locks: none</span></span>
+<span><span class="co">#&gt; |\-action locks: none</span></span>
+<span><span class="co">#&gt; \-model</span></span>
+<span><span class="co">#&gt; |+-status: not built yet (will build in solve())</span></span>
+<span><span class="co">#&gt; |+-objectives: 2 registered (benefit, cost)</span></span>
+<span><span class="co">#&gt; |+-method: not set</span></span>
+<span><span class="co">#&gt; |+-solver: not set (auto)</span></span>
+<span><span class="co">#&gt; |\-checks: incomplete (multiple objectives registered but no MO method</span></span>
 <span><span class="co">#&gt; selected)</span></span>
-<span><span class="co">#&gt; # ℹ Use `x$data` to inspect stored tables and model snapshots.</span></span></code></pre></div>
+<span><span class="co">#&gt; # i Use `x$data` to inspect stored tables and model snapshots.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="configure-the-multi-objective-method">Configure the multi-objective method<a class="anchor" aria-label="anchor" href="#configure-the-multi-objective-method"></a>
@@ -296,12 +288,12 @@
 <code class="sourceCode R"><span><span class="va">runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="va">runs</span></span>
 <span><span class="co">#&gt;   run_id solution_id  status     runtime gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal 0.005000114   0</span></span>
-<span><span class="co">#&gt; 2      2           2 optimal 0.003999949   0</span></span>
-<span><span class="co">#&gt; 3      3           3 optimal 0.008000135   0</span></span>
-<span><span class="co">#&gt; 4      4           4 optimal 0.003000021   0</span></span>
-<span><span class="co">#&gt; 5      5           5 optimal 0.005000114   0</span></span>
-<span><span class="co">#&gt; 6      6           6 optimal 0.002000093   0</span></span></code></pre></div>
+<span><span class="co">#&gt; 1      1           1 optimal 0.009000063   0</span></span>
+<span><span class="co">#&gt; 2      2           2 optimal 0.016000032   0</span></span>
+<span><span class="co">#&gt; 3      3           3 optimal 0.019999981   0</span></span>
+<span><span class="co">#&gt; 4      4           4 optimal 0.004000187   0</span></span>
+<span><span class="co">#&gt; 5      5           5 optimal 0.014000177   0</span></span>
+<span><span class="co">#&gt; 6      6           6 optimal 0.003999949   0</span></span></code></pre></div>
 <p>Each row records one attempted run configuration. <code>run_id</code> identifies the configuration, including its epsilon limit and solver outcome. A run is not itself a solution: an infeasible configuration, a run that terminates without a feasible solution, or a run affected by a solver error may have no associated <code>solution_id</code>. When a run does produce a solution that is retained in the <code>SolutionSet</code>, <code>solution_id</code> identifies that stored solution for subsequent extraction, comparison, and mapping. In this example, all configured runs produce stored solutions.</p>
 <p>The treatment of infeasible runs, runs without a solution, and unexpected errors can be controlled with <a href="https://josesalgr.github.io/multiscape/reference/set_runs_control.html"><code>set_runs_control()</code></a>. Depending on these settings, solving can stop when a failed configuration is encountered or retain the failed run in the run history without an associated solution.</p>
 <p>This distinction is important when reading the figures below. With <code>label_runs = TRUE</code>, <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code> labels points using <code>run_id</code>, whereas functions that extract or map stored plans generally use <code>solution_id</code>. <code><a href="reference/get_runs.html">get_runs()</a></code> provides the link between the run configurations and the solutions that were successfully stored.</p>
@@ -482,12 +474,9 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">transition</span></span>
-<span><span class="co">#&gt; Objective--decision transition</span></span>
+<span><span class="co">#&gt; Spatial solution transition</span></span>
 <span><span class="co">#&gt; From solution: 3 </span></span>
 <span><span class="co">#&gt; To solution:   4 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Objective distance: 0.2519 </span></span>
-<span><span class="co">#&gt; Decision distance:  0.3 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Planning units changed: 12 of 64 (18.8%)</span></span>
 <span><span class="co">#&gt; Activated:            12 </span></span>

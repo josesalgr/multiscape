@@ -300,8 +300,7 @@
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_objective_min_cost(alias = "cost") |>
 #'   add_objective_max_benefit(alias = "benefit") |>

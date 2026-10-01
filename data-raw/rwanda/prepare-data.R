@@ -133,7 +133,7 @@ rwanda_reserve <- list(
   effects = data.frame(
     action = "reserve",
     feature = features$id,
-    multiplier = 1
+    effect = 0
   )
 )
 

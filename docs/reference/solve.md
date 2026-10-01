@@ -64,7 +64,6 @@ and
 
 The typical multiscape workflow is:
 
-
     x <- create_problem(...)
     x <- add_...(x, ...)
     x <- set_...(x, ...)
@@ -216,8 +215,7 @@ x <- create_problem(
     cost = example_data$action_costs
   ) |>
   add_effects(
-    example_data$effects,
-    effect_type = "delta"
+    example_data$effect_assumptions
   ) |>
   add_constraint_targets_relative(0.05) |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE)
@@ -228,24 +226,24 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
   print(solset)
 }
 #> A multiscape solution set (<SolutionSet>)
-#> ├─method
-#> │├─name: `single`
-#> │├─objectives: 1 (cost)
-#> │└─run design: unspecified
-#> └─content
-#> │├─design rows: 1
-#> │├─attempted runs: 1
-#> │├─stored solutions: 1
-#> │└─without solution: 0
-#> └─run summary
-#> │├─statuses: optimal: 1
-#> │├─runtime: 0.02
-#> │├─gap: 0
-#> │├─design columns: none
-#> │└─objective columns: value_cost
-#> └─objective ranges
-#> │└─cost: 2.1
-#> # ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect
+#> +-method
+#> |+-name: `single`
+#> |+-objectives: 1 (cost)
+#> |\-run design: unspecified
+#> \-content
+#> |+-design rows: 1
+#> |+-attempted runs: 1
+#> |+-stored solutions: 1
+#> |\-without solution: 0
+#> \-run summary
+#> |+-statuses: optimal: 1
+#> |+-runtime: 0.02
+#> |+-gap: 0
+#> |+-design columns: none
+#> |\-objective columns: value_cost
+#> \-objective ranges
+#> |\-cost: 2.1
+#> # i Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect
 #> results.
 
 ```

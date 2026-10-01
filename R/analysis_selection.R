@@ -66,8 +66,7 @@
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -291,8 +290,7 @@ selection_frequency <- function(x) {
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -888,8 +886,7 @@ selection_similarity <- function(
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(

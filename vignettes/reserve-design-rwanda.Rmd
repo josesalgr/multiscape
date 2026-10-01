@@ -196,11 +196,12 @@ represented by a single `reserve` action. Because there is only one candidate
 action, the action-assignment model reduces to the classical binary
 site-selection problem.
 
-The table supplied to `add_effects()` uses `effect_type = "after"`. Its
-multiplier of one means that selecting the reserve action represents the
-baseline amount of each feature contained in that unit. It does not describe a
-100% ecological increase: it describes the amount expected to be represented
-after the unit is assigned to the reserve network.
+The table supplied to `add_effects()` specifies `effect = 0` for each
+feature. The reference scenario is the current feature distribution, and the
+reserve action leaves that amount unchanged. Its outcome therefore equals the
+reference amount. Representation targets count this outcome in selected units;
+zero effect does not mean zero represented habitat. This is classical reserve
+selection as a special case of the action-based formulation.
 
 ```{r build-problem}
 problem <- create_problem(
@@ -215,8 +216,11 @@ problem <- create_problem(
     cost = 0
   ) |>
   add_effects(
-    effects = rwanda_reserve$effects,
-    effect_type = "after"
+    effects = data.frame(
+      action = "reserve",
+      feature = rwanda_reserve$features$id,
+      effect = 0
+    )
   ) |>
   add_constraint_targets_relative(0.30) |>
   add_constraint_locked_planning_units(

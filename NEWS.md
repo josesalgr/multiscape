@@ -8,6 +8,9 @@
 - Added `raster_aggregation` and `raster_type` for spatial effect inputs.
 - Legacy effects arguments and columns retain their existing behavior and
   emit a lifecycle deprecation warning announcing removal in a future release.
+- Migrated reference examples, the README, and the Rwanda reserve-design
+  workflow to semantic effect inputs. Added runnable table and raster examples
+  to `add_effects()` and removed legacy syntax from implicit reserve-model setup.
 
 # multiscape 1.2.1
 

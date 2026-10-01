@@ -271,8 +271,7 @@ add_objective_min_cost <- function(
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   )
 #'
 #' p1 <- add_objective_max_benefit(p)
@@ -399,8 +398,7 @@ add_objective_max_benefit <- function(
 #'     cost = example_data$action_costs
 #'   ) |>
 #'   add_effects(
-#'     example_data$effects,
-#'     effect_type = "delta"
+#'     example_data$effect_assumptions
 #'   )
 #'
 #' p1 <- add_objective_min_loss(p)

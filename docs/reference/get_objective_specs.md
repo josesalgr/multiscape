@@ -76,9 +76,9 @@ actions <- data.frame(
 effects <- data.frame(
   action = rep(actions$id, each = 2),
   feature = rep(features$id, times = 2),
-  multiplier = c(
-    1.0, 1.0,
-    1.5, 1.5
+  relative_change = c(
+    0.0, 0.0,
+    0.5, 0.5
   )
 )
 
@@ -96,8 +96,7 @@ problem <- create_problem(
     )
   ) |>
   add_effects(
-    effects = effects,
-    effect_type = "after"
+    effects = effects
   ) |>
   add_constraint_targets_relative(0.05) |>
   add_objective_min_cost(alias = "cost") |>

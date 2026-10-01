@@ -34,11 +34,9 @@ optimization run.
 
 Weighted-sum columns must follow the convention:
 
-
     weight_<alias>
 
 Epsilon-constraint and AUGMECON columns must follow the convention:
-
 
     eps_<alias>
 

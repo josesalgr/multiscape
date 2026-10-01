@@ -12,23 +12,18 @@ add_benefits(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} object created with \code{\link{create_problem}}. It
-must already contain feasible actions; run \code{\link{add_actions}} first.}
+\item{x}{A \code{Problem} object created by \code{\link{create_problem}}
+with feasible actions defined by \code{\link{add_actions}}.}
 
 \item{benefits}{Alias of \code{effects}, kept for backwards compatibility.}
 
-\item{effect_type}{Character string indicating how supplied effect values are
-interpreted in the deprecated interface. Omit for new table inputs. Must be one of:
-\itemize{
-\item \code{"delta"}: values represent signed net changes,
-\item \code{"after"}: values represent after-action amounts and are
-converted to net changes relative to baseline feature amounts.
-}}
+\item{effect_type}{Deprecated interpretation argument: \code{"delta"}
+for changes or \code{"after"} for action amounts. With historical
+multipliers, delta means reference times multiplier; after means an outcome
+equal to reference times multiplier. Omit for new table inputs.}
 
-\item{effect_aggregation}{Character string giving the aggregation used when
-converting raster values to planning-unit level (deprecated; use
-\code{raster_aggregation}). Must be one of
-\code{"sum"} or \code{"mean"}.}
+\item{effect_aggregation}{Deprecated raster aggregation argument; use
+\code{raster_aggregation}.}
 }
 \value{
 An updated \code{Problem} object containing:

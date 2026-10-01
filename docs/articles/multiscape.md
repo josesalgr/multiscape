@@ -76,7 +76,6 @@ values indicating greater baseline provision of the corresponding
 service and therefore greater opportunity cost for restoration.
 
 ``` r
-
 library(multiscape)
 library(dplyr)
 library(ggplot2)
@@ -103,7 +102,6 @@ patterns overlap only partially, so a restoration allocation with low
 opportunity cost for one service need not perform well for another.
 
 ``` r
-
 names(ecosystem_services) <- unname(service_labels[names(ecosystem_services)])
 terra::plot(ecosystem_services)
 ```
@@ -111,7 +109,6 @@ terra::plot(ecosystem_services)
 ![](integrated-ecosystem-services-plot-services-1.png)
 
 ``` r
-
 names(ecosystem_services) <- names(service_labels)
 ```
 
@@ -127,7 +124,6 @@ decisions, but only restoration enters the variable objectives and area
 commitment.
 
 ``` r
-
 planning_attributes <- sim_pu_sf |>
   sf::st_drop_geometry() |>
   select(id, cost, area, locked_in, locked_out)
@@ -180,7 +176,6 @@ the cost objective will use only the explicit action costs to avoid
 counting the same cost twice.
 
 ``` r
-
 problem <- create_problem(
   pu = sim_pu_sf,
   features = ecosystem_services,
@@ -207,7 +202,6 @@ services are evaluated as objectives rather than representation
 requirements.
 
 ``` r
-
 unit_area <- stats::median(sim_pu_sf$area)
 total_commitment_units <- ceiling(0.20 * nrow(sim_pu_sf))
 restoration_target_units <- total_commitment_units - nrow(conservation_units)
@@ -236,7 +230,6 @@ The fixed conservation network therefore appears in maps but contributes
 no constant term to the values used to compare solutions.
 
 ``` r
-
 problem <- problem |>
   add_objective_min_cost(
     alias = "cost",
@@ -297,7 +290,6 @@ nevertheless be infeasible, which is substantive information about
 conflicts among the four services.
 
 ``` r
-
 problem <- problem |>
   set_method_augmecon(
     primary = "cost",
@@ -322,7 +314,6 @@ objective values, and run metadata required by all subsequent
 `multiscape` functions.
 
 ``` r
-
 solutions <- readRDS(file.path(
   "data",
   "integrated-ecosystem-services-solutions.rds"
@@ -335,7 +326,6 @@ reproducibility but is not evaluated during ordinary vignette or
 `pkgdown` builds, which consequently do not require Gurobi.
 
 ``` r
-
 solutions <- solve(problem)
 
 saveRDS(
@@ -357,7 +347,6 @@ the complete set of 81 requested configurations, then display only the
 runs and objective values retained in the efficient `SolutionSet`.
 
 ``` r
-
 efficient_solutions <- solutions |>
   solution_filter(feasible_only = TRUE, nondominated = TRUE) |>
   solution_unique(by = "decisions")
@@ -494,7 +483,6 @@ solutions define the observed range, but an objective-specific extreme
 need not provide an acceptable joint outcome.
 
 ``` r
-
   extremes <- frontier_extremes(
     efficient_solutions,
     objectives = objective_aliases,
@@ -533,7 +521,6 @@ and is used to describe the portfolio rather than redefine the
 optimization problem.
 
 ``` r
-
   service_distances <- frontier_distances(
     efficient_solutions,
     objectives = service_aliases,
@@ -649,7 +636,6 @@ experiment. Frequency should be interpreted as stability within the
 generated solution set, not as ecological irreplaceability.
 
 ``` r
-
   assignment_frequency <- selection_frequency(efficient_solutions)
 
   head(

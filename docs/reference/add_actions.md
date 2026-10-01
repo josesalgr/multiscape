@@ -278,33 +278,33 @@ p1 <- add_actions(
 
 print(p1)
 #> A multiscape object (<Problem>)
-#> ├─data
-#> │├─planning units: <data.frame> (64 total)
-#> │├─costs: min: 0, max: 0
-#> │└─features: 2 total ("woodland", "riparian")
-#> └─actions and effects
-#> │├─actions: 2 total ("Conservation", "Restoration")
-#> │├─feasible action pairs: 128 feasible rows
-#> │├─action costs: min: 5, max: 12
-#> │├─effect data: none
-#> │└─profit data: none
-#> └─spatial
-#> │├─geometry: sf (64 rows)
-#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
-#> │└─relations: none
-#> └─targets and constraints
-#> │├─targets: none
-#> │├─area constraints: none
-#> │├─budget constraints: none
-#> │├─planning-unit locks: none
-#> │└─action locks: none
-#> └─model
-#> │├─status: not built yet (will build in solve())
-#> │├─objectives: none
-#> │├─method: single-objective
-#> │├─solver: not set (auto)
-#> │└─checks: incomplete (no objective registered)
-#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
+#> +-data
+#> |+-planning units: <data.frame> (64 total)
+#> |+-costs: min: 0, max: 0
+#> |\-features: 2 total ("woodland", "riparian")
+#> \-actions and effects
+#> |+-actions: 2 total ("Conservation", "Restoration")
+#> |+-feasible action pairs: 128 feasible rows
+#> |+-action costs: min: 5, max: 12
+#> |+-effect data: none
+#> |\-profit data: none
+#> \-spatial
+#> |+-geometry: sf (64 rows)
+#> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
+#> |\-relations: none
+#> \-targets and constraints
+#> |+-targets: none
+#> |+-area constraints: none
+#> |+-budget constraints: none
+#> |+-planning-unit locks: none
+#> |\-action locks: none
+#> \-model
+#> |+-status: not built yet (will build in solve())
+#> |+-objectives: none
+#> |+-method: single-objective
+#> |+-solver: not set (auto)
+#> |\-checks: incomplete (no objective registered)
+#> # i Use `x$data` to inspect stored tables and model snapshots.
 utils::head(p1$data$dist_actions)
 #>    pu       action cost status internal_pu internal_action action_area
 #> 1   1 conservation    5      0           1               1           1
