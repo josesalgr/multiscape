@@ -27,35 +27,34 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 
-`multiscape` is an exact optimisation framework for **allocating management
-actions across space under multiple competing objectives** in R. It helps
-users decide **which actions to implement, where to implement them, and how
-their spatial allocation affects ecological and socioeconomic outcomes**.
-Actions such as habitat protection, restoration, or resource management are
-represented explicitly across planning units. Users define where each action
-is feasible, what it costs, and how it is expected to change feature amounts
-relative to a reference condition.
+`multiscape` is an exact optimisation framework for **multi-action,
+multi-objective spatial planning in R**. It is designed for problems in which
+decisions involve allocating alternative management actions across planning
+units while balancing multiple competing objectives. Building on the transition
+from place-based prioritisation towards spatially explicit action planning
+([Tallis et al., 2021](https://doi.org/10.1111/nyas.14651);
+[Salgado-Rojas et al., 2023](https://doi.org/10.1111/2041-210X.14220)),
+`multiscape` represents explicitly **what can be done, where it can be done,
+and what consequences those actions are expected to produce**.
 
-This focus on actions and their expected consequences is consistent with
-spatial action mapping ([Tallis et al., 2021](https://doi.org/10.1111/nyas.14651)).
-It also supports multiple-use spatial planning, in which conservation and
-resource-use decisions are considered together against ecological, economic,
-and social objectives
+Users define feasible management actions, their costs, and their expected
+effects on ecological or socioeconomic features relative to a reference
+scenario. These action-based decisions are represented as mixed-integer linear
+programming (MILP) models together with targets, budgets, spatial requirements,
+locked decisions, and other constraints. Multiple objectives, including cost,
+benefit, profit, and fragmentation, can be registered independently and explored
+using weighted-sum, epsilon-constraint, and AUGMECON methods. This formulation
+also provides a basis for multiple-use spatial planning, where alternative
+actions and uses may need to be evaluated against competing ecological,
+economic, and social objectives
 ([Neubert et al., 2025](https://doi.org/10.1016/j.tree.2025.09.007)).
 
-The package uses mixed-integer linear programming (MILP) to express these
-decisions as explicit optimisation models and solve them with exact methods.
-It supports general and action-based formulations built from tabular or
-spatial inputs, with targets, budgets, and other constraints. Objectives such
-as cost, benefit, profit, or fragmentation can be registered independently
-and explored using weighted-sum, epsilon-constraint, and AUGMECON methods,
-supporting transparent, reproducible trade-off analysis.
-
-Each retained solution links its objective values to a specific spatial
-allocation of actions or planning units. Alternatives can therefore be
-analysed in objective space (`frontier_*()`), decision space
-(`selection_*()`), and jointly through objective--decision linkage
-(`linkage_*()`).
+Each retained solution preserves the correspondence between its objective
+values and its spatial allocation of actions. Alternative plans can therefore
+be examined in **objective space** (`frontier_*()`), **decision space**
+(`selection_*()`), and jointly through **objective–decision linkage**
+(`linkage_*()`), allowing users to relate changes in performance directly to
+changes in the actions implemented across space.
 
 ## Installation
 
@@ -692,6 +691,10 @@ Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions:
 spatial action maps for conservation. *Annals of the New York Academy of
 Sciences*, **1505**(1), 118--141.
 [doi:10.1111/nyas.14651](https://doi.org/10.1111/nyas.14651).
+
+Salgado-Rojas, J., Hermoso, V., & Álvarez-Miranda, E. (2023). prioriactions:
+Multi-action management planning in R. *Methods in Ecology and Evolution*.
+[doi:10.1111/2041-210X.14220](https://doi.org/10.1111/2041-210X.14220).
 
 Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use spatial
 planning for sustainable development and conservation. *Trends in Ecology
