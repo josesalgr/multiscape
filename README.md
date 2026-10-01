@@ -15,28 +15,38 @@ downloads](https://cranlogs.r-pkg.org/badges/grand-total/multiscape)](https://cr
 coverage](https://codecov.io/gh/josesalgr/multiscape/graph/badge.svg)](https://app.codecov.io/gh/josesalgr/multiscape)
 <!-- badges: end -->
 
-`multiscape` is an exact optimisation framework for multi-objective
-spatial planning in R. It is designed for planning problems in which
-spatial data, ecological or socioeconomic features, constraints, and
-multiple competing objectives must be considered simultaneously within a
-single decision-support workflow. The package is built around
-mixed-integer linear programming (MILP) formulations, allowing users to
-represent spatial planning problems explicitly as optimisation models
-and solve them with exact methods. This makes `multiscape` especially
-suitable for applications where transparent model structure,
-reproducibility, and rigorous trade-off analysis are important.
-`multiscape` supports both general spatial planning formulations and
-action-based formulations in which decisions are expressed as
-**management actions** applied across planning units. With it, users can
-build planning problems from tabular or spatial inputs, define feasible
-actions and their effects, add targets and other constraints, register
-multiple objectives such as cost, benefit, profit, or fragmentation, and
-explore exact trade-offs using multi-objective methods such as
-weighted-sum, epsilon-constraint, and AUGMECON. Each retained solution
-preserves the correspondence between its objective values and spatial
-decisions, allowing alternatives to be analysed in objective space
-(`frontier_*()`), decision space (`selection_*()`), and jointly through
-objective–decision linkage (`linkage_*()`).
+`multiscape` is an exact optimisation framework for **allocating
+management actions across space under multiple competing objectives** in
+R. It helps users decide **which actions to implement, where to
+implement them, and how their spatial allocation affects ecological and
+socioeconomic outcomes**. Actions such as habitat protection,
+restoration, or resource management are represented explicitly across
+planning units. Users define where each action is feasible, what it
+costs, and how it is expected to change feature amounts relative to a
+reference condition.
+
+This focus on actions and their expected consequences is consistent with
+spatial action mapping ([Tallis et al.,
+2021](https://doi.org/10.1111/nyas.14651)). It also supports
+multiple-use spatial planning, in which conservation and resource-use
+decisions are considered together against ecological, economic, and
+social objectives ([Neubert et al.,
+2025](https://doi.org/10.1016/j.tree.2025.09.007)).
+
+The package uses mixed-integer linear programming (MILP) to express
+these decisions as explicit optimisation models and solve them with
+exact methods. It supports general and action-based formulations built
+from tabular or spatial inputs, with targets, budgets, and other
+constraints. Objectives such as cost, benefit, profit, or fragmentation
+can be registered independently and explored using weighted-sum,
+epsilon-constraint, and AUGMECON methods, supporting transparent,
+reproducible trade-off analysis.
+
+Each retained solution links its objective values to a specific spatial
+allocation of actions or planning units. Alternatives can therefore be
+analysed in objective space (`frontier_*()`), decision space
+(`selection_*()`), and jointly through objective–decision linkage
+(`linkage_*()`).
 
 ## Installation
 
@@ -778,3 +788,15 @@ families.
 
 If you find a bug or would like to suggest an improvement, please open
 an [issue](https://github.com/josesalgr/multiscape/issues).
+
+## References
+
+Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions:
+spatial action maps for conservation. *Annals of the New York Academy of
+Sciences*, **1505**(1), 118–141.
+[doi:10.1111/nyas.14651](https://doi.org/10.1111/nyas.14651).
+
+Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use
+spatial planning for sustainable development and conservation. *Trends
+in Ecology & Evolution*, **40**(11), 1126–1142.
+[doi:10.1016/j.tree.2025.09.007](https://doi.org/10.1016/j.tree.2025.09.007).
