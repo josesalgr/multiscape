@@ -331,10 +331,34 @@ NULL
   out <- list(
     n_effects = .pa_nrow0(de),
     n_profit = .pa_nrow0(dp),
-    effect_mode = "none"
+    effect_mode = "none",
+    effect_signs = "none",
+    effect_input = "not recorded"
   )
 
   if (!is.null(de) && inherits(de, "data.frame") && nrow(de) > 0) {
+    benefit <- if ("benefit" %in% names(de)) de$benefit else rep(0, nrow(de))
+    loss <- if ("loss" %in% names(de)) de$loss else rep(0, nrow(de))
+    effect <- benefit - loss
+    out$effect_signs <- paste0(
+      sum(effect > 0, na.rm = TRUE), " positive, ",
+      sum(effect < 0, na.rm = TRUE), " negative, ",
+      sum(effect == 0, na.rm = TRUE), " zero"
+    )
+    input <- self$data$effects_meta$input_specification
+    if (is.character(input) && length(input) == 1L && !is.na(input)) {
+      out$effect_input <- switch(
+        input,
+        effect = "absolute change",
+        outcome = "action outcome",
+        relative_change = "relative change",
+        raster_effect = "raster of absolute changes",
+        raster_outcome = "raster of action outcomes",
+        delta = "legacy change input",
+        after = "legacy outcome input",
+        "not recorded"
+      )
+    }
     has_b <- "benefit" %in% names(de) && any(de$benefit > 0, na.rm = TRUE)
     has_l <- "loss" %in% names(de) && any(de$loss > 0, na.rm = TRUE)
 
@@ -770,7 +794,9 @@ Problem <- pproto(
     } else {
       cli::cli_text(" {ch$v}{ch$j}{ch$b}effect data:    {eff_sum$n_effects} rows",
                     .envir = environment())
-      cli::cli_text(" {ch$v}{ch$j}{ch$b}effect mode:     {eff_sum$effect_mode}",
+      cli::cli_text(" {ch$v}{ch$j}{ch$b}effect input:    {eff_sum$effect_input}",
+                    .envir = environment())
+      cli::cli_text(" {ch$v}{ch$j}{ch$b}effect signs:    {eff_sum$effect_signs}",
                     .envir = environment())
     }
 

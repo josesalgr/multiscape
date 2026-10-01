@@ -11,6 +11,8 @@
 - Migrated reference examples, the README, and the Rwanda reserve-design
   workflow to semantic effect inputs. Added runnable table and raster examples
   to `add_effects()` and removed legacy syntax from implicit reserve-model setup.
+- Problem summaries distinguish effect input format from counts of positive,
+  negative, and zero effects, replacing the ambiguous "effect mode" label.
 
 # multiscape 1.2.1
 

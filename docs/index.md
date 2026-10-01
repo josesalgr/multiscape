@@ -247,7 +247,8 @@ problem
 #> |+-feasible action pairs: 128 feasible rows
 #> |+-action costs: min: 1.05, max: 2.3
 #> |+-effect data: 256 rows
-#> |+-effect mode: benefit only
+#> |+-effect input: relative change
+#> |+-effect signs: 256 positive, 0 negative, 0 zero
 #> |\-profit data: none
 #> \-spatial
 #> |+-geometry: sf (64 rows)
@@ -337,12 +338,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.009000063   0
-#> 2      2           2 optimal 0.016000032   0
-#> 3      3           3 optimal 0.019999981   0
-#> 4      4           4 optimal 0.004000187   0
-#> 5      5           5 optimal 0.014000177   0
-#> 6      6           6 optimal 0.003999949   0
+#> 1      1           1 optimal 0.006000042   0
+#> 2      2           2 optimal 0.012000084   0
+#> 3      3           3 optimal 0.016999960   0
+#> 4      4           4 optimal 0.003000021   0
+#> 5      5           5 optimal 0.012000084   0
+#> 6      6           6 optimal 0.003000021   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies

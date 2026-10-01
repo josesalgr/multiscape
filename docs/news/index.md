@@ -19,6 +19,9 @@
   examples to
   [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
   and removed legacy syntax from implicit reserve-model setup.
+- Problem summaries distinguish effect input format from counts of
+  positive, negative, and zero effects, replacing the ambiguous “effect
+  mode” label.
 
 ## multiscape 1.2.1
 

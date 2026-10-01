@@ -1114,7 +1114,14 @@ add_effects <- function(
   x$data$effects_meta <- list(
     stored_as = "amount_after_benefit_loss",
     input_interpretation = effect_type,
-    input_specification = if (length(semantic_columns)) semantic_columns[[1L]] else effect_type,
+    input_specification = if (length(semantic_columns) && !legacy_type) {
+      semantic_columns[[1L]]
+    } else if (is.list(effects) && !is.data.frame(effects) &&
+               !legacy_type && !legacy_raster && !is.null(effects)) {
+      if (effect_type == "after") "raster_outcome" else "raster_effect"
+    } else {
+      effect_type
+    },
     component = component,
     amount_after = "baseline + benefit - loss"
   )

@@ -226,7 +226,8 @@
 <span><span class="co">#&gt; |+-feasible action pairs: 128 feasible rows</span></span>
 <span><span class="co">#&gt; |+-action costs: min: 1.05, max: 2.3</span></span>
 <span><span class="co">#&gt; |+-effect data: 256 rows</span></span>
-<span><span class="co">#&gt; |+-effect mode: benefit only</span></span>
+<span><span class="co">#&gt; |+-effect input: relative change</span></span>
+<span><span class="co">#&gt; |+-effect signs: 256 positive, 0 negative, 0 zero</span></span>
 <span><span class="co">#&gt; |\-profit data: none</span></span>
 <span><span class="co">#&gt; \-spatial</span></span>
 <span><span class="co">#&gt; |+-geometry: sf (64 rows)</span></span>
@@ -288,12 +289,12 @@
 <code class="sourceCode R"><span><span class="va">runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="va">runs</span></span>
 <span><span class="co">#&gt;   run_id solution_id  status     runtime gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal 0.009000063   0</span></span>
-<span><span class="co">#&gt; 2      2           2 optimal 0.016000032   0</span></span>
-<span><span class="co">#&gt; 3      3           3 optimal 0.019999981   0</span></span>
-<span><span class="co">#&gt; 4      4           4 optimal 0.004000187   0</span></span>
-<span><span class="co">#&gt; 5      5           5 optimal 0.014000177   0</span></span>
-<span><span class="co">#&gt; 6      6           6 optimal 0.003999949   0</span></span></code></pre></div>
+<span><span class="co">#&gt; 1      1           1 optimal 0.006000042   0</span></span>
+<span><span class="co">#&gt; 2      2           2 optimal 0.012000084   0</span></span>
+<span><span class="co">#&gt; 3      3           3 optimal 0.016999960   0</span></span>
+<span><span class="co">#&gt; 4      4           4 optimal 0.003000021   0</span></span>
+<span><span class="co">#&gt; 5      5           5 optimal 0.012000084   0</span></span>
+<span><span class="co">#&gt; 6      6           6 optimal 0.003000021   0</span></span></code></pre></div>
 <p>Each row records one attempted run configuration. <code>run_id</code> identifies the configuration, including its epsilon limit and solver outcome. A run is not itself a solution: an infeasible configuration, a run that terminates without a feasible solution, or a run affected by a solver error may have no associated <code>solution_id</code>. When a run does produce a solution that is retained in the <code>SolutionSet</code>, <code>solution_id</code> identifies that stored solution for subsequent extraction, comparison, and mapping. In this example, all configured runs produce stored solutions.</p>
 <p>The treatment of infeasible runs, runs without a solution, and unexpected errors can be controlled with <a href="https://josesalgr.github.io/multiscape/reference/set_runs_control.html"><code>set_runs_control()</code></a>. Depending on these settings, solving can stop when a failed configuration is encountered or retain the failed run in the run history without an associated solution.</p>
 <p>This distinction is important when reading the figures below. With <code>label_runs = TRUE</code>, <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code> labels points using <code>run_id</code>, whereas functions that extract or map stored plans generally use <code>solution_id</code>. <code><a href="reference/get_runs.html">get_runs()</a></code> provides the link between the run configurations and the solutions that were successfully stored.</p>
