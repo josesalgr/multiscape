@@ -18,7 +18,7 @@ must already contain feasible actions; run \code{\link{add_actions}} first.}
 \item{benefits}{Alias of \code{effects}, kept for backwards compatibility.}
 
 \item{effect_type}{Character string indicating how supplied effect values are
-interpreted. Must be one of:
+interpreted in the deprecated interface. Omit for new table inputs. Must be one of:
 \itemize{
 \item \code{"delta"}: values represent signed net changes,
 \item \code{"after"}: values represent after-action amounts and are
@@ -26,7 +26,8 @@ converted to net changes relative to baseline feature amounts.
 }}
 
 \item{effect_aggregation}{Character string giving the aggregation used when
-converting raster values to planning-unit level. Must be one of
+converting raster values to planning-unit level (deprecated; use
+\code{raster_aggregation}). Must be one of
 \code{"sum"} or \code{"mean"}.}
 }
 \value{

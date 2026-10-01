@@ -152,37 +152,25 @@ available throughout this landscape. The model permits at most one
 selected action per planning unit, while leaving a unit unmanaged
 remains feasible.
 
-Effects describe how an ecological feature changes when an action is
-selected.
+Effects describe changes relative to the reference scenario in `dist_features`.
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.html)
-supports two interpretations:
+accepts exactly one of three columns:
 
-- with `effect_type = "after"`, the input specifies the expected **final
-  feature amount** under the action;
-- with `effect_type = "delta"`, the input specifies the signed **change
-  from the baseline**.
+- `effect`: signed absolute change;
+- `outcome`: expected amount under the action;
+- `relative_change`: proportional change (`0.25` means +25%).
 
-With the delta interpretation, positive values represent gains, negative
-values represent losses, and zero indicates no change. If $b_{if}$ is
-the baseline amount of feature $f$ in planning unit $i$, the final
-amount after selecting action $a$ is
+With a reference amount of 100, `effect = 30`, `outcome = 130`, and
+`relative_change = 0.30` all describe the same result. A positive effect means
+an increase; whether that is desirable depends on the feature and objective.
+The reference may represent current conditions, a future without intervention,
+or existing management. Outcomes and references must share units and horizon.
 
-$$\text{final amount}_{iaf} = b_{if} + \Delta_{iaf},$$
-
-where $\Delta_{iaf}$ is the value supplied in the `delta` column. The
-choice between `after` and `delta` therefore depends on how ecological
-responses were estimated, not on the optimisation method.
-
-This example uses explicit delta values. Protection is assumed to
-increase woodland and riparian amounts by 100% and 30% of their
-respective local baselines, whereas restoration increases them by 25%
-and 130%. These percentages are used only to generate the simulated
-data. The table passed to `add_effects()` already contains the resulting
-absolute change for every planning-unit–action–feature combination. For
-example, a woodland baseline of 0.6 combined with a 100% relative
-increase produces `delta = 0.6` and a final relative amount of 1.2. The
-coefficient representing the relative increase must therefore not be
-confused with either the delta value or the final feature amount.
+This example supplies relative changes by action and feature. The package
+expands them over feasible planning units. A reference of 0.6 and
+`relative_change = 1` produce an effect of 0.6 and an outcome of 1.2.
+Legacy `effect_type`, `multiplier`, and `delta` inputs remain supported with
+a lifecycle deprecation warning.
 
 ``` r
 # Inspect the assumptions used to generate their
@@ -209,8 +197,7 @@ problem <- problem |>
     cost = example_data$action_costs
   ) |>
   add_effects(
-    effects = example_data$effects,
-    effect_type = "delta"
+    effects = example_data$effect_assumptions
   )
 ```
 

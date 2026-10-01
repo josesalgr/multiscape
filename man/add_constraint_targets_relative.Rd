@@ -48,11 +48,11 @@ with different action subsets.
 }
 \details{
 Use this function when target requirements are naturally expressed as
-proportions of current baseline feature totals rather than in original
+proportions of reference-scenario feature totals rather than in original
 feature units.
 
 Let \eqn{\mathcal{F}} denote the set of features. For each targeted feature
-\eqn{f \in \mathcal{F}}, let \eqn{B_f} denote the current baseline total
+\eqn{f \in \mathcal{F}}, let \eqn{B_f} denote the reference-scenario total
 amount of that feature in the landscape, as computed by
 \code{.pa_feature_totals()}.
 
@@ -88,7 +88,7 @@ pairs allowed to count toward the target for feature \eqn{f}.
 The \code{actions} argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \eqn{B_f} used
 to compute the threshold. In other words, relative targets are always scaled
-against the current full landscape baseline.
+against the full landscape reference scenario.
 
 Therefore, \code{actions} changes who may satisfy the target, but not how the
 threshold itself is scaled.

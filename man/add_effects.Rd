@@ -9,7 +9,9 @@ add_effects(
   effects = NULL,
   effect_type = c("delta", "after"),
   effect_aggregation = c("sum", "mean"),
-  component = c("any", "benefit", "loss")
+  component = c("any", "benefit", "loss"),
+  raster_aggregation = c("sum", "mean"),
+  raster_type = c("effect", "outcome")
 )
 }
 \arguments{
@@ -19,13 +21,15 @@ must already contain feasible actions; run \code{\link{add_actions}} first.}
 \item{effects}{Effect specification. One of:
 \itemize{
 \item \code{NULL}, to store an empty effects table,
+\item a table with \code{action}, \code{feature}, optional \code{pu}, and
+exactly one of \code{effect}, \code{outcome}, or \code{relative_change},
 \item a \code{data.frame(action, feature, multiplier)},
 \item a \code{data.frame(pu, action, feature, ...)} with explicit effects,
 \item a named list of \code{terra::SpatRaster} objects, one per action.
 }}
 
 \item{effect_type}{Character string indicating how supplied effect values are
-interpreted. Must be one of:
+interpreted in the deprecated interface. Omit for new table inputs. Must be one of:
 \itemize{
 \item \code{"delta"}: values represent signed net changes,
 \item \code{"after"}: values represent after-action amounts and are
@@ -33,16 +37,25 @@ converted to net changes relative to baseline feature amounts.
 }}
 
 \item{effect_aggregation}{Character string giving the aggregation used when
-converting raster values to planning-unit level. Must be one of
+converting raster values to planning-unit level (deprecated; use
+\code{raster_aggregation}). Must be one of
 \code{"sum"} or \code{"mean"}.}
 
 \item{component}{Character string controlling which component of the
-canonical effects table is retained. Must be one of:
+canonical effects table is retained (deprecated; new calls keep all
+components). Must be one of:
 \itemize{
 \item \code{"any"}: keep all stored effect rows,
 \item \code{"benefit"}: keep only rows with \code{benefit > 0},
 \item \code{"loss"}: keep only rows with \code{loss > 0}.
 }}
+
+\item{raster_aggregation}{Aggregation of raster values within planning units:
+\code{"sum"} or \code{"mean"}. Replaces \code{effect_aggregation}.}
+
+\item{raster_type}{Meaning of raster values: \code{"effect"} for signed
+changes (default), or \code{"outcome"} for amounts under the action.
+Raster outcome and reference amounts must use matching units and aggregation.}
 }
 \value{
 An updated \code{Problem} object containing:
@@ -81,6 +94,23 @@ Consequently, after validation and aggregation, a stored row cannot have both
 \code{benefit > 0} and \code{loss > 0} at the same time.
 }
 \details{
+\strong{Reference-based interface (since 1.3.0).}
+The amounts in \code{dist_features} describe a user-defined reference
+scenario: current conditions, a business-as-usual future, or existing
+management. Supply exactly one numeric column in an effects table:
+\code{effect} (signed absolute change), \code{outcome} (amount under the
+action), or \code{relative_change} (proportional change, so 0.25 means +25 percent).
+Tables require \code{action} and \code{feature}; omitting \code{pu} expands
+each row over feasible planning-unit/action pairs. Missing reference amounts
+are zero; relative change therefore cannot create an amount from zero.
+All resulting outcomes must be finite and non-negative. Positive effects
+are increases, not necessarily improvements (for example, fire risk).
+Stored tables also expose \code{reference_amount}, \code{action_outcome},
+and signed \code{effect}; \code{amount_after} remains a compatibility alias.
+Legacy columns and explicitly supplied legacy arguments retain their
+behavior but issue a \pkg{lifecycle} deprecation warning. They will be removed
+in a future release. Positional legacy arguments keep their original order.
+
 \strong{When to use \code{add_effects()}.}
 
 Use this function when you want to specify what feasible actions do to

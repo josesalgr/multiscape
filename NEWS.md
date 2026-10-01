@@ -1,6 +1,13 @@
 # multiscape 1.3.0
 
-- Started development of the reference-based effects interface. The existing effects API is unchanged in this version bump.
+- `add_effects()` now accepts exactly one of `effect`, `outcome`, or
+  `relative_change`. Tables without `pu` expand over feasible action pairs.
+- Feature distributions describe a user-defined reference scenario. Effect
+  tables expose `reference_amount`, `action_outcome`, and signed `effect`,
+  while retaining `amount_after`, `benefit`, and `loss` for compatibility.
+- Added `raster_aggregation` and `raster_type` for spatial effect inputs.
+- Legacy effects arguments and columns retain their existing behavior and
+  emit a lifecycle deprecation warning announcing removal in a future release.
 
 # multiscape 1.2.1
 

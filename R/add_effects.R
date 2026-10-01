@@ -27,6 +27,23 @@
 #' \code{benefit > 0} and \code{loss > 0} at the same time.
 #'
 #' @details
+#' \strong{Reference-based interface (since 1.3.0).}
+#' The amounts in \code{dist_features} describe a user-defined reference
+#' scenario: current conditions, a business-as-usual future, or existing
+#' management. Supply exactly one numeric column in an effects table:
+#' \code{effect} (signed absolute change), \code{outcome} (amount under the
+#' action), or \code{relative_change} (proportional change, so 0.25 means +25 percent).
+#' Tables require \code{action} and \code{feature}; omitting \code{pu} expands
+#' each row over feasible planning-unit/action pairs. Missing reference amounts
+#' are zero; relative change therefore cannot create an amount from zero.
+#' All resulting outcomes must be finite and non-negative. Positive effects
+#' are increases, not necessarily improvements (for example, fire risk).
+#' Stored tables also expose \code{reference_amount}, \code{action_outcome},
+#' and signed \code{effect}; \code{amount_after} remains a compatibility alias.
+#' Legacy columns and explicitly supplied legacy arguments retain their
+#' behavior but issue a \pkg{lifecycle} deprecation warning. They will be removed
+#' in a future release. Positional legacy arguments keep their original order.
+#'
 #' \strong{When to use \code{add_effects()}.}
 #'
 #' Use this function when you want to specify what feasible actions do to
@@ -213,13 +230,15 @@
 #' @param effects Effect specification. One of:
 #' \itemize{
 #'   \item \code{NULL}, to store an empty effects table,
+#'   \item a table with \code{action}, \code{feature}, optional \code{pu}, and
+#'   exactly one of \code{effect}, \code{outcome}, or \code{relative_change},
 #'   \item a \code{data.frame(action, feature, multiplier)},
 #'   \item a \code{data.frame(pu, action, feature, ...)} with explicit effects,
 #'   \item a named list of \code{terra::SpatRaster} objects, one per action.
 #' }
 #'
 #' @param effect_type Character string indicating how supplied effect values are
-#'   interpreted. Must be one of:
+#'   interpreted in the deprecated interface. Omit for new table inputs. Must be one of:
 #'   \itemize{
 #'     \item \code{"delta"}: values represent signed net changes,
 #'     \item \code{"after"}: values represent after-action amounts and are
@@ -227,16 +246,23 @@
 #'   }
 #'
 #' @param effect_aggregation Character string giving the aggregation used when
-#'   converting raster values to planning-unit level. Must be one of
+#'   converting raster values to planning-unit level (deprecated; use
+#'   \code{raster_aggregation}). Must be one of
 #'   \code{"sum"} or \code{"mean"}.
 #'
 #' @param component Character string controlling which component of the
-#'   canonical effects table is retained. Must be one of:
+#'   canonical effects table is retained (deprecated; new calls keep all
+#'   components). Must be one of:
 #'   \itemize{
 #'     \item \code{"any"}: keep all stored effect rows,
 #'     \item \code{"benefit"}: keep only rows with \code{benefit > 0},
 #'     \item \code{"loss"}: keep only rows with \code{loss > 0}.
 #'   }
+#' @param raster_aggregation Aggregation of raster values within planning units:
+#'   \code{"sum"} or \code{"mean"}. Replaces \code{effect_aggregation}.
+#' @param raster_type Meaning of raster values: \code{"effect"} for signed
+#'   changes (default), or \code{"outcome"} for amounts under the action.
+#'   Raster outcome and reference amounts must use matching units and aggregation.
 #'
 #' @return An updated \code{Problem} object containing:
 #' \describe{
@@ -260,8 +286,48 @@ add_effects <- function(
     effects = NULL,
     effect_type = c("delta", "after"),
     effect_aggregation = c("sum", "mean"),
-    component = c("any", "benefit", "loss")
+    component = c("any", "benefit", "loss"),
+    raster_aggregation = c("sum", "mean"),
+    raster_type = c("effect", "outcome")
 ) {
+
+  legacy_type <- !missing(effect_type)
+  legacy_aggregation <- !missing(effect_aggregation)
+  legacy_component <- !missing(component)
+  legacy_raster <- is.list(effects) && !is.data.frame(effects) &&
+    !is.null(effects) && missing(raster_type) && missing(raster_aggregation)
+  if (legacy_aggregation && !missing(raster_aggregation)) {
+    stop("Supply only one of raster_aggregation and effect_aggregation.", call. = FALSE)
+  }
+  if (legacy_type && !missing(raster_type)) {
+    stop("Supply only one of raster_type and effect_type.", call. = FALSE)
+  }
+  input_columns <- if (is.data.frame(effects)) names(effects) else character()
+  semantic_columns <- intersect(c("effect", "outcome", "relative_change"), input_columns)
+  legacy_columns <- intersect(c("delta", "after", "multiplier", "benefit", "loss"), input_columns)
+  if (length(semantic_columns) > 1L ||
+      (any(c("outcome", "relative_change") %in% semantic_columns) && length(legacy_columns) > 0L)) {
+    stop("Ambiguous effect specification: supply exactly one of effect, outcome, or relative_change; do not mix new and legacy columns.", call. = FALSE)
+  }
+  if (any(c("outcome", "relative_change") %in% semantic_columns) && legacy_type) {
+    stop("outcome and relative_change define their own interpretation; omit effect_type.", call. = FALSE)
+  }
+  if (legacy_type || legacy_aggregation || legacy_component || legacy_raster || length(legacy_columns) > 0L) {
+    lifecycle::deprecate_warn(
+      "1.3.0", I("The legacy effects interface of `add_effects()`"),
+      details = paste(
+        "The legacy effects syntax will be removed in a future version of multiscape.",
+        "Use exactly one of effect, outcome, or relative_change in effects tables,",
+        "and raster_aggregation/raster_type for raster inputs.",
+        "Legacy calls retain their existing behavior."
+      ),
+      id = "multiscape-add-effects-legacy"
+    )
+  }
+  if (!legacy_aggregation) effect_aggregation <- match.arg(raster_aggregation)
+  if (!legacy_type && is.list(effects) && !is.data.frame(effects)) {
+    effect_type <- if (match.arg(raster_type) == "outcome") "after" else "delta"
+  }
 
   effect_type <- match.arg(effect_type)
   effect_aggregation <- match.arg(effect_aggregation)
@@ -276,7 +342,11 @@ add_effects <- function(
   )
   assertthat::assert_that(!is.null(x$data$dist_actions), msg = "No actions found. Run add_actions() first.")
 
+  # Serialization cannot copy terra's external pointer. This template is read
+  # only during extraction; preserve its valid handle while cloning tabular data.
+  pu_raster_id <- x$data$pu_raster_id
   x <- .pa_clone_data(x)
+  if (inherits(pu_raster_id, "SpatRaster")) x$data$pu_raster_id <- pu_raster_id
 
   pu    <- x$data$pu
   feats <- x$data$features
@@ -706,10 +776,12 @@ add_effects <- function(
         amount_after_mat <- baseline_mat + delta_mat
       }
 
-      delta_vec <- as.vector(t(delta_mat))
+      # Feature-major ordering matches the pu/feature keys below. Keep the
+      # historical ordering for explicitly requested legacy raster calls.
+      delta_vec <- if (legacy_type || legacy_raster) as.vector(t(delta_mat)) else as.vector(delta_mat)
       delta_vec[is.na(delta_vec)] <- 0
 
-      amount_after_vec <- as.vector(t(amount_after_mat))
+      amount_after_vec <- if (legacy_type || legacy_raster) as.vector(t(amount_after_mat)) else as.vector(amount_after_mat)
       amount_after_vec[is.na(amount_after_vec)] <- 0
 
       sp <- .split_delta(delta_vec)
@@ -765,6 +837,27 @@ add_effects <- function(
 
     if ("feature" %in% names(b)) {
       b$feature <- .normalize_feature(b$feature, feats)
+    }
+
+    # Semantic inputs are converted once to signed changes. Existing model
+    # builders continue to consume the same canonical effect coefficients.
+    if (length(semantic_columns) == 1L && length(legacy_columns) == 0L && !legacy_type) {
+      source <- semantic_columns[[1L]]
+      assertthat::assert_that(all(c("action", "feature") %in% names(b)))
+      .validate_effect_values(b, source)
+      .validate_effect_keys(b, intersect(c("pu", "action", "feature"), names(b)))
+      if (!all(b$action %in% action_ids)) stop("Unknown action id(s) in effects.", call. = FALSE)
+      if (!("pu" %in% names(b))) {
+        b <- dplyr::inner_join(da[, c("pu", "action"), drop = FALSE], b,
+                              by = "action", relationship = "many-to-many")
+      }
+      reference <- .baseline_amount(b$pu, b$feature)
+      value <- b[[source]]
+      delta <- switch(source, effect = value, outcome = value - reference,
+                      relative_change = reference * value)
+      b[[source]] <- NULL
+      b$delta <- delta
+      effect_type <- "delta"
     }
 
     # ------------------------------------------------------------------
@@ -1161,11 +1254,15 @@ add_effects <- function(
     out_col = "action_name"
   )
 
+  dist_effects$reference_amount <- .baseline_amount(dist_effects$pu, dist_effects$feature)
+  dist_effects$action_outcome <- dist_effects$amount_after
+  dist_effects$effect <- dist_effects$benefit - dist_effects$loss
   x$data$dist_effects <- dist_effects
 
   x$data$effects_meta <- list(
     stored_as = "amount_after_benefit_loss",
     input_interpretation = effect_type,
+    input_specification = if (length(semantic_columns)) semantic_columns[[1L]] else effect_type,
     component = component,
     amount_after = "baseline + benefit - loss"
   )

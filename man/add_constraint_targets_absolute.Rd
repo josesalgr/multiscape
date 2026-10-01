@@ -47,7 +47,7 @@ with different action subsets.
 \details{
 Use this function when target requirements are naturally expressed in the
 original units of the modelled feature contributions, rather than as
-proportions of current baseline totals.
+proportions of reference-scenario totals.
 
 Let \eqn{\mathcal{F}} denote the set of features. For each targeted feature
 \eqn{f \in \mathcal{F}}, this function stores an absolute target threshold
