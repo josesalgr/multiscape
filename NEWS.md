@@ -1,3 +1,7 @@
+# multiscape 1.3.0
+
+- Started development of the reference-based effects interface. The existing effects API is unchanged in this version bump.
+
 # multiscape 1.2.1
 
 ## Spatial relations
