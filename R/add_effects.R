@@ -759,8 +759,8 @@ add_effects <- function(
 
         fun <- switch(
           effect_aggregation,
-          sum = function(v) sum(v, na.rm = TRUE),
-          mean = function(v) mean(v, na.rm = TRUE)
+          sum = function(v, ...) sum(v, na.rm = TRUE),
+          mean = function(v, ...) mean(v, na.rm = TRUE)
         )
 
         ex <- terra::extract(r, pu_v, fun = fun, na.rm = TRUE)

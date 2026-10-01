@@ -101,3 +101,24 @@ test_that("new raster inputs align planning units and features", {
   expect_warning(q <- add_effects(p, list(restore = r), raster_type = "outcome"), NA)
   expect_equal(q$data$dist_effects$effect, c(10, 20, 30, 40))
 })
+
+test_that("polygon raster extraction supports sum and mean", {
+  r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,
+                   ymin = 0, ymax = 1, crs = "EPSG:3857")
+  terra::values(r) <- c(40, 60)
+  names(r) <- "habitat"
+  polygon <- sf::st_polygon(list(matrix(c(0, 0, 2, 0, 2, 1, 0, 1, 0, 0),
+                                       ncol = 2, byrow = TRUE)))
+  pu <- sf::st_sf(id = 1L, cost = 1, geometry = sf::st_sfc(polygon, crs = 3857))
+  p <- create_problem(pu = pu, features = r, cost = "cost") |>
+    add_actions(actions = data.frame(id = "restore"))
+  terra::values(r) <- c(20, 30)
+  summed <- add_effects(p, list(restore = r), raster_aggregation = "sum")
+  averaged <- add_effects(p, list(restore = r), raster_aggregation = "mean")
+  expect_equal(summed$data$dist_effects$effect, 50)
+  expect_equal(averaged$data$dist_effects$effect, 25)
+  terra::values(r) <- c(60, 90)
+  outcome <- add_effects(p, list(restore = r), raster_aggregation = "sum",
+                         raster_type = "outcome")
+  expect_equal(outcome$data$dist_effects, summed$data$dist_effects)
+})
