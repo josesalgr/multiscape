@@ -27,7 +27,7 @@ toy_equivalent_basic <- function() {
     feature = features$id,
     stringsAsFactors = FALSE
   )
-  effects$multiplier <- 1
+  effects$relative_change <- 0
 
   boundary <- data.frame(
     pu1 = c(1, 1, 2, 3),
@@ -76,7 +76,7 @@ toy_multiaction_semantics <- function() {
       "restoration",  "restoration"
     ),
     feature = c(1, 2, 1, 2),
-    multiplier = c(0.2, 0, 0.1, 2)
+    relative_change = c(0.2, 0, 0.1, 2)
   )
 
   boundary <- data.frame(

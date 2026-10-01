@@ -69,21 +69,20 @@ test_that("add_actions validates pair specifications", {
 })
 
 
-test_that("add_effects supports feature names and explicit signed delta effects", {
+test_that("add_effects supports feature names and explicit signed effects", {
   x <- make_round3_action_problem(with_effects = FALSE)
 
-  # Signed delta tables are explicit at the pu-action-feature level.
+  # Signed effect tables are explicit at the pu-action-feature level.
   effects <- data.frame(
     pu = c(1L, 2L),
     action = c("conservation", "restoration"),
     feature = c("sp1", "sp2"),
-    delta = c(-1, 2)
+    effect = c(-1, 2)
   )
 
   out <- multiscape::add_effects(
     x,
-    effects = effects,
-    effect_type = "delta"
+    effects = effects
   )
 
   tbl <- out$data$dist_effects
@@ -93,82 +92,4 @@ test_that("add_effects supports feature names and explicit signed delta effects"
   expect_true(any(tbl$loss > 0))
   expect_true(any(tbl$benefit > 0))
   expect_true(all(tbl$feature_name %in% c("sp1", "sp2")))
-})
-
-
-test_that("add_effects validates unknown entities and conflicting components", {
-  x <- make_round3_action_problem(with_effects = FALSE)
-
-  expect_error(
-    multiscape::add_effects(
-      x,
-      effects = data.frame(
-        action = "unknown",
-        feature = 1,
-        multiplier = 1
-      ),
-      effect_type = "after"
-    )
-  )
-
-  expect_error(
-    multiscape::add_effects(
-      x,
-      effects = data.frame(
-        action = "conservation",
-        feature = "unknown",
-        multiplier = 1
-      ),
-      effect_type = "after"
-    )
-  )
-
-  expect_error(
-    multiscape::add_effects(
-      x,
-      effects = data.frame(
-        pu = 1,
-        action = "conservation",
-        feature = 1,
-        benefit = 1,
-        loss = 1
-      )
-    ),
-    "both positive"
-  )
-})
-
-
-test_that("add_benefits and add_losses create component-specific effects", {
-  x <- make_round3_action_problem(with_effects = FALSE)
-
-  benefits <- multiscape::add_benefits(
-    x,
-    benefits = data.frame(
-      pu = 1L,
-      action = "restoration",
-      feature = 1L,
-      delta = 2
-    ),
-    effect_type = "delta"
-  )
-
-  expect_true(all(benefits$data$dist_effects$loss == 0))
-  expect_true(any(benefits$data$dist_effects$benefit > 0))
-  expect_s3_class(benefits$data$dist_benefit, "data.frame")
-
-  losses <- multiscape::add_losses(
-    x,
-    losses = data.frame(
-      pu = 1L,
-      action = "conservation",
-      feature = 2L,
-      delta = -1
-    ),
-    effect_type = "delta"
-  )
-
-  expect_true(all(losses$data$dist_effects$benefit == 0))
-  expect_true(any(losses$data$dist_effects$loss > 0))
-  expect_s3_class(losses$data$dist_loss, "data.frame")
 })

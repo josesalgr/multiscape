@@ -1,11 +1,3 @@
-reference_problem <- function() {
-  suppressWarnings(create_problem(
-    pu = data.frame(id = 1:2, cost = 1),
-    features = data.frame(id = 1, name = "habitat"),
-    dist_features = data.frame(pu = 1:2, feature = 1, amount = c(100, 0))
-  )) |> add_actions(actions = data.frame(id = "restore"))
-}
-
 test_that("semantic inputs give equivalent coefficients without warnings", {
   p <- reference_problem()
   tbl <- data.frame(pu = 1, action = "restore", feature = "habitat")
@@ -35,50 +27,40 @@ test_that("compact semantic tables expand including zero references", {
   expect_equal(add_effects(p, b)$data$dist_effects$effect, c(20, 20))
 })
 
-test_that("new inputs and legacy inputs feed identical model tables", {
+
+test_that("semantic columns reject invalid numeric values and negative outcomes", {
   p <- reference_problem()
-  b <- data.frame(pu = 1, action = "restore", feature = 1, effect = 30)
-  modern <- add_effects(p, b)
-  b$delta <- b$effect
-  b$effect <- NULL
-  lifecycle::expect_deprecated(old <- add_effects(p, b))
-  expect_equal(modern$data$dist_effects, old$data$dist_effects)
-  modern <- multiscape:::.pa_build_model_prepare_tables(modern)
-  old <- multiscape:::.pa_build_model_prepare_tables(old)
-  expect_equal(modern$data$dist_effects_model, old$data$dist_effects_model)
-  p$data$dist_actions$status <- c(1L, 3L)
+  keys <- data.frame(pu = 1, action = "restore", feature = 1)
+  for (column in c("effect", "outcome", "relative_change")) {
+    b <- keys
+    b[[column]] <- NA_real_
+    expect_error(add_effects(p, b), "missing")
+    b[[column]] <- Inf
+    expect_error(add_effects(p, b), "finite")
+    b[[column]] <- "130"
+    expect_error(add_effects(p, b), "numeric")
+    b[[column]] <- switch(column, effect = -101, outcome = -1, relative_change = -1.01)
+    expect_error(add_effects(p, b), "negative")
+  }
+})
+
+test_that("semantic columns reject ambiguity and compact tables validate their keys", {
+  p <- reference_problem()
+  keys <- data.frame(pu = 1, action = "restore", feature = 1)
+  for (columns in list(c("effect", "outcome"), c("effect", "relative_change"),
+                       c("outcome", "relative_change"))) {
+    b <- keys
+    b[[columns[1]]] <- 1
+    b[[columns[2]]] <- 1
+    expect_error(add_effects(p, b), "exactly one")
+  }
   compact <- data.frame(action = "restore", feature = 1, effect = 30)
-  expect_equal(add_effects(p, compact)$data$dist_effects$pu, 1L)
   expect_error(add_effects(p, rbind(compact, compact)), "duplicated")
-})
-
-test_that("legacy positional calls preserve coefficients and warn", {
-  p <- reference_problem()
-  b <- data.frame(pu = 1, action = "restore", feature = 1, effect = 130)
-  lifecycle::expect_deprecated(q <- add_effects(p, b, "after", "sum", "any"))
-  expect_equal(q$data$dist_effects$effect, 30)
-  b <- data.frame(action = "restore", feature = 1, multiplier = 0.3)
-  lifecycle::expect_deprecated(q <- add_effects(p, b))
-  # Legacy compact multipliers expand only over stored (non-zero) references.
-  expect_equal(q$data$dist_effects$effect, 30)
-})
-
-test_that("semantic inputs reject ambiguity and invalid values", {
-  p <- reference_problem()
-  b <- data.frame(pu = 1, action = "restore", feature = 1, outcome = 130)
-  expect_error(add_effects(p, b, effect_type = "after"), "omit effect_type")
-  b$effect <- 30
-  expect_error(add_effects(p, b), "exactly one")
-  b$effect <- NULL
-  b$outcome <- NA_real_
-  expect_error(add_effects(p, b), "missing")
-  b$outcome <- -1
-  expect_error(add_effects(p, b), "negative")
-  b$outcome <- Inf
-  expect_error(add_effects(p, b), "finite")
-  b$outcome <- "130"
-  expect_error(add_effects(p, b), "numeric")
-  expect_error(add_effects(p, raster_aggregation = "mean", effect_aggregation = "sum"), "only one")
+  p$data$dist_actions$status <- c(1L, 3L)
+  expect_equal(add_effects(p, compact)$data$dist_effects$pu, 1L)
+  compact$feature <- "unknown"
+  expect_error(add_effects(p, compact), "Unknown feature name")
+  expect_error(add_effects(p, effects = "bad"), "Unsupported type")
 })
 
 test_that("new raster inputs align planning units and features", {

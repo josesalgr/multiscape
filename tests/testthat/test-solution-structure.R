@@ -10,7 +10,7 @@ test_that("single-objective solve returns a one-run SolutionSet", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
@@ -38,7 +38,7 @@ test_that("weighted solve returns a SolutionSet with core components", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>

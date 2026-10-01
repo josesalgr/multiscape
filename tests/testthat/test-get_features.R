@@ -10,7 +10,7 @@ test_that("get_features returns a feature summary for Solution", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
@@ -35,7 +35,7 @@ test_that("get_features returns a feature summary for SolutionSet run", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
@@ -70,7 +70,7 @@ test_that("get_features errors for invalid run in SolutionSet", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_spatial_boundary(boundary = toy$boundary, include_self = TRUE) |>
     multiscape::add_objective_min_cost(alias = "cost") |>

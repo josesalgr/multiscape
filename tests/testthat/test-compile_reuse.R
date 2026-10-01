@@ -8,7 +8,7 @@ test_that("compile_model can be called twice on an already compiled single-objec
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_objective_min_cost(alias = "cost")
 
@@ -38,7 +38,7 @@ test_that("compile_model(force = TRUE) recompiles a single-objective problem", {
     cost = "cost"
   ) |>
     multiscape::add_actions(actions = toy$actions, cost = 0) |>
-    multiscape::add_effects(effects = toy$effects, effect_type = "after") |>
+    multiscape::add_effects(effects = toy$effects) |>
     multiscape::add_constraint_targets_relative(0.5) |>
     multiscape::add_objective_min_cost(alias = "cost")
 

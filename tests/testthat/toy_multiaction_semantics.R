@@ -31,7 +31,7 @@ toy_multiaction_semantics <- function() {
       "restoration", "restoration"
     ),
     feature = c(1, 2, 1, 2),
-    multiplier = c(
+    relative_change = c(
       1.2, 1.0,
       1.1, 2.0
     )
