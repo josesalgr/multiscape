@@ -62,6 +62,7 @@ Suggests:
     slam,
     rlang,
     testthat (>= 3.0.0),
+    withr,
     raster,
     tmap,
     sp,
