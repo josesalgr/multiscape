@@ -95,6 +95,7 @@ Collate:
     'add_action_sets.R'
     'add_actions.R'
     'add_constraint_action_cardinality.R'
+    'add_constraint_action_relations.R'
     'add_constraint_area.R'
     'add_constraint_budget.R'
     'add_constraint_locked_actions.R'

@@ -354,6 +354,41 @@ example below retains its one-action maximum. See the
 [action-cardinality vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
 for exact counts, subset rules, and a solved economic example.
 
+### Optional: define logical relations between actions
+
+Logical relations constrain **which actions can be selected together in each
+unit**. They complement cardinality, which controls how many actions can be
+selected. Distinct calls accumulate; duplicate definitions or names are errors.
+
+```{r action-relation-definitions}
+relations_problem <- actions_problem |>
+  add_constraint_action_cardinality(3, "max") |>
+  # Restoration needs threat control in unit 1.
+  add_constraint_action_requires("restore", "control", pu = 1L) |>
+  # In unit 2, either control or fencing is sufficient.
+  add_constraint_action_requires(
+    "restore", c("control", "fence"), sense = "any", pu = 2L
+  ) |>
+  # Control and fencing are alternative interventions in both units.
+  add_constraint_action_excludes(c("control", "fence"))
+
+# A separate alternative implements restoration and control together or neither.
+together_problem <- actions_problem |>
+  add_constraint_action_cardinality(2, "max") |>
+  add_constraint_action_together(c("restore", "control"))
+relations_problem$data$constraints$action_relations
+```
+
+`requires` is directional: selecting control does not force restoration.
+`together` requires all group members or none; `excludes` permits at most one
+member, including zero. An unavailable companion prevents an all dependency;
+an any dependency can use the remaining companions. An unavailable together
+member prevents the whole group. These rules
+apply to the feasible set shared by all optimization methods. They introduce
+no ecological interaction coefficients. See the
+[action-relations vignette](https://josesalgr.github.io/multiscape/articles/Action_relations.html)
+for solved examples, set members, scope, and compatibility with cardinality.
+
 ### Stage 3: Define the constraints
 
 [`add_constraint_targets_relative()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html)

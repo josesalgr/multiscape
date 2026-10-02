@@ -111,7 +111,8 @@ NULL
 #'   \item{\code{spatial_relations}}{Registered spatial relations.}
 #'   \item{\code{targets}}{Stored target specifications.}
 #'   \item{\code{constraints}}{Stored user-defined constraints, including
-#'   per-unit action counts in \code{constraints$action_cardinality}.}
+#'   per-unit action counts in \code{constraints$action_cardinality} and logical
+#'   relations in \code{constraints$action_relations}.}
 #'   \item{\code{objectives}}{Registered atomic objectives for single- or
 #'   multi-objective workflows.}
 #'   \item{\code{method}}{Stored multi-objective method configuration, when
@@ -433,6 +434,7 @@ NULL
     area_constraints = 0L,
     budget_constraints = 0L,
     action_cardinality_constraints = 0L,
+    action_relation_constraints = 0L,
     pu_locked_in = 0L,
     pu_locked_out = 0L,
     action_locked_in = 0L,
@@ -442,6 +444,9 @@ NULL
   cons <- self$data$constraints %||% list()
   if (is.data.frame(cons$action_cardinality)) {
     out$action_cardinality_constraints <- nrow(cons$action_cardinality)
+  }
+  if (is.data.frame(cons$action_relations)) {
+    out$action_relation_constraints <- nrow(cons$action_relations)
   }
 
   # area constraints
@@ -1044,6 +1049,14 @@ Problem <- pproto(
       n_cardinality <- cons_sum$action_cardinality_constraints
       cli::cli_text(
         " {ch$v}{ch$j}{ch$b}action cardinality: {n_cardinality} registered rules",
+        .envir = environment()
+      )
+    }
+
+    if (cons_sum$action_relation_constraints > 0L) {
+      n_relations <- cons_sum$action_relation_constraints
+      cli::cli_text(
+        " {ch$v}{ch$j}{ch$b}action relations: {n_relations} registered rules",
         .envir = environment()
       )
     }

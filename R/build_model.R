@@ -159,6 +159,8 @@
 
   x <- .pa_build_model_validate_locked_in_action_feasibility(x)
   x <- .pa_validate_action_cardinality_model(x)
+  .pa_validate_action_relations_specs(x$data$constraints$action_relations,
+                                     x$data$pu, x$data$actions)
 
   # ------------------------------------------------------------
   # early validation: objective dependencies
@@ -1413,6 +1415,7 @@
 
   x <- .pa_apply_action_max_per_pu_default(x)
   x <- .pa_apply_action_cardinality_if_present(x)
+  x <- .pa_apply_action_relations_if_present(x)
 
   if (exists(".pa_apply_area_constraints_if_present", mode = "function")) {
     x <- .pa_apply_area_constraints_if_present(x)

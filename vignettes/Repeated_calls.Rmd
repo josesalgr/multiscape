@@ -24,7 +24,7 @@ silently replaced.
 | `add_objective_*()` without `alias` | One explicit single-objective definition; a second one is an error. |
 | `add_objective_*()` with `alias` | Distinct aliases accumulate; a repeated alias is an error. |
 | `add_action_sets()` | Distinct set IDs accumulate; a repeated ID is an error. |
-| Targets, area, budget, and action cardinality | Distinct constraint definitions accumulate; repeated identities are errors. |
+| Targets, area, budget, action cardinality, and logical action relations | Distinct constraint definitions accumulate; repeated identities are errors. |
 | Spatial constructors | Distinct relation names accumulate; a repeated name is an error. |
 | Planning-unit and action locks | Compatible locks accumulate; identical states are idempotent and contradictory states are errors. |
 
@@ -113,9 +113,13 @@ constraint identity.
 | Constraint | Identity |
 |:-----------|:---------|
 | Action cardinality | Set of PUs + total/subset action scope + sense |
+| Logical action relation | Type + action groups (including required companions) + all/any sense + set of PUs |
 | Budget | Action scope + included cost components + sense |
 | Area | Action scope + area measure (`area_col`) + sense |
 | Target | Feature + action scope, shared by absolute and relative targets |
+
+Requires, excludes, and together share one name namespace. A single required
+companion has the same identity under `sense = "all"` and `sense = "any"`.
 
 ```{r accumulation}
 constrained <- actions_base |>

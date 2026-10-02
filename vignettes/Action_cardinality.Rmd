@@ -163,6 +163,12 @@ costs are charged once for each selected unit. Budgets and net-profit objectives
 use those same existing cost definitions. The three MO methods retain the
 cardinality constraints while exploring their objectives.
 
+Capacity alone does not specify dependencies or compatibility. Add logical
+relations to require companion actions, exclude incompatible actions, or
+select an entire group together; see the
+[action-relations vignette](Action_relations.html). These relations preserve
+the capacities configured here.
+
 ## Current ecological scope
 
 In this development stage, concurrent actions are supported in cost/profit

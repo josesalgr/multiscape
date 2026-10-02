@@ -86,8 +86,8 @@ Each set must contain at least two distinct actions. A set identifier cannot
 match an action id, an action display name, or an existing `actions$action_set`
 classification label. Members must be action ids; sets cannot be nested.
 Duplicated memberships and reusing an existing set identifier are errors.
-Updating the action catalog also checks that registered definitions remain
-valid, so removing a member cannot silently leave a dangling set.
+The action catalog is fixed after its first definition. Define a different
+catalog in a separate problem before registering its sets.
 
 ## What registration means
 
@@ -109,3 +109,9 @@ in cost/profit workflows; see the [action-cardinality vignette](Action_cardinali
 Set identifiers cannot yet be used as action inputs to effects, objectives, or
 constraints. Joint ecological effects and feature aggregation remain separate
 steps in the package's development.
+
+To require selection of the members together, pass their individual IDs to
+`add_constraint_action_together()`. Directional dependencies and mutually
+exclusive alternatives use `add_constraint_action_requires()` and
+`add_constraint_action_excludes()`; see the
+[action-relations vignette](Action_relations.html).

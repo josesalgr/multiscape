@@ -70,6 +70,9 @@ reference:
       - add_constraint_area
       - add_constraint_budget
       - add_constraint_action_cardinality
+      - add_constraint_action_requires
+      - add_constraint_action_excludes
+      - add_constraint_action_together
       - add_constraint_locked_actions
       - add_constraint_locked_planning_units
 

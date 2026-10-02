@@ -110,7 +110,8 @@ feature.}
 \item{\code{spatial_relations}}{Registered spatial relations.}
 \item{\code{targets}}{Stored target specifications.}
 \item{\code{constraints}}{Stored user-defined constraints, including
-per-unit action counts in \code{constraints$action_cardinality}.}
+per-unit action counts in \code{constraints$action_cardinality} and logical
+relations in \code{constraints$action_relations}.}
 \item{\code{objectives}}{Registered atomic objectives for single- or
 multi-objective workflows.}
 \item{\code{method}}{Stored multi-objective method configuration, when

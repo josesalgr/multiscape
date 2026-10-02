@@ -325,6 +325,47 @@ maximum. See the [action-cardinality
 vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
 for exact counts, subset rules, and a solved economic example.
 
+### Optional: define logical relations between actions
+
+Logical relations constrain **which actions can be selected together in
+each unit**. They complement cardinality, which controls how many
+actions can be selected. Distinct calls accumulate; duplicate
+definitions or names are errors.
+
+``` r
+relations_problem <- actions_problem |>
+  add_constraint_action_cardinality(3, "max") |>
+  # Restoration needs threat control in unit 1.
+  add_constraint_action_requires("restore", "control", pu = 1L) |>
+  # In unit 2, either control or fencing is sufficient.
+  add_constraint_action_requires(
+    "restore", c("control", "fence"), sense = "any", pu = 2L
+  ) |>
+  # Control and fencing are alternative interventions in both units.
+  add_constraint_action_excludes(c("control", "fence"))
+
+# A separate alternative implements restoration and control together or neither.
+together_problem <- actions_problem |>
+  add_constraint_action_cardinality(2, "max") |>
+  add_constraint_action_together(c("restore", "control"))
+relations_problem$data$constraints$action_relations
+#>       type sense              name        actions       requires   pu
+#> 1 requires   all action_requires_1        restore        control    1
+#> 2 requires   any action_requires_2        restore control, fence    2
+#> 3 excludes  <NA> action_excludes_3 control, fence           NULL 1, 2
+```
+
+`requires` is directional: selecting control does not force restoration.
+`together` requires all group members or none; `excludes` permits at
+most one member, including zero. An unavailable companion prevents an
+all dependency; an any dependency can use the remaining companions. An
+unavailable together member prevents the whole group. These rules apply
+to the feasible set shared by all optimization methods. They introduce
+no ecological interaction coefficients. See the [action-relations
+vignette](https://josesalgr.github.io/multiscape/articles/Action_relations.html)
+for solved examples, set members, scope, and compatibility with
+cardinality.
+
 ### Stage 3: Define the constraints
 
 [`add_constraint_targets_relative()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html)
@@ -483,12 +524,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.008000135   0
-#> 2      2           2 optimal 0.015000105   0
-#> 3      3           3 optimal 0.016000032   0
-#> 4      4           4 optimal 0.003999949   0
+#> 1      1           1 optimal 0.006000042   0
+#> 2      2           2 optimal 0.013999939   0
+#> 3      3           3 optimal 0.016999960   0
+#> 4      4           4 optimal 0.003000021   0
 #> 5      5           5 optimal 0.010999918   0
-#> 6      6           6 optimal 0.003000021   0
+#> 6      6           6 optimal 0.003999949   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies

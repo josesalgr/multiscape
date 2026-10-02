@@ -1,5 +1,13 @@
 # multiscape (development version)
 
+- Added `add_constraint_action_requires()` (all/any companions),
+  `add_constraint_action_excludes()` (at most one group member), and
+  `add_constraint_action_together()` (all or none), scoped separately by PU.
+  Distinct rules accumulate; duplicate identities and names are errors.
+  Unavailable actions are treated as zero, including missing pairs, exclusions,
+  and filtered non-finite costs. Relations use the same compiled feasible set
+  for single-objective, weighted-sum, epsilon-constraint, and AUGMECON methods.
+  They do not lift the default action-count limit or introduce joint effects.
 - Defined a strict repeated-call contract without adding public arguments.
   Actions, effects (including legacy wrappers), profit, solver settings, MO
   methods, and unaliased objectives can be defined only once per problem.
