@@ -45,6 +45,11 @@ it possible to combine multiple target rules, including targets associated
 with different action subsets.
 }
 \details{
+Calls accumulate targets for distinct feature/action scopes. A second target
+for the same feature and action scope raises an error immediately, even if
+it uses relative units or a different label. To change a target, rebuild
+from the problem before it was added.
+
 Use this function when target requirements are naturally expressed in the
 original units of the modelled feature contributions, rather than as
 proportions of reference-scenario totals.

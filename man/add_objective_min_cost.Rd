@@ -81,6 +81,15 @@ term. If \code{actions} is supplied, only the selected subset contributes to
 that term. Planning-unit costs are never subset by \code{actions}; they are
 always global whenever \code{include_pu_cost = TRUE}.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \examples{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()

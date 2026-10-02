@@ -68,6 +68,11 @@ NULL
 #'
 #' \strong{Conflict checking}
 #'
+#' Calls accumulate compatible locks and preserve omitted arguments. Repeating
+#' the same lock is idempotent. Changing an existing locked-in pair to locked-out,
+#' or vice versa, raises an error. To change a lock, rebuild from the problem
+#' before it was added.
+#'
 #' A given \code{(pu, action)} pair cannot be simultaneously requested in both
 #' \code{locked_in} and \code{locked_out}. Such overlaps are rejected.
 #'
@@ -113,6 +118,9 @@ NULL
 #'     cost = example_data$action_costs
 #'   )
 #'
+#' # Keep the base to compare independent lock specifications
+#' actions_base <- p
+#'
 #' # Lock a few feasible decisions
 #' p <- add_constraint_locked_actions(
 #'   x = p,
@@ -130,7 +138,7 @@ NULL
 #'
 #' # Named-list interface
 #' p2 <- add_constraint_locked_actions(
-#'   x = p,
+#'   x = actions_base,
 #'   locked_in = list(
 #'     protect = c(1, 3)
 #'   ),
@@ -401,6 +409,9 @@ add_constraint_locked_actions <- function(
     key_da <- paste(da$pu, da$action)
     key_li <- paste(locked_in_pairs$pu, locked_in_pairs$action)
     idx_li <- key_da %in% key_li
+    if (any(da$status[idx_li] == 3L)) {
+      stop("Some action pairs are already locked_out and cannot be locked_in.", call. = FALSE)
+    }
     da$status[idx_li] <- 2L
   }
 
@@ -408,6 +419,9 @@ add_constraint_locked_actions <- function(
     key_da <- paste(da$pu, da$action)
     key_lo <- paste(locked_out_pairs$pu, locked_out_pairs$action)
     idx_lo <- key_da %in% key_lo
+    if (any(da$status[idx_lo] == 2L)) {
+      stop("Some action pairs are already locked_in and cannot be locked_out.", call. = FALSE)
+    }
     da$status[idx_lo] <- 3L
   }
 

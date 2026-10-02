@@ -88,12 +88,12 @@ factor values are interpreted using common logical strings such as
 \code{"true"}, \code{"t"}, \code{"1"}, \code{"yes"}, and \code{"y"}.
 Missing values are treated as \code{FALSE}.
 
-\strong{Replacement behaviour}
+\strong{Repeated calls}
 
-Each call to \code{add_constraint_locked_planning_units()} replaces any existing
-\code{locked_in} and \code{locked_out} columns in the planning-unit table. In
-other words, the function defines the complete current set of locked planning
-units; it does not merge new values with previous ones.
+Calls accumulate compatible locks and preserve omitted arguments. Repeating
+the same lock is idempotent. A planning unit cannot be locked in after it was
+locked out, or vice versa. Conflicts with existing action locks are also
+rejected. To change a lock, rebuild from the problem before it was added.
 
 \strong{Consistency checks}
 

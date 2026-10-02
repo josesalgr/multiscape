@@ -1,3 +1,30 @@
+# multiscape (development version)
+
+- Defined a strict repeated-call contract without adding public arguments.
+  Actions, effects (including legacy wrappers), profit, solver settings, MO
+  methods, and unaliased objectives can be defined only once per problem.
+  Second definitions raise an error instead of replacing data or settings.
+  Distinct sets, constraints, spatial names, and objective aliases accumulate.
+  Locks accumulate compatible states and reject inversions in either call order.
+  Targets reject duplicate feature/action scopes immediately, including across
+  absolute and relative calls. Budget identity includes cost components and
+  area identity includes its measure. Compare configurations by deriving each
+  alternative from a common problem before its first definition.
+- Added `add_constraint_action_cardinality()` for per-unit minimum, maximum,
+  or exact action counts. Repeated calls support distinct spatial and action
+  scopes; explicit total maxima/equalities replace the implicit one-action
+  limit only in their covered units. Rules are compiled for single-objective
+  and multi-objective methods. Concurrent ecological effects remain blocked
+  pending joint-effect and feature-aggregation support; concurrent cost/profit
+  workflows are supported.
+- Added `add_action_sets()` for named lists or long membership tables and
+  `get_action_sets()` for inspecting definitions. Actions can belong to several
+  sets. Definitions are independent of action feasibility, selection rules,
+  costs, and effects; registering them does not enable simultaneous actions.
+- Action-set registration validates members and identifier conflicts, adds new
+  sets across calls, and preserves the original problem. Action catalogs are
+  fixed after their first definition, protecting dependent sets and indices.
+
 # multiscape 1.3.0
 
 - `add_effects()` now accepts exactly one of `effect`, `outcome`, or

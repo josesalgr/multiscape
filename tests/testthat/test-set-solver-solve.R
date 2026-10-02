@@ -1,4 +1,4 @@
-test_that("set_solver covers incremental updates, wrappers, warnings, and validation", {
+test_that("set_solver covers single assignment, wrappers, warnings, and validation", {
   p <- make_round4_problem()
 
   expect_error(multiscape::set_solver(list()), "Problem")
@@ -38,9 +38,10 @@ test_that("set_solver covers incremental updates, wrappers, warnings, and valida
   expect_equal(p1$data$solve_args$solver_params$a, 1)
   expect_equal(p1$data$solve_args$solver_params$b, 2)
 
-  p2 <- multiscape::set_solver(p1, solver = "gurobi", solver_params = list(a = 3))
+  expect_error(multiscape::set_solver(p1, solver = "gurobi"), "already defined")
+  p2 <- multiscape::set_solver(p, solver = "gurobi", solver_params = list(a = 3))
   expect_identical(p2$data$solve_args$solver, "gurobi")
-  expect_equal(p2$data$solve_args$gap_limit, 0.12345)
+  expect_null(p2$data$solve_args$gap_limit)
   expect_equal(p2$data$solve_args$solver_params$a, 3)
   expect_null(p2$data$solve_args$solver_params$b)
 

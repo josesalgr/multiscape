@@ -125,8 +125,12 @@
 #'   profit.
 #' }
 #'
-#' @return An updated \code{Problem} object with a stored profit table created
-#'   or replaced. The stored table contains columns \code{pu}, \code{action},
+#' Profit can be defined only once per problem, including explicit zero profit.
+#' A second call raises an error. To compare profit scenarios, build separate
+#' problems from the object before profit was added.
+#'
+#' @return An updated \code{Problem} object with a stored profit table created.
+#'   The stored table contains columns \code{pu}, \code{action},
 #'   \code{profit}, \code{internal_pu}, and \code{internal_action}, and
 #'   includes only rows with non-zero profit.
 #'
@@ -182,7 +186,7 @@ add_profit <- function(
     x,
     profit = NULL
 ) {
-
+  .pa_assert_unconfigured(x, "dist_profit", "Profit", "add_profit()")
   # ---- checks: x
   assertthat::assert_that(!is.null(x), msg = "x is NULL")
   assertthat::assert_that(!is.null(x$data), msg = "x does not look like a mulstiscape Problem object")

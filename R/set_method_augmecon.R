@@ -19,6 +19,11 @@
 #' \code{\link{solve}}.
 #'
 #' @details
+#' A problem can have only one explicitly configured multi-objective method.
+#' A second call to any \code{set_method_*()} function raises an error. To
+#' compare methods or run designs, derive alternatives from the same problem
+#' before configuring its method.
+#'
 #' Use this method when one objective should be optimized directly, the
 #' remaining objectives should be controlled through epsilon levels, and weakly
 #' efficient solutions should be reduced through the augmented formulation.
@@ -419,6 +424,7 @@ set_method_augmecon <- function(x,
                                 slack_upper_bound = 1e6,
                                 control = NULL) {
   stopifnot(inherits(x, "Problem"))
+  .pa_assert_unconfigured(x, "method", "Multi-objective method", "set_method_*()")
 
   if (exists(".pa_clone_data", mode = "function")) {
     x <- .pa_clone_data(x)

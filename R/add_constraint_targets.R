@@ -11,6 +11,11 @@
 #' with different action subsets.
 #'
 #' @details
+#' Calls accumulate targets for distinct feature/action scopes. A second target
+#' for the same feature and action scope raises an error immediately, even if
+#' it uses relative units or a different label. To change a target, rebuild
+#' from the problem before it was added.
+#'
 #' Use this function when target requirements are naturally expressed in the
 #' original units of the modelled feature contributions, rather than as
 #' proportions of reference-scenario totals.
@@ -129,7 +134,7 @@ add_constraint_targets_absolute <- function(x, targets,
   x <- .pa_clone_data(x)
   dt <- .pa_parse_targets(x, targets, features = features)
 
-  actions_txt <- .pa_subset_to_string(actions)
+  actions_txt <- .pa_target_actions(x, actions)
 
   out <- data.frame(
     feature      = as.numeric(dt$feature),
@@ -236,6 +241,9 @@ add_constraint_targets_absolute <- function(x, targets,
 #' }
 #'
 #' Relative targets must lie in \eqn{[0,1]}.
+#' A second target for the same feature and action scope raises an error,
+#' including when an absolute target already exists. Labels and threshold
+#' values do not change target identity.
 #'
 #' Repeated calls append new target rules rather than replacing previous ones.
 #' This allows cumulative target modelling, including multiple rules on the same
@@ -314,7 +322,7 @@ add_constraint_targets_relative <- function(x, targets,
   basis_v[is.na(basis_v)] <- 0
   abs_target <- rel * as.numeric(basis_v)
 
-  actions_txt <- .pa_subset_to_string(actions)
+  actions_txt <- .pa_target_actions(x, actions)
 
   out <- data.frame(
     feature      = as.numeric(dt$feature),

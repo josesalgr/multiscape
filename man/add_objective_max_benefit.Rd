@@ -67,6 +67,15 @@ This objective maximizes gains only. It does not subtract losses. If harmful
 effects should also be accounted for, they must be handled separately through
 additional objectives or constraints.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \examples{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()

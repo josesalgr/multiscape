@@ -12,6 +12,11 @@
 #' used later by \code{\link{solve}}.
 #'
 #' @details
+#' A problem can have only one explicitly configured multi-objective method.
+#' A second call to any \code{set_method_*()} function raises an error. To
+#' compare methods or run designs, derive alternatives from the same problem
+#' before configuring its method.
+#'
 #' Use this method when several registered objectives should be combined into a
 #' single scalar optimization problem through explicit preference weights.
 #'
@@ -308,6 +313,7 @@ set_method_weighted_sum <- function(x,
                                     objective_scaling = FALSE,
                                     control = NULL) {
   stopifnot(inherits(x, "Problem"))
+  .pa_assert_unconfigured(x, "method", "Multi-objective method", "set_method_*()")
 
   if (exists(".pa_clone_data", mode = "function")) {
     x <- .pa_clone_data(x)

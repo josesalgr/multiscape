@@ -64,6 +64,15 @@ This objective minimizes harmful effects only. It does not offset losses
 against benefits unless benefits are handled elsewhere through additional
 objectives or constraints.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \examples{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()

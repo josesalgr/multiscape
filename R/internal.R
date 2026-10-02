@@ -539,6 +539,33 @@ available_to_solve <- function(package = ""){
   stop("Unsupported targets format.", call. = FALSE)
 }
 
+# Configurations are single-assignment; defaults computed by readers do not
+# populate these fields. Check before cloning or touching cached models.
+.pa_assert_unconfigured <- function(x, fields, label, constructor) {
+  stopifnot(inherits(x, "Problem"))
+  if (any(vapply(fields, function(field) !is.null(x$data[[field]]), logical(1)))) {
+    stop(label, " already defined. ", constructor, " can only be called once per problem. ",
+         "Rebuild from the problem before this definition to change it.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.pa_target_actions <- function(x, actions) {
+  if (is.null(actions)) return(NA_character_)
+  .pa_subset_to_string(.pa_resolve_action_subset(x, actions)$id)
+}
+
+.pa_constraint_name <- function(x, family, proposed, explicit = FALSE) {
+  names_used <- x$data$constraints[[family]]$name %||% character()
+  if (!(proposed %in% names_used)) return(proposed)
+  if (explicit) {
+    stop("Constraint name '", proposed, "' already exists in ", family, ".", call. = FALSE)
+  }
+  index <- 2L
+  while (paste0(proposed, "_", index) %in% names_used) index <- index + 1L
+  paste0(proposed, "_", index)
+}
+
 .pa_store_targets <- function(x, targets_df) {
   stopifnot(inherits(x, "Problem"))
   stopifnot(inherits(targets_df, "data.frame"))
@@ -554,6 +581,11 @@ available_to_solve <- function(package = ""){
     targets_df$actions <- NA_character_
   }
   targets_df$actions <- as.character(targets_df$actions)
+
+  key_new <- paste(targets_df$feature, targets_df$type, targets_df$actions, sep = "||")
+  if (anyDuplicated(key_new)) {
+    stop("Duplicated targets for the same feature and action scope.", call. = FALSE)
+  }
 
   valid_types <- c("actions")
   bad_type <- setdiff(unique(targets_df$type), valid_types)
@@ -588,15 +620,15 @@ available_to_solve <- function(package = ""){
   }
   old$actions <- as.character(old$actions)
 
-  # optional informative warning for repeated keys
+  # Absolute and relative targets share the same feature/action identity.
   key_old <- paste0(old$feature, "||", old$type, "||", old$actions)
   key_new <- paste0(targets_df$feature, "||", targets_df$type, "||", targets_df$actions)
 
   overlap <- intersect(key_old, key_new)
   if (length(overlap) > 0) {
-    warning(
-      "Additional targets were added for existing (feature, type, actions) combinations. ",
-      "These target rows remain stored simultaneously and will be handled downstream. ",
+    stop(
+      "A target already exists for the same feature and action scope. ",
+      "Rebuild from the problem before this target to change it. ",
       "Example key: ", overlap[1],
       call. = FALSE
     )
@@ -3566,6 +3598,10 @@ available_to_solve <- function(package = ""){
   if (is.null(x$data$spatial_relations) || !is.list(x$data$spatial_relations)) {
     x$data$spatial_relations <- list()
   }
+  if (name %in% names(x$data$spatial_relations)) {
+    stop("Spatial relation '", name, "' already exists. Use a new name or rebuild ",
+         "from the problem before this relation to change it.", call. = FALSE)
+  }
   x$data$spatial_relations[[name]] <- rel
   x
 }
@@ -4086,15 +4122,30 @@ NULL
   stopifnot(inherits(x, "Problem"))
   sense <- match.arg(sense)
 
+  single_defined <- isTRUE(x$data$meta$single_objective_defined) ||
+    (!is.null(x$data$model_args$objective_id) &&
+     length(x$data$objectives %||% list()) == 0L)
+  if (is.null(alias) && single_defined) {
+    stop("A single-objective definition already exists. Use distinct aliases for ",
+         "multi-objective planning or rebuild from the problem before this objective.",
+         call. = FALSE)
+  }
+
   x <- .pa_clone_data(x)
 
   if (is.null(x$data$model_args) || !is.list(x$data$model_args)) {
     x$data$model_args <- list()
   }
 
-  x$data$model_args$model_type <- as.character(model_type)[1]
-  x$data$model_args$objective_id <- as.character(objective_id)[1]
-  x$data$model_args$objective_args <- objective_args
+  if (is.null(alias) || !single_defined) {
+    x$data$model_args$model_type <- as.character(model_type)[1]
+    x$data$model_args$objective_id <- as.character(objective_id)[1]
+    x$data$model_args$objective_args <- objective_args
+  }
+  if (is.null(alias)) {
+    x$data$meta <- x$data$meta %||% list()
+    x$data$meta$single_objective_defined <- TRUE
+  }
 
   x <- .pa_register_objective(
     x = x,
@@ -4864,7 +4915,8 @@ NULL
   area_df$unit <- as.character(area_df$unit)
 
   new_actions_key <- ifelse(is.na(area_df$actions), "__ALL__", area_df$actions)
-  new_key <- paste(new_actions_key, area_df$sense, sep = "||")
+  new_key <- paste(new_actions_key, area_df$sense,
+                   ifelse(is.na(area_df$area_col), "__DEFAULT__", area_df$area_col), sep = "||")
 
   if (anyDuplicated(new_key)) {
     dup <- unique(new_key[duplicated(new_key)])[1]
@@ -4917,7 +4969,8 @@ NULL
   old$sense <- as.character(old$sense)
 
   old_actions_key <- ifelse(is.na(old$actions), "__ALL__", old$actions)
-  old_key <- paste(old_actions_key, old$sense, sep = "||")
+  old_key <- paste(old_actions_key, old$sense,
+                   ifelse(is.na(old$area_col), "__DEFAULT__", old$area_col), sep = "||")
 
   overlap <- intersect(old_key, new_key)
   if (length(overlap) > 0) {
@@ -5047,7 +5100,8 @@ NULL
   budget_df$name <- as.character(budget_df$name)
 
   new_actions_key <- ifelse(is.na(budget_df$actions), "__ALL__", budget_df$actions)
-  new_key <- paste(new_actions_key, budget_df$sense, sep = "||")
+  new_key <- paste(new_actions_key, budget_df$sense, budget_df$include_pu_cost,
+                   budget_df$include_action_cost, sep = "||")
 
   if (anyDuplicated(new_key)) {
     dup <- unique(new_key[duplicated(new_key)])[1]
@@ -5138,7 +5192,8 @@ NULL
   }
 
   old_actions_key <- ifelse(is.na(old$actions), "__ALL__", old$actions)
-  old_key <- paste(old_actions_key, old$sense, sep = "||")
+  old_key <- paste(old_actions_key, old$sense, old$include_pu_cost,
+                   old$include_action_cost, sep = "||")
 
   overlap <- intersect(old_key, new_key)
   if (length(overlap) > 0) {

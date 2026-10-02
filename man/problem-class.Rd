@@ -26,6 +26,16 @@ create_problem()
 }
 }
 \details{
+\strong{Repeated calls}
+
+Action catalogues, effects, profit, solver configuration, multi-objective
+methods, and unaliased single objectives can each be defined once. A second
+definition raises an error. Action sets, named spatial relations, aliased
+objectives, and distinct constraints accumulate; duplicate definitions are
+rejected. Locks accumulate compatible states, allow identical repeats, and
+reject contradictory states. To compare scenarios or configurations, derive
+each alternative from a common problem before the relevant definition.
+
 \strong{Conceptual role}
 
 The \code{Problem} class is designed for a data-first and modular workflow.
@@ -87,6 +97,9 @@ Common entries of \code{data} include:
 \item{\code{pu}}{Planning-unit table.}
 \item{\code{features}}{Feature table.}
 \item{\code{actions}}{Action catalog.}
+\item{\code{action_sets}}{Named combinations of actions, stored as a long
+table of set--action memberships. These definitions do not impose joint
+selection or change the optimization model.}
 \item{\code{dist_features}}{Planning unit--feature baseline amounts.}
 \item{\code{dist_actions}}{Feasible planning unit--action pairs.}
 \item{\code{dist_effects}}{Action effects by planning unit, action, and
@@ -96,7 +109,8 @@ feature.}
 \item{\code{pu_coords}}{Planning-unit coordinates when available.}
 \item{\code{spatial_relations}}{Registered spatial relations.}
 \item{\code{targets}}{Stored target specifications.}
-\item{\code{constraints}}{Stored user-defined constraints.}
+\item{\code{constraints}}{Stored user-defined constraints, including
+per-unit action counts in \code{constraints$action_cardinality}.}
 \item{\code{objectives}}{Registered atomic objectives for single- or
 multi-objective workflows.}
 \item{\code{method}}{Stored multi-objective method configuration, when
@@ -183,6 +197,8 @@ a built optimization model.
 \seealso{
 \code{\link{create_problem}},
 \code{\link{add_actions}},
+\code{\link{add_action_sets}},
+\code{\link{add_constraint_action_cardinality}},
 \code{\link{add_effects}},
 \code{\link{add_constraint_targets_absolute}},
 \code{\link{solve}}

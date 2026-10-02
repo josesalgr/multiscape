@@ -129,6 +129,15 @@ each selected action pattern separately.
 Setting \code{weight_multiplier = 0} removes the contribution of the spatial
 relation from the objective after scaling.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \examples{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()

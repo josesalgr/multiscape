@@ -203,6 +203,128 @@ problem <- problem |>
   )
 ```
 
+### Repeated calls and alternative configurations
+
+Actions, effects, profit, solver settings, an MO method, and an
+unaliased single objective can each be defined **once per problem**. A
+second call raises an error, even with identical inputs. This also
+applies to solver and effects wrappers. Put all solver settings and the
+complete effects table in their first calls. Defaults do not count as an
+explicit configuration.
+
+Distinct action sets, objective aliases, spatial relation names, and
+constraint definitions accumulate. Duplicate definitions raise an error.
+Absolute and relative targets share the same feature/action-scope
+identity. Locks accumulate compatible states; identical repeats are
+allowed and contradictions are rejected.
+
+To compare configurations, keep a common problem before the setting to
+vary:
+
+``` r
+cbc_problem <- problem |> set_solver_cbc(gap_limit = 0, time_limit = 60)
+gurobi_problem <- problem |> set_solver_gurobi(gap_limit = 0, time_limit = 60)
+```
+
+Both alternatives have their own solver configuration. Apply the same
+pattern when comparing effect scenarios, MO methods, or run designs. See
+the [repeated-call
+contract](https://josesalgr.github.io/multiscape/articles/Repeated_calls.html)
+for identities, accumulation rules, and migration examples.
+
+### Optional: register action sets
+
+[`add_action_sets()`](https://josesalgr.github.io/multiscape/reference/add_action_sets.html)
+records named combinations of existing actions. It accepts a named list
+or a long table with columns `set` and `action`. One action may belong
+to several sets. The following independent example defines restoration
+with threat control and restoration with fencing:
+
+``` r
+actions_problem <- create_problem(
+  pu = data.frame(id = 1:2, cost = 1),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = 1:2, feature = 1L, amount = 10)
+) |>
+  add_actions(
+    actions = data.frame(id = c("restore", "control", "fence")),
+    cost = 1
+  )
+
+memberships <- data.frame(
+  set = c("restore_control", "restore_control", "restore_fence", "restore_fence"),
+  action = c("restore", "control", "restore", "fence")
+)
+sets_problem <- add_action_sets(actions_problem, memberships)
+get_action_sets(sets_problem)
+#>               set  action
+#> 1 restore_control control
+#> 2 restore_control restore
+#> 3   restore_fence   fence
+#> 4   restore_fence restore
+
+# The named-list input produces the same definitions.
+list_problem <- add_action_sets(actions_problem, list(
+  restore_control = c("restore", "control"),
+  restore_fence = c("restore", "fence")
+))
+identical(get_action_sets(sets_problem), get_action_sets(list_problem))
+#> [1] TRUE
+```
+
+Registering sets leaves the individual actions and their feasible pairs
+intact. It does not require joint selection, introduce interactions, or
+enable multiple selected actions per unit. In this release, set
+identifiers are definitions only; effects, objectives, and constraints
+still receive individual action ids. The [action-set
+vignette](https://josesalgr.github.io/multiscape/articles/Action_sets.html)
+explains validation and adding new sets across calls.
+
+### Optional: configure action counts per unit
+
+[`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.html)
+sets a minimum, maximum, or exact number of individual actions in each
+specified planning unit. Multiple calls can define different capacities
+or constrain particular action subsets. This independent example allows
+up to four actions in unit 10 and two in unit 20; unit 30 keeps the
+default maximum of one:
+
+``` r
+count_problem <- create_problem(
+  pu = data.frame(id = c(10L, 20L, 30L), cost = 1),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = c(10L, 20L, 30L), feature = 1L, amount = 10)
+) |>
+  add_actions(
+    data.frame(id = c("restore", "control", "fence", "monitor")), cost = 1
+  ) |>
+  add_constraint_action_cardinality(4, "max", pu = 10L) |>
+  add_constraint_action_cardinality(2, "max", pu = 20L) |>
+  add_constraint_action_cardinality(
+    1, "min", actions = c("restore", "control"), pu = c(10L, 20L)
+  )
+count_problem$data$constraints$action_cardinality
+#>                 type count sense                 name          actions     pu
+#> 1 action_cardinality     4   max action_cardinality_1             NULL     10
+#> 2 action_cardinality     2   max action_cardinality_2             NULL     20
+#> 3 action_cardinality     1   min action_cardinality_3 control, restore 10, 20
+```
+
+An explicit total maximum or equality (`actions = NULL`) replaces the
+implicit one-action maximum only in the units it covers. Subset rules
+and minima alone retain that default. Overlapping explicit rules must
+all be satisfied; later calls do not overwrite earlier ones. Registering
+a set adds no counted decision. The optional `name` labels a constraint
+independently of objective aliases.
+
+Concurrent actions currently support cost/profit workflows. Compilation
+rejects concurrent ecological effects until joint-effect and feature
+aggregation are implemented, to avoid counting reference amounts
+repeatedly. The main ecological example below retains its one-action
+maximum. See the [action-cardinality
+vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
+for exact counts, subset rules, and a solved economic example.
+
 ### Stage 3: Define the constraints
 
 [`add_constraint_targets_relative()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html)
@@ -361,11 +483,11 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.006000042   0
-#> 2      2           2 optimal 0.012000084   0
-#> 3      3           3 optimal 0.016999960   0
-#> 4      4           4 optimal 0.003000021   0
-#> 5      5           5 optimal 0.012000084   0
+#> 1      1           1 optimal 0.008000135   0
+#> 2      2           2 optimal 0.015000105   0
+#> 3      3           3 optimal 0.016000032   0
+#> 4      4           4 optimal 0.003999949   0
+#> 5      5           5 optimal 0.010999918   0
 #> 6      6           6 optimal 0.003000021   0
 ```
 

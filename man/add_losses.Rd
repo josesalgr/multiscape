@@ -39,6 +39,8 @@ component.}
 \description{
 Convenience wrapper around \code{\link{add_effects}} that keeps only negative
 effects, represented by rows with \code{loss > 0}.
+Effects share a single definition with \code{add_effects()} and
+\code{add_benefits()}; a second definition raises an error.
 }
 \seealso{
 \code{\link{add_effects}},

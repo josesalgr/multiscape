@@ -53,6 +53,8 @@ reference:
       consequences.
     contents:
       - add_actions
+      - add_action_sets
+      - get_action_sets
       - add_effects
       - add_benefits
       - add_losses
@@ -67,6 +69,7 @@ reference:
       - add_constraint_targets_relative
       - add_constraint_area
       - add_constraint_budget
+      - add_constraint_action_cardinality
       - add_constraint_locked_actions
       - add_constraint_locked_planning_units
 

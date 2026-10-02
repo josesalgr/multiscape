@@ -1,0 +1,177 @@
+---
+title: "Controlling action counts per planning unit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Controlling action counts per planning unit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(multiscape)
+```
+
+`add_constraint_action_cardinality()` constrains how many individual actions
+are selected **in each planning unit**. It accepts the same `sense`, `actions`,
+and optional `name` conventions used by other constraint functions, together
+with `count` and the spatial scope `pu`.
+
+| `sense` | Constraint in each scoped unit | Example |
+|:--------|:-------------------------------|:--------|
+| `"min"` | At least `count` actions | At least one threat-management action |
+| `"max"` | At most `count` actions | Capacity for at most four interventions |
+| `"equal"` | Exactly `count` actions | Exactly two interventions |
+
+The function adds rules to a new problem object and preserves its input.
+Counts are integers, so exact counts do not use a numerical tolerance.
+
+## Define the actions
+
+```{r define-problem}
+problem <- create_problem(
+  pu = data.frame(id = c(10L, 20L, 30L), cost = 7),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = c(10L, 20L, 30L), feature = 1L, amount = 100)
+) |>
+  add_actions(
+    data.frame(id = c("restore", "control", "fence", "monitor")), cost = 1
+  )
+```
+
+Without a cardinality rule, the optimizer keeps its default maximum of one
+action per unit. Registering action sets does not change that limit and does
+not create extra decisions: a set with two members contains two counted
+actions, even if one member also belongs to another set.
+
+## Different capacities in different units
+
+```{r different-capacities}
+capacities <- problem |>
+  add_constraint_action_cardinality(4, "max", pu = 10L, name = "capacity_10") |>
+  add_constraint_action_cardinality(2, "max", pu = 20L, name = "capacity_20")
+capacities$data$constraints$action_cardinality
+```
+
+Unit 10 permits up to four actions, unit 20 up to two, and unit 30 keeps the
+default maximum of one. `pu = c(10L, 20L)` would apply a bound separately to
+both units, rather than limiting their combined number of actions. `pu = NULL`
+applies the rule to all currently registered units.
+
+## Require actions from a subset
+
+```{r subset-minimum}
+required <- capacities |>
+  add_constraint_action_cardinality(
+    1, "min", actions = c("restore", "control"), pu = c(10L, 20L),
+    name = "habitat_or_threat"
+  )
+```
+
+Each of units 10 and 20 must select at least one of `restore` or `control`.
+This count includes individual actions, rather than the number of registered
+sets. Supply action ids or the existing `actions$action_set` classification
+labels; identifiers registered by `add_action_sets()` are not accepted as
+selectable actions. Use their individual members instead.
+
+For example, after permitting three total actions per unit, a second rule
+can allow at most one from the restoration/control subset:
+
+```{r subset-maximum}
+subset_capacity <- problem |>
+  add_constraint_action_cardinality(3, "max") |>
+  add_constraint_action_cardinality(1, "max", actions = c("restore", "control"))
+```
+
+The remaining capacity can be used for fencing and monitoring. A rule that
+only counts an action subset does not replace the default total maximum;
+the explicit total bound in the first call is therefore necessary here.
+
+## Exact counts and combined bounds
+
+```{r exact-count}
+exact <- problem |>
+  add_constraint_action_cardinality(2, "equal", pu = 10L) |>
+  add_constraint_action_cardinality(0, "equal", pu = 20L)
+```
+
+Unit 10 must select exactly two actions; unit 20 cannot select any. An exact
+**total** count, like a total maximum, replaces the default one-action limit
+in its scoped units. A minimum alone retains that default. To require at least
+two actions while allowing up to four, supply both bounds:
+
+```{r minimum-and-maximum}
+bounded <- problem |>
+  add_constraint_action_cardinality(4, "max", pu = 10L) |>
+  add_constraint_action_cardinality(2, "min", pu = 10L)
+```
+
+All explicit rules apply together, independently of call order. If a maximum
+of four covers units 10 and 20, and a maximum of two covers units 20 and 30,
+the effective capacities are four, two, and two:
+
+```{r overlapping-rules}
+overlapping <- problem |>
+  add_constraint_action_cardinality(4, "max", pu = c(10L, 20L)) |>
+  add_constraint_action_cardinality(2, "max", pu = c(20L, 30L))
+```
+
+A later call does not overwrite an earlier rule. Reusing exactly the same
+planning-unit subset, action subset, and sense is rejected. Constraint names
+must also be unique within these rules. `name` labels a constraint for
+inspection; objective aliases continue to identify objectives in MO methods.
+
+## Available actions and infeasibility
+
+Only available planning-unit/action pairs are counted. An action that is
+locked out or has an invalid cost is excluded as in model compilation.
+Locked-in actions remain individual selected decisions and count toward the
+bound. A positive minimum or equality larger than the available count in any
+scoped unit is rejected. Empty sums are zero: upper bounds and zero bounds
+remain valid for units without available actions.
+
+Several individually valid rules can still conflict, or conflict with budgets
+and locked decisions. The solver reports that infeasibility. For example,
+a minimum of two combined with a maximum of one has no feasible allocation;
+adding a minimum does not silently change the upper bound.
+
+## Solve a cost/profit example
+
+This example uses independent economic returns. Four actions in unit 10,
+two in unit 20, and one in unit 30 are optimal when every action has positive
+profit and no other resource limit applies:
+
+```{r economic-model}
+economic <- capacities |>
+  add_profit(c(restore = 8, control = 4, fence = 2, monitor = 1)) |>
+  add_objective_max_profit(alias = "profit")
+```
+
+```{r economic-solution}
+if (requireNamespace("rcbc", quietly = TRUE)) {
+  solution <- solve(set_solver_cbc(economic, verbose = FALSE, gap_limit = 0))
+  selected <- get_actions(solution)
+  selected <- selected[selected$selected > 0.5, , drop = FALSE]
+  stats::aggregate(selected ~ pu, selected, sum)
+  get_objectives(solution)
+}
+```
+
+The maximum profit is 35: 15 from unit 10, 12 from unit 20, and 8 from unit 30.
+Action costs remain associated with each selected action, while planning-unit
+costs are charged once for each selected unit. Budgets and net-profit objectives
+use those same existing cost definitions. The three MO methods retain the
+cardinality constraints while exploring their objectives.
+
+## Current ecological scope
+
+In this development stage, concurrent actions are supported in cost/profit
+workflows. Joint ecological effects and feature aggregation are still pending.
+The existing ecological targets and summaries use per-action `amount_after`;
+summing those values across concurrent actions can repeat a unit's reference
+amount. Compilation therefore rejects potentially concurrent ecological effects
+in the same units until that calculation is updated.
+
+Existing ecological workflows with at most one selected action per unit
+continue to work. Defining sets, adding subset rules under the default maximum,
+or setting an explicit maximum of one retains that behavior.

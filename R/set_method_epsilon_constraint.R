@@ -15,6 +15,11 @@
 #' in \code{x$data$method}, to be used later by \code{\link{solve}}.
 #'
 #' @details
+#' A problem can have only one explicitly configured multi-objective method.
+#' A second call to any \code{set_method_*()} function raises an error. To
+#' compare methods or run designs, derive alternatives from the same problem
+#' before configuring its method.
+#'
 #' Use this method when one objective should be optimized directly while the
 #' remaining objectives are controlled through explicit performance thresholds.
 #'
@@ -355,6 +360,7 @@ set_method_epsilon_constraint <- function(x,
                                           lexicographic_tol = 1e-8,
                                           control = NULL) {
   stopifnot(inherits(x, "Problem"))
+  .pa_assert_unconfigured(x, "method", "Multi-objective method", "set_method_*()")
 
   if (exists(".pa_clone_data", mode = "function")) {
     x <- .pa_clone_data(x)

@@ -63,6 +63,9 @@ An updated \code{Problem} object with CPLEX solver settings.
 \description{
 Convenience wrapper around \code{\link{set_solver}} that sets
 \code{solver = "cplex"}.
+A solver can be configured only once per problem. Calling this wrapper after
+any solver setter raises an error. Derive alternatives from the same problem
+before its first solver configuration.
 }
 \examples{
 # Load a complete simulated planning problem.

@@ -6,6 +6,11 @@
 #' user-defined reference scenario.
 #'
 #' @details
+#' Effects can be defined only once per problem. A second call, including through
+#' \code{add_benefits()} or \code{add_losses()}, raises an error. Supply the
+#' complete effects table in one call. To compare effect scenarios, build
+#' separate problems from the object before effects were added.
+#'
 #' The feature distribution supplied to \code{create_problem()} defines the
 #' reference amounts. The reference can describe current conditions, a future
 #' without intervention, or existing management. Action outcomes and references
@@ -142,7 +147,9 @@ add_effects <- function(
     raster_aggregation = c("sum", "mean"),
     raster_type = c("effect", "outcome")
 ) {
-
+  assertthat::assert_that(!is.null(x), msg = "x is NULL")
+  .pa_assert_unconfigured(x, c("dist_effects", "dist_benefit", "dist_loss"),
+                         "Effects", "add_effects() (including add_benefits()/add_losses())")
   legacy_type <- !missing(effect_type)
   legacy_aggregation <- !missing(effect_aggregation)
   legacy_component <- !missing(component)
@@ -165,6 +172,12 @@ add_effects <- function(
     stop("outcome and relative_change define their own interpretation; omit effect_type.", call. = FALSE)
   }
   if (legacy_type || legacy_aggregation || legacy_component || legacy_raster || length(legacy_columns) > 0L) {
+    caller <- sys.function(sys.parent())
+    user_env <- if (identical(caller, add_benefits) || identical(caller, add_losses)) {
+      parent.frame(2)
+    } else {
+      parent.frame()
+    }
     lifecycle::deprecate_warn(
       "1.3.0", I("The legacy effects interface of `add_effects()`"),
       details = paste(
@@ -173,7 +186,8 @@ add_effects <- function(
         "and raster_aggregation/raster_type for raster inputs.",
         "Legacy calls retain their existing behavior."
       ),
-      id = "multiscape-add-effects-legacy"
+      id = "multiscape-add-effects-legacy",
+      user_env = user_env
     )
   }
   if (!legacy_aggregation) effect_aggregation <- match.arg(raster_aggregation)
@@ -1135,6 +1149,8 @@ add_effects <- function(
 #' @description
 #' Convenience wrapper around \code{\link{add_effects}} that keeps only positive
 #' effects, that is, rows with \code{benefit > 0}.
+#' Effects share a single definition with \code{add_effects()} and
+#' \code{add_losses()}; a second definition raises an error.
 #'
 #' @inheritParams add_effects
 #' @param benefits Alias of \code{effects}, kept for backwards compatibility.
@@ -1191,6 +1207,8 @@ add_benefits <- function(
 #' @description
 #' Convenience wrapper around \code{\link{add_effects}} that keeps only negative
 #' effects, represented by rows with \code{loss > 0}.
+#' Effects share a single definition with \code{add_effects()} and
+#' \code{add_benefits()}; a second definition raises an error.
 #'
 #' @inheritParams add_effects
 #' @param losses Alias of \code{effects}, used for symmetry with

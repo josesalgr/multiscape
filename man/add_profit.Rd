@@ -21,11 +21,15 @@ action-level profit,
 \item a \code{data.frame(action, profit)} defining action-level profit,
 \item a \code{data.frame(pu, action, profit)} defining pair-specific
 profit.
-}}
+}
+
+Profit can be defined only once per problem, including explicit zero profit.
+A second call raises an error. To compare profit scenarios, build separate
+problems from the object before profit was added.}
 }
 \value{
-An updated \code{Problem} object with a stored profit table created
-or replaced. The stored table contains columns \code{pu}, \code{action},
+An updated \code{Problem} object with a stored profit table created.
+The stored table contains columns \code{pu}, \code{action},
 \code{profit}, \code{internal_pu}, and \code{internal_action}, and
 includes only rows with non-zero profit.
 }

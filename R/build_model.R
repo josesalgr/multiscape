@@ -158,6 +158,7 @@
   x <- .pa_build_model_prepare_tables(x)
 
   x <- .pa_build_model_validate_locked_in_action_feasibility(x)
+  x <- .pa_validate_action_cardinality_model(x)
 
   # ------------------------------------------------------------
   # early validation: objective dependencies
@@ -254,17 +255,22 @@
       "status" %in% names(dist_actions) &&
       any(dist_actions$status %in% c(1L, 2L), na.rm = TRUE)
 
+    cardinality <- x$data$constraints$action_cardinality
+    has_selection_cardinality <- is.data.frame(cardinality) && nrow(cardinality) > 0L &&
+      any(cardinality$sense %in% c("min", "equal") & cardinality$count > 0L)
+
     has_selection_requirement <- any(c(
       has_targets,
       has_selection_area,
       has_locked_in_pu,
-      has_locked_in_action
+      has_locked_in_action,
+      has_selection_cardinality
     ))
 
     if (!isTRUE(has_selection_requirement)) {
       warning(
         paste0(
-          "The minimum-cost problem has no feature targets, positive minimum/equality area constraint, ",
+          "The minimum-cost problem has no feature targets, positive minimum/equality area or action-count constraint, ",
           "or locked-in decisions. The all-zero solution may therefore be optimal. ",
           "Add a selection requirement if an empty solution is not intended."
         ),
@@ -1406,6 +1412,7 @@
   }
 
   x <- .pa_apply_action_max_per_pu_default(x)
+  x <- .pa_apply_action_cardinality_if_present(x)
 
   if (exists(".pa_apply_area_constraints_if_present", mode = "function")) {
     x <- .pa_apply_area_constraints_if_present(x)
@@ -1447,11 +1454,21 @@
     stop("Missing rcpp_add_action_max_per_pu().", call. = FALSE)
   }
 
+  # Only explicit TOTAL maxima or equalities replace the implicit maximum.
+  # Do not pass an empty filtered vector to C++: there it means all units.
+  specs <- x$data$constraints$action_cardinality
+  covered <- .pa_action_cardinality_covered_pu(specs)
+  default_pu <- integer()
+  if (length(covered)) {
+    default_pu <- unique(as.integer(da$internal_pu[!da$pu %in% covered]))
+    if (!length(default_pu)) return(x)
+  }
+
   res <- rcpp_add_action_max_per_pu(
     x$data$model_ptr,
     dist_actions_data = da,
     max_per_pu = 1L,
-    internal_pu_ids = integer(),
+    internal_pu_ids = default_pu,
     internal_action_ids = integer()
   )
 

@@ -9,21 +9,23 @@ test_that("solver defaults are quiet and do not request a log file", {
 })
 
 
-test_that("set_solver preserves incremental settings and small gap values", {
+test_that("set_solver defines all settings together and preserves small gap values", {
   p <- make_round4_problem()
 
   configured <- multiscape::set_solver_gurobi(
     p,
     gap_limit = 0.0001,
     cores = 2,
-    verbose = TRUE
+    verbose = TRUE,
+    time_limit = 30
   )
-  updated <- multiscape::set_solver(configured, time_limit = 30)
+  expect_error(multiscape::set_solver(configured, time_limit = 30), "already defined")
 
-  expect_identical(updated$data$solve_args$solver, "gurobi")
-  expect_equal(updated$data$solve_args$gap_limit, 0.0001)
-  expect_identical(updated$data$solve_args$cores, 2L)
-  expect_true(updated$data$solve_args$verbose)
+  expect_identical(configured$data$solve_args$solver, "gurobi")
+  expect_equal(configured$data$solve_args$gap_limit, 0.0001)
+  expect_identical(configured$data$solve_args$cores, 2L)
+  expect_true(configured$data$solve_args$verbose)
+  expect_equal(configured$data$solve_args$time_limit, 30)
 })
 
 

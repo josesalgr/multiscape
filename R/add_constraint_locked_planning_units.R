@@ -70,12 +70,12 @@ NULL
 #' \code{"true"}, \code{"t"}, \code{"1"}, \code{"yes"}, and \code{"y"}.
 #' Missing values are treated as \code{FALSE}.
 #'
-#' \strong{Replacement behaviour}
+#' \strong{Repeated calls}
 #'
-#' Each call to \code{add_constraint_locked_planning_units()} replaces any existing
-#' \code{locked_in} and \code{locked_out} columns in the planning-unit table. In
-#' other words, the function defines the complete current set of locked planning
-#' units; it does not merge new values with previous ones.
+#' Calls accumulate compatible locks and preserve omitted arguments. Repeating
+#' the same lock is idempotent. A planning unit cannot be locked in after it was
+#' locked out, or vice versa. Conflicts with existing action locks are also
+#' rejected. To change a lock, rebuild from the problem before it was added.
 #'
 #' \strong{Consistency checks}
 #'
@@ -266,6 +266,11 @@ add_constraint_locked_planning_units <- function(
   new_in  <- .resolve_lock_spec(locked_in,  "locked_in")
   new_out <- .resolve_lock_spec(locked_out, "locked_out")
 
+  new_in <- new_in | (pu$locked_in %||% rep(FALSE, n_pu))
+  new_out <- new_out | (pu$locked_out %||% rep(FALSE, n_pu))
+  new_in[is.na(new_in)] <- FALSE
+  new_out[is.na(new_out)] <- FALSE
+
   if (any(new_in & new_out, na.rm = TRUE)) {
     bad_ids <- pu_ids[new_in & new_out]
     stop(
@@ -274,6 +279,12 @@ add_constraint_locked_planning_units <- function(
       if (length(bad_ids) > 20) " ..." else "",
       call. = FALSE
     )
+  }
+
+  da <- x$data$dist_actions
+  if (!is.null(da) && any(da$pu %in% pu_ids[new_out] & da$status == 2L)) {
+    stop("Some actions are locked_in inside planning units that are locked_out.",
+         call. = FALSE)
   }
 
   x$data$pu$locked_in <- as.logical(new_in)

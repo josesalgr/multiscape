@@ -61,6 +61,15 @@ This objective considers profit only. It does not subtract planning-unit
 costs or action costs. For a net-profit formulation, use
 \code{\link{add_objective_max_net_profit}}.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \examples{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()

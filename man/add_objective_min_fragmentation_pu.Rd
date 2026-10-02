@@ -33,6 +33,15 @@ An updated \code{Problem} object.
 \code{add_objective_min_fragmentation_pu()} has been replaced by
 \code{\link{add_objective_min_fragmentation_planning_units}}.
 }
+\section{Repeated calls}{
+
+With \code{alias = NULL}, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.
+}
+
 \seealso{
 \code{\link{add_objective_min_fragmentation_planning_units}}
 }

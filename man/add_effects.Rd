@@ -51,6 +51,11 @@ Describe how feasible actions change feature amounts relative to a
 user-defined reference scenario.
 }
 \details{
+Effects can be defined only once per problem. A second call, including through
+\code{add_benefits()} or \code{add_losses()}, raises an error. Supply the
+complete effects table in one call. To compare effect scenarios, build
+separate problems from the object before effects were added.
+
 The feature distribution supplied to \code{create_problem()} defines the
 reference amounts. The reference can describe current conditions, a future
 without intervention, or existing management. Action outcomes and references

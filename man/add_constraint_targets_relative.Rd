@@ -110,6 +110,9 @@ respect to that feature set.
 }
 
 Relative targets must lie in \eqn{[0,1]}.
+A second target for the same feature and action scope raises an error,
+including when an absolute target already exists. Labels and threshold
+values do not change target identity.
 
 Repeated calls append new target rules rather than replacing previous ones.
 This allows cumulative target modelling, including multiple rules on the same

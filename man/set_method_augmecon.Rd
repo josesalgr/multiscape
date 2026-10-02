@@ -85,6 +85,11 @@ configuration in \code{x$data$method}, to be used later by
 \code{\link{solve}}.
 }
 \details{
+A problem can have only one explicitly configured multi-objective method.
+A second call to any \code{set_method_*()} function raises an error. To
+compare methods or run designs, derive alternatives from the same problem
+before configuring its method.
+
 Use this method when one objective should be optimized directly, the
 remaining objectives should be controlled through epsilon levels, and weakly
 efficient solutions should be reduced through the augmented formulation.

@@ -167,6 +167,13 @@ NULL
 #' \code{\link{add_objective_max_profit}},
 #' \code{\link{add_objective_max_net_profit}}
 #'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
+#'
 #' @export
 add_objective_min_cost <- function(
     x,
@@ -292,6 +299,13 @@ add_objective_min_cost <- function(
 #' @seealso
 #' \code{\link{add_objective_min_loss}},
 #' \code{\link{add_effects}}
+#'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
 #'
 #' @export
 add_objective_max_benefit <- function(
@@ -420,6 +434,13 @@ add_objective_max_benefit <- function(
 #' \code{\link{add_objective_max_benefit}},
 #' \code{\link{add_effects}}
 #'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
+#'
 #' @export
 add_objective_min_loss <- function(
     x,
@@ -534,6 +555,13 @@ add_objective_min_loss <- function(
 #' @seealso
 #' \code{\link{add_objective_min_cost}},
 #' \code{\link{add_objective_max_net_profit}}
+#'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
 #'
 #' @export
 add_objective_max_profit <- function(
@@ -665,6 +693,13 @@ add_objective_max_profit <- function(
 #' @seealso
 #' \code{\link{add_objective_max_profit}},
 #' \code{\link{add_objective_min_cost}}
+#'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
 #'
 #' @export
 add_objective_max_net_profit <- function(
@@ -813,6 +848,13 @@ add_objective_max_net_profit <- function(
 #' \code{\link{add_objective_min_fragmentation_action}},
 #' \code{\link{add_objective_min_fragmentation_pu}}
 #'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
+#'
 #' @export
 add_objective_min_fragmentation_planning_units <- function(
     x,
@@ -868,6 +910,13 @@ add_objective_min_fragmentation_planning_units <- function(
 #'
 #' @seealso
 #' \code{\link{add_objective_min_fragmentation_planning_units}}
+#'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
 #'
 #' @export
 add_objective_min_fragmentation_pu <- function(
@@ -1037,6 +1086,13 @@ add_objective_min_fragmentation_pu <- function(
 #' \code{\link{add_spatial_boundary}},
 #' \code{\link{add_spatial_relations}}
 #'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
+#'
 #' @export
 add_objective_min_fragmentation_action <- function(
     x,
@@ -1160,6 +1216,13 @@ add_objective_min_fragmentation_action <- function(
 #' @seealso
 #' \code{\link{add_objective_max_benefit}},
 #' \code{\link{add_objective_min_loss}}
+#'
+#' @section Repeated calls:
+#' With \code{alias = NULL}, one explicit single objective can be defined per
+#' problem; a second unaliased definition raises an error. With an alias,
+#' objectives accumulate under distinct names; a repeated alias raises an error.
+#' Aliased definitions preserve an explicitly configured single objective.
+#' To compare alternatives, start from the problem before its objective was added.
 #'
 #' @export
 add_objective_min_intervention_impact <- function(

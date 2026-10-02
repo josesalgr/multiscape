@@ -79,6 +79,11 @@ This function does not solve the problem. It stores the method configuration
 in \code{x$data$method}, to be used later by \code{\link{solve}}.
 }
 \details{
+A problem can have only one explicitly configured multi-objective method.
+A second call to any \code{set_method_*()} function raises an error. To
+compare methods or run designs, derive alternatives from the same problem
+before configuring its method.
+
 Use this method when one objective should be optimized directly while the
 remaining objectives are controlled through explicit performance thresholds.
 

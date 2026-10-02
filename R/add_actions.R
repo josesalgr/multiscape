@@ -32,6 +32,9 @@
 #' are preserved. If no \code{name} column is provided, action labels are taken
 #' from \code{id}. If an \code{action_set} column is present, it is also
 #' preserved and can later be used to refer to groups of actions.
+#' To register combinations with many-to-many membership, use
+#' \code{\link{add_action_sets}} after defining the individual actions. Existing
+#' definitions are validated whenever the action catalog is updated.
 #'
 #' Actions are stored sorted by \code{id} to ensure reproducible internal
 #' indexing.
@@ -164,10 +167,11 @@
 #' \code{status = 3}. This preserves consistency with planning-unit exclusions
 #' already stored in the problem.
 #'
-#' \strong{Replacement behaviour.}
+#' \strong{Repeated calls.}
 #'
-#' Calling \code{add_actions()} replaces any previous action catalogue and
-#' feasible action table stored in the problem object.
+#' The action catalogue and feasible pairs can be defined only once per problem.
+#' A second call raises an error, even if the input is identical. To compare
+#' action catalogues, build separate problems from the object before this call.
 #'
 #' After defining actions, typical next steps include adding effects, optional
 #' decision-fixing constraints, objectives, and solver settings before calling
@@ -216,6 +220,7 @@
 #'
 #' @seealso
 #' \code{\link{create_problem}},
+#' \code{\link{add_action_sets}},
 #' \code{\link{add_constraint_locked_actions}}
 #'
 #' @examples
@@ -300,7 +305,8 @@ add_actions <- function(
     cost = NULL,
     action_area = NULL
 ) {
-
+  .pa_assert_unconfigured(x, c("actions", "dist_actions"),
+                         "Action catalog", "add_actions()")
   .as_int_id <- function(v, what) {
     if (is.factor(v)) v <- as.character(v)
     if (is.character(v)) {
@@ -1437,6 +1443,15 @@ add_actions <- function(
     ),
     drop = FALSE
   ]
+
+  # Preserve registered combinations only when the new catalog still supports
+  # their members and keeps set identifiers unambiguous.
+  if (!is.null(x$data$action_sets)) {
+    x$data$action_sets <- .pa_validate_action_sets(x$data$action_sets, actions)
+  }
+  .pa_validate_action_cardinality_specs(
+    x$data$constraints$action_cardinality, x$data$pu, actions, dist_actions
+  )
 
   x$data$actions <- actions
   x$data$dist_actions <- dist_actions

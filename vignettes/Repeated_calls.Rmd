@@ -1,0 +1,165 @@
+---
+title: "Repeated calls and alternative problem configurations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Repeated calls and alternative problem configurations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(multiscape)
+```
+
+Each constructor has a fixed repeated-call contract. No argument is needed to
+choose between accumulation and replacement: existing definitions are never
+silently replaced.
+
+| Family | Repeated-call behavior |
+|:-------|:-----------------------|
+| `add_actions()`, `add_effects()`, `add_profit()` | One complete definition per problem; a second call is an error. |
+| `set_solver()` and its backend wrappers | One explicit configuration; a second call is an error. Defaults do not count as configuration. |
+| `set_method_*()` | One MO method, including its run design; switching or repeating it is an error. |
+| `add_objective_*()` without `alias` | One explicit single-objective definition; a second one is an error. |
+| `add_objective_*()` with `alias` | Distinct aliases accumulate; a repeated alias is an error. |
+| `add_action_sets()` | Distinct set IDs accumulate; a repeated ID is an error. |
+| Targets, area, budget, and action cardinality | Distinct constraint definitions accumulate; repeated identities are errors. |
+| Spatial constructors | Distinct relation names accumulate; a repeated name is an error. |
+| Planning-unit and action locks | Compatible locks accumulate; identical states are idempotent and contradictory states are errors. |
+
+The legacy `add_benefits()` and `add_losses()` wrappers share the one effects
+definition with `add_effects()`. Even a zero-profit specification or an empty
+filtered effects table counts as an explicit definition.
+
+## Build a common base
+
+Keep an object before the definition you want to vary. Constructors return an
+independent problem, so alternatives can share that common base.
+
+```{r base}
+base <- create_problem(
+  pu = data.frame(id = 1:3, cost = 1, area = 10),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = 1:3, feature = 1L, amount = 100)
+)
+
+actions_base <- base |>
+  add_actions(data.frame(id = c("restore", "control", "fence")), cost = 1)
+
+low_effect <- actions_base |>
+  add_effects(data.frame(action = "restore", feature = "woodland", effect = 20))
+
+high_effect <- actions_base |>
+  add_effects(data.frame(action = "restore", feature = "woodland", effect = 40))
+
+is.null(actions_base$data$dist_effects)
+```
+
+Calling `add_effects(low_effect, ...)` again would raise an error. To change
+actions, start from `base`; to change effects or profit, start from `actions_base`.
+
+## Compare solver settings and MO methods
+
+Define all solver parameters in one call. Setting a solver does not run it.
+
+```{r alternatives}
+objectives_base <- high_effect |>
+  add_constraint_targets_absolute(50) |>
+  add_objective_min_cost(alias = "cost") |>
+  add_objective_max_benefit(alias = "benefit")
+
+cbc_problem <- objectives_base |>
+  set_solver_cbc(gap_limit = 0, time_limit = 60)
+
+gurobi_problem <- objectives_base |>
+  set_solver_gurobi(gap_limit = 0, time_limit = 60)
+
+weighted_problem <- cbc_problem |>
+  set_method_weighted_sum(
+    aliases = c("cost", "benefit"),
+    runs = set_runs_grid(n = 3)
+  )
+
+epsilon_problem <- cbc_problem |>
+  set_method_epsilon_constraint(
+    primary = "cost",
+    aliases = c("cost", "benefit"),
+    runs = set_runs_manual(data.frame(eps_benefit = c(40, 80)))
+  )
+
+augmecon_problem <- cbc_problem |>
+  set_method_augmecon(
+    primary = "cost",
+    aliases = c("cost", "benefit"),
+    runs = set_runs_grid(n = 3)
+  )
+
+is.null(cbc_problem$data$method)
+is.null(objectives_base$data$solve_args)
+```
+
+Each method is derived from `cbc_problem`, which has no configured MO method.
+To compare run designs within a method, use this same branching pattern.
+
+## Accumulate independent constraints
+
+Constraint identity describes what is constrained, rather than the threshold
+or its diagnostic name. Identifier order does not affect identity.
+Explicit constraint names must be unique within their family; omitted names
+are generated automatically. A different name does not permit a duplicate
+constraint identity.
+
+| Constraint | Identity |
+|:-----------|:---------|
+| Action cardinality | Set of PUs + total/subset action scope + sense |
+| Budget | Action scope + included cost components + sense |
+| Area | Action scope + area measure (`area_col`) + sense |
+| Target | Feature + action scope, shared by absolute and relative targets |
+
+```{r accumulation}
+constrained <- actions_base |>
+  add_action_sets(list(restore_control = c("restore", "control"))) |>
+  add_action_sets(list(restore_fence = c("restore", "fence"))) |>
+  add_constraint_action_cardinality(3, "max", pu = 1) |>
+  add_constraint_action_cardinality(2, "max", pu = 2) |>
+  add_constraint_budget(20, "max") |>
+  add_constraint_budget(10, "max", include_action_cost = FALSE)
+
+get_action_sets(constrained)
+constrained$data$constraints$action_cardinality[, c("count", "sense", "name")]
+```
+
+Adding another total maximum for PU 1 would be an error, even with a different
+count or name. Different scopes may overlap: all accumulated constraints apply
+simultaneously. Constraints that are individually valid can still make the model
+infeasible; the solver determines joint feasibility.
+
+Absolute and relative targets cannot be used to redefine the same feature and
+action scope. Targets for the same feature with different contributing action
+subsets can accumulate.
+
+## Accumulate compatible locks
+
+```{r locks}
+locked <- actions_base |>
+  add_constraint_locked_planning_units(locked_in = 1) |>
+  add_constraint_locked_planning_units(locked_out = 3) |>
+  add_constraint_locked_actions(locked_out = list(fence = 2)) |>
+  add_constraint_locked_actions(locked_out = list(fence = 2))
+
+locked$data$pu[, c("id", "locked_in", "locked_out")]
+```
+
+Omitted lock arguments preserve existing states. Repeating the same lock does
+not change its meaning. Attempting to lock PU 1 out now would raise an error,
+as would locking an action in inside excluded PU 3. This is checked in either
+call order. To alter a lock, rebuild from the object before the original lock.
+
+Spatial relations similarly accumulate under distinct names. Reusing a name
+raises an error, whether using `add_spatial_relations()` directly or a spatial
+constructor such as `add_spatial_boundary()`.
+
+For migration from earlier behavior, move all solver settings into one call,
+combine effects into one complete table, and create alternatives from a common
+base rather than applying a second configuration to an existing problem.

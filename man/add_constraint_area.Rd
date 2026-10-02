@@ -69,6 +69,13 @@ provided that no duplicated combination of action subset and constraint sense
 is introduced.
 }
 \details{
+Calls accumulate constraints for distinct action scopes, area measures
+(\code{area_col}), or senses. Repeating the same combination raises an error,
+even with a different threshold, display unit, or name. To change it, rebuild
+from the problem before the constraint was added.
+Explicit names must be unique within the area-constraint family; omitted
+names are generated automatically.
+
 Use this function when area requirements must be imposed either on the total
 selected landscape or on the effective area allocated to specific actions.
 
