@@ -97,6 +97,14 @@ rcpp_add_target_recovery <- function(x, features_data, dist_actions_data, dist_b
     .Call(`_multiscape_rcpp_add_target_recovery`, x, features_data, dist_actions_data, dist_benefit_data, target_col, tol)
 }
 
+rcpp_add_effect_loss_variables <- function(model_ptr, columns0, coefficients) {
+    .Call(`_multiscape_rcpp_add_effect_loss_variables`, model_ptr, columns0, coefficients)
+}
+
+rcpp_add_effect_selection_variables <- function(model_ptr, members0) {
+    .Call(`_multiscape_rcpp_add_effect_selection_variables`, model_ptr, members0)
+}
+
 rcpp_model_add_columns <- function(x, obj, lb, ub, vtype, names = NULL, block_name = "augmecon_slacks", tag = "") {
     .Call(`_multiscape_rcpp_model_add_columns`, x, obj, lb, ub, vtype, names, block_name, tag)
 }

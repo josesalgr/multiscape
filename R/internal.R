@@ -959,6 +959,10 @@ available_to_solve <- function(package = ""){
     de[de$internal_action %in% keep_internal, , drop = FALSE]
   }
 
+  if (.pa_uses_aggregate_effects(x)) {
+    return(invisible(.pa_apply_aggregate_targets(x, t)))
+  }
+
   dbm <- .get_dist_benefit_model_from_effects(x, benefit_col = "amount_after")
 
   if (is.null(dbm) || nrow(dbm) == 0) {
@@ -1076,7 +1080,8 @@ available_to_solve <- function(package = ""){
     model_list$A <- Matrix::sparseMatrix(
       i = as.integer(model_list$A_i) + 1L,
       j = as.integer(model_list$A_j) + 1L,
-      x = as.numeric(model_list$A_x)
+      x = as.numeric(model_list$A_x),
+      dims = c(length(model_list$rhs), length(model_list$obj))
     )
 
     if (isTRUE(drop_triplets)) {
@@ -2224,7 +2229,7 @@ available_to_solve <- function(package = ""){
     de_with_x$selected_baseline <- de_with_x$baseline_amount * de_with_x$x_value
   }
 
-  if (.pa_has_joint_effects(x)) de_with_x <- .pa_joint_selected_features(x, da_out)
+  if (.pa_uses_aggregate_effects(x)) de_with_x <- .pa_joint_selected_features(x, da_out)
 
   # Aggregated selected quantities by feature.
   selected_baseline_by_feat <- data.frame(
@@ -2421,7 +2426,11 @@ available_to_solve <- function(package = ""){
       if (!is.na(actions_string) && nzchar(actions_string)) {
         matched <- .pa_resolve_action_subset(x, strsplit(actions_string, "\\|")[[1]])
         keep_actions <- as.integer(matched$internal_id)
-        dd <- dd[dd$internal_action %in% keep_actions, , drop = FALSE]
+        if (.pa_uses_aggregate_effects(x)) {
+          dd <- .pa_joint_selected_features(x, da_out, keep_actions)
+        } else {
+          dd <- dd[dd$internal_action %in% keep_actions, , drop = FALSE]
+        }
       }
 
       if (nrow(dd) == 0) {
@@ -2429,7 +2438,7 @@ available_to_solve <- function(package = ""){
       }
 
       tmp <- data.frame(
-        feature = as.integer(dd$internal_feature),
+        feature = as.integer(x$data$features$id[match(dd$internal_feature, x$data$features$internal_id)]),
         achieved = as.numeric(dd$selected_amount_after)
       )
 
@@ -4415,6 +4424,18 @@ NULL
 
   # ---- APPLY SUPERSET RUNTIME UPDATES (solver-agnostic)
   model <- .pa_apply_runtime_updates_to_model(model, x)
+
+  # Constant ecological objectives can create empty constraint rows. Check
+  # their feasibility explicitly: some solver adapters omit such rows.
+  empty_rows <- Matrix::rowSums(abs(model$A)) == 0
+  impossible <- empty_rows & (
+    (model$sense == "<=" & model$rhs < 0) |
+    (model$sense == ">=" & model$rhs > 0) |
+    (model$sense %in% c("=", "==") & model$rhs != 0)
+  )
+  if (any(impossible)) {
+    stop("Solver status: infeasible (unsatisfied constant constraint).", call. = FALSE)
+  }
 
   # ---- pack args into Solution metadata
   solve_args <- list(

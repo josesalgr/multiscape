@@ -1,5 +1,20 @@
 # multiscape (development version)
 
+- **Changed behavior:** `add_objective_max_benefit()` now maximizes signed net
+  change relative to the reference, including negative individual effects and
+  interaction corrections. Earlier versions counted positive effects only;
+  models with negative effects may select different plans. Names and public
+  arguments are unchanged; no separate net-benefit function is introduced.
+- `add_objective_min_loss()` retains its loss-only criterion, with the negative
+  part computed after combining actions within each planning unit and feature.
+  Exact loss auxiliaries support mixed signs, overlapping scopes, zero weights,
+  secondary bounds, and payoff/lexicographic solves in all three MO methods.
+- Concurrent individual effects are additive unless joint totals are supplied.
+  Ecological targets and result summaries count the reference once per selected
+  unit in their action scope, using signed joint changes for final outcomes.
+  `selected_benefit` remains the positive-gain metric; `selected_net` matches
+  the signed benefit objective when their scopes coincide.
+
 - Modern `add_effects()` tables and rasters accept registered action sets as
   total joint outcomes, effects, or relative changes. Original totals and input
   tables are preserved separately from sparse signed subset corrections.
@@ -8,8 +23,8 @@
   for feasible non-zero corrections, and integrated into single-objective and
   all three MO formulations. Inferred negative outcomes are excluded.
   Joint solution summaries aggregate signed changes per PU/feature and count
-  the selected reference once. Mixed-sign benefit/loss optimization and
-  concurrent ecological targets remain guarded pending final aggregation.
+  the selected reference once. Signed ecological objectives and concurrent
+  targets use the final aggregation described above.
 - Added `add_constraint_action_requires()` (all/any companions),
   `add_constraint_action_excludes()` (at most one group member), and
   `add_constraint_action_together()` (all or none), scoped separately by PU.
@@ -32,9 +47,8 @@
   or exact action counts. Repeated calls support distinct spatial and action
   scopes; explicit total maxima/equalities replace the implicit one-action
   limit only in their covered units. Rules are compiled for single-objective
-  and multi-objective methods. Concurrent ecological effects remain blocked
-  pending joint-effect and feature-aggregation support; concurrent cost/profit
-  workflows are supported.
+  and multi-objective methods, including concurrent economic and ecological
+  workflows with final feature aggregation.
 - Added `add_action_sets()` for named lists or long membership tables and
   `get_action_sets()` for inspecting definitions. Actions can belong to several
   sets. Definitions are independent of action feasibility, selection rules,

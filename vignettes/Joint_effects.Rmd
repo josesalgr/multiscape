@@ -96,8 +96,8 @@ solution time still depends on the full model and the number of MO runs.
 
 ## Solve with all three MO methods
 
-In this positive-coefficient example, the existing benefit objective includes
-individual contributions and the pair correction. Each method selects both
+The benefit objective maximizes signed change, including all individual
+contributions and the pair correction. Each method selects both
 actions, with benefit 70 and action cost 2.
 
 ```{r methods}
@@ -127,7 +127,7 @@ for (solution in solutions) {
 }
 ```
 
-## Negative interactions and current development scope
+## Negative interactions, net benefit, and final loss
 
 ```{r negative-interaction}
 negative_input <- effects
@@ -153,11 +153,75 @@ The correction is -10, but the final change is +40. The summary reports benefit
 40 and loss zero, counting the selected reference once. It does not classify
 the negative correction as an ecological loss by itself.
 
-Optimizing the final positive/negative split requires the next stage's feature
-aggregation formulation. Benefit objectives currently require non-negative
-coefficients; loss objectives require non-positive coefficients. Mixed signed
-cases raise an explicit error, as do concurrent ecological targets. Internal
-SO/MO tests exercise the signed polynomial, including automatic payoff/grid
-runs, but no public net-benefit objective is introduced here. Cost/profit models
-can use signed joint effects and inspect evaluated ecological summaries.
-Individual-only ecological workflows retain their existing behavior and guard.
+`add_objective_max_benefit()` now optimizes that signed net change. Earlier
+versions counted positive effects only; models with negative effects can change
+their solutions. No separate net-benefit function is needed.
+
+```{r signed-objectives}
+benefit_problem <- negative |> add_objective_max_benefit(alias = "benefit")
+loss_problem <- negative |>
+  add_constraint_action_cardinality(2, "equal") |>
+  add_objective_min_loss(alias = "loss")
+```
+
+```{r solve-signed-objectives, eval=requireNamespace("rcbc", quietly = TRUE)}
+benefit_solution <- solve(set_solver_cbc(benefit_problem, gap_limit = 0, verbose = FALSE))
+loss_solution <- solve(set_solver_cbc(loss_problem, gap_limit = 0, verbose = FALSE))
+stopifnot(get_objectives(benefit_solution)$benefit == 40,
+          get_objectives(loss_solution)$loss == 0)
+```
+
+For signed change $\Delta_{if}$ after combining scoped actions, the two criteria
+are $\max \sum_{i,f}\Delta_{if}$ and
+$\min \sum_{i,f}\max(-\Delta_{if},0)$. Gains can offset deterioration in the
+benefit objective. In the loss objective, gains in one unit or feature cannot
+cancel losses in another. Both retain independent action and feature scopes.
+An interaction belongs to an action scope only if every member belongs to it.
+
+Loss is linearized exactly using finite bounds derived from the signed
+coefficients. Mixed-sign PU/feature expressions require one continuous loss
+variable and one binary sign variable; sign-compatible expressions need no
+such auxiliaries. The constraints make the loss exact even if it is a secondary
+objective or has zero weight. All required scoped expressions are prepared in
+the common model used by weighted-sum, epsilon-constraint, and AUGMECON.
+
+```{r deteriorating-joint-outcome}
+deteriorating_input <- effects
+deteriorating_input$effect[deteriorating_input$action == "restore_control"] <- -10
+deteriorating <- add_effects(base, deteriorating_input) |>
+  add_constraint_action_cardinality(2, "equal")
+```
+
+```{r solve-deterioration, eval=requireNamespace("rcbc", quietly = TRUE)}
+net_solution <- deteriorating |> add_objective_max_benefit(alias = "benefit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
+loss_solution <- deteriorating |> add_objective_min_loss(alias = "loss") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
+stopifnot(get_objectives(net_solution)$benefit == -10,
+          get_objectives(loss_solution)$loss == 10,
+          get_features(loss_solution)$selected_amount_after == 90)
+```
+
+The pair correction is now -60; the objective counts the final change of -10,
+and the final loss is 10. It does not count the correction's magnitude as loss.
+
+## Targets on joint outcomes
+
+Targets require the reference plus the joint change. With reference 100 and
+joint change +40, selecting both actions contributes 140, rather than adding
+the two individual post-action amounts (130 + 120). Action-scoped targets count
+the reference only when at least one scoped action is selected in the unit.
+
+```{r joint-target}
+target_problem <- negative |>
+  add_constraint_targets_absolute(140) |>
+  add_objective_min_cost(alias = "cost")
+```
+
+```{r solve-joint-target, eval=requireNamespace("rcbc", quietly = TRUE)}
+target_solution <- solve(set_solver_cbc(target_problem, gap_limit = 0, verbose = FALSE))
+get_targets(target_solution)
+stopifnot(get_objectives(target_solution)$cost == 2,
+          get_features(target_solution)$selected_amount_after == 140,
+          get_targets(target_solution)$achieved == 140)
+```

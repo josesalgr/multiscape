@@ -126,17 +126,6 @@ NULL
   .pa_validate_action_cardinality_specs(
     specs, x$data$pu, x$data$actions, x$data$dist_actions_model
   )
-  upper <- .pa_action_cardinality_upper_bounds(x)
-  concurrent <- as.integer(names(upper)[upper > 1L])
-  de <- x$data$dist_effects_model
-  has_effects <- is.data.frame(de) && nrow(de) > 0L && any(de$pu %in% concurrent)
-  if (has_effects && !.pa_has_joint_effects(x)) {
-    affected <- intersect(concurrent, unique(de$pu))
-    stop("Concurrent actions with ecological effects are not supported in this development stage. ",
-         "Feature outcomes and targets still use per-action amount_after and could repeat the reference. ",
-         "Use cardinality with costs/profit until joint-effect and feature aggregation support is implemented. ",
-         "Affected PU id(s): ", paste(affected, collapse = ", "), ".", call. = FALSE)
-  }
   x
 }
 
@@ -208,13 +197,11 @@ NULL
 #' unit is rejected. An empty sum is zero, so maxima and zero bounds remain
 #' valid even in units without available actions.
 #'
-#' During this development stage, concurrent actions are supported with
-#' costs, profit, and their associated objectives and constraints. Compilation
-#' accepts registered joint-effect workflows, with exact signed interactions.
-#' Mixed benefit/loss objectives and concurrent ecological targets still require
-#' final feature aggregation. Individual-only ecological workflows retain the
-#' temporary guard against concurrent effects. Problems retaining at most
-#' one action per unit keep their existing ecological workflow.
+#' Concurrent actions support costs, profits, ecological objectives, and targets.
+#' Individual effects are additive unless a joint total is supplied through a
+#' registered action set. Benefit maximizes signed change; loss is split after
+#' aggregation within each unit and feature. Targets count the reference once
+#' for selected units in their action scope.
 #'
 #' @param x A `Problem` object with registered actions.
 #' @param count A single finite, non-negative integer.

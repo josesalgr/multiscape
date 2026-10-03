@@ -68,13 +68,11 @@ positive minimum or equality exceeding available actions in any scoped
 unit is rejected. An empty sum is zero, so maxima and zero bounds remain
 valid even in units without available actions.
 
-During this development stage, concurrent actions are supported with
-costs, profit, and their associated objectives and constraints. Compilation
-accepts registered joint-effect workflows, with exact signed interactions.
-Mixed benefit/loss objectives and concurrent ecological targets still require
-final feature aggregation. Individual-only ecological workflows retain the
-temporary guard against concurrent effects. Problems retaining at most
-one action per unit keep their existing ecological workflow.
+Concurrent actions support costs, profits, ecological objectives, and targets.
+Individual effects are additive unless a joint total is supplied through a
+registered action set. Benefit maximizes signed change; loss is split after
+aggregation within each unit and feature. Targets count the reference once
+for selected units in their action scope.
 }
 \examples{
 problem <- create_problem(

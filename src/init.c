@@ -10,6 +10,8 @@
 /* .Call calls */
 extern SEXP _multiscape_rcpp_new_optimization_problem(SEXP, SEXP, SEXP);
 extern SEXP _multiscape_rcpp_add_joint_effect_variables(SEXP, SEXP);
+extern SEXP _multiscape_rcpp_add_effect_loss_variables(SEXP, SEXP, SEXP);
+extern SEXP _multiscape_rcpp_add_effect_selection_variables(SEXP, SEXP);
 extern SEXP _multiscape_rcpp_optimization_problem_as_list(SEXP);
 extern SEXP _multiscape_rcpp_get_optimization_problem_ncol(SEXP);
 extern SEXP _multiscape_rcpp_get_optimization_problem_nrow(SEXP);
@@ -102,6 +104,8 @@ static const R_CallMethodDef CallEntries[] = {
   {"_multiscape_rcpp_add_objective_min_loss", (DL_FUNC) &_multiscape_rcpp_add_objective_min_loss, 6},
   {"_multiscape_rcpp_prepare_objective_min_loss", (DL_FUNC) &_multiscape_rcpp_prepare_objective_min_loss, 5},
   {"_multiscape_rcpp_model_add_columns", (DL_FUNC) &_multiscape_rcpp_model_add_columns, 8},
+  {"_multiscape_rcpp_add_effect_loss_variables", (DL_FUNC) &_multiscape_rcpp_add_effect_loss_variables, 3},
+  {"_multiscape_rcpp_add_effect_selection_variables", (DL_FUNC) &_multiscape_rcpp_add_effect_selection_variables, 2},
   {NULL, NULL, 0}
 
 };

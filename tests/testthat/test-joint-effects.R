@@ -17,8 +17,7 @@ joint_pair <- function(total = 70, pu = 10L, features = "habitat") {
   add_effects(p, table)
 }
 
-# Exercise the signed polynomial through existing internal IR, without adding
-# the public net-benefit objective reserved for the next development stage.
+# The public benefit objective now evaluates the signed polynomial.
 joint_signed_objective <- function(p, alias = NULL, actions = NULL, features = NULL) {
   multiscape:::.pa_set_active_and_register_objective(
     p, "maximizeBenefits", "max_benefit",
@@ -282,12 +281,12 @@ test_that("joint auxiliaries coexist with spatial auxiliaries and three MO objec
   }
 })
 
-test_that("mixed positive/loss objectives and concurrent targets stay protected until point five", {
+test_that("mixed signed objectives and concurrent targets compile with final aggregation", {
   p <- joint_pair(40)
-  expect_error(compile_model(add_objective_max_benefit(p)), "final feature aggregation")
-  expect_error(compile_model(add_objective_min_loss(p)), "final feature aggregation")
+  expect_no_error(compile_model(add_objective_max_benefit(p)))
+  expect_no_error(compile_model(add_objective_min_loss(p)))
   targets <- p |> add_constraint_targets_absolute(10) |> add_objective_min_cost()
-  expect_error(compile_model(targets), "targets require final feature aggregation")
+  expect_no_error(compile_model(targets))
   expect_error(compile_model(joint_signed_objective(p, features = 99)), "Unknown feature")
 })
 

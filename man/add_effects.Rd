@@ -119,12 +119,13 @@ sign or optimization method. Cardinality still determines allowed action
 counts; registration and effects do not force joint selection. Inferred
 negative feature outcomes are excluded from the feasible set.
 
-During this development stage, cost/profit workflows support signed joint
-effects. Public benefit/loss objectives support sign-compatible corrections;
-mixed signed corrections and concurrent ecological targets remain protected
-pending the final feature-aggregation stage. Solution summaries already
-evaluate the signed effect once per PU/feature, split its final positive and
-negative parts, and count the selected reference only once.
+Benefit objectives maximize total signed change, including negative effects
+and interaction corrections. Loss objectives minimize the negative part of
+the final joint change per PU/feature, rather than treating a negative
+correction as a loss by itself. Concurrent individual effects are additive
+when no interaction is supplied. Targets use the joint outcome and count the
+reference once per unit in their action scope. Solution summaries report
+signed net change and its final positive/negative parts separately.
 
 \strong{Raster inputs}
 

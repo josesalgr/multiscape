@@ -432,7 +432,7 @@ test_that("set registration does not imply a relation but members can be used ex
   expect_identical(get_action_sets(out), get_action_sets(p))
 })
 
-test_that("existing ecological effects and targets retain their one-action workflow", {
+test_that("ecological effects, targets and relations support one or concurrent actions", {
   skip_if_no_cbc()
   p <- make_relation_problem(pu = 10L) |>
     add_effects(data.frame(action = c("a", "b", "c", "d"), feature = 1L,
@@ -444,7 +444,11 @@ test_that("existing ecological effects and targets retain their one-action workf
   expect_identical(relation_selected(s), "b")
   expect_equal(get_objectives(s)$benefit, 10)
   concurrent <- add_constraint_action_cardinality(p, 2, "max")
-  expect_error(compile_model(concurrent), "Concurrent actions with ecological effects")
+  s <- solve(concurrent)
+  expect_identical(relation_selected(s), c("a", "b"))
+  expect_equal(get_objectives(s)$benefit, 30)
+  expect_equal(get_features(s)$selected_amount_after, 130)
+  expect_equal(get_targets(s)$achieved, 130)
 })
 
 test_that("relations are shown only when registered in problem printing", {

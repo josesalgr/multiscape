@@ -24,8 +24,8 @@
 #' \eqn{f \in \mathcal{F}}, this function stores an absolute target threshold
 #' \eqn{T_f \ge 0}.
 #'
-#' When the optimization model is built, each such target is interpreted as a
-#' lower-bound constraint of the form:
+#' With at most one action per unit, each target is interpreted as a
+#' lower-bound constraint on post-action amounts of the form:
 #' \deqn{
 #' \sum_{(i,a) \in \mathcal{D}_f^{\star}} c_{iaf} x_{ia} \ge T_f,
 #' }
@@ -46,6 +46,14 @@
 #' T_f = t_f,
 #' }
 #' where \eqn{t_f} is the user-supplied target value for feature \eqn{f}.
+#'
+#' With concurrent actions, the model instead combines signed changes within
+#' each unit and feature and counts the reference once:
+#' \deqn{\sum_i \left(r_{if} s_i^{\star} + \Delta_{if}^{\star}(x)\right) \ge T_f.}
+#' Here \eqn{s_i^{\star}} indicates that at least one action in the target scope
+#' is selected. Joint corrections contribute only when every member belongs
+#' to that scope. Individual effects are additive when no interaction is supplied.
+#' The same aggregation is used to report target achievement.
 #'
 #' The \code{actions} argument restricts which actions may contribute toward
 #' achievement of the target, but it does not modify the value of \eqn{T_f}
@@ -215,6 +223,14 @@ add_constraint_targets_absolute <- function(x, targets,
 #'   \item \eqn{\mathcal{D}_f^{\star}} is the subset of planning unit--action
 #'   pairs allowed to count toward the target for feature \eqn{f}.
 #' }
+#'
+#' With concurrent actions, the model instead combines signed changes within
+#' each unit and feature and counts the reference once:
+#' \deqn{\sum_i \left(r_{if} s_i^{\star} + \Delta_{if}^{\star}(x)\right) \ge T_f.}
+#' Here \eqn{s_i^{\star}} indicates that at least one action in the target scope
+#' is selected. Joint corrections contribute only when every member belongs
+#' to that scope. Individual effects are additive when no interaction is supplied.
+#' The same aggregation is used to report target achievement.
 #'
 #' The \code{actions} argument restricts which actions may contribute toward
 #' target achievement, but it does not affect the baseline amount \eqn{B_f} used

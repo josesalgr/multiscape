@@ -317,11 +317,12 @@ all be satisfied; later calls do not overwrite earlier ones. Registering
 a set adds no counted decision. The optional `name` labels a constraint
 independently of objective aliases.
 
-Concurrent actions support cost/profit workflows and registered joint
-effects. Mixed-sign benefit/loss objectives and concurrent ecological
-targets remain protected until final feature aggregation is implemented.
-The main ecological example below retains its one-action maximum. See
-the [action-cardinality
+Concurrent actions support economic and ecological workflows. Individual
+effects are additive unless a joint total is supplied; benefit maximizes
+signed change and loss measures deterioration after combining effects
+within each unit and feature. Targets count the reference once. The main
+ecological example below retains its one-action maximum. See the
+[action-cardinality
 vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
 for exact counts, subset rules, and a solved economic example.
 
@@ -403,24 +404,23 @@ assumptions do not establish empirical absence of interactions.
 The [joint-effects
 vignette](https://josesalgr.github.io/multiscape/articles/Joint_effects.html)
 includes solved examples with all three MO methods and negative
-interactions. Public benefit/loss objectives currently require
-sign-compatible coefficients; mixed cases and concurrent ecological
-targets await the next aggregation stage. Joint solution summaries
-already evaluate final signed effects and count the selected reference
-once.
+interactions. Benefit maximizes signed joint change, while loss measures
+final deterioration within each unit and feature. Ecological targets and
+solution summaries use the final joint outcome and count the selected
+reference once.
 
 ### Stage 3: Define the constraints
 
 [`add_constraint_targets_relative()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html)
-requires the selected actions to generate gains equivalent to at least
-10% of the total baseline amount of **each feature separately**. Targets
+requires final feature amounts in selected units to reach at least 10%
+of the total reference amount of **each feature separately**. Targets
 restrict the feasible set; they are not additional objectives. Other
 applications could introduce budgets, area requirements, locked
 decisions, or spatial constraints at this stage.
 
 ``` r
-# Require action-induced gains of at least 10% of the total baseline amount of
-# woodland and at least 10% of the total baseline amount of riparian habitat.
+# Require final amounts of at least 10% of the total reference amount of
+# woodland and at least 10% of the total reference amount of riparian habitat.
 problem <- problem |>
   add_constraint_targets_relative(0.10)
 ```
@@ -434,8 +434,19 @@ minimises the total implementation cost of the selected actions.
 Planning-unit costs are excluded because the example defines economic
 expenditure through the action-specific cost table.
 [`add_objective_max_benefit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
-maximises total ecological benefit, calculated as the sum of
-action-induced gains across selected planning units and features.
+maximises total signed ecological change relative to the reference
+scenario. Positive changes increase the objective; negative changes
+reduce it. Joint interactions are included before aggregation. Costs
+remain a separate objective.
+
+**Changed behavior:** earlier versions counted positive effects only.
+`add_objective_max_benefit()` now counts gains minus deteriorations.
+Existing models with negative effects can produce different plans.
+Feature summaries retain `selected_benefit` for positive gains,
+`selected_loss` for deterioration, and `selected_net` for the signed
+change optimized by this objective. `add_objective_min_loss()` retains
+its loss-only purpose: gains in other units or features cannot offset a
+deterioration.
 
 Because woodland and riparian effects use the same relative scale and no
 feature-specific weights are supplied, the example gives both features
@@ -567,12 +578,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.016000032   0
-#> 2      2           2 optimal 0.010000229   0
-#> 3      3           3 optimal 0.016000032   0
-#> 4      4           4 optimal 0.008000135   0
-#> 5      5           5 optimal 0.006999969   0
-#> 6      6           6 optimal 0.000000000   0
+#> 1      1           1 optimal 0.007999897   0
+#> 2      2           2 optimal 0.012000084   0
+#> 3      3           3 optimal 0.015000105   0
+#> 4      4           4 optimal 0.005000114   0
+#> 5      5           5 optimal 0.013000011   0
+#> 6      6           6 optimal 0.003000021   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies

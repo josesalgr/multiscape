@@ -200,9 +200,10 @@ NULL
 #' Cycles and combinations of valid relations can make the model infeasible;
 #' the solver determines joint feasibility, including conflicts with locks,
 #' budgets, and cardinality. No cross-unit dependency or temporal order is implied.
-#' Registered joint effects support concurrent cost/profit workflows and
-#' sign-compatible ecological objectives. Mixed benefit/loss objectives and
-#' concurrent ecological targets remain protected until final feature aggregation.
+#' Registered joint effects support concurrent economic and ecological
+#' workflows. Benefit maximizes signed joint change; loss minimizes final
+#' deterioration within each unit and feature. Ecological targets count the
+#' reference once per selected unit within their action scope.
 #'
 #' @section Repeated calls:
 #' Distinct relations accumulate in `x$data$constraints$action_relations` and

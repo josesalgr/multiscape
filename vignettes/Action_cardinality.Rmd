@@ -169,17 +169,38 @@ select an entire group together; see the
 [action-relations vignette](Action_relations.html). These relations preserve
 the capacities configured here.
 
-## Current ecological scope
+## Ecological effects with concurrent actions
 
-Concurrent actions support cost/profit workflows and registered joint ecological
-effects; see the [joint-effects vignette](Joint_effects.html). Solution summaries
-combine signed effects per unit and feature and count the reference once.
-Benefit objectives currently require non-negative effect coefficients, and loss
-objectives require non-positive coefficients. Mixed signed coefficients in those
-objectives and concurrent ecological targets remain blocked until the final
-feature-aggregation formulation is implemented. Individual-only ecological
-workflows retain the existing concurrency guard.
+Concurrent individual effects are additive unless supplied joint effects
+specify a different total; see the [joint-effects vignette](Joint_effects.html).
+Benefit maximizes signed change, including negative effects. Loss measures
+deterioration after combining all scoped actions within each unit and feature.
+Solution summaries and ecological targets count the selected reference once.
 
-Existing ecological workflows with at most one selected action per unit
-continue to work. Defining sets, adding subset rules under the default maximum,
-or setting an explicit maximum of one retains that behavior.
+```{r additive-ecological-example}
+ecological <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_constraint_action_cardinality(2, "equal") |>
+  add_effects(data.frame(action = c("restore", "control"),
+                        feature = "habitat", effect = c(30, -20))) |>
+  add_constraint_targets_absolute(110) |>
+  add_objective_max_benefit(alias = "benefit")
+```
+
+```{r additive-ecological-solution, eval=requireNamespace("rcbc", quietly = TRUE)}
+solution <- solve(set_solver_cbc(ecological, gap_limit = 0, verbose = FALSE))
+get_objectives(solution)
+get_features(solution)
+stopifnot(get_objectives(solution)$benefit == 10,
+          get_features(solution)$selected_loss == 0,
+          get_features(solution)$selected_baseline == 100,
+          get_features(solution)$selected_amount_after == 110)
+```
+
+The net change is +10, the final loss is zero, and the outcome is 110. The
+negative individual contribution is included before the final loss is split.
+Existing workflows with at most one action per unit retain that capacity;
+`max_benefit()` now includes negative effects in those workflows as well.

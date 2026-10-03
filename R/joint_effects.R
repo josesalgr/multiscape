@@ -99,14 +99,29 @@ NULL
 
 .pa_has_joint_effects <- function(x) isTRUE(x$data$effects_meta$joint_effects)
 
+.pa_uses_aggregate_effects <- function(x) {
+  if (.pa_has_joint_effects(x)) return(TRUE)
+  de <- x$data$dist_effects_model %||% x$data$dist_effects
+  if (!is.data.frame(de) || !nrow(de)) return(FALSE)
+  upper <- .pa_action_cardinality_upper_bounds(x)
+  any(upper[as.character(de$pu)] > 1L)
+}
+
 .pa_prepare_joint_effects_model <- function(x) {
-  if (!.pa_has_joint_effects(x)) return(x)
+  if (!.pa_uses_aggregate_effects(x)) return(x)
   terms <- x$data$effect_terms
+  if (!.pa_has_joint_effects(x)) {
+    de <- x$data$dist_effects_model
+    terms <- de[, c("pu", "action", "feature", "internal_pu", "internal_feature", "effect"), drop = FALSE]
+    terms$kind <- "action"
+    terms$members <- lapply(as.character(terms$action), identity)
+    terms$member_key <- vapply(terms$members, .pa_member_key, character(1))
+  }
   if (!is.data.frame(terms) || !all(c("pu", "feature", "members", "effect", "kind", "member_key") %in% names(terms)) ||
       !is.list(terms$members) || anyNA(terms$effect) || any(!is.finite(terms$effect))) {
     stop("Stored joint-effect terms are malformed.", call. = FALSE)
   }
-  .pa_validate_action_sets(x$data$action_sets, x$data$actions)
+  if (.pa_has_joint_effects(x)) .pa_validate_action_sets(x$data$action_sets, x$data$actions)
   da <- x$data$dist_actions_model
   for (k in seq_len(nrow(terms))) {
     m <- terms$members[[k]]
@@ -117,10 +132,6 @@ NULL
     }
   }
   upper <- .pa_action_cardinality_upper_bounds(x)
-  if (is.data.frame(x$data$targets) && nrow(x$data$targets) &&
-      any(upper[as.character(terms$pu)] > 1L)) {
-    stop("Concurrent joint-effect targets require final feature aggregation (point 5); per-action amount_after would repeat the reference.", call. = FALSE)
-  }
   usable <- vapply(seq_len(nrow(terms)), function(k) {
     m <- terms$members[[k]]
     id <- terms$pu[k]
@@ -144,7 +155,7 @@ NULL
 }
 
 .pa_build_joint_effects <- function(x) {
-  if (!.pa_has_joint_effects(x)) return(x)
+  if (!.pa_uses_aggregate_effects(x)) return(x)
   terms <- x$data$effect_terms_model
   x <- .pa_refresh_model_snapshot(x)
   da <- x$data$dist_actions_model
@@ -208,13 +219,8 @@ NULL
     terms <- terms[terms$internal_feature %in% ids, , drop = FALSE]
   }
   if (!column %in% c("effect", "benefit", "loss")) {
-    stop("Joint objectives currently support effect, benefit, or loss coefficients; amount_after requires the feature-aggregation stage.", call. = FALSE)
+    stop("Aggregate objectives support signed effect or final loss coefficients.", call. = FALSE)
   }
-  if ((column == "benefit" && any(terms$effect < 0)) ||
-      (column == "loss" && any(terms$effect > 0))) {
-    stop("Mixed signed joint effects require final feature aggregation before benefit/loss optimization (point 5). Use a cost/profit objective in this stage.", call. = FALSE)
-  }
-  if (column == "loss") terms$effect <- -terms$effect
   terms
 }
 
@@ -222,6 +228,22 @@ NULL
   terms <- .pa_joint_objective_terms(x, column, actions, features)
   n <- length(rcpp_optimization_problem_as_list(x$data$model_ptr)$obj)
   vector <- numeric(n)
+  if (column == "loss") {
+    for (rows in .pa_effect_scopes(terms)) {
+      coefficients <- terms$effect[rows]
+      if (all(coefficients >= 0)) next
+      if (all(coefficients <= 0)) {
+        sums <- tapply(-coefficients, terms$column0[rows], sum)
+        vector[as.integer(names(sums)) + 1L] <- vector[as.integer(names(sums)) + 1L] + as.numeric(sums)
+      } else {
+        key <- .pa_effect_loss_key(terms, rows)
+        column0 <- x$data$effect_loss_columns[[key]]
+        if (is.null(column0)) stop("Missing final-loss auxiliary in the compiled model.", call. = FALSE)
+        vector[column0 + 1L] <- vector[column0 + 1L] + 1
+      }
+    }
+    return(vector)
+  }
   if (nrow(terms)) {
     sums <- tapply(terms$effect, terms$column0, sum)
     vector[as.integer(names(sums)) + 1L] <- as.numeric(sums)
@@ -229,11 +251,116 @@ NULL
   vector
 }
 
-# Feature summaries for joint models are evaluated once per PU/feature.
-.pa_joint_selected_features <- function(x, da_out) {
+.pa_effect_scopes <- function(terms) {
+  split(seq_len(nrow(terms)), paste(terms$internal_pu, terms$internal_feature, sep = ":"))
+}
+
+.pa_eval_aggregate_effect_objective <- function(x, solution, type, actions = NULL, features = NULL) {
+  terms <- .pa_joint_objective_terms(x, "effect", actions, features)
+  da <- x$data$dist_actions_model
+  columns <- x$data$model_list$x_offset + da$internal_row
+  if (length(columns) && (max(columns) > length(solution) || anyNA(solution[columns]))) {
+    stop("Solution does not contain valid atomic action decisions.", call. = FALSE)
+  }
+  da$selected <- solution[columns] > .5
+  active <- vapply(seq_len(nrow(terms)), function(k) {
+    all(terms$members[[k]] %in% da$action[da$pu == terms$pu[k] & da$selected])
+  }, logical(1))
+  changes <- vapply(.pa_effect_scopes(terms), function(rows) {
+    sum(terms$effect[rows] * active[rows])
+  }, numeric(1))
+  if (type == "loss") sum(pmax(-changes, 0)) else sum(changes)
+}
+
+.pa_effect_loss_key <- function(terms, rows) {
+  paste(terms$internal_pu[rows[1]], terms$internal_feature[rows[1]],
+        paste(terms$column0[rows], format(terms$effect[rows], digits = 17, scientific = TRUE),
+              sep = "=", collapse = ";"), sep = "|")
+}
+
+.pa_build_effect_losses <- function(x) {
+  if (!.pa_uses_aggregate_effects(x)) return(x)
+  args <- x$data$model_args
+  scopes <- args$needs$effect_loss_scopes %||% list()
+  if (identical(args$model_type, "minimizeLosses")) {
+    scopes <- c(scopes, list(args$objective_args %||% list()))
+  }
+  expressions <- list()
+  for (scope in scopes) {
+    terms <- .pa_joint_objective_terms(x, "effect", scope$actions, scope$features)
+    for (rows in .pa_effect_scopes(terms)) {
+      coefs <- terms$effect[rows]
+      if (!any(coefs < 0) || !any(coefs > 0)) next
+      key <- .pa_effect_loss_key(terms, rows)
+      expressions[[key]] <- list(columns0 = as.integer(terms$column0[rows]), coefficients = as.numeric(coefs))
+    }
+  }
+  result <- rcpp_add_effect_loss_variables(x$data$model_ptr,
+    lapply(expressions, `[[`, "columns0"), lapply(expressions, `[[`, "coefficients"))
+  x$data$effect_loss_columns <- stats::setNames(as.list(as.integer(result$columns0)), names(expressions))
+  x$data$model_registry$vars$effect_losses <- result
+  .pa_refresh_model_snapshot(x)
+}
+
+# Targets use reference + joint change, crediting the reference only once when
+# at least one action in the target scope is implemented in a planning unit.
+.pa_apply_aggregate_targets <- function(x, targets) {
+  da <- x$data$dist_actions_model
   df <- x$data$dist_features
-  active <- unique(da_out$pu[da_out$selected > 0.5])
-  terms <- x$data$effect_terms_model
+  selection_columns <- list()
+  applied <- list()
+  for (k in seq_len(nrow(targets))) {
+    target <- targets[k, , drop = FALSE]
+    feature <- x$data$features$internal_id[match(target$feature, x$data$features$id)]
+    if (is.na(feature)) stop("Some target features could not be mapped to internal feature ids.", call. = FALSE)
+    actions <- NULL
+    pairs <- da
+    if (!is.na(target$actions) && nzchar(target$actions)) {
+      actions <- .pa_resolve_action_subset(x, strsplit(target$actions, "\\|")[[1]])$internal_id
+      pairs <- da[da$internal_action %in% actions, , drop = FALSE]
+    }
+    terms <- .pa_joint_objective_terms(x, "effect", actions, feature)
+    columns <- as.integer(terms$column0)
+    values <- as.numeric(terms$effect)
+    for (pu in unique(pairs$pu)) {
+      reference <- sum(df$amount[df$pu == pu & df$feature == target$feature])
+      if (reference == 0) next
+      rows <- pairs[pairs$pu == pu, , drop = FALSE]
+      if (is.null(actions)) {
+        column0 <- x$data$model_list$w_offset + rows$internal_pu[1] - 1L
+      } else {
+        action_columns <- as.integer(x$data$model_list$x_offset + rows$internal_row - 1L)
+        if (length(action_columns) == 1L) column0 <- action_columns else {
+          key <- paste(sort(action_columns), collapse = ":")
+          column0 <- selection_columns[[key]]
+          if (is.null(column0)) {
+            result <- rcpp_add_effect_selection_variables(x$data$model_ptr, list(action_columns))
+            column0 <- as.integer(result$columns0)[1]
+            selection_columns[[key]] <- column0
+          }
+        }
+      }
+      columns <- c(columns, column0)
+      values <- c(values, reference)
+    }
+    if (!length(columns) || all(values == 0)) {
+      stop("Infeasible targets detected: target has no non-zero reference or effect contributions.", call. = FALSE)
+    }
+    applied[[k]] <- rcpp_add_linear_constraint(x$data$model_ptr, columns, values, ">=",
+      as.numeric(target$target_value), name = paste0("feature_target_", k), block_name = "feature_targets")
+  }
+  x$data$model_registry$cons$feature_targets <- applied
+  x$data$model_args$targets_applied <- TRUE
+  x$data$model_args$targets_counts <- list(actions = nrow(targets))
+  x
+}
+
+# Feature summaries for joint models are evaluated once per PU/feature.
+.pa_joint_selected_features <- function(x, da_out, actions = NULL) {
+  df <- x$data$dist_features
+  in_scope <- if (is.null(actions)) rep(TRUE, nrow(da_out)) else da_out$internal_action %in% actions
+  active <- unique(da_out$pu[da_out$selected > 0.5 & in_scope])
+  terms <- .pa_joint_objective_terms(x, "effect", actions)
   scopes <- unique(rbind(df[, c("pu", "feature")], terms[, c("pu", "feature")]))
   scopes$internal_feature <- x$data$features$internal_id[match(scopes$feature, x$data$features$id)]
   scopes$selected_net <- vapply(seq_len(nrow(scopes)), function(k) {

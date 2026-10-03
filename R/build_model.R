@@ -178,6 +178,7 @@
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_needs_cpp(x)
   x <- .pa_build_joint_effects(x)
+  x <- .pa_build_effect_losses(x)
 
   # ------------------------------------------------------------
   # objective (C++ side)
@@ -544,8 +545,8 @@
   mtype <- as.character(args$model_type)[1]
   oargs <- args$objective_args %||% list()
 
-  if (.pa_has_joint_effects(x) && mtype %in% c("maximizeBenefits", "minimizeLosses")) {
-    .pa_joint_objective_terms(x, if (mtype == "minimizeLosses") "loss" else oargs$benefit_col %||% "benefit",
+  if (.pa_uses_aggregate_effects(x) && mtype %in% c("maximizeBenefits", "minimizeLosses")) {
+    .pa_joint_objective_terms(x, if (mtype == "minimizeLosses") "loss" else oargs$benefit_col %||% "effect",
                              oargs$actions, oargs$features)
     return(x)
   }
@@ -598,7 +599,7 @@
       )
     }
 
-    bcol <- as.character(oargs$benefit_col %||% "benefit")[1]
+    bcol <- as.character(oargs$benefit_col %||% "effect")[1]
 
     if (!(bcol %in% names(x$data$dist_effects_model))) {
       .pa_abort(
@@ -620,82 +621,14 @@
       de <- de[de$internal_feature %in% as.integer(feats), , drop = FALSE]
     }
 
-    obj_alias <- .pa_active_objective_alias(x) %||% "maximizeBenefits"
-
     if (!.has_rows(de)) {
-
-      feature_msg <- ""
-      if (!is.null(feats)) {
-        feature_names <- .pa_feature_names_from_internal_ids(x, as.integer(feats))
-        feature_msg <- paste0(
-          "\nSelected feature(s): ",
-          paste(feature_names, collapse = ", "),
-          "."
-        )
-      }
-
-      action_msg <- ""
-      if (!is.null(acts)) {
-        action_names <- .pa_action_names_from_internal_ids(x, as.integer(acts))
-        action_msg <- paste0(
-          "\nSelected action(s): ",
-          paste(action_names, collapse = ", "),
-          "."
-        )
-      }
-
-      if (identical(bcol, "amount_after")) {
-        .pa_abort(
-          "Objective '", obj_alias, "' has no positive non-zero representation coefficients.",
-          feature_msg,
-          action_msg,
-          "\nBecause this is an implicit simple conservation model, ",
-          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
-          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
-        )
-      } else {
-        .pa_abort(
-          "Objective '", obj_alias, "' has no positive non-zero benefit coefficients.",
-          feature_msg,
-          action_msg,
-          "\nThis objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.",
-          "\nFor add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects()."
-        )
-      }
+      .pa_abort("Objective 'maximizeBenefits' has no matching effect rows for its action/feature subset.")
     }
-
     bb <- as.numeric(de[[bcol]])
-
-    if (!any(is.finite(bb) & bb > .Machine$double.eps, na.rm = TRUE)) {
-
-      feature_msg <- ""
-      if (!is.null(feats)) {
-        feature_names <- .pa_feature_names_from_internal_ids(x, as.integer(feats))
-        feature_msg <- paste0(
-          "\nSelected feature(s): ",
-          paste(feature_names, collapse = ", "),
-          "."
-        )
-      }
-
-      action_msg <- ""
-      if (!is.null(acts)) {
-        action_names <- .pa_action_names_from_internal_ids(x, as.integer(acts))
-        action_msg <- paste0(
-          "\nSelected action(s): ",
-          paste(action_names, collapse = ", "),
-          "."
-        )
-      }
-
-      .pa_abort(
-        "Objective '", obj_alias, "' has no positive non-zero benefit coefficients.",
-        feature_msg,
-        action_msg,
-        "\nThis objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.",
-        "\nFor add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects()."
-      )
+    if (anyNA(bb) || any(!is.finite(bb))) {
+      .pa_abort("Objective 'maximizeBenefits' coefficient column contains NA or non-finite values.")
     }
+    # Negative and identically zero net objectives are valid.
   }
 
   if (identical(mtype, "minimizeLosses")) {
@@ -1047,8 +980,8 @@
 
   } else if (identical(mtype, "maximizeBenefits")) {
 
-    if (.pa_has_joint_effects(x)) {
-      vector <- .pa_joint_objective_vector(x, oargs$benefit_col %||% "benefit",
+    if (.pa_uses_aggregate_effects(x)) {
+      vector <- .pa_joint_objective_vector(x, oargs$benefit_col %||% "effect",
                                            oargs$actions, oargs$features)
       rcpp_model_set_objective_vector(op, vector, "max")
       x$data$model_args$modelsense <- "max"
@@ -1069,7 +1002,7 @@
       .pa_abort("Missing x$data$dist_effects_model for objective 'maximizeBenefits'.")
     }
 
-    bcol <- as.character(oargs$benefit_col %||% "benefit")[1]
+    bcol <- as.character(oargs$benefit_col %||% "effect")[1]
 
     if (is.na(bcol) || !nzchar(bcol)) {
       .pa_abort("`benefit_col` must be a non-empty string.")
@@ -1100,10 +1033,8 @@
       de <- de[de$internal_feature %in% as.integer(feats), , drop = FALSE]
     }
 
-    # The C++ objective builder expects a column named 'benefit'. For the usual
-    # benefit objective this is already the canonical column. If a different
-    # coefficient column is requested, for example 'amount_after' in the implicit
-    # conservation model, copy it locally into 'benefit' before calling C++.
+    # C++ expects a column named 'benefit'; supply signed effects in a local
+    # copy while preserving the canonical positive/loss reporting components.
     de$benefit <- as.numeric(de[[bcol]])
 
     if (anyNA(de$benefit) || any(!is.finite(de$benefit))) {
@@ -1123,29 +1054,6 @@
 
     coef_x <- as.numeric(prep$coef_x)
 
-    if (is.null(coef_x) ||
-        length(coef_x) == 0L ||
-        !any(is.finite(coef_x) & abs(coef_x) > .Machine$double.eps, na.rm = TRUE)) {
-
-      obj_alias <- .pa_active_objective_alias(x) %||% "maximizeBenefits"
-
-      if (identical(bcol, "amount_after")) {
-        .pa_abort(
-          "Objective '", obj_alias, "' produced an empty or zero representation vector.",
-          "\nBecause this is an implicit simple conservation model, ",
-          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
-          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
-        )
-      } else {
-        .pa_abort(
-          "Objective '", obj_alias, "' produced an empty or zero objective vector.",
-          "\nThis usually means that the selected feature(s) have no positive non-zero effects ",
-          "for the feasible action set.",
-          "\nCheck add_effects(), especially the `feature` column and the selected `features=` argument."
-        )
-      }
-    }
-
     res <- rcpp_add_objective_max_benefit(
       op,
       coef_x = coef_x,
@@ -1158,7 +1066,7 @@
 
   } else if (identical(mtype, "minimizeLosses")) {
 
-    if (.pa_has_joint_effects(x)) {
+    if (.pa_uses_aggregate_effects(x)) {
       vector <- .pa_joint_objective_vector(x, "loss", oargs$actions, oargs$features)
       rcpp_model_set_objective_vector(op, vector, "min")
       x$data$model_args$modelsense <- "min"

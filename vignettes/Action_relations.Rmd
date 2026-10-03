@@ -184,6 +184,8 @@ stopifnot(get_objectives(mo_solution)$profit == 7,
           get_objectives(mo_solution)$cost == 2)
 ```
 
-Logical coupling does not specify an ecological synergy or antagonism. The
-mixed benefit/loss objectives and concurrent ecological targets still require
-final feature aggregation; see the [joint-effects vignette](Joint_effects.html).
+Logical coupling does not specify an ecological synergy or antagonism.
+Supply joint totals through `add_effects()` to express interactions. Benefit
+maximizes signed joint change, loss minimizes final deterioration per unit and
+feature, and targets count the reference once; see the
+[joint-effects vignette](Joint_effects.html).

@@ -345,14 +345,14 @@ test_that("compiled rows match independently enumerated cardinality feasibility"
   expect_identical(row$name, "total_pu_10")
 })
 
-test_that("ecological effects are protected until concurrent aggregation is implemented", {
+test_that("concurrent ecological effects and targets compile with final aggregation", {
   p <- make_cardinality_problem() |>
     add_effects(data.frame(action = c("a", "b", "c", "d"), feature = 1L, effect = 10)) |>
     add_objective_max_benefit()
   expect_s3_class(compile_model(add_constraint_action_cardinality(p, 1, "max")), "Problem")
-  expect_error(compile_model(add_constraint_action_cardinality(p, 2, "max", pu = 10L)), "Concurrent actions.*ecological effects")
-  expect_error(compile_model(p |> add_constraint_action_cardinality(2, "equal", pu = 10L) |>
-                              add_constraint_targets_absolute(150)), "reference")
+  expect_no_error(compile_model(add_constraint_action_cardinality(p, 2, "max", pu = 10L)))
+  expect_no_error(compile_model(p |> add_constraint_action_cardinality(2, "equal", pu = 10L) |>
+                              add_constraint_targets_absolute(150)))
   # Overlapping maxima that still allow only one action remain compatible.
   safe <- p |> add_constraint_action_cardinality(2, "max") |>
     add_constraint_action_cardinality(1, "max", pu = c(10L, 20L)) |>

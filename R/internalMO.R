@@ -351,7 +351,7 @@
   # max_benefit
   # ------------------------------------------------------------------
   if (identical(id, "max_benefit")) {
-    bcol    <- .c1(a$benefit_col, "benefit")
+    bcol    <- .c1(a$benefit_col, "effect")
     actions <- .chr(a$actions)
     feats   <- .chr(a$features)
 
@@ -848,7 +848,7 @@
       )
     )
 
-    solutions[[r]] <- one$solution
+    solutions[r] <- list(one$solution)
     status[r]  <- as.character(one$status %||% NA_character_)
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
@@ -1100,7 +1100,7 @@
       stop_on_error = stop_on_error
     )
 
-    solutions[[r]] <- one$solution
+    solutions[r] <- list(one$solution)
     status[r]  <- as.character(one$status %||% NA_character_)
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
@@ -1680,9 +1680,9 @@
 
     } else if (identical(type, "benefit")) {
 
-      if (.pa_has_joint_effects(base_superset)) {
+      if (.pa_uses_aggregate_effects(base_superset)) {
         current <- rcpp_optimization_problem_as_list(op)$obj
-        vector <- .pa_joint_objective_vector(base_superset, t$benefit_col %||% "benefit", t$actions, t$features)
+        vector <- .pa_joint_objective_vector(base_superset, t$benefit_col %||% "effect", t$actions, t$features)
         rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
         next
       }
@@ -1704,6 +1704,11 @@
         }
       }
 
+      # Canonical positive/loss components remain unchanged for reporting.
+      bcol <- t$benefit_col %||% "effect"
+      if (!bcol %in% names(de_sub)) stop("Missing benefit coefficient column '", bcol, "'.", call. = FALSE)
+      de_sub$benefit <- as.numeric(de_sub[[bcol]])
+
       prep <- rcpp_prepare_objective_max_benefit(
         x = op,
         dist_actions_data = da_sub,
@@ -1722,7 +1727,7 @@
 
     } else if (identical(type, "loss")) {
 
-      if (.pa_has_joint_effects(base_superset)) {
+      if (.pa_uses_aggregate_effects(base_superset)) {
         current <- rcpp_optimization_problem_as_list(op)$obj
         vector <- .pa_joint_objective_vector(base_superset, "loss", t$actions, t$features)
         rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
@@ -2228,7 +2233,6 @@
   }
 
   idx <- which(v != 0)
-  if (length(idx) == 0) stop("epsilon objvec has no non-zero coefficients.", call. = FALSE)
 
   # add row: sum(v[j]*x[j]) <= eps
 
@@ -2664,6 +2668,16 @@
   # resto de objetivos: evaluaciÃ³n por objvec
   base_eval <- .pamo_prepare_superset_model(x, list(ir))
 
+  # Scoped loss auxiliaries need not occupy the same columns when rebuilt for
+  # evaluation. Evaluate ecological changes from the atomic action decisions,
+  # not from a prefix of the solution's auxiliary columns.
+  if (.pa_uses_aggregate_effects(base_eval) && length(terms) == 1L &&
+      terms[[1]]$type %in% c("benefit", "loss")) {
+    term <- terms[[1]]
+    return(.pa_eval_aggregate_effect_objective(base_eval,
+      .pamo_get_solution_vector(solution), term$type, term$actions, term$features))
+  }
+
   obj_vec <- .pamo_objvec_from_ir(base_eval, ir)
   sol_vec <- .pamo_get_solution_vector(solution)
 
@@ -2723,7 +2737,9 @@
 
   nz <- which(abs(obj_vec) > 0)
   if (length(nz) == 0L) {
-    stop("Alias '", alias, "' produced an empty objective vector.", call. = FALSE)
+    rcpp_add_linear_constraint(base_eval$data$model_ptr, integer(), numeric(), "<=",
+      as.numeric(rhs + tol), name = name %||% paste0("eps_bound_", alias))
+    return(.pa_refresh_model_snapshot(base_eval))
   }
 
   if (is.null(name)) {
@@ -3045,7 +3061,8 @@
       y_action = isTRUE(need_y_act),
       y_intervention = FALSE,
       u_intervention = isTRUE(need_u_int),
-      u_intervention_actions = u_int_actions
+      u_intervention_actions = u_int_actions,
+      effect_loss_scopes = Filter(function(t) identical(t$type, "loss"), all_terms)
     ),
     relation_name = if (length(rel_names) == 1L) rel_names[1] else NULL
   )
