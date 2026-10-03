@@ -37,6 +37,10 @@ rcpp_add_base_variables <- function(x, pu_data, dist_actions_data, dist_features
     .Call(`_multiscape_rcpp_add_base_variables`, x, pu_data, dist_actions_data, dist_features_data, add_z)
 }
 
+rcpp_add_joint_effect_variables <- function(model_ptr, members0) {
+    .Call(`_multiscape_rcpp_add_joint_effect_variables`, model_ptr, members0)
+}
+
 rcpp_add_linear_constraint <- function(model_ptr, j0, x, sense, rhs, name = "", block_name = "linear_constraint", tag = "") {
     .Call(`_multiscape_rcpp_add_linear_constraint`, model_ptr, j0, x, sense, rhs, name, block_name, tag)
 }

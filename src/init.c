@@ -9,6 +9,7 @@
 
 /* .Call calls */
 extern SEXP _multiscape_rcpp_new_optimization_problem(SEXP, SEXP, SEXP);
+extern SEXP _multiscape_rcpp_add_joint_effect_variables(SEXP, SEXP);
 extern SEXP _multiscape_rcpp_optimization_problem_as_list(SEXP);
 extern SEXP _multiscape_rcpp_get_optimization_problem_ncol(SEXP);
 extern SEXP _multiscape_rcpp_get_optimization_problem_nrow(SEXP);
@@ -74,6 +75,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"_multiscape_rcpp_add_pu_locks", (DL_FUNC) &_multiscape_rcpp_add_pu_locks, 4},
   {"_multiscape_rcpp_add_linking_x_le_w", (DL_FUNC) &_multiscape_rcpp_add_linking_x_le_w, 4},
   {"_multiscape_rcpp_add_base_variables", (DL_FUNC) &_multiscape_rcpp_add_base_variables, 5},
+  {"_multiscape_rcpp_add_joint_effect_variables", (DL_FUNC) &_multiscape_rcpp_add_joint_effect_variables, 2},
   {"_multiscape_rcpp_add_linking_z_le_w", (DL_FUNC) &_multiscape_rcpp_add_linking_z_le_w, 4},
   {"_multiscape_rcpp_add_target_recovery", (DL_FUNC) &_multiscape_rcpp_add_target_recovery, 6},
   {"_multiscape_rcpp_add_linear_constraint", (DL_FUNC) &_multiscape_rcpp_add_linear_constraint, 8},

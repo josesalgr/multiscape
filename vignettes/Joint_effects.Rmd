@@ -1,0 +1,163 @@
+---
+title: "Joint effects and interactions between management actions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Joint effects and interactions between management actions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(multiscape)
+```
+
+Supply the **total effect of executing a combination** in the same call as its
+individual effects. The package preserves those totals and calculates signed
+interaction corrections, rather than attributing portions to individual actions.
+
+```{r inputs}
+base <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_action_sets(data.frame(set = c("restore_control", "restore_control"),
+                             action = c("restore", "control"))) |>
+  add_constraint_action_cardinality(2, "max")
+effects <- data.frame(action = c("restore", "control", "restore_control"),
+                      feature = "habitat", effect = c(30, 20, 70))
+problem <- add_effects(base, effects)
+problem$data$effect_terms[, c("action", "total_effect", "effect")]
+```
+
+The pair correction is `70 - 30 - 20 = 20`. Selecting both yields 70, while
+restoration alone yields 30. Registration and effects do not force selection;
+cardinality controls capacity and logical relations control permitted groups.
+
+The modern `action` field accepts atomic IDs or registered set IDs. `effect`,
+`outcome`, and `relative_change` keep their meanings, sharing the same reference:
+
+```{r equivalent-inputs}
+outcomes <- data.frame(action = effects$action, feature = "habitat", outcome = c(130, 120, 170))
+changes <- data.frame(action = effects$action, feature = "habitat", relative_change = c(.3, .2, .7))
+outcome_problem <- add_effects(base, outcomes)
+relative_problem <- add_effects(base, changes)
+stopifnot(isTRUE(all.equal(problem$data$effect_terms, outcome_problem$data$effect_terms)),
+          isTRUE(all.equal(problem$data$effect_terms, relative_problem$data$effect_terms)))
+```
+
+Modern raster lists can likewise include names of registered sets, with the same
+layer order, aggregation, reference, and interpretation rules as individual
+rasters. Legacy component filtering is rejected for sets. With no `pu`, a joint
+row expands only over units where every member has an available pair. Explicit
+joint rows with unavailable members are rejected. Later locks or incompatible
+constraints can make a supplied combination unreachable without removing its
+original observation.
+
+## Preserve inputs and record assumptions
+
+```{r provenance}
+problem$data$effects_input
+problem$data$joint_effects[, c("action", "effect", "action_outcome")]
+problem$data$effects_meta[c("missing_interactions", "missing_individual_effects")]
+```
+
+`effects_input` preserves the original table; `effects_original` preserves all
+canonical totals; `joint_effects` contains supplied set totals; `effect_terms`
+contains signed corrections. `dist_effects` retains individual rows for
+compatibility. Different set names cannot provide duplicate membership totals
+for one PU/feature. Zero corrections remain preserved as input observations.
+
+Unspecified individual effects and interactions are **assumed zero**. This is
+an explicit model assumption, not evidence that an unobserved interaction is
+absent. For three actions, subtract individual and supplied pair corrections:
+
+$$\delta_{ABC}=E(ABC)-E(A)-E(B)-E(C)-\delta_{AB}-\delta_{AC}-\delta_{BC}.$$
+
+The rule extends to larger sets. No unprovided subsets are generated automatically.
+
+## Exact activation and model size
+
+For set $S$, compilation adds a continuous auxiliary satisfying:
+
+$$0\le y_{i,S}\le1,\quad y_{i,S}\le x_{i,a}\ (a\in S),\quad
+y_{i,S}\ge\sum_{a\in S}x_{i,a}-|S|+1.$$
+
+Binary member decisions determine it exactly, even with negative coefficients
+or economic objectives. One PU/membership variable is shared across features.
+Only reachable, non-zero corrections need auxiliaries. Availability, known
+cardinality limits, and exclusions can eliminate combinations. Inferred negative
+final feature amounts are excluded through linear outcome constraints.
+
+Ten actions have 1,013 subsets of size two or greater, but only non-zero,
+reachable corrections contribute variables. Sparse interactions limit growth;
+solution time still depends on the full model and the number of MO runs.
+
+## Solve with all three MO methods
+
+In this positive-coefficient example, the existing benefit objective includes
+individual contributions and the pair correction. Each method selects both
+actions, with benefit 70 and action cost 2.
+
+```{r methods}
+mo_base <- problem |>
+  add_constraint_action_cardinality(1, "min") |>
+  add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+  add_objective_max_benefit(alias = "benefit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE)
+methods <- list(
+  weighted = set_method_weighted_sum(mo_base, aliases = c("cost", "benefit"),
+    normalize_weights = FALSE, runs = set_runs_manual(data.frame(weight_cost = 1, weight_benefit = 1))),
+  epsilon = set_method_epsilon_constraint(mo_base, primary = "cost", aliases = c("cost", "benefit"),
+    runs = set_runs_manual(data.frame(eps_benefit = 69))),
+  augmecon = set_method_augmecon(mo_base, primary = "cost", aliases = c("cost", "benefit"),
+    runs = set_runs_manual(data.frame(eps_benefit = 69)))
+)
+```
+
+```{r solve-mo, eval=requireNamespace("rcbc", quietly = TRUE)}
+solutions <- lapply(methods, solve)
+lapply(solutions, get_objectives)
+for (solution in solutions) {
+  objective <- get_objectives(solution)
+  feature <- get_features(solution)
+  stopifnot(objective$cost == 2, objective$benefit == 70,
+            feature$selected_baseline == 100, feature$selected_amount_after == 170)
+}
+```
+
+## Negative interactions and current development scope
+
+```{r negative-interaction}
+negative_input <- effects
+negative_input$effect[negative_input$action == "restore_control"] <- 40
+negative <- add_effects(base, negative_input)
+negative$data$effect_terms[, c("action", "total_effect", "effect")]
+economic <- negative |>
+  add_profit(c(restore = 10, control = 9)) |>
+  add_objective_max_profit(alias = "profit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE)
+```
+
+```{r solve-negative, eval=requireNamespace("rcbc", quietly = TRUE)}
+solution <- solve(economic)
+get_features(solution)
+stopifnot(get_features(solution)$selected_net == 40,
+          get_features(solution)$selected_benefit == 40,
+          get_features(solution)$selected_loss == 0,
+          get_features(solution)$selected_amount_after == 140)
+```
+
+The correction is -10, but the final change is +40. The summary reports benefit
+40 and loss zero, counting the selected reference once. It does not classify
+the negative correction as an ecological loss by itself.
+
+Optimizing the final positive/negative split requires the next stage's feature
+aggregation formulation. Benefit objectives currently require non-negative
+coefficients; loss objectives require non-positive coefficients. Mixed signed
+cases raise an explicit error, as do concurrent ecological targets. Internal
+SO/MO tests exercise the signed polynomial, including automatic payoff/grid
+runs, but no public net-benefit objective is introduced here. Cost/profit models
+can use signed joint effects and inspect evaluated ecological summaries.
+Individual-only ecological workflows retain their existing behavior and guard.

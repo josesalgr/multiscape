@@ -171,12 +171,14 @@ the capacities configured here.
 
 ## Current ecological scope
 
-In this development stage, concurrent actions are supported in cost/profit
-workflows. Joint ecological effects and feature aggregation are still pending.
-The existing ecological targets and summaries use per-action `amount_after`;
-summing those values across concurrent actions can repeat a unit's reference
-amount. Compilation therefore rejects potentially concurrent ecological effects
-in the same units until that calculation is updated.
+Concurrent actions support cost/profit workflows and registered joint ecological
+effects; see the [joint-effects vignette](Joint_effects.html). Solution summaries
+combine signed effects per unit and feature and count the reference once.
+Benefit objectives currently require non-negative effect coefficients, and loss
+objectives require non-positive coefficients. Mixed signed coefficients in those
+objectives and concurrent ecological targets remain blocked until the final
+feature-aggregation formulation is implemented. Individual-only ecological
+workflows retain the existing concurrency guard.
 
 Existing ecological workflows with at most one selected action per unit
 continue to work. Defining sets, adding subset rules under the default maximum,

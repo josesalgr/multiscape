@@ -47,8 +47,9 @@ prohibit its trigger; a missing together member prohibits the other members.
 Cycles and combinations of valid relations can make the model infeasible;
 the solver determines joint feasibility, including conflicts with locks,
 budgets, and cardinality. No cross-unit dependency or temporal order is implied.
-Concurrent ecological effects remain protected until the planned joint-effect
-and feature-aggregation stage. Cost/profit workflows support concurrent actions.
+Registered joint effects support concurrent cost/profit workflows and
+sign-compatible ecological objectives. Mixed benefit/loss objectives and
+concurrent ecological targets remain protected until final feature aggregation.
 }
 
 \section{Repeated calls}{

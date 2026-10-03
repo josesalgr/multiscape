@@ -43,8 +43,9 @@ add an interaction effect. It also does not enable simultaneous actions:
 the default maximum of one selected action per planning unit still applies
 unless changed with \code{\link[=add_constraint_action_cardinality]{add_constraint_action_cardinality()}}.
 Sets may be registered even if their members have no common feasible unit.
-In this release they are definitions only and cannot yet be supplied as
-action identifiers to effect, objective, or constraint functions.
+The modern \code{\link[=add_effects]{add_effects()}} interface accepts these identifiers for supplied
+total joint effects. Objectives and constraints still receive individual
+members. Joint effects do not make a set a separate selectable action.
 }
 \examples{
 problem <- create_problem(

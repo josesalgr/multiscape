@@ -274,9 +274,9 @@ identical(get_action_sets(sets_problem), get_action_sets(list_problem))
 
 Registering sets leaves the individual actions and their feasible pairs
 intact. It does not require joint selection, introduce interactions, or
-enable multiple selected actions per unit. In this release, set
-identifiers are definitions only; effects, objectives, and constraints
-still receive individual action ids. The [action-set
+enable multiple selected actions per unit. Modern `add_effects()`
+accepts set identifiers for total joint effects. Objectives and
+constraints still receive individual action ids. The [action-set
 vignette](https://josesalgr.github.io/multiscape/articles/Action_sets.html)
 explains validation and adding new sets across calls.
 
@@ -317,11 +317,11 @@ all be satisfied; later calls do not overwrite earlier ones. Registering
 a set adds no counted decision. The optional `name` labels a constraint
 independently of objective aliases.
 
-Concurrent actions currently support cost/profit workflows. Compilation
-rejects concurrent ecological effects until joint-effect and feature
-aggregation are implemented, to avoid counting reference amounts
-repeatedly. The main ecological example below retains its one-action
-maximum. See the [action-cardinality
+Concurrent actions support cost/profit workflows and registered joint
+effects. Mixed-sign benefit/loss objectives and concurrent ecological
+targets remain protected until final feature aggregation is implemented.
+The main ecological example below retains its one-action maximum. See
+the [action-cardinality
 vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
 for exact counts, subset rules, and a solved economic example.
 
@@ -365,6 +365,49 @@ no ecological interaction coefficients. See the [action-relations
 vignette](https://josesalgr.github.io/multiscape/articles/Action_relations.html)
 for solved examples, set members, scope, and compatibility with
 cardinality.
+
+### Optional: supply joint action effects
+
+Supply total joint effects alongside individual effects in **one call**
+to `add_effects()`. The package preserves supplied totals and computes
+signed interaction corrections. The following independent example has a
+reference amount of 100 and a joint change of 70:
+
+``` r
+joint_problem <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_action_sets(list(restore_control = c("restore", "control"))) |>
+  add_constraint_action_cardinality(2, "max") |>
+  add_effects(data.frame(
+    action = c("restore", "control", "restore_control"),
+    feature = "habitat", effect = c(30, 20, 70)
+  ))
+joint_problem$data$effect_terms[, c("action", "total_effect", "effect")]
+#>            action total_effect effect
+#> 1         control           20     20
+#> 2         restore           30     30
+#> 3 restore_control           70     20
+```
+
+The pair correction is `70 - 30 - 20 = 20`. An exact AND auxiliary
+contributes it only when both members are selected, and is shared across
+features. Only non-zero, reachable corrections need auxiliaries.
+`outcome`, `relative_change`, and modern raster lists can also describe
+registered sets. Missing individual effects and interactions are
+explicitly assumed zero, as recorded in `effects_meta`. These
+assumptions do not establish empirical absence of interactions.
+
+The [joint-effects
+vignette](https://josesalgr.github.io/multiscape/articles/Joint_effects.html)
+includes solved examples with all three MO methods and negative
+interactions. Public benefit/loss objectives currently require
+sign-compatible coefficients; mixed cases and concurrent ecological
+targets await the next aggregation stage. Joint solution summaries
+already evaluate final signed effects and count the selected reference
+once.
 
 ### Stage 3: Define the constraints
 
@@ -524,12 +567,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.006000042   0
-#> 2      2           2 optimal 0.013999939   0
-#> 3      3           3 optimal 0.016999960   0
-#> 4      4           4 optimal 0.003000021   0
-#> 5      5           5 optimal 0.010999918   0
-#> 6      6           6 optimal 0.003999949   0
+#> 1      1           1 optimal 0.016000032   0
+#> 2      2           2 optimal 0.010000229   0
+#> 3      3           3 optimal 0.016000032   0
+#> 4      4           4 optimal 0.008000135   0
+#> 5      5           5 optimal 0.006999969   0
+#> 6      6           6 optimal 0.000000000   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies

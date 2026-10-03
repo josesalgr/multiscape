@@ -1680,6 +1680,13 @@
 
     } else if (identical(type, "benefit")) {
 
+      if (.pa_has_joint_effects(base_superset)) {
+        current <- rcpp_optimization_problem_as_list(op)$obj
+        vector <- .pa_joint_objective_vector(base_superset, t$benefit_col %||% "benefit", t$actions, t$features)
+        rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
+        next
+      }
+
       de_sub <- .subset_dist_effects(
         df = base_superset$data$dist_effects_model,
         actions = t$actions,
@@ -1714,6 +1721,13 @@
       )
 
     } else if (identical(type, "loss")) {
+
+      if (.pa_has_joint_effects(base_superset)) {
+        current <- rcpp_optimization_problem_as_list(op)$obj
+        vector <- .pa_joint_objective_vector(base_superset, "loss", t$actions, t$features)
+        rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
+        next
+      }
 
       de_sub <- .subset_dist_effects(
         df = base_superset$data$dist_effects_model,

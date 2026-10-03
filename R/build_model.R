@@ -156,6 +156,7 @@
   # prepare model-ready tables (filters + joins)
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_tables(x)
+  x <- .pa_prepare_joint_effects_model(x)
 
   x <- .pa_build_model_validate_locked_in_action_feasibility(x)
   x <- .pa_validate_action_cardinality_model(x)
@@ -176,6 +177,7 @@
   # prepare auxiliary variables/constraints required by needs
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_needs_cpp(x)
+  x <- .pa_build_joint_effects(x)
 
   # ------------------------------------------------------------
   # objective (C++ side)
@@ -541,6 +543,12 @@
 
   mtype <- as.character(args$model_type)[1]
   oargs <- args$objective_args %||% list()
+
+  if (.pa_has_joint_effects(x) && mtype %in% c("maximizeBenefits", "minimizeLosses")) {
+    .pa_joint_objective_terms(x, if (mtype == "minimizeLosses") "loss" else oargs$benefit_col %||% "benefit",
+                             oargs$actions, oargs$features)
+    return(x)
+  }
 
   has_actions_model <- .has_rows(x$data$dist_actions_model)
   has_effects_model <- .has_rows(x$data$dist_effects_model)
@@ -1039,6 +1047,16 @@
 
   } else if (identical(mtype, "maximizeBenefits")) {
 
+    if (.pa_has_joint_effects(x)) {
+      vector <- .pa_joint_objective_vector(x, oargs$benefit_col %||% "benefit",
+                                           oargs$actions, oargs$features)
+      rcpp_model_set_objective_vector(op, vector, "max")
+      x$data$model_args$modelsense <- "max"
+      x$data$model_args$objective_id <- "max_benefit"
+      x$data$model_registry$objective <- list(type = mtype, id = "max_benefit", joint_effects = TRUE)
+      return(x)
+    }
+
     if (!exists("rcpp_prepare_objective_max_benefit", mode = "function")) {
       .pa_abort("Missing rcpp_prepare_objective_max_benefit().")
     }
@@ -1139,6 +1157,15 @@
     objective_id <- "max_benefit"
 
   } else if (identical(mtype, "minimizeLosses")) {
+
+    if (.pa_has_joint_effects(x)) {
+      vector <- .pa_joint_objective_vector(x, "loss", oargs$actions, oargs$features)
+      rcpp_model_set_objective_vector(op, vector, "min")
+      x$data$model_args$modelsense <- "min"
+      x$data$model_args$objective_id <- "min_loss"
+      x$data$model_registry$objective <- list(type = mtype, id = "min_loss", joint_effects = TRUE)
+      return(x)
+    }
 
     if (!exists("rcpp_prepare_objective_min_loss", mode = "function")) {
       .pa_abort("Missing rcpp_prepare_objective_min_loss().")

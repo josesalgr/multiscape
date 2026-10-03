@@ -116,6 +116,7 @@ Collate:
     'create_problem.R'
     'data-sim.R'
     'globals.R'
+    'joint_effects.R'
     'load_sim.R'
     'package.R'
     'plot.R'

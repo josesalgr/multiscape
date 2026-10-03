@@ -93,6 +93,39 @@ A positive effect denotes an increase, not necessarily an improvement:
 whether increasing a feature is desirable depends on the objective.
 Zero effects are retained and have an outcome equal to the reference amount.
 
+\strong{Joint effects of action sets}
+
+In the modern table or raster interface, \code{action} can also identify a
+set registered with \code{add_action_sets()}. Supply the total outcome or
+total change of that combination, not an interaction coefficient. Individual
+and joint effects belong in the same single call. Set members must share an
+available PU; a global row expands only over such units. Explicit joint rows
+with unavailable members raise an error. Legacy component filtering is not
+supported for joint effects.
+
+The original canonical totals are preserved in \code{effects_original} and
+\code{joint_effects}; original table input is preserved in \code{effects_input}.
+\code{dist_effects} continues to contain individual actions only. The separate
+\code{effect_terms} table stores signed corrections: for set S, subtract all
+supplied proper-subset corrections from its supplied total change.
+Unspecified individual effects and interactions are explicitly assumed zero,
+recorded in \code{effects_meta}. This is a modelling assumption, not evidence
+that unobserved interactions are absent.
+
+Compilation adds an exact AND auxiliary only for a feasible PU/set with a
+non-zero correction. It is continuous on \verb{0 <= y <= 1}, determined by the binary
+members, shared across features, and activated independently of coefficient
+sign or optimization method. Cardinality still determines allowed action
+counts; registration and effects do not force joint selection. Inferred
+negative feature outcomes are excluded from the feasible set.
+
+During this development stage, cost/profit workflows support signed joint
+effects. Public benefit/loss objectives support sign-compatible corrections;
+mixed signed corrections and concurrent ecological targets remain protected
+pending the final feature-aggregation stage. Solution summaries already
+evaluate the signed effect once per PU/feature, split its final positive and
+negative parts, and count the selected reference only once.
+
 \strong{Raster inputs}
 
 Supply a named list of \code{terra::SpatRaster} objects, one per action.
@@ -136,6 +169,21 @@ p_relative <- add_effects(p, data.frame(
   action = "restore", feature = "habitat", relative_change = 0.50
 ))
 p_effect$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
+
+# Joint totals in one call: 30 + 20 + interaction 20 = total 70.
+joint_base <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_action_sets(list(restore_control = c("restore", "control"))) |>
+  add_constraint_action_cardinality(2, "max")
+joint <- joint_base |>
+  add_effects(data.frame(
+    action = c("restore", "control", "restore_control"),
+    feature = "habitat", effect = c(30, 20, 70)
+  ))
+joint$data$effect_terms[, c("action", "total_effect", "effect")]
 
 # Raster example: one polygon contains two cells with reference amounts 40, 60.
 r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,

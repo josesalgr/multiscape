@@ -102,13 +102,14 @@ identical(problem$data$actions, table_problem$data$actions)
 identical(problem$data$dist_actions, table_problem$data$dist_actions)
 ```
 
-In this release these are definitions only. The default is still at most one
+These remain neutral definitions. The default is still at most one
 selected action per planning unit. The separate
 `add_constraint_action_cardinality()` function can allow concurrent actions
 in cost/profit workflows; see the [action-cardinality vignette](Action_cardinality.html).
-Set identifiers cannot yet be used as action inputs to effects, objectives, or
-constraints. Joint ecological effects and feature aggregation remain separate
-steps in the package's development.
+Modern `add_effects()` accepts set identifiers for total joint outcomes or
+changes; see the [joint-effects vignette](Joint_effects.html). Objectives and
+constraints still receive individual members. Mixed benefit/loss objectives
+and concurrent targets await final feature aggregation.
 
 To require selection of the members together, pass their individual IDs to
 `add_constraint_action_together()`. Directional dependencies and mutually

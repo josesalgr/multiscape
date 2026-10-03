@@ -1,5 +1,15 @@
 # multiscape (development version)
 
+- Modern `add_effects()` tables and rasters accept registered action sets as
+  total joint outcomes, effects, or relative changes. Original totals and input
+  tables are preserved separately from sparse signed subset corrections.
+  Missing interactions/individual effects are explicitly assumed zero.
+  Exact continuous AND auxiliaries are shared across features, created only
+  for feasible non-zero corrections, and integrated into single-objective and
+  all three MO formulations. Inferred negative outcomes are excluded.
+  Joint solution summaries aggregate signed changes per PU/feature and count
+  the selected reference once. Mixed-sign benefit/loss optimization and
+  concurrent ecological targets remain guarded pending final aggregation.
 - Added `add_constraint_action_requires()` (all/any companions),
   `add_constraint_action_excludes()` (at most one group member), and
   `add_constraint_action_together()` (all or none), scoped separately by PU.

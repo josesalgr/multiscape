@@ -112,6 +112,10 @@ feature.}
 \item{\code{constraints}}{Stored user-defined constraints, including
 per-unit action counts in \code{constraints$action_cardinality} and logical
 relations in \code{constraints$action_relations}.}
+\item{\code{effects_original}, \code{joint_effects}, \code{effect_terms}}{
+Canonical supplied totals, supplied joint totals, and their signed subset
+corrections, when registered sets occur in modern effect input. Missing
+interactions are assumed zero as recorded in \code{effects_meta}.}
 \item{\code{objectives}}{Registered atomic objectives for single- or
 multi-objective workflows.}
 \item{\code{method}}{Stored multi-objective method configuration, when

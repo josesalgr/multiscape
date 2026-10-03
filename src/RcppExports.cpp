@@ -121,6 +121,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_add_joint_effect_variables
+Rcpp::List rcpp_add_joint_effect_variables(SEXP model_ptr, Rcpp::List members0);
+RcppExport SEXP _multiscape_rcpp_add_joint_effect_variables(SEXP model_ptrSEXP, SEXP members0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type model_ptr(model_ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type members0(members0SEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_add_joint_effect_variables(model_ptr, members0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_add_linear_constraint
 Rcpp::List rcpp_add_linear_constraint(SEXP model_ptr, Rcpp::IntegerVector j0, Rcpp::NumericVector x, std::string sense, double rhs, std::string name, std::string block_name, std::string tag);
 RcppExport SEXP _multiscape_rcpp_add_linear_constraint(SEXP model_ptrSEXP, SEXP j0SEXP, SEXP xSEXP, SEXP senseSEXP, SEXP rhsSEXP, SEXP nameSEXP, SEXP block_nameSEXP, SEXP tagSEXP) {

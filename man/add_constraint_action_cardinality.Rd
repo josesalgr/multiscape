@@ -70,9 +70,10 @@ valid even in units without available actions.
 
 During this development stage, concurrent actions are supported with
 costs, profit, and their associated objectives and constraints. Compilation
-rejects potentially concurrent actions with ecological effects in the same
-units, because ecological outcomes and targets still require the planned
-joint-effect and feature-aggregation update. Problems retaining at most
+accepts registered joint-effect workflows, with exact signed interactions.
+Mixed benefit/loss objectives and concurrent ecological targets still require
+final feature aggregation. Individual-only ecological workflows retain the
+temporary guard against concurrent effects. Problems retaining at most
 one action per unit keep their existing ecological workflow.
 }
 \examples{

@@ -133,9 +133,9 @@ locks, budgets, cardinality, and all other constraints.
 
 ## Solve an economic example
 
-This example uses profits rather than concurrent ecological effects, whose
-joint aggregation is reserved for the following development stage. Restoring
-requires control; their combined profit is 7, compared with fencing alone at 6.
+This example uses independent action profits. For concurrent ecological effects,
+see the [joint-effects vignette](Joint_effects.html). Restoring requires control;
+their combined profit is 7, compared with fencing alone at 6.
 The two-action capacity prevents adding fencing to the restoration group.
 
 ```{r economic-problem}
@@ -185,5 +185,5 @@ stopifnot(get_objectives(mo_solution)$profit == 7,
 ```
 
 Logical coupling does not specify an ecological synergy or antagonism. The
-temporary compilation guard for simultaneous ecological effects remains in
-place until joint effects and final feature aggregation are implemented.
+mixed benefit/loss objectives and concurrent ecological targets still require
+final feature aggregation; see the [joint-effects vignette](Joint_effects.html).

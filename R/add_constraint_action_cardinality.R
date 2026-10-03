@@ -130,7 +130,7 @@ NULL
   concurrent <- as.integer(names(upper)[upper > 1L])
   de <- x$data$dist_effects_model
   has_effects <- is.data.frame(de) && nrow(de) > 0L && any(de$pu %in% concurrent)
-  if (has_effects) {
+  if (has_effects && !.pa_has_joint_effects(x)) {
     affected <- intersect(concurrent, unique(de$pu))
     stop("Concurrent actions with ecological effects are not supported in this development stage. ",
          "Feature outcomes and targets still use per-action amount_after and could repeat the reference. ",
@@ -210,9 +210,10 @@ NULL
 #'
 #' During this development stage, concurrent actions are supported with
 #' costs, profit, and their associated objectives and constraints. Compilation
-#' rejects potentially concurrent actions with ecological effects in the same
-#' units, because ecological outcomes and targets still require the planned
-#' joint-effect and feature-aggregation update. Problems retaining at most
+#' accepts registered joint-effect workflows, with exact signed interactions.
+#' Mixed benefit/loss objectives and concurrent ecological targets still require
+#' final feature aggregation. Individual-only ecological workflows retain the
+#' temporary guard against concurrent effects. Problems retaining at most
 #' one action per unit keep their existing ecological workflow.
 #'
 #' @param x A `Problem` object with registered actions.

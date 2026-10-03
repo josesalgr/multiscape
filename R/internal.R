@@ -2224,6 +2224,8 @@ available_to_solve <- function(package = ""){
     de_with_x$selected_baseline <- de_with_x$baseline_amount * de_with_x$x_value
   }
 
+  if (.pa_has_joint_effects(x)) de_with_x <- .pa_joint_selected_features(x, da_out)
+
   # Aggregated selected quantities by feature.
   selected_baseline_by_feat <- data.frame(
     internal_feature = integer(0),

@@ -218,8 +218,8 @@ test_that("registration is independent of spatial feasibility and action selecti
   expect_identical(out$data$dist_actions$status, rep(0L, 3))
   expect_error(add_objective_max_benefit(out, actions = "pair"), "did not match")
   expect_error(
-    add_effects(out, data.frame(action = "pair", feature = "woodland", effect = 30)),
-    "[Uu]nknown|not found|did not match"
+    add_effects(out, data.frame(pu = 10L, action = "pair", feature = "woodland", effect = 30)),
+    "available pairs"
   )
 })
 

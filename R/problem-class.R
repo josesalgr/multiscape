@@ -113,6 +113,10 @@ NULL
 #'   \item{\code{constraints}}{Stored user-defined constraints, including
 #'   per-unit action counts in \code{constraints$action_cardinality} and logical
 #'   relations in \code{constraints$action_relations}.}
+#'   \item{\code{effects_original}, \code{joint_effects}, \code{effect_terms}}{
+#'   Canonical supplied totals, supplied joint totals, and their signed subset
+#'   corrections, when registered sets occur in modern effect input. Missing
+#'   interactions are assumed zero as recorded in \code{effects_meta}.}
 #'   \item{\code{objectives}}{Registered atomic objectives for single- or
 #'   multi-objective workflows.}
 #'   \item{\code{method}}{Stored multi-objective method configuration, when
@@ -342,7 +346,7 @@ NULL
 }
 
 .pa_effects_summary <- function(self) {
-  de <- self$data$dist_effects
+  de <- self$data$effects_original %||% self$data$dist_effects
   dp <- self$data$dist_profit
 
   out <- list(
@@ -831,6 +835,12 @@ Problem <- pproto(
       cli::cli_text(" {ch$v}{ch$j}{ch$b}effect input:    {eff_sum$effect_input}",
                     .envir = environment())
       cli::cli_text(" {ch$v}{ch$j}{ch$b}effect signs:    {eff_sum$effect_signs}",
+                    .envir = environment())
+    }
+
+    if (isTRUE(self$data$effects_meta$joint_effects)) {
+      n_joint <- nrow(self$data$joint_effects)
+      cli::cli_text(" {ch$v}{ch$j}{ch$b}joint effects: {n_joint} supplied rows; missing interactions assumed zero",
                     .envir = environment())
     }
 
