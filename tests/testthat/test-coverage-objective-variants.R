@@ -59,6 +59,8 @@ test_that("profit objective variants compile and solve with action filters", {
 
 
 test_that("intervention impact objective solves selected action-feature pairs", {
+  # Historical objective coverage during the deprecation transition.
+  withr::local_options(lifecycle_verbosity = "quiet")
   skip_if_no_cbc()
 
   impact <- make_coverage_objective_problem() |>

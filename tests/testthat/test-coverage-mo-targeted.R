@@ -53,6 +53,8 @@ test_that("weighted MO solves action fragmentation with selected action weights"
 
 
 test_that("weighted MO composes all supported atomic objective families", {
+  # Historical objective coverage during the deprecation transition.
+  withr::local_options(lifecycle_verbosity = "quiet")
   skip_if_no_cbc()
 
   p <- make_round2_action_problem(

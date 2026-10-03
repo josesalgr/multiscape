@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   fig.path = "integrated-ecosystem-services-",
   fig.width = 7,
   fig.height = 5,
+  fig.retina = 2,
   out.width = "100%",
   message = FALSE,
   warning = FALSE,
@@ -64,8 +65,8 @@ This vignette uses `multiscape` to extend an existing conservation network with
 a fixed amount of forest restoration. Existing conservation areas are treated
 as prior commitments and remain unchanged. The optimizer decides where to add
 restoration within the surrounding productive matrix while balancing five
-separate objectives: implementation cost and the baseline levels of four
-ecosystem services inside the selected restoration portfolio.
+separate objectives: implementation cost and the deficits to common service
+ceilings in the selected restoration portfolio.
 
 The example addresses the following planning question:
 
@@ -94,46 +95,48 @@ C(r)=\sum_{i \in \mathcal{I}_R}c_i^R r_i,
 
 where \(c_i^R\) is the local cost of restoring unit \(i\).
 
-For each ecosystem service \(f\), the model also minimizes
+For each ecosystem service \(f\), define a common ceiling \(M_f\) as the
+largest reference amount observed in the eligible restoration units. The effect
+assigned to restoration is the deficit to that ceiling:
 
 \[
-O_f(r)=\sum_{i \in \mathcal{I}_R}q_{if}r_i,
+\Delta_{if}=M_f-q_{if},\qquad
+B_f(r)=\sum_{i\in\mathcal{I}_R}(M_f-q_{if})r_i.
 \]
 
-where \(q_{if}\) is the normalized baseline amount of service \(f\) currently
-provided by unit \(i\). This quantity can be interpreted as the total baseline
-service level contained in the selected restoration portfolio. Minimizing it
-directs restoration towards units with lower current provision of that service.
-
-This interpretation is important. A low value does not mean that a site is
-ecologically unimportant, nor does it prove that restoration will generate a
-large future gain. It indicates only that the site is comparatively deficient
-in the service represented by that layer and that selecting it avoids placing
-restoration in areas where that service is already strongly expressed.
+Here \(q_{if}\) is the reference amount currently provided by unit \(i\).
+The four service objectives maximize \(B_f\), while implementation cost is
+minimized. A larger benefit means that restoration is allocated to a stronger
+current deficit relative to the common ceiling.
 
 The complete objective vector is
 
 \[
-\min \left\{
-C(r),
-O_{\mathrm{control}}(r),
-O_{\mathrm{carbon}}(r),
-O_{\mathrm{water}}(r),
-O_{\mathrm{sediment}}(r)
-\right\}.
+\left\{\min C(r),\ \max B_{\mathrm{control}}(r),
+\max B_{\mathrm{carbon}}(r),\ \max B_{\mathrm{water}}(r),
+\max B_{\mathrm{sediment}}(r)\right\}.
 \]
 
-The four ecosystem-service objectives are retained separately because their
-spatial patterns differ. The model therefore searches for low-cost restoration
-portfolios that target several types of ecological deficit without assuming
-that one unit of carbon, water yield, sediment retention, and biological
-control are directly interchangeable.
+Every plan restores exactly \(K\) equal-area units. Consequently,
 
-These objectives describe baseline conditions at candidate restoration sites.
-They do not estimate the changes caused by restoration. Consequently,
-`add_effects()` is not required here. A model intended to predict post-
-restoration gains would need action-specific effects and one or more benefit
-objectives.
+\[
+B_f(r)=K M_f-\sum_i q_{if}r_i.
+\]
+
+The first term is constant across plans. Maximizing this deficit therefore
+preserves the former criterion of minimizing current service provision in the
+restoration portfolio. This equivalence requires fixed effort, a common ceiling
+within each feature, and one restoration action per unit. It does not apply
+automatically to varying restoration effort or concurrent restoration actions.
+
+The ceiling is an explicit accounting assumption for deficit-based
+prioritization. It is not an estimated ecological response to restoration.
+A low current value does not establish that a site can reach the ceiling or
+will respond more strongly than another site. Applications with estimated
+outcomes should supply those estimates to `add_effects()` instead.
+
+The four services remain separate objectives because their spatial patterns
+differ; no exchange weights between services are imposed in advance.
 
 # Landscape and ecosystem-service data
 
@@ -144,7 +147,9 @@ intervention.
 
 Four normalized raster layers describe current ecosystem-service provision:
 rodent and lagomorph control, carbon stock, seasonal water yield, and sediment
-retention. Values range from 0 to 1 within each layer. Higher values indicate
+retention. Raster-cell values range from 0 to 1 within each layer. `create_problem()`
+sums these values inside each planning unit, so the stored reference amounts
+can exceed 1. Higher values indicate
 stronger current provision of the corresponding service; lower values indicate
 areas where that service is comparatively weak and where restoration may help
 address an existing ecological deficit.
@@ -280,6 +285,8 @@ to compare alternative locations for that fixed effort.
 
 ```{r constraints}
 unit_area <- stats::median(sim_pu_sf$area)
+stopifnot(all(is.finite(sim_pu_sf$area)),
+          all(abs(sim_pu_sf$area - unit_area) < 1e-8))
 total_commitment_units <- ceiling(0.20 * nrow(sim_pu_sf))
 restoration_target_units <- total_commitment_units - nrow(conservation_units)
 restoration_target_area <- restoration_target_units * unit_area
@@ -297,14 +304,41 @@ problem <- problem |>
   )
 ```
 
+# Express restoration effects as deficits
+
+For each feature, use the maximum reference amount among eligible restoration
+units as a common ceiling. Supplying this ceiling as `outcome` makes
+`add_effects()` compute the signed effect as ceiling minus local reference.
+The ceilings share the units of the aggregated reference amounts.
+
+```{r deficit-effects}
+restoration_ceilings <- problem$data$dist_features |>
+  filter(pu %in% restoration_units$pu) |>
+  group_by(feature) |>
+  summarise(outcome = max(amount), .groups = "drop")
+
+restoration_effects <- restoration_ceilings |>
+  mutate(action = "restoration")
+
+problem <- problem |>
+  add_effects(restoration_effects)
+
+restoration_ceilings
+```
+
+Only restoration contributes effects in this accounting scope. The fixed
+conservation network remains visible in the maps but contributes no restoration
+benefit. The common ceiling makes every restoration effect non-negative here;
+`max_benefit()` also supports signed effects when other outcomes imply losses.
+
 # Register five restoration objectives
 
 The model registers five atomic objectives, each of which retains a distinct
 interpretation.
 
 The first objective minimizes the explicit cost of the selected restoration
-actions. The other four objectives minimize the current amount of each
-ecosystem service contained within the restoration portfolio. In practical
+actions. The other four objectives maximize the deficit to the common ceiling for each
+ecosystem service in the restoration portfolio. In practical
 terms, they encourage the optimizer to direct restoration towards sites with
 low baseline carbon stock, low seasonal water yield, low sediment retention,
 or low rodent and lagomorph control.
@@ -317,7 +351,7 @@ portfolio.
 
 Keeping the four services separate is deliberate. A site selected because it
 has low carbon stock may still have high water yield, so no single restoration
-portfolio is expected to minimize all four service totals simultaneously.
+portfolio is expected to maximize all four deficit totals simultaneously.
 
 ```{r objectives}
 problem <- problem |>
@@ -327,22 +361,22 @@ problem <- problem |>
     include_action_cost = TRUE,
     actions = "restoration"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_benefit(
     features = "L1_control_inv",
     actions = "restoration",
     alias = "rodent_control"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_benefit(
     features = "L1_stock_inv",
     actions = "restoration",
     alias = "carbon_stock"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_benefit(
     features = "L1_rend_inv",
     actions = "restoration",
     alias = "water_yield"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_benefit(
     features = "L1_reten_inv",
     actions = "restoration",
     alias = "sediment_retention"
@@ -363,14 +397,13 @@ AUGMECON is used instead as an a posteriori method. Cost is treated as the
 primary objective, while the four ecosystem-service objectives become explicit
 epsilon constraints. Each run asks a different version of the same management
 question: what is the least-cost restoration portfolio that also satisfies a
-particular combination of limits on the baseline services contained in the
-selected sites?
+particular combination of minimum deficit benefits at the selected sites?
 
 `set_runs_grid(3)` constructs three epsilon levels for each of the four
 secondary objectives from their payoff ranges. Their Cartesian product produces
 \(3^4=81\) requested configurations. These configurations sample contrasting
-combinations of ecosystem-service requirements, from relatively permissive
-limits to combinations that force restoration strongly towards low-service
+combinations of minimum deficit benefits, from relatively permissive
+requirements to combinations that force restoration strongly towards low-service
 areas.
 
 The grid is intentionally small for a vignette involving more than 30,000
@@ -411,7 +444,15 @@ The complete optimization requires Gurobi and a valid licence. It took about
 configurations whenever the vignette or package website is built would add
 substantial and unnecessary computational cost.
 
-The vignette therefore loads a precomputed `SolutionSet`. This object preserves
+The vignette therefore loads a precomputed `SolutionSet`. Its plans were
+originally optimized by minimizing reference amounts. The cached object has
+been migrated to deficit benefits by evaluating the same selected actions,
+using the exact fixed-effort identity above. Objective values, optimization
+senses, epsilon bounds, feature summaries, and model vectors have been updated;
+the spatial allocations and original solver diagnostics are retained. No new
+optimization is implied by this migration.
+
+This object preserves
 the action assignments, objective values, solver status, and run metadata
 needed for the remaining analysis.
 
@@ -486,9 +527,9 @@ a simpler management question:
 > sites with high current ecosystem-service provision and towards sites with
 > lower baseline service levels?
 
-All five objectives are minimized. Accordingly, an improvement in an ecosystem-
-service objective means that the selected restoration portfolio contains less
-of that service at baseline than the least-cost portfolio. In the logic of this
+Cost is minimized and the four deficit benefits are maximized. An improvement
+in a service objective means a larger deficit benefit than in the least-cost
+portfolio and, at fixed effort, a lower selected reference amount. In the logic of this
 example, the plan is targeting a stronger current deficit for that service. It
 does **not** mean that the service has already increased after restoration.
 
@@ -523,7 +564,7 @@ does **not** mean that the service has already increased after restoration.
       service_aliases,
       function(service) {
         objective_values$solution_id[
-          which.min(objective_values[[service]])
+          which.max(objective_values[[service]])
         ]
       },
       numeric(1)
@@ -551,8 +592,8 @@ does **not** mean that the service has already increased after restoration.
         additional_cost = 100 * (
           objective_values$cost / minimum_cost - 1
         ),
-        impact_reduction = 100 * (
-          baseline - objective_values[[service]]
+        benefit_increase = 100 * (
+          objective_values[[service]] - baseline
         ) / baseline,
         role = roles,
         label = ifelse(
@@ -569,8 +610,8 @@ does **not** mean that the service has already increased after restoration.
 
 Each panel compares an efficient plan with the least-cost restoration plan,
 which is located at zero on both axes. Moving to the right means accepting a
-higher implementation cost. Moving upwards means reducing the baseline amount
-of the corresponding ecosystem service inside the selected restoration sites.
+higher implementation cost. Moving upwards means increasing the deficit benefit
+of the corresponding service relative to the least-cost restoration plan.
 
 A higher point therefore represents a portfolio that directs restoration more
 strongly towards locations where that service is currently low. Separate
@@ -579,12 +620,12 @@ among services and because equal percentage changes need not have equal
 ecological or policy significance.
 
 A point below zero would indicate that a more expensive plan selects sites with
-a higher baseline level of that service than the least-cost plan.
+a smaller deficit benefit for that service than the least-cost plan.
 
 ```{r cost-service-improvement, echo=FALSE, fig.width=9, fig.height=6.5}
   ggplot(
     improvement_data,
-    aes(x = additional_cost, y = impact_reduction)
+    aes(x = additional_cost, y = benefit_increase)
   ) +
     geom_hline(yintercept = 0, colour = "grey80", linewidth = 0.4) +
     geom_point(
@@ -626,7 +667,7 @@ a higher baseline level of that service than the least-cost plan.
     ) +
     labs(
       x = "Additional cost relative to the least-cost plan",
-      y = "Reduction in ecosystem-service opportunity cost",
+      y = "Increase in deficit benefit relative to the least-cost plan",
       colour = NULL
     ) +
     theme_minimal(base_size = 11) +
@@ -659,7 +700,8 @@ reason may be unattractive for another.
 The heatmap summarizes the full five-objective profile of every retained plan.
 Solutions are ordered from lowest to highest cost. Within each objective column,
 values are normalized across the observed efficient set. Blue indicates the
-best observed value for a minimized objective, red the worst, and intermediate
+best observed value for each objective (low cost or high benefit), red the worst,
+and intermediate
 colours show relative performance between those extremes.
 
 This normalization supports visual comparison but does not make the objectives
@@ -683,6 +725,8 @@ or that the four services should receive equal policy weight.
     objective_ranges[2, ] - objective_ranges[1, ],
     "/"
   )
+  # Express every column as regret: low cost is good; high benefits are good.
+  normalized_matrix[, service_aliases] <- 1 - normalized_matrix[, service_aliases]
   normalized_matrix[!is.finite(normalized_matrix)] <- 0
 
   heatmap_data <- do.call(
@@ -793,7 +837,7 @@ stakeholder preferences.
 For ecological interpretation, the analysis also calculates distance to an
 ideal defined only by the four ecosystem-service objectives. We refer to this
 as *joint ecosystem-service regret*. A value of zero would mean that one plan
-simultaneously attains the best observed baseline-service total for all four
+simultaneously attains the largest observed deficit benefit for all four
 services. Larger values indicate increasing distance from that joint deficit-
 targeting profile.
 
@@ -971,8 +1015,8 @@ for (service in service_aliases) {
       objective_values$solution_id
     )
   ]
-  representative_summary[[paste0(service, "_reduction_percent")]] <- round(
-    100 * (baseline - values) / baseline,
+  representative_summary[[paste0(service, "_benefit_increase_percent")]] <- round(
+    100 * (values - baseline) / baseline,
     1
   )
 }
@@ -980,9 +1024,8 @@ for (service in service_aliases) {
 representative_summary
 ```
 
-Positive percentages in the service columns represent reductions in baseline
-service levels inside the restoration portfolio relative to the least-cost
-plan. For example, a positive carbon-stock value means that the plan restores
+Positive percentages in the service columns represent increases in deficit
+benefits relative to the least-cost plan. For example, a positive carbon-stock value means that the plan restores
 sites with lower current carbon stock than those selected by the least-cost
 portfolio. It should not be interpreted as a measured increase in carbon after
 restoration.
@@ -1199,7 +1242,8 @@ need: carbon, water, sediment retention, and biological control can point to
 different restoration priorities.
 
 This interpretation must remain within the limits of the data and formulation.
-Low baseline service provision is not equivalent to high restoration potential.
+The deficit effects assume a common service ceiling. Low baseline service
+provision is not evidence of high realized restoration potential.
 A degraded site may respond strongly to intervention, weakly, or only after a
 long time. Conversely, a site with high current service provision could still
 benefit from restoration. The model identifies where current service deficits
@@ -1207,7 +1251,7 @@ and implementation costs favour intervention; it does not predict the ecological
 response produced by that intervention.
 
 A more complete application could combine the present deficit-based objectives
-with action-specific estimates of expected restoration gain, feasibility,
+with empirically estimated action outcomes, feasibility,
 time to recovery, land-use opportunity cost, connectivity, or future climate
 risk. Those additions would distinguish more explicitly between *where services
 are currently low* and *where restoration is expected to improve them most*.

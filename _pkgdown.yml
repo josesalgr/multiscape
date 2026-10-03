@@ -90,7 +90,7 @@ reference:
 
   - title: "Atomic objectives"
     desc: >
-      Add ecological, economic, intervention, and spatial objectives to the
+      Add ecological, economic, and spatial objectives to the
       planning problem.
     contents:
       - add_objective_min_cost
@@ -98,7 +98,6 @@ reference:
       - add_objective_min_loss
       - add_objective_max_profit
       - add_objective_max_net_profit
-      - add_objective_min_intervention_impact
       - add_objective_min_fragmentation_planning_units
       - add_objective_min_fragmentation_action
 
@@ -229,6 +228,7 @@ reference:
     desc: >
       Functions retained temporarily for backward compatibility.
     contents:
+      - add_objective_min_intervention_impact
       - add_constraint_locked_pu
       - add_objective_min_fragmentation_pu
       - get_pu

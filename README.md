@@ -578,12 +578,12 @@ produced.
 runs <- get_runs(solutions)
 runs
 #>   run_id solution_id  status     runtime gap
-#> 1      1           1 optimal 0.007999897   0
-#> 2      2           2 optimal 0.012000084   0
-#> 3      3           3 optimal 0.015000105   0
-#> 4      4           4 optimal 0.005000114   0
-#> 5      5           5 optimal 0.013000011   0
-#> 6      6           6 optimal 0.003000021   0
+#> 1      1           1 optimal 0.006999969   0
+#> 2      2           2 optimal 0.009999990   0
+#> 3      3           3 optimal 0.010999918   0
+#> 4      4           4 optimal 0.003000021   0
+#> 5      5           5 optimal 0.009999990   0
+#> 6      6           6 optimal 0.002999783   0
 ```
 
 Each row records one attempted run configuration. `run_id` identifies
@@ -971,10 +971,16 @@ A planning problem can combine:
 - alternative actions and action-specific effects;
 - targets, budgets, area requirements, and locked decisions;
 - boundary, adjacency, distance, and other spatial relations;
-- objectives for cost, benefit, loss, profit, impact, and fragmentation;
+- objectives for cost, net benefit, loss, profit, and fragmentation;
 - post-optimisation analysis in objective space, decision space, and
   their objective–decision linkage; and
 - commercial or open-source optimisation solvers.
+
+`add_objective_min_intervention_impact()` is deprecated and retained
+temporarily for compatibility. New deficit-based restoration workflows
+use `add_effects()` and `add_objective_max_benefit()`; see the
+forest-restoration vignette for the fixed-effort assumptions needed to
+preserve the old prioritization criterion.
 
 Objectives are registered independently from the method used to combine
 them. `multiscape` currently implements:

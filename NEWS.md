@@ -1,5 +1,12 @@
 # multiscape (development version)
 
+- Deprecated `add_objective_min_intervention_impact()` with `lifecycle`. It keeps
+  its original behavior and arguments until removal in a future release. New
+  workflows express action consequences through effects and net benefit.
+  The forest-restoration example now uses deficit effects with a common ceiling
+  per feature and fixed restoration effort, documenting the equivalence and its
+  limits. Cached plans are migrated by exact affine evaluation of their decisions.
+
 - **Changed behavior:** `add_objective_max_benefit()` now maximizes signed net
   change relative to the reference, including negative individual effects and
   interaction corrections. Earlier versions counted positive effects only;
