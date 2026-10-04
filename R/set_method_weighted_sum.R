@@ -12,6 +12,14 @@
 #' used later by \code{\link{solve}}.
 #'
 #' @details
+#' MO solves may multiply the complete scalar criterion by a bounded positive
+#' factor to improve its numerical visibility. This does not change the weights
+#' or preference ordering, and returned objective values retain their original
+#' units. CBC and Gurobi use precise numerical defaults; explicit
+#' \code{solver_params} supplied to \code{\link{set_solver}} override them.
+#' Effective settings and the scalar factor
+#' are recorded in each solution's \code{diagnostics$solver_args}.
+#'
 #' A problem can have only one explicitly configured multi-objective method.
 #' A second call to any \code{set_method_*()} function raises an error. To
 #' compare methods or run designs, derive alternatives from the same problem

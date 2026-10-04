@@ -452,6 +452,15 @@ senses, epsilon bounds, feature summaries, and model vectors have been updated;
 the spatial allocations and original solver diagnostics are retained. No new
 optimization is implied by this migration.
 
+The affine identity establishes equivalence for fixed restoration effort;
+it does not guarantee bit-for-bit reproduction after reoptimization. A fresh
+solver run can select different plans at numerical epsilon boundaries or among
+plans of equal cost. Current MO solves use precise solver defaults, scale the
+scalar criterion without changing its meaning, and check secondary bounds
+against reevaluated decisions. Inspect each stored solution's
+`diagnostics$epsilon_checks` and `diagnostics$solver_args` when regenerating
+the analysis. The historical cached plans retain their original diagnostics.
+
 This object preserves
 the action assignments, objective values, solver status, and run metadata
 needed for the remaining analysis.

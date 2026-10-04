@@ -1,5 +1,23 @@
 # multiscape (development version)
 
+- Fixed single-objective `min_cost` action scopes so they agree with the MO
+  cost criterion; planning-unit costs remain global and feasible actions retain
+  their original indices.
+- Fixed CBC crashes/short solution vectors caused by trailing empty matrix
+  rows or columns, including fully locked legacy impact models. A redundant
+  bound row preserves dimensions without changing the feasible decisions.
+- MO solves use bounded positive scalar-objective rescaling, with values
+  returned in their original units. CBC and Gurobi receive precise numerical
+  defaults; explicit solver parameters take precedence. Epsilon bounds are
+  checked against reevaluated selected decisions and checks/effective settings
+  are recorded in solution diagnostics. Binary integrality noise no longer
+  enters objective evaluation or automatic epsilon endpoints.
+- After an optimal AUGMECON solve, refine normalized slacks at the attained
+  primary level within the remaining time limit. The original augmented
+  criterion and global status/gap are preserved and refinement is recorded.
+- Native model allocation reserves memory according to the actual core size
+  rather than one million rows/columns for every temporary MO model.
+
 - Deprecated `add_objective_min_intervention_impact()` with `lifecycle`. It keeps
   its original behavior and arguments until removal in a future release. New
   workflows express action consequences through effects and net benefit.

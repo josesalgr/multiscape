@@ -19,6 +19,26 @@
 #' \code{\link{solve}}.
 #'
 #' @details
+#' \strong{Numerical precision}
+#'
+#' MO solves may multiply the complete scalar objective by a bounded positive
+#' factor to make small augmentation terms visible to the solver. This
+#' preserves the criterion and reported values remain in the original units.
+#' CBC and Gurobi use precise feasibility, integrality, and optimality defaults;
+#' explicit \code{solver_params} supplied to \code{\link{set_solver}} override
+#' these defaults. Secondary bounds are
+#' checked by reevaluating the selected decisions. Effective parameters,
+#' objective scaling, and epsilon checks are stored in solution diagnostics.
+#' After an optimal augmented solve, a second pass fixes the attained primary
+#' value and maximizes normalized slack. This refines numerically unresolved
+#' secondary improvements without replacing the original augmented criterion.
+#' It starts from the first solution, uses the remaining per-run time limit,
+#' and preserves the first pass's
+#' global status/gap; refinement details are recorded in diagnostics.
+#' Exact MILP methods still operate with floating-point arithmetic. Algebraically
+#' equivalent formulations can return different plans at numerical boundaries
+#' or among tied alternatives; bit-for-bit reproduction is not guaranteed.
+#'
 #' A problem can have only one explicitly configured multi-objective method.
 #' A second call to any \code{set_method_*()} function raises an error. To
 #' compare methods or run designs, derive alternatives from the same problem

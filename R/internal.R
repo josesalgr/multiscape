@@ -1495,6 +1495,34 @@ available_to_solve <- function(package = ""){
   x
 }
 
+.pa_cbc_complete_dimensions <- function(mat, row_lb, row_ub, col_lb, col_ub) {
+  # rcbc passes sparse triplets, rather than matrix dimensions, to CBC.
+  # Its native matrix therefore loses trailing empty rows/columns. One
+  # redundant bound row records both dimensions without deleting variables
+  # or changing their bounds, objective contributions, or returned indices.
+  nr <- nrow(mat)
+  nc <- ncol(mat)
+  if (nc > 0L && (nr == 0L ||
+      !any(mat[nr, , drop = FALSE] != 0) ||
+      !any(mat[, nc, drop = FALSE] != 0))) {
+    anchor <- Matrix::sparseMatrix(i = 1L, j = nc, x = 1, dims = c(1L, nc))
+    mat <- rbind(mat, anchor)
+    row_lb <- c(row_lb, col_lb[nc])
+    row_ub <- c(row_ub, col_ub[nc])
+  }
+  list(mat = mat, row_lb = row_lb, row_ub = row_ub)
+}
+
+.pa_positive_objective_scale <- function(obj) {
+  nonzero <- abs(obj[is.finite(obj) & obj != 0])
+  if (!length(nonzero)) return(1)
+  # A common positive factor preserves the scalar criterion exactly. Raise
+  # small rewards above solver tolerances without producing huge coefficients.
+  exponent <- max(0, min(6, ceiling(-log10(min(nonzero))),
+                         floor(log10(1e8 / max(nonzero)))))
+  10^exponent
+}
+
 .pa_model_from_ptr <- function(op, args = list(), drop_triplets = TRUE) {
 
   if (!requireNamespace("Matrix", quietly = TRUE)) {
@@ -4425,6 +4453,19 @@ NULL
   # ---- APPLY SUPERSET RUNTIME UPDATES (solver-agnostic)
   model <- .pa_apply_runtime_updates_to_model(model, x)
 
+  mo_numeric <- isTRUE(x$data$runtime_updates$mo_numeric)
+  initial_solution <- x$data$runtime_updates$start
+  if (!is.null(initial_solution)) {
+    if (length(initial_solution) != length(model$obj)) {
+      stop("Runtime initial solution length does not match the model.", call. = FALSE)
+    }
+    initial_solution <- as.numeric(initial_solution)
+    binary <- model$vtype == "B"
+    initial_solution[binary] <- round(initial_solution[binary])
+  }
+  objective_scale <- if (mo_numeric) .pa_positive_objective_scale(model$obj) else 1
+  model$obj <- model$obj * objective_scale
+
   # Constant ecological objectives can create empty constraint rows. Check
   # their feasibility explicitly: some solver adapters omit such rows.
   empty_rows <- Matrix::rowSums(abs(model$A)) == 0
@@ -4449,6 +4490,8 @@ NULL
     output_file = output_file,
     solver_params = solver_params_user
   )
+  if (mo_numeric) solve_args$objective_scale <- objective_scale
+  if (!is.null(initial_solution)) solve_args$warm_start <- TRUE
 
   # ------------------------------------------------------------
   # 1) Call solver -> return unified payload:
@@ -4465,6 +4508,7 @@ NULL
     model$sense <- replace(model$sense, model$sense == "==", "=")
     model$lb <- model$bounds$lower$val
     model$ub <- model$bounds$upper$val
+    if (!is.null(initial_solution)) model$start <- initial_solution
 
     params <- list(
       LogToConsole = as.integer(verbose),
@@ -4472,6 +4516,10 @@ NULL
       MIPGap = gap_limit,
       TimeLimit = time_limit
     )
+    if (mo_numeric) {
+      params <- c(params, list(FeasibilityTol = 1e-9, IntFeasTol = 1e-9,
+                               OptimalityTol = 1e-9, MIPGapAbs = 0))
+    }
     if (!is.null(cores)) params$Threads <- cores
     if (isTRUE(output_file)) params$LogFile <- name_output_file
     if (isTRUE(solution_limit)) params$SolutionLimit <- 1
@@ -4482,6 +4530,7 @@ NULL
     }
 
     params <- utils::modifyList(params, solver_params_user)
+    if (mo_numeric) solve_args$effective_solver_params <- params
 
     sol <- gurobi::gurobi(model, params)
 
@@ -4536,21 +4585,34 @@ NULL
       sec = as.character(time_limit),
       timem = "elapsed"
     )
+    if (mo_numeric) {
+      cbc_args <- c(cbc_args, list(primalTolerance = "1e-9",
+                                   integerTolerance = "1e-9", dualTolerance = "1e-9"))
+    }
     if (!is.null(cores)) cbc_args$threads <- as.character(cores)
     if (isTRUE(solution_limit)) cbc_args$maxso <- "1"
     cbc_args <- utils::modifyList(cbc_args, solver_params_user)
+    if (mo_numeric) solve_args$effective_solver_params <- cbc_args
+
+    cbc_matrix <- .pa_cbc_complete_dimensions(
+      model$A, row_lb, row_ub,
+      model$bounds$lower$val, model$bounds$upper$val
+    )
 
     rt <- system.time({
+      cbc_start <- initial_solution
+      if (!is.null(cbc_start)) cbc_start[model$vtype != "B"] <- NA_real_
       sol_cbc <- rcbc::cbc_solve(
         obj = model$obj,
-        mat = model$A,
+        mat = cbc_matrix$mat,
         is_integer = ifelse(model$vtype == "B", TRUE, FALSE),
-        row_ub = row_ub,
-        row_lb = row_lb,
+        row_ub = cbc_matrix$row_ub,
+        row_lb = cbc_matrix$row_lb,
         col_lb = model$bounds$lower$val,
         col_ub = model$bounds$upper$val,
         max = ifelse(model$modelsense == "min", FALSE, TRUE),
-        cbc_args = cbc_args
+        cbc_args = cbc_args,
+        initial_solution = cbc_start
       )
     })
 
@@ -4681,6 +4743,10 @@ NULL
   } else {
     stop("Internal error: unknown solver '", solver, "'.", call. = FALSE)
   }
+
+  # Return the objective in its original units, including AUGMECON's original
+  # augmentation coefficient. Only the solver-facing copy was rescaled.
+  objval <- objval / objective_scale
 
   # ------------------------------------------------------------
   # Hard fail if solver returned no usable solution

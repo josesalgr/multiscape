@@ -79,6 +79,13 @@ This function does not solve the problem. It stores the method configuration
 in \code{x$data$method}, to be used later by \code{\link{solve}}.
 }
 \details{
+CBC and Gurobi use precise numerical defaults for MO solves. Explicit
+\code{solver_params} supplied to \code{\link{set_solver}} take precedence.
+Secondary bounds are checked against
+reevaluated selected decisions, with violations and numerical tolerances
+recorded in each solution's \code{diagnostics$epsilon_checks}. Floating-point
+roundoff and tied plans still preclude guaranteed bit-for-bit reproduction.
+
 A problem can have only one explicitly configured multi-objective method.
 A second call to any \code{set_method_*()} function raises an error. To
 compare methods or run designs, derive alternatives from the same problem

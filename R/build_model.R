@@ -849,7 +849,14 @@
   needs <- args$needs %||% list()
   need_z <- isTRUE(needs$z)
 
-  op <- rcpp_new_optimization_problem()
+  # Reserve for the actual core rather than a million slots in every
+  # temporary MO model. Native vectors grow when auxiliaries are added.
+  core_columns <- nrow(x$data$pu) + nrow(x$data$dist_actions_model)
+  op <- rcpp_new_optimization_problem(
+    nrow = as.integer(max(4096, 2 * core_columns)),
+    ncol = as.integer(max(4096, core_columns)),
+    ncell = as.integer(max(100000, 4 * core_columns))
+  )
 
   # registry placeholder for future MO updates (constraint/objective IDs)
   x$data$model_registry <- list(
@@ -957,10 +964,18 @@
     if (!exists("rcpp_prepare_objective_min_cost", mode = "function")) .pa_abort("Missing rcpp_prepare_objective_min_cost().")
     if (!exists("rcpp_add_objective_min_cost",     mode = "function")) .pa_abort("Missing rcpp_add_objective_min_cost().")
 
+    # Keep native row indices: only the cost contribution is scoped, never
+    # the feasible decisions or the global planning-unit cost component.
+    da_cost <- x$data$dist_actions_model
+    if (!is.null(oargs$actions)) {
+      action_ids <- .pa_resolve_action_subset(x, oargs$actions)$internal_id
+      da_cost <- da_cost[da_cost$internal_action %in% action_ids, , drop = FALSE]
+    }
+
     rcpp_prepare_objective_min_cost(
       op,
       pu_data = x$data$pu,
-      dist_actions_data = x$data$dist_actions_model,
+      dist_actions_data = da_cost,
       include_pu_cost = isTRUE(oargs$include_pu_cost %||% TRUE),
       include_action_cost = isTRUE(oargs$include_action_cost %||% TRUE),
       block_name = "objective_min_cost",
@@ -970,7 +985,7 @@
     res <- rcpp_add_objective_min_cost(
       op,
       pu_data = x$data$pu,
-      dist_actions_data = x$data$dist_actions_model,
+      dist_actions_data = da_cost,
       include_pu_cost = isTRUE(oargs$include_pu_cost %||% TRUE),
       include_action_cost = isTRUE(oargs$include_action_cost %||% TRUE),
       weight = 1.0
