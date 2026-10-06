@@ -23,6 +23,17 @@ No return value. This page documents the `Problem` class.
 
 ## Details
 
+**Repeated calls**
+
+Action catalogues, effects, profit, solver configuration,
+multi-objective methods, and unaliased single objectives can each be
+defined once. A second definition raises an error. Action sets, named
+spatial relations, aliased objectives, and distinct constraints
+accumulate; duplicate definitions are rejected. Locks accumulate
+compatible states, allow identical repeats, and reject contradictory
+states. To compare scenarios or configurations, derive each alternative
+from a common problem before the relevant definition.
+
 **Conceptual role**
 
 The `Problem` class is designed for a data-first and modular workflow.
@@ -101,6 +112,12 @@ Common entries of `data` include:
 
   Action catalog.
 
+- `action_sets`:
+
+  Named combinations of actions, stored as a long table of set–action
+  memberships. These definitions do not impose joint selection or change
+  the optimization model.
+
 - `dist_features`:
 
   Planning unit–feature baseline amounts.
@@ -135,7 +152,15 @@ Common entries of `data` include:
 
 - `constraints`:
 
-  Stored user-defined constraints.
+  Stored user-defined constraints, including per-unit action counts in
+  `constraints$action_cardinality` and logical relations in
+  `constraints$action_relations`.
+
+- `effects_original`, `joint_effects`, `effect_terms`:
+
+  Canonical supplied totals, supplied joint totals, and their signed
+  subset corrections, when registered sets occur in modern effect input.
+  Missing interactions are assumed zero as recorded in `effects_meta`.
 
 - `objectives`:
 
@@ -264,6 +289,8 @@ already materialized as a built optimization model.
 
 [`create_problem`](https://josesalgr.github.io/multiscape/reference/create_problem.md),
 [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md),
+[`add_action_sets`](https://josesalgr.github.io/multiscape/reference/add_action_sets.md),
+[`add_constraint_action_cardinality`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md),
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md),
 [`add_constraint_targets_absolute`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_absolute.md),
 [`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)

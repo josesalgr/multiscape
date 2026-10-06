@@ -95,6 +95,15 @@ x\_{ia} \ge T_f, \$\$ where:
 - \\\mathcal{D}\_f^{\star}\\ is the subset of planning unit–action pairs
   allowed to count toward the target for feature \\f\\.
 
+With concurrent actions, the model instead combines signed changes
+within each unit and feature and counts the reference once: \$\$\sum_i
+\left(r\_{if} s_i^{\star} + \Delta\_{if}^{\star}(x)\right) \ge T_f.\$\$
+Here \\s_i^{\star}\\ indicates that at least one action in the target
+scope is selected. Joint corrections contribute only when every member
+belongs to that scope. Individual effects are additive when no
+interaction is supplied. The same aggregation is used to report target
+achievement.
+
 The `actions` argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \\B_f\\
 used to compute the threshold. In other words, relative targets are
@@ -121,7 +130,10 @@ If `targets` does not explicitly identify features:
 - if `features` is supplied, the target values are interpreted with
   respect to that feature set.
 
-Relative targets must lie in \\\[0,1\]\\.
+Relative targets must lie in \\\[0,1\]\\. A second target for the same
+feature and action scope raises an error, including when an absolute
+target already exists. Labels and threshold values do not change target
+identity.
 
 Repeated calls append new target rules rather than replacing previous
 ones. This allows cumulative target modelling, including multiple rules
@@ -155,8 +167,8 @@ p1$data$targets
 #> 1       1 actions    ge relative_baseline        0.3    14.08761     4.226283
 #> 2       2 actions    ge relative_baseline        0.3    13.44903     4.034709
 #>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-10-01 11:05:58.807187     woodland
-#> 2    <NA>  <NA> 2026-10-01 11:05:58.807187     riparian
+#> 1    <NA>  <NA> 2026-10-06 19:16:39.521824     woodland
+#> 2    <NA>  <NA> 2026-10-06 19:16:39.521824     riparian
 
 # Require 20% for one selected feature
 p2 <- add_constraint_targets_relative(
@@ -167,8 +179,8 @@ p2 <- add_constraint_targets_relative(
 p2$data$targets
 #>   feature    type sense       target_unit target_raw basis_total target_value
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
-#>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-10-01 11:05:58.811556     woodland
+#>   actions label                created_at feature_name
+#> 1    <NA>  <NA> 2026-10-06 19:16:39.52598     woodland
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_relative(
@@ -181,6 +193,6 @@ p3$data$targets
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
 #> 2       2 actions    ge relative_baseline        0.2    13.44903     2.689806
 #>   actions label                 created_at feature_name
-#> 1 protect  <NA> 2026-10-01 11:05:58.815776     woodland
-#> 2 protect  <NA> 2026-10-01 11:05:58.815776     riparian
+#> 1 protect  <NA> 2026-10-06 19:16:39.530224     woodland
+#> 2 protect  <NA> 2026-10-06 19:16:39.530224     riparian
 ```

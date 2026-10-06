@@ -29,7 +29,7 @@
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css">
+</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,12 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+<li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul>
@@ -117,8 +122,8 @@ conservation network with a fixed amount of forest restoration. Existing
 conservation areas are treated as prior commitments and remain
 unchanged. The optimizer decides where to add restoration within the
 surrounding productive matrix while balancing five separate objectives:
-implementation cost and the baseline levels of four ecosystem services
-inside the selected restoration portfolio.</p>
+implementation cost and the deficits to common service ceilings in the
+selected restoration portfolio.</p>
 <p>The example addresses the following planning question:</p>
 <blockquote>
 <p>Which additional sites should be restored to complete the landscape
@@ -149,43 +154,44 @@ C(r)=\sum_{i \in \mathcal{I}_R}c_i^R r_i,
 <p>where <span class="math inline">\(c_i^R\)</span> is the local cost of
 restoring unit <span class="math inline">\(i\)</span>.</p>
 <p>For each ecosystem service <span class="math inline">\(f\)</span>,
-the model also minimizes</p>
+define a common ceiling <span class="math inline">\(M_f\)</span> as the
+largest reference amount observed in the eligible restoration units. The
+effect assigned to restoration is the deficit to that ceiling:</p>
 <p><span class="math display">\[
-O_f(r)=\sum_{i \in \mathcal{I}_R}q_{if}r_i,
+\Delta_{if}=M_f-q_{if},\qquad
+B_f(r)=\sum_{i\in\mathcal{I}_R}(M_f-q_{if})r_i.
 \]</span></p>
-<p>where <span class="math inline">\(q_{if}\)</span> is the normalized
-baseline amount of service <span class="math inline">\(f\)</span>
-currently provided by unit <span class="math inline">\(i\)</span>. This
-quantity can be interpreted as the total baseline service level
-contained in the selected restoration portfolio. Minimizing it directs
-restoration towards units with lower current provision of that
-service.</p>
-<p>This interpretation is important. A low value does not mean that a
-site is ecologically unimportant, nor does it prove that restoration
-will generate a large future gain. It indicates only that the site is
-comparatively deficient in the service represented by that layer and
-that selecting it avoids placing restoration in areas where that service
-is already strongly expressed.</p>
+<p>Here <span class="math inline">\(q_{if}\)</span> is the reference
+amount currently provided by unit <span class="math inline">\(i\)</span>. The four service objectives maximize
+<span class="math inline">\(B_f\)</span>, while implementation cost is
+minimized. A larger benefit means that restoration is allocated to a
+stronger current deficit relative to the common ceiling.</p>
 <p>The complete objective vector is</p>
 <p><span class="math display">\[
-\min \left\{
-C(r),
-O_{\mathrm{control}}(r),
-O_{\mathrm{carbon}}(r),
-O_{\mathrm{water}}(r),
-O_{\mathrm{sediment}}(r)
-\right\}.
+\left\{\min C(r),\ \max B_{\mathrm{control}}(r),
+\max B_{\mathrm{carbon}}(r),\ \max B_{\mathrm{water}}(r),
+\max B_{\mathrm{sediment}}(r)\right\}.
 \]</span></p>
-<p>The four ecosystem-service objectives are retained separately because
-their spatial patterns differ. The model therefore searches for low-cost
-restoration portfolios that target several types of ecological deficit
-without assuming that one unit of carbon, water yield, sediment
-retention, and biological control are directly interchangeable.</p>
-<p>These objectives describe baseline conditions at candidate
-restoration sites. They do not estimate the changes caused by
-restoration. Consequently, <code><a href="../reference/add_effects.html">add_effects()</a></code> is not required
-here. A model intended to predict post- restoration gains would need
-action-specific effects and one or more benefit objectives.</p>
+<p>Every plan restores exactly <span class="math inline">\(K\)</span>
+equal-area units. Consequently,</p>
+<p><span class="math display">\[
+B_f(r)=K M_f-\sum_i q_{if}r_i.
+\]</span></p>
+<p>The first term is constant across plans. Maximizing this deficit
+therefore preserves the former criterion of minimizing current service
+provision in the restoration portfolio. This equivalence requires fixed
+effort, a common ceiling within each feature, and one restoration action
+per unit. It does not apply automatically to varying restoration effort
+or concurrent restoration actions.</p>
+<p>The ceiling is an explicit accounting assumption for deficit-based
+prioritization. It is not an estimated ecological response to
+restoration. A low current value does not establish that a site can
+reach the ceiling or will respond more strongly than another site.
+Applications with estimated outcomes should supply those estimates to
+<code><a href="../reference/add_effects.html">add_effects()</a></code> instead.</p>
+<p>The four services remain separate objectives because their spatial
+patterns differ; no exchange weights between services are imposed in
+advance.</p>
 </div>
 <div class="section level2">
 <h2 id="landscape-and-ecosystem-service-data">Landscape and ecosystem-service data<a class="anchor" aria-label="anchor" href="#landscape-and-ecosystem-service-data"></a>
@@ -196,11 +202,13 @@ available for new forest restoration, while other units are already
 conserved or excluded from intervention.</p>
 <p>Four normalized raster layers describe current ecosystem-service
 provision: rodent and lagomorph control, carbon stock, seasonal water
-yield, and sediment retention. Values range from 0 to 1 within each
-layer. Higher values indicate stronger current provision of the
-corresponding service; lower values indicate areas where that service is
-comparatively weak and where restoration may help address an existing
-ecological deficit.</p>
+yield, and sediment retention. Raster-cell values range from 0 to 1
+within each layer. <code><a href="../reference/create_problem.html">create_problem()</a></code> sums these values
+inside each planning unit, so the stored reference amounts can exceed 1.
+Higher values indicate stronger current provision of the corresponding
+service; lower values indicate areas where that service is comparatively
+weak and where restoration may help address an existing ecological
+deficit.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
@@ -332,6 +340,8 @@ layers are used to compare alternative locations for that fixed
 effort.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">unit_area</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>          <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span> <span class="op">-</span> <span class="va">unit_area</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">total_commitment_units</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fl">0.20</span> <span class="op">*</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">restoration_target_units</span> <span class="op">&lt;-</span> <span class="va">total_commitment_units</span> <span class="op">-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">conservation_units</span><span class="op">)</span></span>
 <span><span class="va">restoration_target_area</span> <span class="op">&lt;-</span> <span class="va">restoration_target_units</span> <span class="op">*</span> <span class="va">unit_area</span></span>
@@ -349,13 +359,47 @@ effort.</p>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="express-restoration-effects-as-deficits">Express restoration effects as deficits<a class="anchor" aria-label="anchor" href="#express-restoration-effects-as-deficits"></a>
+</h2>
+<p>For each feature, use the maximum reference amount among eligible
+restoration units as a common ceiling. Supplying this ceiling as
+<code>outcome</code> makes <code><a href="../reference/add_effects.html">add_effects()</a></code> compute the signed
+effect as ceiling minus local reference. The ceilings share the units of
+the aggregated reference amounts.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">restoration_ceilings</span> <span class="op">&lt;-</span> <span class="va">problem</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_features</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pu</span> <span class="op"><a href="https://rspatial.github.io/terra/reference/match.html" class="external-link">%in%</a></span> <span class="va">restoration_units</span><span class="op">$</span><span class="va">pu</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">feature</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>outcome <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">amount</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">restoration_effects</span> <span class="op">&lt;-</span> <span class="va">restoration_ceilings</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>action <span class="op">=</span> <span class="st">"restoration"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/add_effects.html">add_effects</a></span><span class="op">(</span><span class="va">restoration_effects</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">restoration_ceilings</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 x 2</span></span></span>
+<span><span class="co">#&gt;   feature outcome</span></span>
+<span><span class="co">#&gt;     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>       1    7.71</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>       2    7.79</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>       3    7.19</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>       4    3.36</span></span></code></pre></div>
+<p>Only restoration contributes effects in this accounting scope. The
+fixed conservation network remains visible in the maps but contributes
+no restoration benefit. The common ceiling makes every restoration
+effect non-negative here; <code>max_benefit()</code> also supports
+signed effects when other outcomes imply losses.</p>
+</div>
+<div class="section level2">
 <h2 id="register-five-restoration-objectives">Register five restoration objectives<a class="anchor" aria-label="anchor" href="#register-five-restoration-objectives"></a>
 </h2>
 <p>The model registers five atomic objectives, each of which retains a
 distinct interpretation.</p>
 <p>The first objective minimizes the explicit cost of the selected
-restoration actions. The other four objectives minimize the current
-amount of each ecosystem service contained within the restoration
+restoration actions. The other four objectives maximize the deficit to
+the common ceiling for each ecosystem service in the restoration
 portfolio. In practical terms, they encourage the optimizer to direct
 restoration towards sites with low baseline carbon stock, low seasonal
 water yield, low sediment retention, or low rodent and lagomorph
@@ -367,9 +411,9 @@ solution. This makes the reported objective values directly comparable
 as properties of the additional restoration portfolio.</p>
 <p>Keeping the four services separate is deliberate. A site selected
 because it has low carbon stock may still have high water yield, so no
-single restoration portfolio is expected to minimize all four service
+single restoration portfolio is expected to maximize all four deficit
 totals simultaneously.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span></span>
 <span>    alias <span class="op">=</span> <span class="st">"cost"</span>,</span>
@@ -377,22 +421,22 @@ totals simultaneously.</p>
 <span>    include_action_cost <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    actions <span class="op">=</span> <span class="st">"restoration"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/add_objective_min_intervention_impact.html">add_objective_min_intervention_impact</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span></span>
 <span>    features <span class="op">=</span> <span class="st">"L1_control_inv"</span>,</span>
 <span>    actions <span class="op">=</span> <span class="st">"restoration"</span>,</span>
 <span>    alias <span class="op">=</span> <span class="st">"rodent_control"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/add_objective_min_intervention_impact.html">add_objective_min_intervention_impact</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span></span>
 <span>    features <span class="op">=</span> <span class="st">"L1_stock_inv"</span>,</span>
 <span>    actions <span class="op">=</span> <span class="st">"restoration"</span>,</span>
 <span>    alias <span class="op">=</span> <span class="st">"carbon_stock"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/add_objective_min_intervention_impact.html">add_objective_min_intervention_impact</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span></span>
 <span>    features <span class="op">=</span> <span class="st">"L1_rend_inv"</span>,</span>
 <span>    actions <span class="op">=</span> <span class="st">"restoration"</span>,</span>
 <span>    alias <span class="op">=</span> <span class="st">"water_yield"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/add_objective_min_intervention_impact.html">add_objective_min_intervention_impact</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span></span>
 <span>    features <span class="op">=</span> <span class="st">"L1_reten_inv"</span>,</span>
 <span>    actions <span class="op">=</span> <span class="st">"restoration"</span>,</span>
 <span>    alias <span class="op">=</span> <span class="st">"sediment_retention"</span></span>
@@ -413,15 +457,15 @@ plan.</p>
 as the primary objective, while the four ecosystem-service objectives
 become explicit epsilon constraints. Each run asks a different version
 of the same management question: what is the least-cost restoration
-portfolio that also satisfies a particular combination of limits on the
-baseline services contained in the selected sites?</p>
+portfolio that also satisfies a particular combination of minimum
+deficit benefits at the selected sites?</p>
 <p><code>set_runs_grid(3)</code> constructs three epsilon levels for
 each of the four secondary objectives from their payoff ranges. Their
 Cartesian product produces <span class="math inline">\(3^4=81\)</span>
 requested configurations. These configurations sample contrasting
-combinations of ecosystem-service requirements, from relatively
-permissive limits to combinations that force restoration strongly
-towards low-service areas.</p>
+combinations of minimum deficit benefits, from relatively permissive
+requirements to combinations that force restoration strongly towards
+low-service areas.</p>
 <p>The grid is intentionally small for a vignette involving more than
 30,000 planning units. It is sufficient to demonstrate the
 many-objective workflow, but it should not be interpreted as an
@@ -439,7 +483,7 @@ restoration area cannot always be concentrated simultaneously in
 locations with very low levels of all four services. Such runs reveal
 conflicts among the spatial deficits rather than representing a failure
 of the analysis.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/set_method_augmecon.html">set_method_augmecon</a></span><span class="op">(</span></span>
 <span>    primary <span class="op">=</span> <span class="st">"cost"</span>,</span>
@@ -459,9 +503,26 @@ Re-solving all 81 configurations whenever the vignette or package
 website is built would add substantial and unnecessary computational
 cost.</p>
 <p>The vignette therefore loads a precomputed <code>SolutionSet</code>.
-This object preserves the action assignments, objective values, solver
-status, and run metadata needed for the remaining analysis.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+Its plans were originally optimized by minimizing reference amounts. The
+cached object has been migrated to deficit benefits by evaluating the
+same selected actions, using the exact fixed-effort identity above.
+Objective values, optimization senses, epsilon bounds, feature
+summaries, and model vectors have been updated; the spatial allocations
+and original solver diagnostics are retained. No new optimization is
+implied by this migration.</p>
+<p>The affine identity establishes equivalence for fixed restoration
+effort; it does not guarantee bit-for-bit reproduction after
+reoptimization. A fresh solver run can select different plans at
+numerical epsilon boundaries or among plans of equal cost. Current MO
+solves use precise solver defaults, scale the scalar criterion without
+changing its meaning, and check secondary bounds against reevaluated
+decisions. Inspect each stored solution’s
+<code>diagnostics$epsilon_checks</code> and
+<code>diagnostics$solver_args</code> when regenerating the analysis. The
+historical cached plans retain their original diagnostics.</p>
+<p>This object preserves the action assignments, objective values,
+solver status, and run metadata needed for the remaining analysis.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/serialize.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
 <span>  <span class="st">"data"</span>,</span>
 <span>  <span class="st">"integrated-ecosystem-services-solutions.rds"</span></span>
@@ -470,7 +531,7 @@ status, and run metadata needed for the remaining analysis.</p>
 set after changing the formulation, run design, or solver configuration.
 It is displayed for reproducibility but is not evaluated during ordinary
 vignette or <code>pkgdown</code> builds.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/serialize.html" class="external-link">saveRDS</a></span><span class="op">(</span></span>
@@ -495,7 +556,7 @@ are discrete.</p>
 non-dominated solutions and repeated decision vectors are removed. The
 resulting <code>SolutionSet</code> contains the distinct efficient
 restoration portfolios generated by this experiment.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efficient_solutions</span> <span class="op">&lt;-</span> <span class="va">solutions</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/solution_filter.html">solution_filter</a></span><span class="op">(</span>feasible_only <span class="op">=</span> <span class="cn">TRUE</span>, nondominated <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/solution_unique.html">solution_unique</a></span><span class="op">(</span>by <span class="op">=</span> <span class="st">"decisions"</span><span class="op">)</span></span>
@@ -528,39 +589,39 @@ restoration portfolios generated by this experiment.</p>
 <span><span class="co">#&gt; 16     81          81 optimal   0.3240001 0.000000e+00</span></span>
 <span><span class="fu"><a href="../reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">efficient_solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    solution_id     cost rodent_control carbon_stock water_yield</span></span>
-<span><span class="co">#&gt; 1           23 258716.2       1495.492     8711.409   10027.200</span></span>
-<span><span class="co">#&gt; 2           24 258701.0       1493.568     8711.404   10027.187</span></span>
-<span><span class="co">#&gt; 3           26 148168.2       1511.004    10014.317   10027.200</span></span>
-<span><span class="co">#&gt; 4           27 148167.4       1539.062    10014.318   10027.200</span></span>
-<span><span class="co">#&gt; 5           41 215254.0       1511.468     8711.411    9148.542</span></span>
-<span><span class="co">#&gt; 6           42 208536.5       2098.464     8711.411    9148.542</span></span>
-<span><span class="co">#&gt; 7           44 147312.3       1511.469    10014.300    9148.542</span></span>
-<span><span class="co">#&gt; 8           45 141545.5       2520.960    10014.303    9148.543</span></span>
-<span><span class="co">#&gt; 9           50 150860.0       1511.470     8711.403   10027.165</span></span>
-<span><span class="co">#&gt; 10          51 147406.2       2058.816     8711.412   10027.080</span></span>
-<span><span class="co">#&gt; 11          53 121961.2       1511.469    10014.318   10027.198</span></span>
-<span><span class="co">#&gt; 12          54 119665.0       2362.490    10009.051   10027.176</span></span>
-<span><span class="co">#&gt; 13          71 147154.9       1511.467    10014.300    9148.543</span></span>
-<span><span class="co">#&gt; 14          72 140495.7       2521.595    10014.310    9148.543</span></span>
-<span><span class="co">#&gt; 15          80 121774.2       1511.470    10014.311   10027.172</span></span>
-<span><span class="co">#&gt; 16          81 118753.5       2521.662    10014.318   10027.201</span></span>
+<span><span class="co">#&gt; 1           23 258716.2       14789.95     7750.003    5166.418</span></span>
+<span><span class="co">#&gt; 2           24 258701.0       14791.88     7750.008    5166.432</span></span>
+<span><span class="co">#&gt; 3           26 148168.2       14774.44     6447.096    5166.419</span></span>
+<span><span class="co">#&gt; 4           27 148167.4       14746.38     6447.095    5166.418</span></span>
+<span><span class="co">#&gt; 5           41 215254.0       14773.98     7750.001    6045.077</span></span>
+<span><span class="co">#&gt; 6           42 208536.5       14186.98     7750.002    6045.076</span></span>
+<span><span class="co">#&gt; 7           44 147312.3       14773.98     6447.113    6045.077</span></span>
+<span><span class="co">#&gt; 8           45 141545.5       13764.49     6447.110    6045.076</span></span>
+<span><span class="co">#&gt; 9           50 150860.0       14773.98     7750.010    5166.454</span></span>
+<span><span class="co">#&gt; 10          51 147406.2       14226.63     7750.001    5166.539</span></span>
+<span><span class="co">#&gt; 11          53 121961.2       14773.98     6447.095    5166.420</span></span>
+<span><span class="co">#&gt; 12          54 119665.0       13922.96     6452.362    5166.443</span></span>
+<span><span class="co">#&gt; 13          71 147154.9       14773.98     6447.112    6045.076</span></span>
+<span><span class="co">#&gt; 14          72 140495.7       13763.85     6447.102    6045.076</span></span>
+<span><span class="co">#&gt; 15          80 121774.2       14773.98     6447.102    5166.447</span></span>
+<span><span class="co">#&gt; 16          81 118753.5       13763.78     6447.094    5166.418</span></span>
 <span><span class="co">#&gt;    sediment_retention</span></span>
-<span><span class="co">#&gt; 1        5.511997e-07</span></span>
-<span><span class="co">#&gt; 2        7.745541e-07</span></span>
-<span><span class="co">#&gt; 3        6.396928e-07</span></span>
-<span><span class="co">#&gt; 4        6.396928e-07</span></span>
-<span><span class="co">#&gt; 5        2.858626e+01</span></span>
-<span><span class="co">#&gt; 6        3.174687e+01</span></span>
-<span><span class="co">#&gt; 7        3.613481e+01</span></span>
-<span><span class="co">#&gt; 8        3.613296e+01</span></span>
-<span><span class="co">#&gt; 9        2.334568e+01</span></span>
-<span><span class="co">#&gt; 10       3.310843e+01</span></span>
-<span><span class="co">#&gt; 11       3.613522e+01</span></span>
-<span><span class="co">#&gt; 12       3.613518e+01</span></span>
-<span><span class="co">#&gt; 13       5.123982e+01</span></span>
-<span><span class="co">#&gt; 14       7.186292e+01</span></span>
-<span><span class="co">#&gt; 15       5.388135e+01</span></span>
-<span><span class="co">#&gt; 16       7.227048e+01</span></span></code></pre></div>
+<span><span class="co">#&gt; 1            7095.274</span></span>
+<span><span class="co">#&gt; 2            7095.274</span></span>
+<span><span class="co">#&gt; 3            7095.274</span></span>
+<span><span class="co">#&gt; 4            7095.274</span></span>
+<span><span class="co">#&gt; 5            7066.688</span></span>
+<span><span class="co">#&gt; 6            7063.527</span></span>
+<span><span class="co">#&gt; 7            7059.139</span></span>
+<span><span class="co">#&gt; 8            7059.141</span></span>
+<span><span class="co">#&gt; 9            7071.928</span></span>
+<span><span class="co">#&gt; 10           7062.165</span></span>
+<span><span class="co">#&gt; 11           7059.139</span></span>
+<span><span class="co">#&gt; 12           7059.139</span></span>
+<span><span class="co">#&gt; 13           7044.034</span></span>
+<span><span class="co">#&gt; 14           7023.411</span></span>
+<span><span class="co">#&gt; 15           7041.393</span></span>
+<span><span class="co">#&gt; 16           7023.003</span></span></code></pre></div>
 <p>The reduction from 81 requested configurations to a smaller set of
 unique efficient plans is expected. Nearby epsilon combinations can
 select the same 2,112 restoration units, dominated solutions add no new
@@ -581,10 +642,10 @@ organize the results around a simpler management question:</p>
 from sites with high current ecosystem-service provision and towards
 sites with lower baseline service levels?</p>
 </blockquote>
-<p>All five objectives are minimized. Accordingly, an improvement in an
-ecosystem- service objective means that the selected restoration
-portfolio contains less of that service at baseline than the least-cost
-portfolio. In the logic of this example, the plan is targeting a
+<p>Cost is minimized and the four deficit benefits are maximized. An
+improvement in a service objective means a larger deficit benefit than
+in the least-cost portfolio and, at fixed effort, a lower selected
+reference amount. In the logic of this example, the plan is targeting a
 stronger current deficit for that service. It does <strong>not</strong>
 mean that the service has already increased after restoration.</p>
 <div class="section level4">
@@ -592,9 +653,9 @@ mean that the service has already increased after restoration.</p>
 </h4>
 <p>Each panel compares an efficient plan with the least-cost restoration
 plan, which is located at zero on both axes. Moving to the right means
-accepting a higher implementation cost. Moving upwards means reducing
-the baseline amount of the corresponding ecosystem service inside the
-selected restoration sites.</p>
+accepting a higher implementation cost. Moving upwards means increasing
+the deficit benefit of the corresponding service relative to the
+least-cost restoration plan.</p>
 <p>A higher point therefore represents a portfolio that directs
 restoration more strongly towards locations where that service is
 currently low. Separate vertical scales are retained because the
@@ -602,8 +663,8 @@ observed percentage range differs among services and because equal
 percentage changes need not have equal ecological or policy
 significance.</p>
 <p>A point below zero would indicate that a more expensive plan selects
-sites with a higher baseline level of that service than the least-cost
-plan.</p>
+sites with a smaller deficit benefit for that service than the
+least-cost plan.</p>
 <p><img src="integrated-ecosystem-services-cost-service-improvement-1.png" class="r-plt" alt="" width="100%"></p>
 <p>The points are not connected because they represent alternative
 spatial portfolios, not successive stages of one restoration trajectory.
@@ -627,9 +688,9 @@ ecological reason may be unattractive for another.</p>
 <p>The heatmap summarizes the full five-objective profile of every
 retained plan. Solutions are ordered from lowest to highest cost. Within
 each objective column, values are normalized across the observed
-efficient set. Blue indicates the best observed value for a minimized
-objective, red the worst, and intermediate colours show relative
-performance between those extremes.</p>
+efficient set. Blue indicates the best observed value for each objective
+(low cost or high benefit), red the worst, and intermediate colours show
+relative performance between those extremes.</p>
 <p>This normalization supports visual comparison but does not make the
 objectives commensurable. It does not imply that cost and ecosystem
 services share units, or that the four services should receive equal
@@ -656,24 +717,24 @@ reference points because they show the maximum contrast generated by the
 experiment. However, the plan that best targets one ecosystem-service
 deficit may be costly or may select sites with high baseline values of
 another service.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">extremes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/frontier_extremes.html">frontier_extremes</a></span><span class="op">(</span></span>
 <span>    <span class="va">efficient_solutions</span>,</span>
 <span>    objectives <span class="op">=</span> <span class="va">objective_aliases</span>,</span>
 <span>    ties <span class="op">=</span> <span class="st">"first"</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">extremes</span></span>
-<span><span class="co">#&gt;    solution_id          objective sense bound  role        value</span></span>
-<span><span class="co">#&gt; 1           81               cost   min   min  best 1.187535e+05</span></span>
-<span><span class="co">#&gt; 2           23               cost   min   max worst 2.587162e+05</span></span>
-<span><span class="co">#&gt; 3           24     rodent_control   min   min  best 1.493568e+03</span></span>
-<span><span class="co">#&gt; 4           81     rodent_control   min   max worst 2.521662e+03</span></span>
-<span><span class="co">#&gt; 5           50       carbon_stock   min   min  best 8.711403e+03</span></span>
-<span><span class="co">#&gt; 6           81       carbon_stock   min   max worst 1.001432e+04</span></span>
-<span><span class="co">#&gt; 7           41        water_yield   min   min  best 9.148542e+03</span></span>
-<span><span class="co">#&gt; 8           81        water_yield   min   max worst 1.002720e+04</span></span>
-<span><span class="co">#&gt; 9           23 sediment_retention   min   min  best 5.511997e-07</span></span>
-<span><span class="co">#&gt; 10          81 sediment_retention   min   max worst 7.227048e+01</span></span></code></pre></div>
+<span><span class="co">#&gt;    solution_id          objective sense bound  role      value</span></span>
+<span><span class="co">#&gt; 1           81               cost   min   min  best 118753.490</span></span>
+<span><span class="co">#&gt; 2           23               cost   min   max worst 258716.180</span></span>
+<span><span class="co">#&gt; 3           81     rodent_control   max   min worst  13763.784</span></span>
+<span><span class="co">#&gt; 4           24     rodent_control   max   max  best  14791.878</span></span>
+<span><span class="co">#&gt; 5           81       carbon_stock   max   min worst   6447.094</span></span>
+<span><span class="co">#&gt; 6           50       carbon_stock   max   max  best   7750.010</span></span>
+<span><span class="co">#&gt; 7           81        water_yield   max   min worst   5166.418</span></span>
+<span><span class="co">#&gt; 8           41        water_yield   max   max  best   6045.077</span></span>
+<span><span class="co">#&gt; 9           81 sediment_retention   max   min worst   7023.003</span></span>
+<span><span class="co">#&gt; 10          23 sediment_retention   max   max  best   7095.274</span></span></code></pre></div>
 <p>With five objectives, a two-dimensional geometric knee is not
 appropriate. <code>frontier_knee(method = "ideal")</code> instead
 identifies the observed plan closest to the normalized five-objective
@@ -686,15 +747,15 @@ does not replace stakeholder preferences.</p>
 <p>For ecological interpretation, the analysis also calculates distance
 to an ideal defined only by the four ecosystem-service objectives. We
 refer to this as <em>joint ecosystem-service regret</em>. A value of
-zero would mean that one plan simultaneously attains the best observed
-baseline-service total for all four services. Larger values indicate
+zero would mean that one plan simultaneously attains the largest
+observed deficit benefit for all four services. Larger values indicate
 increasing distance from that joint deficit- targeting profile.</p>
 <p>Plotting this distance against additional cost keeps the financial
 and ecological dimensions visible. Because each service is normalized to
 its observed range, the diagnostic gives the four services equal
 influence. This equal weighting is used only to describe the generated
 alternatives; it does not alter the AUGMECON formulation.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">service_distances</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/frontier_distances.html">frontier_distances</a></span><span class="op">(</span></span>
 <span>    <span class="va">efficient_solutions</span>,</span>
 <span>    objectives <span class="op">=</span> <span class="va">service_aliases</span>,</span>
@@ -719,7 +780,7 @@ alternatives; it does not alter the AUGMECON formulation.</p>
 <span>    <span class="st">"knee_rank"</span></span>
 <span>  <span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   solution_id   cost rodent_control carbon_stock water_yield sediment_retention</span></span>
-<span><span class="co">#&gt; 1          41 215254       1511.468     8711.411    9148.542           28.58626</span></span>
+<span><span class="co">#&gt; 1          41 215254       14773.98     7750.001    6045.077           7066.688</span></span>
 <span><span class="co">#&gt;   knee_score knee_rank</span></span>
 <span><span class="co">#&gt; 1   0.644435         1</span></span>
 <span></span>
@@ -761,30 +822,30 @@ balancing cost with all four deficits.</p>
 <span><span class="co">#&gt; 3                            Rodent-control best          24</span></span>
 <span><span class="co">#&gt; 4                              Carbon-stock best          50</span></span>
 <span><span class="co">#&gt; 5                        Sediment-retention best          23</span></span>
-<span><span class="co">#&gt;   additional_cost_percent rodent_control_reduction_percent</span></span>
-<span><span class="co">#&gt; 1                     0.0                              0.0</span></span>
-<span><span class="co">#&gt; 2                    81.3                             40.1</span></span>
-<span><span class="co">#&gt; 3                   117.8                             40.8</span></span>
-<span><span class="co">#&gt; 4                    27.0                             40.1</span></span>
-<span><span class="co">#&gt; 5                   117.9                             40.7</span></span>
-<span><span class="co">#&gt;   carbon_stock_reduction_percent water_yield_reduction_percent</span></span>
-<span><span class="co">#&gt; 1                              0                           0.0</span></span>
-<span><span class="co">#&gt; 2                             13                           8.8</span></span>
-<span><span class="co">#&gt; 3                             13                           0.0</span></span>
-<span><span class="co">#&gt; 4                             13                           0.0</span></span>
-<span><span class="co">#&gt; 5                             13                           0.0</span></span>
-<span><span class="co">#&gt;   sediment_retention_reduction_percent</span></span>
-<span><span class="co">#&gt; 1                                  0.0</span></span>
-<span><span class="co">#&gt; 2                                 60.4</span></span>
-<span><span class="co">#&gt; 3                                100.0</span></span>
-<span><span class="co">#&gt; 4                                 67.7</span></span>
-<span><span class="co">#&gt; 5                                100.0</span></span></code></pre>
-<p>Positive percentages in the service columns represent reductions in
-baseline service levels inside the restoration portfolio relative to the
-least-cost plan. For example, a positive carbon-stock value means that
-the plan restores sites with lower current carbon stock than those
-selected by the least-cost portfolio. It should not be interpreted as a
-measured increase in carbon after restoration.</p>
+<span><span class="co">#&gt;   additional_cost_percent rodent_control_benefit_increase_percent</span></span>
+<span><span class="co">#&gt; 1                     0.0                                     0.0</span></span>
+<span><span class="co">#&gt; 2                    81.3                                     7.3</span></span>
+<span><span class="co">#&gt; 3                   117.8                                     7.5</span></span>
+<span><span class="co">#&gt; 4                    27.0                                     7.3</span></span>
+<span><span class="co">#&gt; 5                   117.9                                     7.5</span></span>
+<span><span class="co">#&gt;   carbon_stock_benefit_increase_percent water_yield_benefit_increase_percent</span></span>
+<span><span class="co">#&gt; 1                                   0.0                                    0</span></span>
+<span><span class="co">#&gt; 2                                  20.2                                   17</span></span>
+<span><span class="co">#&gt; 3                                  20.2                                    0</span></span>
+<span><span class="co">#&gt; 4                                  20.2                                    0</span></span>
+<span><span class="co">#&gt; 5                                  20.2                                    0</span></span>
+<span><span class="co">#&gt;   sediment_retention_benefit_increase_percent</span></span>
+<span><span class="co">#&gt; 1                                         0.0</span></span>
+<span><span class="co">#&gt; 2                                         0.6</span></span>
+<span><span class="co">#&gt; 3                                         1.0</span></span>
+<span><span class="co">#&gt; 4                                         0.7</span></span>
+<span><span class="co">#&gt; 5                                         1.0</span></span></code></pre>
+<p>Positive percentages in the service columns represent increases in
+deficit benefits relative to the least-cost plan. For example, a
+positive carbon-stock value means that the plan restores sites with
+lower current carbon stock than those selected by the least-cost
+portfolio. It should not be interpreted as a measured increase in carbon
+after restoration.</p>
 <p>The table provides the numerical context for the maps by showing the
 additional cost required to achieve each spatial redirection.</p>
 <p><img src="integrated-ecosystem-services-map-selected-solutions-1.png" class="r-plt" alt="" width="100%"></p>
@@ -831,7 +892,7 @@ expected because those assignments are locked into every solution.</p>
 solution set. It should not be interpreted as ecological
 irreplaceability, restoration success, or the probability that a site is
 objectively optimal.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">assignment_frequency</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/selection_frequency.html">selection_frequency</a></span><span class="op">(</span><span class="va">efficient_solutions</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span></span>
@@ -877,19 +938,20 @@ shows that there is no single universal map of ecological need: carbon,
 water, sediment retention, and biological control can point to different
 restoration priorities.</p>
 <p>This interpretation must remain within the limits of the data and
-formulation. Low baseline service provision is not equivalent to high
-restoration potential. A degraded site may respond strongly to
-intervention, weakly, or only after a long time. Conversely, a site with
-high current service provision could still benefit from restoration. The
-model identifies where current service deficits and implementation costs
-favour intervention; it does not predict the ecological response
-produced by that intervention.</p>
+formulation. The deficit effects assume a common service ceiling. Low
+baseline service provision is not evidence of high realized restoration
+potential. A degraded site may respond strongly to intervention, weakly,
+or only after a long time. Conversely, a site with high current service
+provision could still benefit from restoration. The model identifies
+where current service deficits and implementation costs favour
+intervention; it does not predict the ecological response produced by
+that intervention.</p>
 <p>A more complete application could combine the present deficit-based
-objectives with action-specific estimates of expected restoration gain,
-feasibility, time to recovery, land-use opportunity cost, connectivity,
-or future climate risk. Those additions would distinguish more
-explicitly between <em>where services are currently low</em> and
-<em>where restoration is expected to improve them most</em>.</p>
+objectives with empirically estimated action outcomes, feasibility, time
+to recovery, land-use opportunity cost, connectivity, or future climate
+risk. Those additions would distinguish more explicitly between
+<em>where services are currently low</em> and <em>where restoration is
+expected to improve them most</em>.</p>
 <p>Finally, the generated alternatives depend on the epsilon design. The
 81 requested boundary configurations provide a transparent first
 exploration of the five-dimensional trade-off space, not an exhaustive

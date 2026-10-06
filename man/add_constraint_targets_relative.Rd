@@ -85,6 +85,14 @@ unit \eqn{i},
 pairs allowed to count toward the target for feature \eqn{f}.
 }
 
+With concurrent actions, the model instead combines signed changes within
+each unit and feature and counts the reference once:
+\deqn{\sum_i \left(r_{if} s_i^{\star} + \Delta_{if}^{\star}(x)\right) \ge T_f.}
+Here \eqn{s_i^{\star}} indicates that at least one action in the target scope
+is selected. Joint corrections contribute only when every member belongs
+to that scope. Individual effects are additive when no interaction is supplied.
+The same aggregation is used to report target achievement.
+
 The \code{actions} argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \eqn{B_f} used
 to compute the threshold. In other words, relative targets are always scaled
@@ -110,6 +118,9 @@ respect to that feature set.
 }
 
 Relative targets must lie in \eqn{[0,1]}.
+A second target for the same feature and action scope raises an error,
+including when an absolute target already exists. Labels and threshold
+values do not change target identity.
 
 Repeated calls append new target rules rather than replacing previous ones.
 This allows cumulative target modelling, including multiple rules on the same

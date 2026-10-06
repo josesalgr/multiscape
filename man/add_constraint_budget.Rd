@@ -59,6 +59,13 @@ calling this function repeatedly, provided that no duplicated combination of
 action subset and constraint sense is introduced.
 }
 \details{
+Calls accumulate constraints for distinct action scopes, cost components,
+or senses. Repeating the same combination raises an error, even with a
+different threshold or name. To change it, rebuild from the problem before
+the constraint was added.
+Explicit names must be unique within the budget-constraint family; omitted
+names are generated automatically.
+
 Use this function when spending limits or minimum spending requirements must
 be imposed either on the full problem or on the subset of selected decisions
 associated with specific actions.

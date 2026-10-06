@@ -86,6 +86,9 @@ supplied instead, it is renamed internally to \code{id}. Additional columns
 are preserved. If no \code{name} column is provided, action labels are taken
 from \code{id}. If an \code{action_set} column is present, it is also
 preserved and can later be used to refer to groups of actions.
+To register combinations with many-to-many membership, use
+\code{\link{add_action_sets}} after defining the individual actions. Existing
+definitions are validated whenever the action catalog is updated.
 
 Actions are stored sorted by \code{id} to ensure reproducible internal
 indexing.
@@ -218,10 +221,11 @@ as locked out, then all feasible actions in those planning units are assigned
 \code{status = 3}. This preserves consistency with planning-unit exclusions
 already stored in the problem.
 
-\strong{Replacement behaviour.}
+\strong{Repeated calls.}
 
-Calling \code{add_actions()} replaces any previous action catalogue and
-feasible action table stored in the problem object.
+The action catalogue and feasible pairs can be defined only once per problem.
+A second call raises an error, even if the input is identical. To compare
+action catalogues, build separate problems from the object before this call.
 
 After defining actions, typical next steps include adding effects, optional
 decision-fixing constraints, objectives, and solver settings before calling
@@ -303,5 +307,6 @@ p4$data$dist_actions
 }
 \seealso{
 \code{\link{create_problem}},
+\code{\link{add_action_sets}},
 \code{\link{add_constraint_locked_actions}}
 }

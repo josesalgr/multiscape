@@ -71,7 +71,7 @@ problem <- create_problem(
     alias = "cost",
     include_pu_cost = FALSE
   ) |>
-  add_objective_max_benefit(
+  add_objective_max_effect(
     alias = "benefit"
   ) |>
   set_method_weighted_sum(

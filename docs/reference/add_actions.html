@@ -31,7 +31,7 @@ and assigns a non-negative implementation cost to each feasible pair."><meta pro
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -39,7 +39,7 @@ and assigns a non-negative implementation cost to each feasible pair."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,12 @@ and assigns a non-negative implementation cost to each feasible pair."><meta pro
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -173,7 +178,10 @@ represented as actions applied in planning units.</p>
 supplied instead, it is renamed internally to <code>id</code>. Additional columns
 are preserved. If no <code>name</code> column is provided, action labels are taken
 from <code>id</code>. If an <code>action_set</code> column is present, it is also
-preserved and can later be used to refer to groups of actions.</p>
+preserved and can later be used to refer to groups of actions.
+To register combinations with many-to-many membership, use
+<code><a href="add_action_sets.html">add_action_sets</a></code> after defining the individual actions. Existing
+definitions are validated whenever the action catalog is updated.</p>
 <p>Actions are stored sorted by <code>id</code> to ensure reproducible internal
 indexing.</p>
 <p><strong>Feasible planning unit–action pairs.</strong></p>
@@ -265,9 +273,10 @@ meaning that the decision is free. If planning units have already been marked
 as locked out, then all feasible actions in those planning units are assigned
 <code>status = 3</code>. This preserves consistency with planning-unit exclusions
 already stored in the problem.</p>
-<p><strong>Replacement behaviour.</strong></p>
-<p>Calling <code>add_actions()</code> replaces any previous action catalogue and
-feasible action table stored in the problem object.</p>
+<p><strong>Repeated calls.</strong></p>
+<p>The action catalogue and feasible pairs can be defined only once per problem.
+A second call raises an error, even if the input is identical. To compare
+action catalogues, build separate problems from the object before this call.</p>
 <p>After defining actions, typical next steps include adding effects, optional
 decision-fixing constraints, objectives, and solver settings before calling
 <code><a href="solve.html">solve()</a></code>.</p>
@@ -275,6 +284,7 @@ decision-fixing constraints, objectives, and solver settings before calling
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="create_problem.html">create_problem</a></code>,
+<code><a href="add_action_sets.html">add_action_sets</a></code>,
 <code><a href="add_constraint_locked_actions.html">add_constraint_locked_actions</a></code></p></div>
     </div>
 

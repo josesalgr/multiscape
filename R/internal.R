@@ -64,7 +64,7 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
   # Use the package namespace as the parent environment so proto methods can
   # still find internal helpers such as .pa_cli_box_chars().
   new_proto <- function(...) {
-    ns <- parent.env(environment())
+    ns <- environment(pproto)
 
     proto::proto(
       envir = new.env(parent = ns),
@@ -539,6 +539,33 @@ available_to_solve <- function(package = ""){
   stop("Unsupported targets format.", call. = FALSE)
 }
 
+# Configurations are single-assignment; defaults computed by readers do not
+# populate these fields. Check before cloning or touching cached models.
+.pa_assert_unconfigured <- function(x, fields, label, constructor) {
+  stopifnot(inherits(x, "Problem"))
+  if (any(vapply(fields, function(field) !is.null(x$data[[field]]), logical(1)))) {
+    stop(label, " already defined. ", constructor, " can only be called once per problem. ",
+         "Rebuild from the problem before this definition to change it.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.pa_target_actions <- function(x, actions) {
+  if (is.null(actions)) return(NA_character_)
+  .pa_subset_to_string(.pa_resolve_action_subset(x, actions)$id)
+}
+
+.pa_constraint_name <- function(x, family, proposed, explicit = FALSE) {
+  names_used <- x$data$constraints[[family]]$name %||% character()
+  if (!(proposed %in% names_used)) return(proposed)
+  if (explicit) {
+    stop("Constraint name '", proposed, "' already exists in ", family, ".", call. = FALSE)
+  }
+  index <- 2L
+  while (paste0(proposed, "_", index) %in% names_used) index <- index + 1L
+  paste0(proposed, "_", index)
+}
+
 .pa_store_targets <- function(x, targets_df) {
   stopifnot(inherits(x, "Problem"))
   stopifnot(inherits(targets_df, "data.frame"))
@@ -554,6 +581,11 @@ available_to_solve <- function(package = ""){
     targets_df$actions <- NA_character_
   }
   targets_df$actions <- as.character(targets_df$actions)
+
+  key_new <- paste(targets_df$feature, targets_df$type, targets_df$actions, sep = "||")
+  if (anyDuplicated(key_new)) {
+    stop("Duplicated targets for the same feature and action scope.", call. = FALSE)
+  }
 
   valid_types <- c("actions")
   bad_type <- setdiff(unique(targets_df$type), valid_types)
@@ -588,15 +620,15 @@ available_to_solve <- function(package = ""){
   }
   old$actions <- as.character(old$actions)
 
-  # optional informative warning for repeated keys
+  # Absolute and relative targets share the same feature/action identity.
   key_old <- paste0(old$feature, "||", old$type, "||", old$actions)
   key_new <- paste0(targets_df$feature, "||", targets_df$type, "||", targets_df$actions)
 
   overlap <- intersect(key_old, key_new)
   if (length(overlap) > 0) {
-    warning(
-      "Additional targets were added for existing (feature, type, actions) combinations. ",
-      "These target rows remain stored simultaneously and will be handled downstream. ",
+    stop(
+      "A target already exists for the same feature and action scope. ",
+      "Rebuild from the problem before this target to change it. ",
       "Example key: ", overlap[1],
       call. = FALSE
     )
@@ -927,6 +959,10 @@ available_to_solve <- function(package = ""){
     de[de$internal_action %in% keep_internal, , drop = FALSE]
   }
 
+  if (.pa_uses_aggregate_effects(x)) {
+    return(invisible(.pa_apply_aggregate_targets(x, t)))
+  }
+
   dbm <- .get_dist_benefit_model_from_effects(x, benefit_col = "amount_after")
 
   if (is.null(dbm) || nrow(dbm) == 0) {
@@ -1044,7 +1080,8 @@ available_to_solve <- function(package = ""){
     model_list$A <- Matrix::sparseMatrix(
       i = as.integer(model_list$A_i) + 1L,
       j = as.integer(model_list$A_j) + 1L,
-      x = as.numeric(model_list$A_x)
+      x = as.numeric(model_list$A_x),
+      dims = c(length(model_list$rhs), length(model_list$obj))
     )
 
     if (isTRUE(drop_triplets)) {
@@ -1456,6 +1493,34 @@ available_to_solve <- function(package = ""){
   }
 
   x
+}
+
+.pa_cbc_complete_dimensions <- function(mat, row_lb, row_ub, col_lb, col_ub) {
+  # rcbc passes sparse triplets, rather than matrix dimensions, to CBC.
+  # Its native matrix therefore loses trailing empty rows/columns. One
+  # redundant bound row records both dimensions without deleting variables
+  # or changing their bounds, objective contributions, or returned indices.
+  nr <- nrow(mat)
+  nc <- ncol(mat)
+  if (nc > 0L && (nr == 0L ||
+      !any(mat[nr, , drop = FALSE] != 0) ||
+      !any(mat[, nc, drop = FALSE] != 0))) {
+    anchor <- Matrix::sparseMatrix(i = 1L, j = nc, x = 1, dims = c(1L, nc))
+    mat <- rbind(mat, anchor)
+    row_lb <- c(row_lb, col_lb[nc])
+    row_ub <- c(row_ub, col_ub[nc])
+  }
+  list(mat = mat, row_lb = row_lb, row_ub = row_ub)
+}
+
+.pa_positive_objective_scale <- function(obj) {
+  nonzero <- abs(obj[is.finite(obj) & obj != 0])
+  if (!length(nonzero)) return(1)
+  # A common positive factor preserves the scalar criterion exactly. Raise
+  # small rewards above solver tolerances without producing huge coefficients.
+  exponent <- max(0, min(6, ceiling(-log10(min(nonzero))),
+                         floor(log10(1e8 / max(nonzero)))))
+  10^exponent
 }
 
 .pa_model_from_ptr <- function(op, args = list(), drop_triplets = TRUE) {
@@ -2192,6 +2257,8 @@ available_to_solve <- function(package = ""){
     de_with_x$selected_baseline <- de_with_x$baseline_amount * de_with_x$x_value
   }
 
+  if (.pa_uses_aggregate_effects(x)) de_with_x <- .pa_joint_selected_features(x, da_out)
+
   # Aggregated selected quantities by feature.
   selected_baseline_by_feat <- data.frame(
     internal_feature = integer(0),
@@ -2387,7 +2454,11 @@ available_to_solve <- function(package = ""){
       if (!is.na(actions_string) && nzchar(actions_string)) {
         matched <- .pa_resolve_action_subset(x, strsplit(actions_string, "\\|")[[1]])
         keep_actions <- as.integer(matched$internal_id)
-        dd <- dd[dd$internal_action %in% keep_actions, , drop = FALSE]
+        if (.pa_uses_aggregate_effects(x)) {
+          dd <- .pa_joint_selected_features(x, da_out, keep_actions)
+        } else {
+          dd <- dd[dd$internal_action %in% keep_actions, , drop = FALSE]
+        }
       }
 
       if (nrow(dd) == 0) {
@@ -2395,7 +2466,7 @@ available_to_solve <- function(package = ""){
       }
 
       tmp <- data.frame(
-        feature = as.integer(dd$internal_feature),
+        feature = as.integer(x$data$features$id[match(dd$internal_feature, x$data$features$internal_id)]),
         achieved = as.numeric(dd$selected_amount_after)
       )
 
@@ -3524,6 +3595,7 @@ available_to_solve <- function(package = ""){
         x2,
         y2,
         fun = fun,
+        max_cells_in_memory = 1e6,
         progress = FALSE
       )
     )
@@ -3565,6 +3637,10 @@ available_to_solve <- function(package = ""){
   stopifnot(inherits(x, "Problem"))
   if (is.null(x$data$spatial_relations) || !is.list(x$data$spatial_relations)) {
     x$data$spatial_relations <- list()
+  }
+  if (name %in% names(x$data$spatial_relations)) {
+    stop("Spatial relation '", name, "' already exists. Use a new name or rebuild ",
+         "from the problem before this relation to change it.", call. = FALSE)
   }
   x$data$spatial_relations[[name]] <- rel
   x
@@ -3967,7 +4043,16 @@ available_to_solve <- function(package = ""){
 
 
 .pa_deepcopy_data <- function(d) {
-  unserialize(serialize(d, NULL))
+  # R vectors and data frames use copy-on-modification. Serializing all input
+  # tables for every setter creates large transient buffers unnecessarily.
+  # Clone reference objects explicitly; preserve list attributes and scopes.
+  if (is.environment(d) || isS4(d)) return(unserialize(serialize(d, NULL)))
+  if (is.list(d) && !is.data.frame(d)) {
+    out <- lapply(d, .pa_deepcopy_data)
+    attributes(out) <- attributes(d)
+    return(out)
+  }
+  d
 }
 
 .pa_clone_data <- function(x, drop_model = TRUE) {
@@ -3977,7 +4062,13 @@ available_to_solve <- function(package = ""){
   y <- pproto(NULL, x)
 
   # ahora sí, sustituir data por una copia profunda
-  y$data <- .pa_deepcopy_data(x$data)
+  d <- x$data
+  if (isTRUE(drop_model)) {
+    d$model_ptr <- NULL
+    d$model_index <- NULL
+    d$model_list <- NULL
+  }
+  y$data <- .pa_deepcopy_data(d)
 
   if (isTRUE(drop_model)) {
     y$data$model_ptr   <- NULL
@@ -4086,15 +4177,30 @@ NULL
   stopifnot(inherits(x, "Problem"))
   sense <- match.arg(sense)
 
+  single_defined <- isTRUE(x$data$meta$single_objective_defined) ||
+    (!is.null(x$data$model_args$objective_id) &&
+     length(x$data$objectives %||% list()) == 0L)
+  if (is.null(alias) && single_defined) {
+    stop("A single-objective definition already exists. Use distinct aliases for ",
+         "multi-objective planning or rebuild from the problem before this objective.",
+         call. = FALSE)
+  }
+
   x <- .pa_clone_data(x)
 
   if (is.null(x$data$model_args) || !is.list(x$data$model_args)) {
     x$data$model_args <- list()
   }
 
-  x$data$model_args$model_type <- as.character(model_type)[1]
-  x$data$model_args$objective_id <- as.character(objective_id)[1]
-  x$data$model_args$objective_args <- objective_args
+  if (is.null(alias) || !single_defined) {
+    x$data$model_args$model_type <- as.character(model_type)[1]
+    x$data$model_args$objective_id <- as.character(objective_id)[1]
+    x$data$model_args$objective_args <- objective_args
+  }
+  if (is.null(alias)) {
+    x$data$meta <- x$data$meta %||% list()
+    x$data$meta$single_objective_defined <- TRUE
+  }
 
   x <- .pa_register_objective(
     x = x,
@@ -4363,6 +4469,31 @@ NULL
   # ---- APPLY SUPERSET RUNTIME UPDATES (solver-agnostic)
   model <- .pa_apply_runtime_updates_to_model(model, x)
 
+  mo_numeric <- isTRUE(x$data$runtime_updates$mo_numeric)
+  initial_solution <- x$data$runtime_updates$start
+  if (!is.null(initial_solution)) {
+    if (length(initial_solution) != length(model$obj)) {
+      stop("Runtime initial solution length does not match the model.", call. = FALSE)
+    }
+    initial_solution <- as.numeric(initial_solution)
+    binary <- model$vtype == "B"
+    initial_solution[binary] <- round(initial_solution[binary])
+  }
+  objective_scale <- if (mo_numeric) .pa_positive_objective_scale(model$obj) else 1
+  model$obj <- model$obj * objective_scale
+
+  # Constant ecological objectives can create empty constraint rows. Check
+  # their feasibility explicitly: some solver adapters omit such rows.
+  empty_rows <- Matrix::rowSums(abs(model$A)) == 0
+  impossible <- empty_rows & (
+    (model$sense == "<=" & model$rhs < 0) |
+    (model$sense == ">=" & model$rhs > 0) |
+    (model$sense %in% c("=", "==") & model$rhs != 0)
+  )
+  if (any(impossible)) {
+    stop("Solver status: infeasible (unsatisfied constant constraint).", call. = FALSE)
+  }
+
   # ---- pack args into Solution metadata
   solve_args <- list(
     solver = solver,
@@ -4375,6 +4506,8 @@ NULL
     output_file = output_file,
     solver_params = solver_params_user
   )
+  if (mo_numeric) solve_args$objective_scale <- objective_scale
+  if (!is.null(initial_solution)) solve_args$warm_start <- TRUE
 
   # ------------------------------------------------------------
   # 1) Call solver -> return unified payload:
@@ -4391,6 +4524,7 @@ NULL
     model$sense <- replace(model$sense, model$sense == "==", "=")
     model$lb <- model$bounds$lower$val
     model$ub <- model$bounds$upper$val
+    if (!is.null(initial_solution)) model$start <- initial_solution
 
     params <- list(
       LogToConsole = as.integer(verbose),
@@ -4398,6 +4532,10 @@ NULL
       MIPGap = gap_limit,
       TimeLimit = time_limit
     )
+    if (mo_numeric) {
+      params <- c(params, list(FeasibilityTol = 1e-9, IntFeasTol = 1e-9,
+                               OptimalityTol = 1e-9, MIPGapAbs = 0))
+    }
     if (!is.null(cores)) params$Threads <- cores
     if (isTRUE(output_file)) params$LogFile <- name_output_file
     if (isTRUE(solution_limit)) params$SolutionLimit <- 1
@@ -4408,6 +4546,7 @@ NULL
     }
 
     params <- utils::modifyList(params, solver_params_user)
+    if (mo_numeric) solve_args$effective_solver_params <- params
 
     sol <- gurobi::gurobi(model, params)
 
@@ -4462,21 +4601,34 @@ NULL
       sec = as.character(time_limit),
       timem = "elapsed"
     )
+    if (mo_numeric) {
+      cbc_args <- c(cbc_args, list(primalTolerance = "1e-9",
+                                   integerTolerance = "1e-9", dualTolerance = "1e-9"))
+    }
     if (!is.null(cores)) cbc_args$threads <- as.character(cores)
     if (isTRUE(solution_limit)) cbc_args$maxso <- "1"
     cbc_args <- utils::modifyList(cbc_args, solver_params_user)
+    if (mo_numeric) solve_args$effective_solver_params <- cbc_args
+
+    cbc_matrix <- .pa_cbc_complete_dimensions(
+      model$A, row_lb, row_ub,
+      model$bounds$lower$val, model$bounds$upper$val
+    )
 
     rt <- system.time({
+      cbc_start <- initial_solution
+      if (!is.null(cbc_start)) cbc_start[model$vtype != "B"] <- NA_real_
       sol_cbc <- rcbc::cbc_solve(
         obj = model$obj,
-        mat = model$A,
+        mat = cbc_matrix$mat,
         is_integer = ifelse(model$vtype == "B", TRUE, FALSE),
-        row_ub = row_ub,
-        row_lb = row_lb,
+        row_ub = cbc_matrix$row_ub,
+        row_lb = cbc_matrix$row_lb,
         col_lb = model$bounds$lower$val,
         col_ub = model$bounds$upper$val,
         max = ifelse(model$modelsense == "min", FALSE, TRUE),
-        cbc_args = cbc_args
+        cbc_args = cbc_args,
+        initial_solution = cbc_start
       )
     })
 
@@ -4607,6 +4759,10 @@ NULL
   } else {
     stop("Internal error: unknown solver '", solver, "'.", call. = FALSE)
   }
+
+  # Return the objective in its original units, including AUGMECON's original
+  # augmentation coefficient. Only the solver-facing copy was rescaled.
+  objval <- objval / objective_scale
 
   # ------------------------------------------------------------
   # Hard fail if solver returned no usable solution
@@ -4864,7 +5020,8 @@ NULL
   area_df$unit <- as.character(area_df$unit)
 
   new_actions_key <- ifelse(is.na(area_df$actions), "__ALL__", area_df$actions)
-  new_key <- paste(new_actions_key, area_df$sense, sep = "||")
+  new_key <- paste(new_actions_key, area_df$sense,
+                   ifelse(is.na(area_df$area_col), "__DEFAULT__", area_df$area_col), sep = "||")
 
   if (anyDuplicated(new_key)) {
     dup <- unique(new_key[duplicated(new_key)])[1]
@@ -4917,7 +5074,8 @@ NULL
   old$sense <- as.character(old$sense)
 
   old_actions_key <- ifelse(is.na(old$actions), "__ALL__", old$actions)
-  old_key <- paste(old_actions_key, old$sense, sep = "||")
+  old_key <- paste(old_actions_key, old$sense,
+                   ifelse(is.na(old$area_col), "__DEFAULT__", old$area_col), sep = "||")
 
   overlap <- intersect(old_key, new_key)
   if (length(overlap) > 0) {
@@ -5047,7 +5205,8 @@ NULL
   budget_df$name <- as.character(budget_df$name)
 
   new_actions_key <- ifelse(is.na(budget_df$actions), "__ALL__", budget_df$actions)
-  new_key <- paste(new_actions_key, budget_df$sense, sep = "||")
+  new_key <- paste(new_actions_key, budget_df$sense, budget_df$include_pu_cost,
+                   budget_df$include_action_cost, sep = "||")
 
   if (anyDuplicated(new_key)) {
     dup <- unique(new_key[duplicated(new_key)])[1]
@@ -5138,7 +5297,8 @@ NULL
   }
 
   old_actions_key <- ifelse(is.na(old$actions), "__ALL__", old$actions)
-  old_key <- paste(old_actions_key, old$sense, sep = "||")
+  old_key <- paste(old_actions_key, old$sense, old$include_pu_cost,
+                   old$include_action_cost, sep = "||")
 
   overlap <- intersect(old_key, new_key)
   if (length(overlap) > 0) {

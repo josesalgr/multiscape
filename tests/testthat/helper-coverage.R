@@ -223,7 +223,7 @@ make_round3_action_problem <- function(with_effects = TRUE) {
 }
 
 
-make_round3_spatial_problem <- function(action_based = FALSE) {
+make_round3_spatial_problem <- function(action_based = FALSE, with_effects = TRUE) {
   testthat::skip_if_not_installed("sf")
 
   geometry <- sf::st_sfc(
@@ -286,14 +286,16 @@ make_round3_spatial_problem <- function(action_based = FALSE) {
       )
     )
 
-    x <- multiscape::add_effects(
-      x,
-      effects = data.frame(
-        action = rep(c("conservation", "restoration"), each = 2),
-        feature = rep(1:2, times = 2),
-        relative_change = c(0, 0, 0.5, 0.5)
+    if (isTRUE(with_effects)) {
+      x <- multiscape::add_effects(
+        x,
+        effects = data.frame(
+          action = rep(c("conservation", "restoration"), each = 2),
+          feature = rep(1:2, times = 2),
+          relative_change = c(0, 0, 0.5, 0.5)
+        )
       )
-    )
+    }
   }
 
   x

@@ -100,6 +100,13 @@ returned. If the result contains a `solution_id` column but only a
 single solution is present and `solution` was not requested explicitly,
 the `solution_id` column is removed for convenience.
 
+Positive gains and losses are split after combining actions within each
+unit and feature. With matching action/feature scopes, the benefit
+objective corresponds to the sum of `selected_net`, and the loss
+objective to the sum of `selected_loss`. `selected_benefit` remains a
+descriptive positive-gain component and is not the signed benefit
+objective.
+
 This function summarizes feature outcomes in the result. It is different
 from
 [`get_targets`](https://josesalgr.github.io/multiscape/reference/get_targets.md),
@@ -132,7 +139,7 @@ problem <- create_problem(
   ) |>
   add_constraint_targets_relative(0.05) |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-  add_objective_max_benefit(alias = "benefit") |>
+  add_objective_max_effect(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
     runs = set_runs_grid(n = 3),

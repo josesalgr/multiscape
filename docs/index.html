@@ -32,7 +32,7 @@
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css">
+</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -42,7 +42,7 @@
 
     <a class="navbar-brand me-2" href="index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,12 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+<li><a class="dropdown-item" href="articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul>
@@ -82,7 +87,7 @@
 <!-- badges: start -->
 
 <p><code>multiscape</code> is an exact optimisation framework for <strong>multi-action, multi-objective spatial planning in R</strong>. It is designed for problems in which decisions involve allocating alternative management actions across planning units while balancing multiple competing objectives. Building on the transition from place-based prioritisation towards spatially explicit action planning (<a href="https://doi.org/10.1111/nyas.14651" class="external-link">Tallis et al., 2021</a>; <a href="https://doi.org/10.1111/2041-210X.14220" class="external-link">Salgado-Rojas et al., 2023</a>), <code>multiscape</code> represents explicitly <strong>what can be done, where it can be done, and what consequences those actions are expected to produce</strong>.</p>
-<p>Users define feasible management actions, their costs, and their expected effects on ecological or socioeconomic features relative to a reference scenario. These action-based decisions are represented as mixed-integer linear programming (MILP) models together with targets, budgets, spatial requirements, locked decisions, and other constraints. Multiple objectives, including cost, benefit, profit, and fragmentation, can be registered independently and explored using weighted-sum, epsilon-constraint, and AUGMECON methods. This formulation also provides a basis for multiple-use spatial planning, where alternative actions and uses may need to be evaluated against competing ecological, economic, and social objectives (<a href="https://doi.org/10.1016/j.tree.2025.09.007" class="external-link">Neubert et al., 2025</a>).</p>
+<p>Users define feasible management actions, their costs, and their expected effects on ecological or socioeconomic features relative to a reference scenario. These action-based decisions are represented as mixed-integer linear programming (MILP) models together with targets, budgets, spatial requirements, locked decisions, and other constraints. Multiple objectives, including cost, signed effects, profit, and fragmentation, can be registered independently and explored using weighted-sum, epsilon-constraint, and AUGMECON methods. This formulation also provides a basis for multiple-use spatial planning, where alternative actions and uses may need to be evaluated against competing ecological, economic, and social objectives (<a href="https://doi.org/10.1016/j.tree.2025.09.007" class="external-link">Neubert et al., 2025</a>).</p>
 <p>Each retained solution preserves the correspondence between its objective values and its spatial allocation of actions. Alternative plans can therefore be examined in <strong>objective space</strong> (<code>frontier_*()</code>), <strong>decision space</strong> (<code>selection_*()</code>), and jointly through <strong>objective–decision linkage</strong> (<code>linkage_*()</code>), allowing users to relate changes in performance directly to changes in the actions implemented across space.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -101,450 +106,353 @@
 <h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
 <div class="section level3">
+<h3 id="start-with-a-reference-then-describe-what-actions-change">Start with a reference, then describe what actions change<a class="anchor" aria-label="anchor" href="#start-with-a-reference-then-describe-what-actions-change"></a>
+</h3>
+<p>A planning unit is one cell or polygon in the landscape. A feature is something we want to represent, such as a species or an ecosystem service. For each unit and feature, we first supply a <strong>reference amount</strong>: the value against which the consequences of an action will be measured.</p>
+<p>The reference is the <strong>scenario you want to compare an action against</strong>. It can describe current conditions, a future without the proposed action, continuation of existing management, or another explicitly chosen alternative. It does not have to describe the landscape just before management begins. Use reference and action amounts for the same feature, location, time horizon and units, so their difference answers the intended comparison.</p>
+<p>For example, suppose habitat amount is 100 today. At the planning horizon it is expected to be 70 under business as usual (BAU), and 90 with restoration. Relative to future BAU, the action’s effect is <span class="math inline">\(90-70=20\)</span>; relative to today, the difference is <span class="math inline">\(90-100=-10\)</span>. These answer different questions. A future BAU reference captures the improvement over the expected alternative, including avoided losses, even when the action does not restore today’s amount.</p>
+<p><a href="https://doi.org/10.1111/nyas.14651" class="external-link">Tallis et al. (2021)</a> describe spatial action mapping through impacts assessed against BAU conditions: the expected world without the action being evaluated. This illustrates why the reference should be chosen for the comparison, rather than automatically equated with the current state. In multiscape, supplying a reference does not itself decide whether you optimize gains, final representation, or another criterion; that choice is made through the constraints and objectives.</p>
+<p>The workflow is: <strong>supply the reference → describe actions and their outcomes → set requirements → find a plan → inspect the results</strong>. In the code below, <code>problem</code> is simply the name of the R object we build. The function that creates it in this branch is <code><a href="reference/create_problem.html">create_problem()</a></code>.</p>
+</div>
+<div class="section level3">
 <h3 id="the-planning-problem">The planning problem<a class="anchor" aria-label="anchor" href="#the-planning-problem"></a>
 </h3>
-<p>The following example represents a stylised <strong>multi-objective multi-use spatial planning problem</strong>. The landscape is divided into 64 planning units and contains two ecological features: woodland and riparian habitat. Each planning unit can remain unmanaged or be assigned to one of two mutually exclusive management actions: <strong>protection</strong> or <strong>restoration</strong>.</p>
-<p>For every planning unit <span class="math inline">\(i\)</span> and action <span class="math inline">\(a\)</span>, the model defines a binary decision variable <span class="math inline">\(x_{ia}\)</span>. The variable equals 1 when action <span class="math inline">\(a\)</span> is assigned to planning unit <span class="math inline">\(i\)</span>, and 0 otherwise. Because the actions are mutually exclusive, at most one action can be selected in each planning unit. A planning unit may also remain without intervention.</p>
-<p>The analysis asks:</p>
+<p>The Meseta Ibérica offers a concrete question for spatial action planning:</p>
 <blockquote>
-<p>How does the spatial allocation of protection and restoration change as progressively larger implementation budgets become available, and how much additional ecological benefit can be obtained?</p>
+<p>Where should alternative landscape strategies be selected to meet species and ecosystem-service targets at low cost, while keeping the resulting action maps spatially cohesive?</p>
 </blockquote>
-<p>For each planning unit, <code>amount</code> is a synthetic <strong>relative feature amount</strong>. Baseline values range from 0 to 1: a value of 0 represents no local amount of the feature, whereas 1 is the largest baseline amount represented in the simulated landscape. Intermediate values are continuous relative amounts, not probabilities of occurrence or binary presence–absence observations. Woodland forms a north-western hotspot, whereas riparian habitat follows a diagonal corridor.</p>
-<p>The 0–1 scale applies to the baseline values only. Because these are relative indices rather than probabilities or proportions, action-induced final amounts may exceed 1. For example, doubling a baseline amount of 0.6 produces a final relative amount of 1.2.</p>
-<p>All inputs are included with <code>multiscape</code>:</p>
+<p>This example uses an earlier Prioriactions dataset associated with <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">Cánibe Iglesias et al. (2025)</a>. It contains 11,109 planning units, 151 species and four ecosystem services, with four strategies: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong> and <strong>Firesmart</strong>. We retain the archive’s original names and absolute targets. The author-provided <code>Miguel_Galicia.zip</code> is an earlier dataset; the article’s final inputs contain 207 species. The tutorial therefore illustrates the planning formulation on available data rather than reproducing the publication.</p>
+<p>Here we formulate a straightforward multiscape problem: select at most one management strategy in each cell. Each cell-strategy combination has a cost and an expected outcome. The example teaches this formulation using available Meseta data; the separate technical reproduction of Prioriactions is not part of this introductory workflow.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load packages</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Load a complete simulated planning problem.</span></span>
-<span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>The object contains the following linked tables:</p>
-<ul>
-<li>
-<code>planning_units</code>: planning-unit identifiers, geometries, and baseline costs;</li>
-<li>
-<code>features</code>: identifiers and names of the ecological features;</li>
-<li>
-<code>dist_features</code>: baseline feature amounts by planning unit;</li>
-<li>
-<code>actions</code>: the available management actions;</li>
-<li>
-<code>action_costs</code>: the cost of each feasible planning-unit–action combination;</li>
-<li>
-<code>effects</code>: the expected effect of each action on each feature; and</li>
-<li>
-<code>effect_assumptions</code>: the coefficients used to generate the simulated effects.</li>
-</ul>
-<p>The simulated baseline feature amounts are shown below.</p>
-<p><img src="reference/figures/README-example-features-1.png" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
+<span><span class="va">meseta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>, <span class="st">"meseta_iberica_inputs.rds"</span>, package <span class="op">=</span> <span class="st">"multiscape"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">meseta</span><span class="op">$</span><span class="va">actions</span></span>
+<span><span class="co">#&gt;   id          name</span></span>
+<span><span class="co">#&gt; 1  1 Afforestation</span></span>
+<span><span class="co">#&gt; 2  2           BAU</span></span>
+<span><span class="co">#&gt; 3  3    FarmReturn</span></span>
+<span><span class="co">#&gt; 4  4     Firesmart</span></span></code></pre></div>
+<p>The prepared object contains the tables used throughout the tutorial:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Input</th>
+<th>What it describes</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>planning_units</code></td>
+<td>Unit identifiers and their geometries</td>
+</tr>
+<tr>
+<td><code>features</code></td>
+<td>Species and ecosystem-service identifiers</td>
+</tr>
+<tr>
+<td><code>dist_features</code></td>
+<td>Reference representation credited to each unit and feature</td>
+</tr>
+<tr>
+<td><code>actions</code></td>
+<td>The four original strategy identifiers and names</td>
+</tr>
+<tr>
+<td><code>action_costs</code></td>
+<td>Implementation cost for each unit and strategy</td>
+</tr>
+<tr>
+<td><code>outcomes</code></td>
+<td>Representation under each selected strategy</td>
+</tr>
+<tr>
+<td><code>targets</code></td>
+<td>Required absolute representation of each feature</td>
+</tr>
+<tr>
+<td><code>boundary</code></td>
+<td>Weighted edges connecting neighbouring units</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">action_costs</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">outcomes</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">targets</span><span class="op">)</span></span></code></pre></div>
+<p>Here, outcomes are binary and missing occurrence rows mean zero. The reference is also zero: it records the representation credited outside selected strategies, not a prediction that an unmanaged landscape has no biodiversity. The service variables retain the archive’s binary coding. Costs are selection penalties in the supplied units, rather than established monetary amounts.</p>
 </div>
 <div class="section level3">
 <h3 id="stage-1-create-the-base-problem">Stage 1: Create the base problem<a class="anchor" aria-label="anchor" href="#stage-1-create-the-base-problem"></a>
 </h3>
-<p><a href="https://josesalgr.github.io/multiscape/reference/create_problem.html"><code>create_problem()</code></a> establishes the spatial domain and the ecological features being planned. Here, <code>planning_units</code> contains the 64 geometries, <code>features</code> defines the feature catalogue, and <code>dist_features</code> links every planning unit to its woodland and riparian amounts. The planning-unit <code>cost</code> column is retained in the problem, although the objective used below includes only action-specific implementation costs.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Initialise the problem using planning-unit geometries and baseline feature</span></span>
-<span><span class="co"># amounts.</span></span>
+<p><code><a href="reference/create_problem.html">create_problem()</a></code> receives the <strong>reference scenario</strong>, before any action outcomes are added. In particular, <code>dist_features</code> contains rows with <code>pu</code>, <code>feature</code> and <code>amount</code>: <code>amount</code> is the reference value of that feature in that planning unit. The geometries come from <code>pu</code>, and <code>features</code> lists what is being planned. A target is added later; it does not belong in the reference. We use zero planning-unit costs because the next stage will attach the supplied strategy costs to actions.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pu</span> <span class="op">&lt;-</span> <span class="va">meseta</span><span class="op">$</span><span class="va">planning_units</span></span>
+<span><span class="va">pu</span><span class="op">$</span><span class="va">cost</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
-<span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span>
-<span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span>
-<span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span>
+<span>  pu <span class="op">=</span> <span class="va">pu</span>,</span>
+<span>  features <span class="op">=</span> <span class="va">meseta</span><span class="op">$</span><span class="va">features</span>,</span>
+<span>  dist_features <span class="op">=</span> <span class="va">meseta</span><span class="op">$</span><span class="va">dist_features</span>,</span>
 <span>  cost <span class="op">=</span> <span class="st">"cost"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>With the deliberately zero reference, the constructor may warn that features are not represented yet. Their credited representation is supplied by the action outcomes in the next stage.</p>
+<p>Creating the base problem does not yet specify which strategies to choose. Actions describe the available decisions; effects describe what those decisions produce; constraints state what a feasible plan must achieve.</p>
 </div>
 <div class="section level3">
 <h3 id="stage-2-define-actions-and-their-effects">Stage 2: Define actions and their effects<a class="anchor" aria-label="anchor" href="#stage-2-define-actions-and-their-effects"></a>
 </h3>
-<p><a href="https://josesalgr.github.io/multiscape/reference/add_actions.html"><code>add_actions()</code></a> registers protection and restoration as alternative management uses, associates each action with its local implementation cost, and defines the feasible planning-unit–action combinations. Both actions are available throughout this landscape. The model permits at most one selected action per planning unit, while leaving a unit unmanaged remains feasible.</p>
-<p>Effects describe changes relative to the reference scenario in <code>dist_features</code>. <a href="https://josesalgr.github.io/multiscape/reference/add_effects.html"><code>add_effects()</code></a> accepts exactly one of three columns:</p>
-<ul>
-<li>
-<code>effect</code>: signed absolute change;</li>
-<li>
-<code>outcome</code>: expected amount under the action;</li>
-<li>
-<code>relative_change</code>: proportional change (<code>0.25</code> means +25%).</li>
-</ul>
-<p>With a reference amount of 100, <code>effect = 30</code>, <code>outcome = 130</code>, and <code>relative_change = 0.30</code> all describe the same result. A positive effect means an increase; whether that is desirable depends on the feature and objective. The reference may represent current conditions, a future without intervention, or existing management. Outcomes and references must share units and horizon.</p>
-<p>This example supplies relative changes by action and feature. The package expands them over feasible planning units. A reference of 0.6 and <code>relative_change = 1</code> produce an effect of 0.6 and an outcome of 1.2. Legacy <code>effect_type</code>, <code>multiplier</code>, and <code>delta</code> inputs remain supported with a lifecycle deprecation warning.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Inspect the assumptions used to generate their</span></span>
-<span><span class="co"># ecological effects, and the first planning-unit--action--feature records.</span></span>
-<span><span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span>
-<span><span class="co">#&gt;    action feature relative_change</span></span>
-<span><span class="co">#&gt; 1 protect       1            1.00</span></span>
-<span><span class="co">#&gt; 2 protect       2            0.30</span></span>
-<span><span class="co">#&gt; 3 restore       1            0.25</span></span>
-<span><span class="co">#&gt; 4 restore       2            1.30</span></span>
+<p>Each action is one of the four management strategies: Afforestation, BAU, FarmReturn or Firesmart. Selecting an action means choosing that strategy in a cell. We use these names directly as action identifiers.</p>
+<p>The input archive uses numerical strategy identifiers. The following mapping replaces them with their names in the cost and outcome tables, so the solver and the maps refer to the same readable actions.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">strategy_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">actions</span><span class="op">$</span><span class="va">name</span>, <span class="va">meseta</span><span class="op">$</span><span class="va">actions</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
+<span><span class="va">actions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">meseta</span><span class="op">$</span><span class="va">actions</span><span class="op">$</span><span class="va">name</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/add_actions.html">add_actions</a></span><span class="op">(</span></span>
-<span>    actions <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span>
-<span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/add_effects.html">add_effects</a></span><span class="op">(</span></span>
-<span>    effects <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span><span class="va">costs</span> <span class="op">&lt;-</span> <span class="va">meseta</span><span class="op">$</span><span class="va">action_costs</span></span>
+<span><span class="va">costs</span><span class="op">$</span><span class="va">action</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">strategy_names</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">costs</span><span class="op">$</span><span class="va">action</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_actions.html">add_actions</a></span><span class="op">(</span><span class="va">problem</span>, actions <span class="op">=</span> <span class="va">actions</span>, cost <span class="op">=</span> <span class="va">costs</span><span class="op">)</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="how-does-an-action-change-the-reference">How does an action change the reference?<a class="anchor" aria-label="anchor" href="#how-does-an-action-change-the-reference"></a>
+</h4>
+<p><code><a href="reference/add_effects.html">add_effects()</a></code> describes the feature amount under the action scenario in a cell. Let <span class="math inline">\(r\)</span> be its amount under the reference scenario, <span class="math inline">\(y\)</span> its amount under the action scenario, and <span class="math inline">\(\Delta = y-r\)</span> its absolute change. Supply <strong>one</strong> of these three columns:</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr>
+<th>Column</th>
+<th>What you supply</th>
+<th>Amount after the action</th>
+<th>Absolute change</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>outcome</code></td>
+<td>The final amount <span class="math inline">\(y\)</span>
+</td>
+<td><span class="math inline">\(y = \text{outcome}\)</span></td>
+<td><span class="math inline">\(\Delta = \text{outcome} - r\)</span></td>
+</tr>
+<tr>
+<td><code>effect</code></td>
+<td>The absolute change <span class="math inline">\(\Delta\)</span>
+</td>
+<td><span class="math inline">\(y = r + \text{effect}\)</span></td>
+<td><span class="math inline">\(\Delta = \text{effect}\)</span></td>
+</tr>
+<tr>
+<td><code>relative_change</code></td>
+<td>The proportional change <span class="math inline">\(q\)</span>
+</td>
+<td><span class="math inline">\(y = r(1+q)\)</span></td>
+<td><span class="math inline">\(\Delta = rq\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>For a reference of <strong>100</strong>, these three separate inputs all produce <strong>130</strong>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Three alternative ways to describe the SAME result; use one of them.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span>, action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, outcome <span class="op">=</span> <span class="fl">130</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span>, action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, effect <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span>, action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"habitat"</span>, relative_change <span class="op">=</span> <span class="fl">0.30</span><span class="op">)</span></span></code></pre></div>
+<p><code>relative_change = 0.30</code> means an increase of 30%, not an increase of 30 units. A decrease from 100 to 80 could instead be written as <code>outcome = 80</code>, <code>effect = -20</code>, or <code>relative_change = -0.20</code>. Reference and final amounts share units; a proportional change is dimensionless. Use exactly one of the three columns in the effects table, rather than mixing them.</p>
+<p>If the reference is <strong>zero</strong>, a proportional change still gives zero: <span class="math inline">\(0(1+q)=0\)</span>. Use an absolute outcome or effect to describe a positive amount from a zero reference. That is why this case uses <code>outcome</code>: an outcome of 1 means one unit of credited representation under the selected strategy. The zero reference used here is an accounting convention for this representation example, not a BAU forecast. The strategy named BAU remains one of the four available alternatives; its name does not automatically make it the reference.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">outcomes</span> <span class="op">&lt;-</span> <span class="va">meseta</span><span class="op">$</span><span class="va">outcomes</span></span>
+<span><span class="va">outcomes</span><span class="op">$</span><span class="va">action</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">strategy_names</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">outcomes</span><span class="op">$</span><span class="va">action</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_effects.html">add_effects</a></span><span class="op">(</span><span class="va">problem</span>, effects <span class="op">=</span> <span class="va">outcomes</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="stage-3-define-the-constraints">Stage 3: Define the constraints<a class="anchor" aria-label="anchor" href="#stage-3-define-the-constraints"></a>
 </h3>
-<p><a href="https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html"><code>add_constraint_targets_relative()</code></a> requires the selected actions to generate gains equivalent to at least 10% of the total baseline amount of <strong>each feature separately</strong>. Targets restrict the feasible set; they are not additional objectives. Other applications could introduce budgets, area requirements, locked decisions, or spatial constraints at this stage.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Require action-induced gains of at least 10% of the total baseline amount of</span></span>
-<span><span class="co"># woodland and at least 10% of the total baseline amount of riparian habitat.</span></span>
-<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/add_constraint_targets_relative.html">add_constraint_targets_relative</a></span><span class="op">(</span><span class="fl">0.10</span><span class="op">)</span></span></code></pre></div>
+<p>Choose at most one strategy in each cell. A cell can also remain unselected. Each feature must reach its supplied absolute representation target, counting the outcomes of the chosen strategies. With this zero reference, the targets are representation requirements, not gains relative to an estimated BAU future. Fractional thresholds are retained: a binary total must reach or exceed them.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/add_constraint_action_cardinality.html">add_constraint_action_cardinality</a></span><span class="op">(</span></span>
+<span>    count <span class="op">=</span> <span class="fl">1</span>, sense <span class="op">=</span> <span class="st">"max"</span>, name <span class="op">=</span> <span class="st">"one_strategy_per_cell"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/add_constraint_targets_absolute.html">add_constraint_targets_absolute</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">targets</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="stage-4-define-the-objectives">Stage 4: Define the objectives<a class="anchor" aria-label="anchor" href="#stage-4-define-the-objectives"></a>
 </h3>
-<p>Objectives are registered independently so they can later be combined using different multi-objective methods. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html"><code>add_objective_min_cost()</code></a> minimises the total implementation cost of the selected actions. Planning-unit costs are excluded because the example defines economic expenditure through the action-specific cost table. <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code></a> maximises total ecological benefit, calculated as the sum of action-induced gains across selected planning units and features.</p>
-<p>Because woodland and riparian effects use the same relative scale and no feature-specific weights are supplied, the example gives both features equal weight in the benefit objective. See the <a href="https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html"><code>add_objective_max_benefit()</code> reference</a> for the complete definition of the objective, its available arguments, and how feature contributions are aggregated.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>We use a scalar criterion with two components:</p>
+<ul>
+<li>
+<strong>Cost:</strong> the supplied costs of the selected strategies.</li>
+<li>
+<strong>Spatial fragmentation:</strong> weighted edges across which selection of a given strategy changes between selected and unselected.</li>
+</ul>
+<p>We register these components independently so their values remain available for interpretation, then combine them into one scalar objective. Both components refer to the same selected management actions.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Minimise action-specific implementation costs. Planning-unit costs are</span></span>
-<span>  <span class="co"># excluded because expenditure is represented by the action-cost table.</span></span>
-<span>  <span class="fu"><a href="reference/add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span></span>
-<span>    alias <span class="op">=</span> <span class="st">"cost"</span>,</span>
-<span>    include_pu_cost <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    include_action_cost <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Maximise the sum of action-induced ecological gains across both features.</span></span>
-<span>  <span class="fu"><a href="reference/add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span></span></code></pre></div>
-<p>The summary confirms that the spatial inputs, actions, effects, constraints, and two objectives are present. It also shows that the multi-objective method and solver have not yet been selected.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Print the complete formulation before selecting a multi-objective method</span></span>
-<span><span class="co"># and optimisation solver.</span></span>
-<span><span class="va">problem</span></span>
-<span><span class="co">#&gt; A multiscape object (&lt;Problem&gt;)</span></span>
-<span><span class="co">#&gt; +-data</span></span>
-<span><span class="co">#&gt; |+-planning units: &lt;data.frame&gt; (64 total)</span></span>
-<span><span class="co">#&gt; |+-costs: min: 0, max: 0</span></span>
-<span><span class="co">#&gt; |\-features: 2 total ("woodland", "riparian")</span></span>
-<span><span class="co">#&gt; \-actions and effects</span></span>
-<span><span class="co">#&gt; |+-actions: 2 total ("Protect", "Restore")</span></span>
-<span><span class="co">#&gt; |+-feasible action pairs: 128 feasible rows</span></span>
-<span><span class="co">#&gt; |+-action costs: min: 1.05, max: 2.3</span></span>
-<span><span class="co">#&gt; |+-effect data: 256 rows</span></span>
-<span><span class="co">#&gt; |+-effect input: relative change</span></span>
-<span><span class="co">#&gt; |+-effect signs: 256 positive, 0 negative, 0 zero</span></span>
-<span><span class="co">#&gt; |\-profit data: none</span></span>
-<span><span class="co">#&gt; \-spatial</span></span>
-<span><span class="co">#&gt; |+-geometry: sf (64 rows)</span></span>
-<span><span class="co">#&gt; |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span></span>
-<span><span class="co">#&gt; |\-relations: none</span></span>
-<span><span class="co">#&gt; \-targets and constraints</span></span>
-<span><span class="co">#&gt; |+-targets: 2 rows</span></span>
-<span><span class="co">#&gt; |+-target preview: "woodland" &gt;= 1.409, "riparian" &gt;= 1.345</span></span>
-<span><span class="co">#&gt; |+-area constraints: none</span></span>
-<span><span class="co">#&gt; |+-budget constraints: none</span></span>
-<span><span class="co">#&gt; |+-planning-unit locks: none</span></span>
-<span><span class="co">#&gt; |\-action locks: none</span></span>
-<span><span class="co">#&gt; \-model</span></span>
-<span><span class="co">#&gt; |+-status: not built yet (will build in solve())</span></span>
-<span><span class="co">#&gt; |+-objectives: 2 registered (benefit, cost)</span></span>
-<span><span class="co">#&gt; |+-method: not set</span></span>
-<span><span class="co">#&gt; |+-solver: not set (auto)</span></span>
-<span><span class="co">#&gt; |\-checks: incomplete (multiple objectives registered but no MO method</span></span>
-<span><span class="co">#&gt; selected)</span></span>
-<span><span class="co">#&gt; # i Use `x$data` to inspect stored tables and model snapshots.</span></span></code></pre></div>
+<span>  <span class="fu"><a href="reference/add_spatial_relations.html">add_spatial_relations</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">boundary</span>, name <span class="op">=</span> <span class="st">"boundary"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>include_pu_cost <span class="op">=</span> <span class="cn">FALSE</span>, alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/add_objective_min_fragmentation_action.html">add_objective_min_fragmentation_action</a></span><span class="op">(</span></span>
+<span>    relation_name <span class="op">=</span> <span class="st">"boundary"</span>, alias <span class="op">=</span> <span class="st">"spatial"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p>An edge contributes when neighbouring cells differ in selection of a strategy. Minimizing this sum encourages cohesive action maps, while cost discourages unnecessary selections. The prepared boundary table contains neighbour edges with their original weights and excludes diagonal records.</p>
 </div>
 <div class="section level3">
-<h3 id="configure-the-multi-objective-method">Configure the multi-objective method<a class="anchor" aria-label="anchor" href="#configure-the-multi-objective-method"></a>
+<h3 id="configure-the-optimisation-method">Configure the optimisation method<a class="anchor" aria-label="anchor" href="#configure-the-optimisation-method"></a>
 </h3>
-<p>The registered objectives define what the plans should achieve; the multi-objective method determines how the trade-off between them is explored. Here, <a href="https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.html"><code>set_method_epsilon_constraint()</code></a> treats ecological benefit as the primary objective and evaluates six increasingly permissive limits on total cost. For each cost limit, the model identifies the feasible plan with the greatest ecological benefit.</p>
-<p>With <code>lexicographic = TRUE</code>, solutions tied on the primary benefit objective are refined by minimising cost. This prevents the method from returning an unnecessarily expensive plan when a less costly plan attains the same benefit. The six limits are generated by <a href="https://josesalgr.github.io/multiscape/reference/set_runs_grid.html"><code>set_runs_grid()</code></a>. The example uses Gurobi through <a href="https://josesalgr.github.io/multiscape/reference/set_solver_gurobi.html"><code>set_solver_gurobi()</code></a>, which requires the Gurobi R package and a valid licence.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="va">problem</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Maximise benefit under six alternative limits on total cost.</span></span>
-<span>  <span class="co"># Lexicographic refinement selects the least-cost plan among solutions tied</span></span>
-<span>  <span class="co"># on the primary objective.</span></span>
-<span>  <span class="fu"><a href="reference/set_method_epsilon_constraint.html">set_method_epsilon_constraint</a></span><span class="op">(</span></span>
-<span>    primary <span class="op">=</span> <span class="st">"benefit"</span>,</span>
-<span>    runs <span class="op">=</span> <span class="fu"><a href="reference/set_runs_grid.html">set_runs_grid</a></span><span class="op">(</span><span class="fl">6</span><span class="op">)</span>,</span>
-<span>    lexicographic <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/set_solver_gurobi.html">set_solver_gurobi</a></span><span class="op">(</span>gap_limit <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<p>A single manual weighted run minimizes <strong>cost + 0.5 × spatial fragmentation</strong>. The cost coefficient is one and the spatial coefficient is 0.5. Neither normalization nor objective scaling is applied, so the coefficient has a direct meaning in the supplied cost and boundary units.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Keep the formulation before choosing an optimisation method.</span></span>
+<span><span class="va">action_problem</span> <span class="op">&lt;-</span> <span class="va">problem</span></span>
+<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span>
+<span>  <span class="va">problem</span>,</span>
+<span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
+<span>  runs <span class="op">=</span> <span class="fu"><a href="reference/set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>weight_cost <span class="op">=</span> <span class="fl">1</span>, weight_spatial <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  normalize_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  objective_scaling <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>We use 0.5 as an illustrative spatial coefficient, following the source workflow. Registering two aliases here does not introduce a new biodiversity objective or generate a Pareto frontier. Species and services enter through the target constraints.</p>
 </div>
 <div class="section level3">
 <h3 id="solve-the-problem">Solve the problem<a class="anchor" aria-label="anchor" href="#solve-the-problem"></a>
 </h3>
-<p><a href="https://josesalgr.github.io/multiscape/reference/solve.html"><code>solve()</code></a> returns a <code>SolutionSet</code> containing the solver status, objective values, selected action assignments, and run-level information for every epsilon-constraint problem. <a href="https://josesalgr.github.io/multiscape/reference/get_objectives.html"><code>get_objectives()</code></a> extracts the resulting objective values, with one row per stored solution and one column per objective.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   solution_id   benefit   cost</span></span>
-<span><span class="co">#&gt; 1           1  1.185508   2.60</span></span>
-<span><span class="co">#&gt; 2           2 15.359707  22.25</span></span>
-<span><span class="co">#&gt; 3           3 24.535156  41.91</span></span>
-<span><span class="co">#&gt; 4           4 29.006289  61.41</span></span>
-<span><span class="co">#&gt; 5           5 29.782291  81.46</span></span>
-<span><span class="co">#&gt; 6           6 29.796218 101.28</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="link-run-configurations-to-stored-solutions">Link run configurations to stored solutions<a class="anchor" aria-label="anchor" href="#link-run-configurations-to-stored-solutions"></a>
-</h3>
-<p>A multi-objective method evaluates a sequence of optimisation configurations. <a href="https://josesalgr.github.io/multiscape/reference/get_runs.html"><code>get_runs()</code></a> returns the registry of these configurations together with their solver outcomes and, when available, the identifier of the solution they produced.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">runs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
-<span><span class="va">runs</span></span>
-<span><span class="co">#&gt;   run_id solution_id  status     runtime gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal 0.006000042   0</span></span>
-<span><span class="co">#&gt; 2      2           2 optimal 0.012000084   0</span></span>
-<span><span class="co">#&gt; 3      3           3 optimal 0.016999960   0</span></span>
-<span><span class="co">#&gt; 4      4           4 optimal 0.003000021   0</span></span>
-<span><span class="co">#&gt; 5      5           5 optimal 0.012000084   0</span></span>
-<span><span class="co">#&gt; 6      6           6 optimal 0.003000021   0</span></span></code></pre></div>
-<p>Each row records one attempted run configuration. <code>run_id</code> identifies the configuration, including its epsilon limit and solver outcome. A run is not itself a solution: an infeasible configuration, a run that terminates without a feasible solution, or a run affected by a solver error may have no associated <code>solution_id</code>. When a run does produce a solution that is retained in the <code>SolutionSet</code>, <code>solution_id</code> identifies that stored solution for subsequent extraction, comparison, and mapping. In this example, all configured runs produce stored solutions.</p>
-<p>The treatment of infeasible runs, runs without a solution, and unexpected errors can be controlled with <a href="https://josesalgr.github.io/multiscape/reference/set_runs_control.html"><code>set_runs_control()</code></a>. Depending on these settings, solving can stop when a failed configuration is encountered or retain the failed run in the run history without an associated solution.</p>
-<p>This distinction is important when reading the figures below. With <code>label_runs = TRUE</code>, <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code> labels points using <code>run_id</code>, whereas functions that extract or map stored plans generally use <code>solution_id</code>. <code><a href="reference/get_runs.html">get_runs()</a></code> provides the link between the run configurations and the solutions that were successfully stored.</p>
+<p>This configuration uses Gurobi, two threads, a five-minute solver time limit and a 2% relative gap limit. Gurobi requires an installation and valid licence. Model preparation takes additional time before the solver starts.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/set_solver_gurobi.html">set_solver_gurobi</a></span><span class="op">(</span></span>
+<span>  <span class="va">problem</span>,</span>
+<span>  gap_limit <span class="op">=</span> <span class="fl">0.02</span>, time_limit <span class="op">=</span> <span class="fl">300</span>, cores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  solver_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Method <span class="op">=</span> <span class="fl">2</span>, NodefileStart <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span></code></pre></div>
+<p>The gap measures the remaining difference between the best feasible objective and the solver’s bound. A 2% stopping tolerance does not prove the exact optimum or a unique spatial plan. Check the returned status and gap before interpreting the solution.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="interpret-the-solutions">Interpret the solutions<a class="anchor" aria-label="anchor" href="#interpret-the-solutions"></a>
 </h2>
 <div class="section level3">
-<h3 id="objective-space-performance-and-trade-offs">Objective space: performance and trade-offs<a class="anchor" aria-label="anchor" href="#objective-space-performance-and-trade-offs"></a>
+<h3 id="link-the-run-to-its-stored-solution">Link the run to its stored solution<a class="anchor" aria-label="anchor" href="#link-the-run-to-its-stored-solution"></a>
 </h3>
-<p>Each point below represents a stored spatial solution generated by one epsilon-constraint run. The plot is produced with <a href="https://josesalgr.github.io/multiscape/reference/plot_tradeoff.html"><code>plot_tradeoff()</code></a>. With lexicographic refinement, the returned plans are intended to lie on the <strong>observed efficient frontier</strong>. This is the frontier represented by the six runs evaluated here, not necessarily every attainable trade-off in the complete discrete solution space.</p>
-<p>The horizontal axis shows the cost actually incurred by each solution, which may be lower than the upper cost limit imposed in its run. The vertical axis shows total ecological benefit, obtained by summing the action-induced gains across both features and all selected planning units. Moving from left to right therefore reveals how the maximum observed ecological benefit changes as more expensive plans become available.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_tradeoff.html">plot_tradeoff</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
-<span>  connect <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  label_runs <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    x <span class="op">=</span> <span class="st">"Total implementation cost (cost units)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Total ecological gain (relative-amount units)"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-example-tradeoff-1.png" alt="" width="100%"></p>
-<p>The curve rises rapidly at first and becomes flatter near its high-benefit end. In this region, substantial increases in implementation cost produce only small additional ecological gains. The result illustrates declining marginal returns and helps identify where further expenditure has comparatively little effect.</p>
-</div>
-<div class="section level3">
-<h3 id="identify-a-compromise-solution">Identify a compromise solution<a class="anchor" aria-label="anchor" href="#identify-a-compromise-solution"></a>
-</h3>
-<p>A multi-objective analysis should consider both <strong>objective space</strong>, which describes how well each plan performs, and <strong>decision space</strong>, which describes where actions are allocated. <a href="https://josesalgr.github.io/multiscape/reference/frontier_knee.html"><code>frontier_knee()</code></a> identifies an empirical compromise on the observed frontier: a solution near the point where additional ecological gains begin to require comparatively large increases in cost.</p>
+<p><code><a href="reference/get_runs.html">get_runs()</a></code> connects the requested run to the retained solution, and reports solver status, runtime and gap. <code><a href="reference/get_objectives.html">get_objectives()</a></code> returns the two components in their original units. The weighted scalar value can be reconstructed from these columns.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">knee</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_knee.html">frontier_knee</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">knee</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">solution_id</span>, <span class="va">cost</span>, <span class="va">benefit</span>, <span class="va">knee_score</span>, <span class="va">method</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   solution_id  cost  benefit knee_score   method</span></span>
-<span><span class="co">#&gt; 1           3 41.91 24.53516   0.295399 distance</span></span></code></pre></div>
-<p>The knee is a decision aid rather than a universally optimal answer. Its location depends on the solutions included in the observed frontier, the normalisation of the objectives, and the geometric criterion used to calculate the knee score. It should therefore be interpreted alongside policy preferences and the spatial characteristics of the selected plan.</p>
-<p><a href="https://josesalgr.github.io/multiscape/reference/frontier_extremes.html"><code>frontier_extremes()</code></a> and <a href="https://josesalgr.github.io/multiscape/reference/frontier_distances.html"><code>frontier_distances()</code></a> provide complementary views of the observed objective space. They identify the objective-wise extremes and calculate each solution’s normalised distance from the observed ideal and nadir points.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/frontier_extremes.html">frontier_extremes</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
-<span>  ties <span class="op">=</span> <span class="st">"first"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;   solution_id objective sense bound  role      value</span></span>
-<span><span class="co">#&gt; 1           1      cost   min   min  best   2.600000</span></span>
-<span><span class="co">#&gt; 2           6      cost   min   max worst 101.280000</span></span>
-<span><span class="co">#&gt; 3           1   benefit   max   min worst   1.185508</span></span>
-<span><span class="co">#&gt; 4           6   benefit   max   max  best  29.796218</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/frontier_distances.html">frontier_distances</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;   solution_id   cost   benefit norm_cost norm_benefit distance_to_ideal</span></span>
-<span><span class="co">#&gt; 1           1   2.60  1.185508 0.0000000 1.0000000000         1.0000000</span></span>
-<span><span class="co">#&gt; 2           2  22.25 15.359707 0.1991285 0.5045841386         0.5424549</span></span>
-<span><span class="co">#&gt; 3           3  41.91 24.535156 0.3983583 0.1838843574         0.4387514</span></span>
-<span><span class="co">#&gt; 4           4  61.41 29.006289 0.5959668 0.0276095455         0.5966060</span></span>
-<span><span class="co">#&gt; 5           5  81.46 29.782291 0.7991488 0.0004867732         0.7991489</span></span>
-<span><span class="co">#&gt; 6           6 101.28 29.796218 1.0000000 0.0000000000         1.0000000</span></span>
-<span><span class="co">#&gt;   rank_to_ideal</span></span>
-<span><span class="co">#&gt; 1             5</span></span>
-<span><span class="co">#&gt; 2             2</span></span>
-<span><span class="co">#&gt; 3             1</span></span>
-<span><span class="co">#&gt; 4             3</span></span>
-<span><span class="co">#&gt; 5             4</span></span>
-<span><span class="co">#&gt; 6             5</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
+<span><span class="va">performance</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
+<span><span class="va">performance</span><span class="op">$</span><span class="va">scalar_objective</span> <span class="op">&lt;-</span> <span class="va">performance</span><span class="op">$</span><span class="va">cost</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">performance</span><span class="op">$</span><span class="va">spatial</span></span>
+<span><span class="va">performance</span></span></code></pre></div>
+<p>Read these values from your own run: solver version and stopping tolerance can lead to different feasible plans. This simplified action formulation has its own results; the separate Prioriactions reproduction is not its benchmark.</p>
 </div>
 <div class="section level3">
-<h3 id="decision-space-spatial-prescriptions">Decision space: spatial prescriptions<a class="anchor" aria-label="anchor" href="#decision-space-spatial-prescriptions"></a>
+<h3 id="check-target-achievement">Check target achievement<a class="anchor" aria-label="anchor" href="#check-target-achievement"></a>
 </h3>
-<p>Plans that are close in objective space can still prescribe different actions in different locations. <a href="https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.html"><code>plot_spatial_actions()</code></a> complements the trade-off plot by showing how protection and restoration are reallocated as the cost limit is relaxed. Planning units shown only through the base layer receive no management action in the corresponding solution. In the call below, <code>solutions = 1:6</code> selects <strong>solution IDs</strong>, not run IDs; the preceding run registry provides the link between the two identifiers.</p>
+<p>Objectives answer how costly or fragmented the plan is. Targets answer whether it meets the ecological requirements. Inspect their achieved amounts separately.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/get_targets.html">get_targets</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Check all supplied targets, not just the first rows. A low cost alone does not demonstrate target achievement; feasibility depends on the target constraints and the selected actions that contribute representation.</p>
+</div>
+<div class="section level3">
+<h3 id="decision-space-where-are-the-strategies-selected">Decision space: where are the strategies selected?<a class="anchor" aria-label="anchor" href="#decision-space-where-are-the-strategies-selected"></a>
+</h3>
+<p>Map the selected strategies to see what the plan prescribes in each cell. Each strategy has its own map; a blank cell means that strategy was not selected there. Because at most one strategy is allowed per cell, these maps describe alternative spatial assignments rather than overlapping action bundles.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  solutions <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">6</span>,</span>
-<span>  fill_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    protect <span class="op">=</span> <span class="st">"#2E7D32"</span>,</span>
-<span>    restore <span class="op">=</span> <span class="st">"#E69F00"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  base_alpha <span class="op">=</span> <span class="fl">0.12</span></span>
+<span>  <span class="va">solutions</span>, solutions <span class="op">=</span> <span class="fl">1</span>, actions <span class="op">=</span> <span class="va">actions</span><span class="op">$</span><span class="va">id</span>, layout <span class="op">=</span> <span class="st">"facet"</span>, ncol <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-example-maps-1.png" alt="" width="100%"></p>
-<p>The sequence of maps should be interpreted together with the baseline feature patterns. Protection and restoration may expand into new planning units as larger budgets become available, but actions can also be substituted or relocated when a different spatial combination produces greater benefit under the active cost limit.</p>
+<p>The maps and objective values answer complementary questions: where to act, and how costly or fragmented the resulting plan is. The article’s maps summarize ten replicates with different final inputs and scenarios; the tutorial first inspects one plan and then explores alternatives from the available earlier dataset.</p>
 </div>
 <div class="section level3">
-<h3 id="compare-spatial-similarity">Compare spatial similarity<a class="anchor" aria-label="anchor" href="#compare-spatial-similarity"></a>
+<h3 id="an-executed-example">An executed example<a class="anchor" aria-label="anchor" href="#an-executed-example"></a>
 </h3>
-<p>Similar objective values do not necessarily imply similar spatial prescriptions. <a href="https://josesalgr.github.io/multiscape/reference/selection_similarity.html"><code>selection_similarity()</code></a> compares the sets of selected planning-unit–action pairs for every pair of solutions. Jaccard similarity is useful here because it focuses on jointly selected assignments and does not inflate similarity through planning units that remain unmanaged in both plans.</p>
-<p>A value of 1 indicates identical sets of selected assignments, whereas 0 indicates that the two solutions share no selected planning-unit–action pair. Rows and columns correspond to solution identifiers, and the diagonal is always 1 because every solution is identical to itself.</p>
+<p>The following maps show six solved plans for the bundled inputs, using spatial weights 0, 0.1, 0.25, 0.5, 1 and 2. Each plan meets all 155 targets. The colours identify Afforestation (yellow), BAU (green), FarmReturn (blue), and Firesmart (brown); grey cells have no selected action.</p>
+<div class="float">
+<img src="reference/figures/meseta-action-maps.png" alt="Six action maps across spatial weights"><div class="figcaption">Six action maps across spatial weights</div>
+</div>
+<p>These are representative solved plans, not the article’s ten-replicate selection frequencies. Solver stopping gaps allow alternative assignments in later runs. The next section explains how to generate and compare a set of plans.</p>
+</div>
+<div class="section level3">
+<h3 id="objective-space-explore-the-spatial-cost-trade-off">Objective space: explore the spatial-cost trade-off<a class="anchor" aria-label="anchor" href="#objective-space-explore-the-spatial-cost-trade-off"></a>
+</h3>
+<p>Once the original single run is understood, a separate planning question is how much extra cost greater cohesion requires. Keep the data and targets fixed and vary the spatial coefficient. Start from <code>action_problem</code>, saved before the method was configured. This branch accepts one method definition per problem, so create each method configuration from that shared formulation.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/selection_similarity.html">selection_similarity</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  metric <span class="op">=</span> <span class="st">"jaccard"</span>,</span>
-<span>  format <span class="op">=</span> <span class="st">"matrix"</span></span>
+<code class="sourceCode R"><span><span class="va">spatial_exploration</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/set_method_weighted_sum.html">set_method_weighted_sum</a></span><span class="op">(</span></span>
+<span>  <span class="va">action_problem</span>,</span>
+<span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
+<span>  runs <span class="op">=</span> <span class="fu"><a href="reference/set_runs_manual.html">set_runs_manual</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    weight_cost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">6</span><span class="op">)</span>,</span>
+<span>    weight_spatial <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span>,</span>
+<span>  normalize_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  objective_scaling <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;            1         2          3          4          5          6</span></span>
-<span><span class="co">#&gt; 1 1.00000000 0.0000000 0.03448276 0.02439024 0.01886792 0.01538462</span></span>
-<span><span class="co">#&gt; 2 0.00000000 1.0000000 0.53571429 0.37500000 0.28846154 0.23437500</span></span>
-<span><span class="co">#&gt; 3 0.03448276 0.5357143 1.00000000 0.70000000 0.53846154 0.43750000</span></span>
-<span><span class="co">#&gt; 4 0.02439024 0.3750000 0.70000000 1.00000000 0.76923077 0.62500000</span></span>
-<span><span class="co">#&gt; 5 0.01886792 0.2884615 0.53846154 0.76923077 1.00000000 0.78461538</span></span>
-<span><span class="co">#&gt; 6 0.01538462 0.2343750 0.43750000 0.62500000 0.78461538 1.00000000</span></span>
-<span><span class="co">#&gt; attr(,"metric")</span></span>
-<span><span class="co">#&gt; [1] "jaccard"</span></span></code></pre></div>
+<span><span class="va">spatial_exploration</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/set_solver_gurobi.html">set_solver_gurobi</a></span><span class="op">(</span></span>
+<span>  <span class="va">spatial_exploration</span>, gap_limit <span class="op">=</span> <span class="fl">0.02</span>, time_limit <span class="op">=</span> <span class="fl">300</span>, cores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  solver_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Method <span class="op">=</span> <span class="fl">2</span>, NodefileStart <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">alternatives</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">spatial_exploration</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">alternatives</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/plot_tradeoff.html">plot_tradeoff</a></span><span class="op">(</span></span>
+<span>  <span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
+<span>  connect <span class="op">=</span> <span class="cn">FALSE</span>, label_runs <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Both components are minimized, so lower values on either axis are preferable. Increasing the spatial coefficient prioritizes cohesion relative to cost. Six weighted runs sample this trade-off; they do not establish the complete frontier. This extension is a sensitivity analysis, not a replication of the article’s climate scenarios or its ten stochastic replicates.</p>
 </div>
 <div class="section level3">
-<h3 id="identify-recurrent-action-assignments">Identify recurrent action assignments<a class="anchor" aria-label="anchor" href="#identify-recurrent-action-assignments"></a>
+<h3 id="an-observed-trade-off">An observed trade-off<a class="anchor" aria-label="anchor" href="#an-observed-trade-off"></a>
 </h3>
-<p><a href="https://josesalgr.github.io/multiscape/reference/selection_frequency.html"><code>selection_frequency()</code></a> calculates how often each planning-unit–action pair is selected across the solution set. In this example, frequency is the proportion of the six solutions containing a particular assignment. High frequency indicates recurrence across the explored trade-offs, but it should not, on its own, be interpreted as ecological irreplaceability.</p>
+<div class="float">
+<img src="reference/figures/meseta-tradeoff.png" alt="Cost versus action fragmentation"><div class="figcaption">Cost versus action fragmentation</div>
+</div>
+<p>Both objectives are minimized. In the six audited plans above, moving from weight 0 to weight 2 increases cost by approximately 16% and reduces action fragmentation by approximately 95%. These runs sample the trade-off rather than proving its complete Pareto frontier. Solution 5 improves both objective values of solution 4, which remains in the sample because of finite stopping gaps; frontier diagnostics use the observed non-dominated set.</p>
+</div>
+<div class="section level3">
+<h3 id="compare-spatial-similarity-and-recurrent-assignments">Compare spatial similarity and recurrent assignments<a class="anchor" aria-label="anchor" href="#compare-spatial-similarity-and-recurrent-assignments"></a>
+</h3>
+<p>For a set of alternatives, objective values show performance, while decision analysis shows whether that performance requires different actions in space. Jaccard similarity measures overlap in selected unit-action pairs; a value of one indicates identical selected assignments.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">action_frequency</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/selection_frequency.html">selection_frequency</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span></span>
-<span>  <span class="va">action_frequency</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">action_frequency</span><span class="op">$</span><span class="va">frequency</span><span class="op">)</span>, <span class="op">]</span>,</span>
-<span>  <span class="fl">10</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;    pu  action n_selected n_solutions frequency</span></span>
-<span><span class="co">#&gt; 20 18 restore          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 22 19 restore          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 42 28 restore          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 55 34 protect          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 57 35 protect          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 62 37 restore          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 64 38 restore          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 71 41 protect          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 73 42 protect          5           6 0.8333333</span></span>
-<span><span class="co">#&gt; 75 43 protect          5           6 0.8333333</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/selection_similarity.html">selection_similarity</a></span><span class="op">(</span><span class="va">alternatives</span>, metric <span class="op">=</span> <span class="st">"jaccard"</span>, format <span class="op">=</span> <span class="st">"matrix"</span><span class="op">)</span></span>
+<span><span class="va">action_frequency</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/selection_frequency.html">selection_frequency</a></span><span class="op">(</span><span class="va">alternatives</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">action_frequency</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">action_frequency</span><span class="op">$</span><span class="va">frequency</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<p>Frequency measures recurrence of the four management actions across the explored weights, not ecological irreplaceability or selection probability across the paper’s replicates. The objective, decision and linkage tools illustrated in the <a href="examples/simulated_workflow.Rmd">simulated workflow</a> provide a fuller introduction to analysing many alternatives.</p>
 </div>
 <div class="section level3">
-<h3 id="link-objective-performance-to-spatial-change">Link objective performance to spatial change<a class="anchor" aria-label="anchor" href="#link-objective-performance-to-spatial-change"></a>
+<h3 id="identify-an-empirical-compromise">Identify an empirical compromise<a class="anchor" aria-label="anchor" href="#identify-an-empirical-compromise"></a>
 </h3>
-<p>Objective-space proximity does not necessarily imply similar spatial prescriptions. <a href="https://josesalgr.github.io/multiscape/reference/frontier_neighbors.html"><code>frontier_neighbors()</code></a> identifies local neighbours along the observed objective-space trade-off. Here, solutions are oriented towards increasing ecological benefit, matching the progression from lower- to higher-budget plans used above. <a href="https://josesalgr.github.io/multiscape/reference/linkage_distances.html"><code>linkage_distances()</code></a> then compares those same solution pairs in objective and decision space.</p>
+<p><code><a href="reference/frontier_knee.html">frontier_knee()</a></code> suggests a compromise among the observed non-dominated solutions. Its recommendation depends on the sampled weights and normalized objective geometry; it is a decision aid, not a uniquely best plan. <code><a href="reference/frontier_extremes.html">frontier_extremes()</a></code> and <code><a href="reference/frontier_distances.html">frontier_distances()</a></code> describe the observed extremes and each plan’s position relative to the observed ideal and nadir.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">neighbors</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_neighbors.html">frontier_neighbors</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"benefit"</span>, <span class="st">"cost"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">linkage</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/linkage_distances.html">linkage_distances</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
-<span>  pairs <span class="op">=</span> <span class="va">neighbors</span>,</span>
-<span>  decision_metric <span class="op">=</span> <span class="st">"jaccard"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">linkage</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
-<span>    <span class="va">from_solution</span>,</span>
-<span>    <span class="va">to_solution</span>,</span>
-<span>    <span class="va">objective_distance</span>,</span>
-<span>    <span class="va">decision_distance</span>,</span>
-<span>    <span class="va">changed_planning_units</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt;   from_solution to_solution objective_distance decision_distance</span></span>
-<span><span class="co">#&gt; 1             1           2          0.5339373         1.0000000</span></span>
-<span><span class="co">#&gt; 2             2           3          0.3775459         0.4642857</span></span>
-<span><span class="co">#&gt; 3             3           4          0.2519343         0.3000000</span></span>
-<span><span class="co">#&gt; 4             4           5          0.2049843         0.2307692</span></span>
-<span><span class="co">#&gt; 5             5           6          0.2008518         0.2153846</span></span>
-<span><span class="co">#&gt;   changed_planning_units</span></span>
-<span><span class="co">#&gt; 1                     16</span></span>
-<span><span class="co">#&gt; 2                     13</span></span>
-<span><span class="co">#&gt; 3                     12</span></span>
-<span><span class="co">#&gt; 4                     12</span></span>
-<span><span class="co">#&gt; 5                     13</span></span></code></pre></div>
-<p>The two distances describe different aspects of the same comparison: <code>objective_distance</code> measures separation in normalised objective space, whereas <code>decision_distance</code> measures dissimilarity between spatial action allocations. Keeping them separate makes it possible to identify similar levels of performance that require substantially different spatial plans.</p>
-<p><a href="https://josesalgr.github.io/multiscape/reference/linkage_transition.html"><code>linkage_transition()</code></a> provides a more detailed view of a selected comparison. Here, we examine the transition from solution 3 to solution 4.</p>
+<code class="sourceCode R"><span><span class="va">knee</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_knee.html">frontier_knee</a></span><span class="op">(</span><span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">knee</span></span>
+<span><span class="fu"><a href="reference/frontier_extremes.html">frontier_extremes</a></span><span class="op">(</span><span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/frontier_distances.html">frontier_distances</a></span><span class="op">(</span><span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="link-performance-to-spatial-changes">Link performance to spatial changes<a class="anchor" aria-label="anchor" href="#link-performance-to-spatial-changes"></a>
+</h3>
+<p>Compare neighbours in objective space and ask whether moving between those plans changes many management prescriptions. Objective distance uses normalized performance; decision distance uses the selected unit-action pairs. Neither measure alone describes both kinds of change.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">transition</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/linkage_transition.html">linkage_transition</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  from <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  to <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">neighbors</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_neighbors.html">frontier_neighbors</a></span><span class="op">(</span><span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">linkage</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/linkage_distances.html">linkage_distances</a></span><span class="op">(</span></span>
+<span>  <span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
+<span>  pairs <span class="op">=</span> <span class="va">neighbors</span>, decision_metric <span class="op">=</span> <span class="st">"jaccard"</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">transition</span></span>
-<span><span class="co">#&gt; Spatial solution transition</span></span>
-<span><span class="co">#&gt; From solution: 3 </span></span>
-<span><span class="co">#&gt; To solution:   4 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Planning units changed: 12 of 64 (18.8%)</span></span>
-<span><span class="co">#&gt; Activated:            12 </span></span>
-<span><span class="co">#&gt; Deactivated:          0 </span></span>
-<span><span class="co">#&gt; Action switches:      0 </span></span>
-<span><span class="co">#&gt; Composition changes:  0 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Objective changes:</span></span>
-<span><span class="co">#&gt; - cost: 19.5 (improvement -19.5)</span></span>
-<span><span class="co">#&gt; - benefit: 4.47113 (improvement 4.47113)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Use `$summary`, `$objectives`, `$transitions`, `$actions`, or `$state_matrix` for details.</span></span></code></pre></div>
-<p>The printed summary reports objective and decision distances, the number of planning units whose state changes, and the corresponding changes in each objective. Detailed planning-unit, action, and state-transition tables remain available within the returned object.</p>
-<p><a href="https://josesalgr.github.io/multiscape/reference/linkage_turnover.html"><code>linkage_turnover()</code></a> extends these local comparisons by relating decision-space turnover to the associated objective-space change. Its <code>reconfiguration_rate</code> highlights local transitions that require comparatively large spatial changes for a given separation in objective performance.</p>
+<span><span class="va">linkage</span></span>
+<span><span class="va">turnover</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/linkage_turnover.html">linkage_turnover</a></span><span class="op">(</span></span>
+<span>  <span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
+<span>  pairs <span class="op">=</span> <span class="va">neighbors</span>, decision_metric <span class="op">=</span> <span class="st">"jaccard"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">turnover</span></span></code></pre></div>
+<p>To inspect a particular transition, use its solution identifiers. The returned object includes a summary, individual cell transitions, action changes and a state-transition matrix. Recurrence and consistency describe this sampled set of plans; they do not establish ecological irreplaceability.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">turnover</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/linkage_turnover.html">linkage_turnover</a></span><span class="op">(</span></span>
-<span>  <span class="va">solutions</span>,</span>
-<span>  objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"benefit"</span><span class="op">)</span>,</span>
-<span>  pairs <span class="op">=</span> <span class="va">neighbors</span>,</span>
-<span>  decision_metric <span class="op">=</span> <span class="st">"jaccard"</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/linkage_contrasts.html">linkage_contrasts</a></span><span class="op">(</span><span class="va">turnover</span>, type <span class="op">=</span> <span class="st">"high_reconfiguration"</span>, n <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/linkage_transition.html">linkage_transition</a></span><span class="op">(</span></span>
+<span>  <span class="va">alternatives</span>, from <span class="op">=</span> <span class="fl">1</span>, to <span class="op">=</span> <span class="fl">2</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">turnover</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
-<span>    <span class="va">from_solution</span>,</span>
-<span>    <span class="va">to_solution</span>,</span>
-<span>    <span class="va">objective_distance</span>,</span>
-<span>    <span class="va">decision_distance</span>,</span>
-<span>    <span class="va">reconfiguration_rate</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt;   from_solution to_solution objective_distance decision_distance</span></span>
-<span><span class="co">#&gt; 1             1           2          0.5339373         1.0000000</span></span>
-<span><span class="co">#&gt; 2             2           3          0.3775459         0.4642857</span></span>
-<span><span class="co">#&gt; 3             3           4          0.2519343         0.3000000</span></span>
-<span><span class="co">#&gt; 4             4           5          0.2049843         0.2307692</span></span>
-<span><span class="co">#&gt; 5             5           6          0.2008518         0.2153846</span></span>
-<span><span class="co">#&gt;   reconfiguration_rate</span></span>
-<span><span class="co">#&gt; 1             1.872879</span></span>
-<span><span class="co">#&gt; 2             1.229747</span></span>
-<span><span class="co">#&gt; 3             1.190786</span></span>
-<span><span class="co">#&gt; 4             1.125790</span></span>
-<span><span class="co">#&gt; 5             1.072356</span></span></code></pre></div>
-<p>Informative pairs can then be selected reproducibly with <a href="https://josesalgr.github.io/multiscape/reference/linkage_contrasts.html"><code>linkage_contrasts()</code></a>. For example, the contrasts below identify the local transitions with the largest spatial reconfiguration relative to objective-space change.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/linkage_contrasts.html">linkage_contrasts</a></span><span class="op">(</span></span>
-<span>  <span class="va">turnover</span>,</span>
-<span>  type <span class="op">=</span> <span class="st">"high_reconfiguration"</span>,</span>
-<span>  n <span class="op">=</span> <span class="fl">2</span></span>
-<span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
-<span>    <span class="va">contrast_rank</span>,</span>
-<span>    <span class="va">contrast_type</span>,</span>
-<span>    <span class="va">from_solution</span>,</span>
-<span>    <span class="va">to_solution</span>,</span>
-<span>    <span class="va">objective_distance</span>,</span>
-<span>    <span class="va">decision_distance</span>,</span>
-<span>    <span class="va">reconfiguration_rate</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt;   contrast_rank        contrast_type from_solution to_solution</span></span>
-<span><span class="co">#&gt; 1             1 high_reconfiguration             1           2</span></span>
-<span><span class="co">#&gt; 2             2 high_reconfiguration             2           3</span></span>
-<span><span class="co">#&gt;   objective_distance decision_distance reconfiguration_rate</span></span>
-<span><span class="co">#&gt; 1          0.5339373         1.0000000             1.872879</span></span>
-<span><span class="co">#&gt; 2          0.3775459         0.4642857             1.229747</span></span></code></pre></div>
-<p><code><a href="reference/selection_consistency.html">selection_consistency()</a></code> provides a complementary decision-space summary of which planning-unit states recur or vary across the alternatives considered.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/selection_consistency.html">selection_consistency</a></span><span class="op">(</span><span class="va">alternatives</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>The executable tutorial is <a href="examples/meseta_iberica.R">examples/meseta_iberica.R</a>. It includes the single-run formulation, the six-weight exploration and the objective, decision and linkage analyses above. The <a href="examples/simulated_workflow.Rmd">simulated workflow</a> illustrates additional methods and diagnostics on a smaller dataset.</p>
 </div>
 </div>
 <div class="section level2">
@@ -556,7 +464,7 @@
 <li>alternative actions and action-specific effects;</li>
 <li>targets, budgets, area requirements, and locked decisions;</li>
 <li>boundary, adjacency, distance, and other spatial relations;</li>
-<li>objectives for cost, benefit, loss, profit, impact, and fragmentation;</li>
+<li>objectives for cost, signed effects, profit, and fragmentation;</li>
 <li>post-optimisation analysis in objective space, decision space, and their objective–decision linkage; and</li>
 <li>commercial or open-source optimisation solvers.</li>
 </ul>
@@ -569,9 +477,9 @@
 <li>
 <strong>AUGMECON</strong>, the augmented epsilon-constraint method, for systematic generation of efficient alternatives.</li>
 </ul>
-<figure><img src="reference/figures/overview_multiscape.png" alt="The multiscape workflow: define the problem, add actions and effects, specify constraints and objectives, solve, and compare spatial plans."><figcaption aria-hidden="true">
-The multiscape workflow: define the problem, add actions and effects, specify constraints and objectives, solve, and compare spatial plans.
-</figcaption></figure>
+<div class="float">
+<img src="reference/figures/overview_multiscape.png" alt="The multiscape workflow: define the problem, add actions and effects, specify constraints and objectives, solve, and compare spatial plans."><div class="figcaption">The multiscape workflow: define the problem, add actions and effects, specify constraints and objectives, solve, and compare spatial plans.</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
@@ -582,6 +490,7 @@ The multiscape workflow: define the problem, add actions and effects, specify co
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Cánibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C., Salgado-Rojas, J., Sil, Â., &amp; Regos, A. (2025). Integrating multiple landscape management strategies to optimise conservation under climate and planning scenarios: a case study in the Iberian Peninsula. <em>Ecosystem Services</em>, <strong>74</strong>, 101742. <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">doi:10.1016/j.ecoser.2025.101742</a>.</p>
 <p>Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions: spatial action maps for conservation. <em>Annals of the New York Academy of Sciences</em>, <strong>1505</strong>(1), 118–141. <a href="https://doi.org/10.1111/nyas.14651" class="external-link">doi:10.1111/nyas.14651</a>.</p>
 <p>Salgado-Rojas, J., Hermoso, V., &amp; Álvarez-Miranda, E. (2023). prioriactions: Multi-action management planning in R. <em>Methods in Ecology and Evolution</em>. <a href="https://doi.org/10.1111/2041-210X.14220" class="external-link">doi:10.1111/2041-210X.14220</a>.</p>
 <p>Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use spatial planning for sustainable development and conservation. <em>Trends in Ecology &amp; Evolution</em>, <strong>40</strong>(11), 1126–1142. <a href="https://doi.org/10.1016/j.tree.2025.09.007" class="external-link">doi:10.1016/j.tree.2025.09.007</a>.</p>

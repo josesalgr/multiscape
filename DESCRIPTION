@@ -1,6 +1,6 @@
 Package: multiscape
 Type: Package
-Version: 1.3.0
+Version: 1.4.0
 Title: Multi-Objective Spatial Planning
 Description: Provides a modular framework for exact multi-objective spatial
     planning using mixed-integer programming. The package supports the
@@ -92,7 +92,10 @@ Collate:
     'RcppExports.R'
     'internal.R'
     'add_action_max_per_pu.R'
+    'add_action_sets.R'
     'add_actions.R'
+    'add_constraint_action_cardinality.R'
+    'add_constraint_action_relations.R'
     'add_constraint_area.R'
     'add_constraint_budget.R'
     'add_constraint_locked_actions.R'
@@ -113,6 +116,7 @@ Collate:
     'create_problem.R'
     'data-sim.R'
     'globals.R'
+    'joint_effects.R'
     'load_sim.R'
     'package.R'
     'plot.R'

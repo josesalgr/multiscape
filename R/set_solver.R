@@ -35,17 +35,14 @@
 #'   \item \code{solver_params}.
 #' }
 #'
-#' \strong{Incremental update semantics}
+#' \strong{Single configuration}
 #'
-#' This function updates solver settings incrementally.
-#'
-#' If an argument is supplied as \code{NULL}, the previously stored value is
-#' kept unchanged. Therefore, repeated calls can be used to modify only selected
-#' components of the solver configuration.
-#'
-#' For example, a user may first configure the solver backend and time limit,
-#' and later update only the optimality gap or only a backend-specific
-#' parameter.
+#' Solver settings can be configured only once per problem, including through
+#' backend wrappers. A second call raises an error, even if the arguments are
+#' identical. Supply all settings together. Arguments left as \code{NULL} use
+#' solver defaults. Reading defaults does not count as explicit configuration.
+#' To compare configurations, derive each alternative from the same problem
+#' before the first solver call.
 #'
 #' \strong{Gap limit}
 #'
@@ -110,9 +107,7 @@
 #'   \item through additional named arguments in \code{...}.
 #' }
 #'
-#' These two sources are merged, and the result is then merged with any
-#' previously stored \code{solver_params}. Existing parameters are therefore
-#' preserved unless explicitly overwritten.
+#' These two sources are merged within the single configuration call.
 #'
 #' This is particularly useful for backend-specific controls such as node
 #' selection, emphasis parameters, tolerances, or heuristics.
@@ -197,9 +192,9 @@
 #'
 #' x1$data$solve_args
 #'
-#' # Update only selected settings
+#' # Define an alternative from the common unconfigured problem
 #' x2 <- set_solver(
-#'   x1,
+#'   x,
 #'   gap_limit = 0.05,
 #'   solver_params = list(randomSeed = 123)
 #' )
@@ -227,6 +222,7 @@ set_solver <- function(
     )
   }
 
+  .pa_assert_unconfigured(x, "solve_args", "Solver configuration", "set_solver()")
   if (exists(".pa_clone_data", mode = "function")) {
     x <- .pa_clone_data(x)
   }
@@ -446,9 +442,8 @@ set_solver <- function(
     x$data$solve_args <- list()
   }
 
-  # Begin with the existing configuration so that NULL arguments preserve
-  # previously stored values.
-  out <- x$data$solve_args
+  # First and only explicit configuration; NULL values leave solver defaults.
+  out <- list()
 
   out$solver <- solver
 
@@ -480,15 +475,7 @@ set_solver <- function(
     out$name_output_file <- log_file
   }
 
-  # Backend-specific parameters are preserved for incremental updates of the
-  # same backend, but are not carried silently when switching solvers.
-  previous_solver_params <- if (!is.null(stored_solver) &&
-                                !identical(stored_solver, solver)) {
-    list()
-  } else {
-    out$solver_params %||% list()
-  }
-  out$solver_params <- utils::modifyList(previous_solver_params, solver_params)
+  out$solver_params <- solver_params
 
   # Report settings that cannot be transmitted by the selected R interface.
   unavailable <- character(0)
@@ -580,6 +567,9 @@ set_solver <- function(
 #'
 #' This function does not solve the model. It only updates the stored solver
 #' configuration.
+#' A solver can be configured only once per problem. Calling this wrapper after
+#' any solver setter raises an error. Derive alternatives from the same problem
+#' before its first solver configuration.
 #'
 #' @inheritParams set_solver
 #'
@@ -638,6 +628,9 @@ set_solver_gurobi <- function(x, ..., solver_params = list(), gap_limit = NULL, 
 #'
 #' This function does not solve the model. It only updates the stored solver
 #' configuration.
+#' A solver can be configured only once per problem. Calling this wrapper after
+#' any solver setter raises an error. Derive alternatives from the same problem
+#' before its first solver configuration.
 #'
 #' @inheritParams set_solver
 #'
@@ -693,6 +686,9 @@ set_solver_cbc <- function(x, ..., solver_params = list(), gap_limit = NULL, tim
 #' @description
 #' Convenience wrapper around \code{\link{set_solver}} that sets
 #' \code{solver = "cplex"}.
+#' A solver can be configured only once per problem. Calling this wrapper after
+#' any solver setter raises an error. Derive alternatives from the same problem
+#' before its first solver configuration.
 #'
 #' @inheritParams set_solver
 #'
@@ -749,6 +745,9 @@ set_solver_cplex <- function(x, ..., solver_params = list(), gap_limit = NULL, t
 #'
 #' This function does not solve the model. It only updates the stored solver
 #' configuration.
+#' A solver can be configured only once per problem. Calling this wrapper after
+#' any solver setter raises an error. Derive alternatives from the same problem
+#' before its first solver configuration.
 #'
 #' @inheritParams set_solver
 #'

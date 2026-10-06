@@ -11,7 +11,7 @@
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +30,12 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -49,6 +54,33 @@
       <small>Source: <a href="https://github.com/josesalgr/multiscape/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.4.0" id="multiscape-140">multiscape 1.4.0<a class="anchor" aria-label="anchor" href="#multiscape-140"></a></h2>
+<ul><li><p>Added <code><a href="../reference/add_objective_max_effect.html">add_objective_max_effect()</a></code> and <code><a href="../reference/add_objective_min_effect.html">add_objective_min_effect()</a></code> for signed changes relative to the reference, including action interactions. Their arguments are <code>x</code>, <code>actions</code>, <code>features</code>, and <code>alias</code>.</p></li>
+<li><p><code><a href="../reference/add_objective_max_benefit.html">add_objective_max_benefit()</a></code> is deprecated with lifecycle and delegates to <code><a href="../reference/add_objective_max_effect.html">add_objective_max_effect()</a></code>, retaining the development branch’s signed-net behavior. The published positive-only behavior changed earlier in this branch.</p></li>
+<li><p><code><a href="../reference/add_objective_min_loss.html">add_objective_min_loss()</a></code> is deprecated but retains its original final negative-part criterion. <code>min_effect()</code> is not an equivalent replacement: it minimizes signed change and permits compensation. No removal date is set.</p></li>
+<li><p>Added an educational Meseta Ibérica action-planning tutorial, bundled inputs, and a runnable script covering spatial-cost trade-offs and spatial analyses.</p></li>
+<li><p>Improved prototype/data-cloning memory use and indexed planning-unit analyses.</p></li>
+<li><p>Bounded polygon/raster extraction buffers to avoid eager full-raster allocation failures when building large landscape examples.</p></li>
+</ul><div class="section level3">
+<h3 id="other-changes-1-4-0">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-1-4-0"></a></h3>
+<ul><li><p>Fixed single-objective <code>min_cost</code> action scopes so they agree with the MO cost criterion; planning-unit costs remain global and feasible actions retain their original indices.</p></li>
+<li><p>Fixed CBC crashes/short solution vectors caused by trailing empty matrix rows or columns, including fully locked legacy impact models. A redundant bound row preserves dimensions without changing the feasible decisions.</p></li>
+<li><p>MO solves use bounded positive scalar-objective rescaling, with values returned in their original units. CBC and Gurobi receive precise numerical defaults; explicit solver parameters take precedence. Epsilon bounds are checked against reevaluated selected decisions and checks/effective settings are recorded in solution diagnostics. Binary integrality noise no longer enters objective evaluation or automatic epsilon endpoints.</p></li>
+<li><p>After an optimal AUGMECON solve, refine normalized slacks at the attained primary level within the remaining time limit. The original augmented criterion and global status/gap are preserved and refinement is recorded.</p></li>
+<li><p>Native model allocation reserves memory according to the actual core size rather than one million rows/columns for every temporary MO model.</p></li>
+<li><p>Deprecated <code><a href="../reference/add_objective_min_intervention_impact.html">add_objective_min_intervention_impact()</a></code> with <code>lifecycle</code>. It keeps its original behavior and arguments until removal in a future release. New workflows express action consequences through effects and net benefit. The forest-restoration example now uses deficit effects with a common ceiling per feature and fixed restoration effort, documenting the equivalence and its limits. Cached plans are migrated by exact affine evaluation of their decisions.</p></li>
+<li><p><strong>Changed behavior:</strong> <code><a href="../reference/add_objective_max_benefit.html">add_objective_max_benefit()</a></code> now maximizes signed net change relative to the reference, including negative individual effects and interaction corrections. Earlier versions counted positive effects only; models with negative effects may select different plans. Names and public arguments are unchanged; no separate net-benefit function is introduced.</p></li>
+<li><p><code><a href="../reference/add_objective_min_loss.html">add_objective_min_loss()</a></code> retains its loss-only criterion, with the negative part computed after combining actions within each planning unit and feature. Exact loss auxiliaries support mixed signs, overlapping scopes, zero weights, secondary bounds, and payoff/lexicographic solves in all three MO methods.</p></li>
+<li><p>Concurrent individual effects are additive unless joint totals are supplied. Ecological targets and result summaries count the reference once per selected unit in their action scope, using signed joint changes for final outcomes. <code>selected_benefit</code> remains the positive-gain metric; <code>selected_net</code> matches the signed benefit objective when their scopes coincide.</p></li>
+<li><p>Modern <code><a href="../reference/add_effects.html">add_effects()</a></code> tables and rasters accept registered action sets as total joint outcomes, effects, or relative changes. Original totals and input tables are preserved separately from sparse signed subset corrections. Missing interactions/individual effects are explicitly assumed zero. Exact continuous AND auxiliaries are shared across features, created only for feasible non-zero corrections, and integrated into single-objective and all three MO formulations. Inferred negative outcomes are excluded. Joint solution summaries aggregate signed changes per PU/feature and count the selected reference once. Signed ecological objectives and concurrent targets use the final aggregation described above.</p></li>
+<li><p>Added <code><a href="../reference/add_constraint_action_requires.html">add_constraint_action_requires()</a></code> (all/any companions), <code><a href="../reference/add_constraint_action_excludes.html">add_constraint_action_excludes()</a></code> (at most one group member), and <code><a href="../reference/add_constraint_action_together.html">add_constraint_action_together()</a></code> (all or none), scoped separately by PU. Distinct rules accumulate; duplicate identities and names are errors. Unavailable actions are treated as zero, including missing pairs, exclusions, and filtered non-finite costs. Relations use the same compiled feasible set for single-objective, weighted-sum, epsilon-constraint, and AUGMECON methods. They do not lift the default action-count limit or introduce joint effects.</p></li>
+<li><p>Defined a strict repeated-call contract without adding public arguments. Actions, effects (including legacy wrappers), profit, solver settings, MO methods, and unaliased objectives can be defined only once per problem. Second definitions raise an error instead of replacing data or settings. Distinct sets, constraints, spatial names, and objective aliases accumulate. Locks accumulate compatible states and reject inversions in either call order. Targets reject duplicate feature/action scopes immediately, including across absolute and relative calls. Budget identity includes cost components and area identity includes its measure. Compare configurations by deriving each alternative from a common problem before its first definition.</p></li>
+<li><p>Added <code><a href="../reference/add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code> for per-unit minimum, maximum, or exact action counts. Repeated calls support distinct spatial and action scopes; explicit total maxima/equalities replace the implicit one-action limit only in their covered units. Rules are compiled for single-objective and multi-objective methods, including concurrent economic and ecological workflows with final feature aggregation.</p></li>
+<li><p>Added <code><a href="../reference/add_action_sets.html">add_action_sets()</a></code> for named lists or long membership tables and <code><a href="../reference/get_action_sets.html">get_action_sets()</a></code> for inspecting definitions. Actions can belong to several sets. Definitions are independent of action feasibility, selection rules, costs, and effects; registering them does not enable simultaneous actions.</p></li>
+<li><p>Action-set registration validates members and identifier conflicts, adds new sets across calls, and preserves the original problem. Action catalogs are fixed after their first definition, protecting dependent sets and indices.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="multiscape-130">multiscape 1.3.0<a class="anchor" aria-label="anchor" href="#multiscape-130"></a></h2>
 <ul><li>

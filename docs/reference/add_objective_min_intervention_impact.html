@@ -5,12 +5,16 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add objective: minimize intervention impact — add_objective_min_intervention_impact"><meta name="description" content="Define an objective that minimizes the impact associated with selecting
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Add objective: minimize intervention impact — add_objective_min_intervention_impact"><meta name="description" content="
+Deprecated; retained temporarily with its original behavior.
+Define an objective that minimizes the impact associated with selecting
 planning units for intervention.
 This objective uses planning-unit selection variables rather than summing the
 same impact repeatedly over multiple actions. As a result, each planning unit
 contributes at most once to the objective, regardless of how many feasible
-actions exist in that unit."><meta property="og:description" content="Define an objective that minimizes the impact associated with selecting
+actions exist in that unit."><meta property="og:description" content="
+Deprecated; retained temporarily with its original behavior.
+Define an objective that minimizes the impact associated with selecting
 planning units for intervention.
 This objective uses planning-unit selection variables rather than summing the
 same impact repeatedly over multiple actions. As a result, each planning unit
@@ -21,7 +25,7 @@ actions exist in that unit."><meta property="og:image" content="https://josesalg
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -29,7 +33,7 @@ actions exist in that unit."><meta property="og:image" content="https://josesalg
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +44,12 @@ actions exist in that unit."><meta property="og:image" content="https://josesalg
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -61,7 +70,9 @@ actions exist in that unit."><meta property="og:image" content="https://josesalg
     </div>
 
     <div class="ref-description section level2">
-    <p>Define an objective that minimizes the impact associated with selecting
+    <p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a></p>
+<p>Deprecated; retained temporarily with its original behavior.</p>
+<p>Define an objective that minimizes the impact associated with selecting
 planning units for intervention.</p>
 <p>This objective uses planning-unit selection variables rather than summing the
 same impact repeatedly over multiple actions. As a result, each planning unit
@@ -116,29 +127,39 @@ multi-objective workflows.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Use this function when intervention itself has a baseline ecological, social,
-or operational burden that should be minimized independently of the detailed
-effects of particular actions.</p>
-<p>Let \(w_i \in \{0,1\}\) denote whether planning unit \(i\) is selected
-for intervention. Let \(q_{if}\) denote the impact amount associated with
-planning unit \(i\) and feature \(f\), taken from column
-<code>impact_col</code> in the feature-distribution table.</p>
-<p>If all selected features are included, the objective can be interpreted as:</p>
-<p>$$
-\min \sum_{i \in \mathcal{I}} \left( \sum_{f \in \mathcal{F}^{\star}} q_{if}
-\right) w_i,
-$$</p>
-<p>where \(\mathcal{F}^{\star}\) denotes the selected subset of features.</p>
-<p>Thus, the coefficient attached to \(w_i\) is the aggregated impact of the
-selected features in planning unit \(i\).</p>
-<p>The role of <code>actions</code> in this objective is not to make impact additive
-over actions, but to restrict the notion of intervention to planning units
-that are relevant for the selected subset of actions in downstream model
-construction. Even when multiple feasible actions exist in a planning unit,
-the planning unit contributes at most once through \(w_i\).</p>
-<p>This objective is useful when intervention itself has a baseline ecological,
-social, or operational impact that should be minimized independently of the
-detailed gain or loss generated by particular actions.</p>
+    <p>The legacy objective minimizes the reference amount in units where at least
+one action in the selected scope is executed, counting each unit once. Its
+original arguments, objective sense, and single/MO formulations remain
+available during the transition.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="migration">Migration<a class="anchor" aria-label="anchor" href="#migration"></a></h2>
+
+
+<p>This function will be removed in a future version of multiscape. New workflows
+should express action consequences with <code><a href="add_effects.html">add_effects</a></code> and optimize
+signed changes with <code><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></code>.</p>
+<p>This is not an automatic replacement. For deficit-based prioritization,
+let \(q_{if}\) be the reference amount and \(M_f\) a common ceiling for
+feature \(f\). Supply \(M_f-q_{if}\) as the restoration effect, or
+\(M_f\) as its outcome. If every plan restores exactly \(K\) units and
+at most one scoped action is selected in each unit, then
+$$\sum_i(M_f-q_{if})r_i=K M_f-\sum_iq_{if}r_i.$$
+Maximizing this deficit is equivalent to minimizing the old baseline sum.
+Equal area fixes \(K\) only when units have equal effective action areas.
+With variable effort, varying ceilings, or concurrent scoped actions,
+equivalence is not guaranteed. The common ceiling is a modelling assumption,
+not an empirical estimate of restoration response.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="repeated-calls">Repeated calls<a class="anchor" aria-label="anchor" href="#repeated-calls"></a></h2>
+
+
+<p>With <code>alias = NULL</code>, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an error.
+Aliased definitions preserve an explicitly configured single objective.
+To compare alternatives, start from the problem before its objective was added.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -148,83 +169,34 @@ detailed gain or loss generated by particular actions.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load a complete simulated planning problem.</span></span></span>
-<span class="r-in"><span><span class="va">example_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_sim_multiaction.html">load_sim_multiaction</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Equal-area units with a fixed restoration effort of two units.</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  pu <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">planning_units</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">features</span>,</span></span>
-<span class="r-in"><span>  dist_features <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">dist_features</span>,</span></span>
-<span class="r-in"><span>  cost <span class="op">=</span> <span class="st">"cost"</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, cost <span class="op">=</span> <span class="fl">1</span>, area <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, name <span class="op">=</span> <span class="st">"service"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, feature <span class="op">=</span> <span class="fl">1</span>, amount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.6</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">actions</span>,</span></span>
-<span class="r-in"><span>    cost <span class="op">=</span> <span class="va">example_data</span><span class="op">$</span><span class="va">action_costs</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu">add_objective_min_intervention_impact</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p1</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">model_args</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"restore"</span><span class="op">)</span>, cost <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_effects.html">add_effects</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>action <span class="op">=</span> <span class="st">"restore"</span>, feature <span class="op">=</span> <span class="st">"service"</span>, outcome <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_constraint_area.html">add_constraint_area</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"equal"</span>, tolerance <span class="op">=</span> <span class="fl">0</span>, actions <span class="op">=</span> <span class="st">"restore"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>features <span class="op">=</span> <span class="st">"service"</span>, actions <span class="op">=</span> <span class="st">"restore"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`add_objective_max_benefit()` was deprecated in multiscape 1.4.0.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">i</span> Please use `add_objective_max_effect()` instead.</span>
+<span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">model_args</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "minimizeInterventionImpact"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "maximizeBenefits"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $objective_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "min_intervention_impact"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "max_effect"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$impact_col</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "amount"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$features</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$effect_sense</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "max"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "protect" "restore"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_objective_min_intervention_impact</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">model_args</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "minimizeInterventionImpact"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "min_intervention_impact"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$impact_col</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "amount"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$features</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "protect" "restore"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_objective_min_intervention_impact</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">p</span>,</span></span>
-<span class="r-in"><span>  actions <span class="op">=</span> <span class="st">"restore"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p3</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">model_args</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "minimizeInterventionImpact"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "min_intervention_impact"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$impact_col</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "amount"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$features</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $objective_args$actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "restore"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>

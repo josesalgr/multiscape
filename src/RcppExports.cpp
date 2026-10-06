@@ -121,6 +121,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_add_joint_effect_variables
+Rcpp::List rcpp_add_joint_effect_variables(SEXP model_ptr, Rcpp::List members0);
+RcppExport SEXP _multiscape_rcpp_add_joint_effect_variables(SEXP model_ptrSEXP, SEXP members0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type model_ptr(model_ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type members0(members0SEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_add_joint_effect_variables(model_ptr, members0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_add_linear_constraint
 Rcpp::List rcpp_add_linear_constraint(SEXP model_ptr, Rcpp::IntegerVector j0, Rcpp::NumericVector x, std::string sense, double rhs, std::string name, std::string block_name, std::string tag);
 RcppExport SEXP _multiscape_rcpp_add_linear_constraint(SEXP model_ptrSEXP, SEXP j0SEXP, SEXP xSEXP, SEXP senseSEXP, SEXP rhsSEXP, SEXP nameSEXP, SEXP block_nameSEXP, SEXP tagSEXP) {
@@ -353,6 +365,31 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type target_col(target_colSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_add_target_recovery(x, features_data, dist_actions_data, dist_benefit_data, target_col, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_add_effect_loss_variables
+Rcpp::List rcpp_add_effect_loss_variables(SEXP model_ptr, Rcpp::List columns0, Rcpp::List coefficients);
+RcppExport SEXP _multiscape_rcpp_add_effect_loss_variables(SEXP model_ptrSEXP, SEXP columns0SEXP, SEXP coefficientsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type model_ptr(model_ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type columns0(columns0SEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type coefficients(coefficientsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_add_effect_loss_variables(model_ptr, columns0, coefficients));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_add_effect_selection_variables
+Rcpp::List rcpp_add_effect_selection_variables(SEXP model_ptr, Rcpp::List members0);
+RcppExport SEXP _multiscape_rcpp_add_effect_selection_variables(SEXP model_ptrSEXP, SEXP members0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type model_ptr(model_ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type members0(members0SEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_add_effect_selection_variables(model_ptr, members0));
     return rcpp_result_gen;
 END_RCPP
 }

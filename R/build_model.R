@@ -156,8 +156,12 @@
   # prepare model-ready tables (filters + joins)
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_tables(x)
+  x <- .pa_prepare_joint_effects_model(x)
 
   x <- .pa_build_model_validate_locked_in_action_feasibility(x)
+  x <- .pa_validate_action_cardinality_model(x)
+  .pa_validate_action_relations_specs(x$data$constraints$action_relations,
+                                     x$data$pu, x$data$actions)
 
   # ------------------------------------------------------------
   # early validation: objective dependencies
@@ -173,6 +177,8 @@
   # prepare auxiliary variables/constraints required by needs
   # ------------------------------------------------------------
   x <- .pa_build_model_prepare_needs_cpp(x)
+  x <- .pa_build_joint_effects(x)
+  x <- .pa_build_effect_losses(x)
 
   # ------------------------------------------------------------
   # objective (C++ side)
@@ -254,17 +260,22 @@
       "status" %in% names(dist_actions) &&
       any(dist_actions$status %in% c(1L, 2L), na.rm = TRUE)
 
+    cardinality <- x$data$constraints$action_cardinality
+    has_selection_cardinality <- is.data.frame(cardinality) && nrow(cardinality) > 0L &&
+      any(cardinality$sense %in% c("min", "equal") & cardinality$count > 0L)
+
     has_selection_requirement <- any(c(
       has_targets,
       has_selection_area,
       has_locked_in_pu,
-      has_locked_in_action
+      has_locked_in_action,
+      has_selection_cardinality
     ))
 
     if (!isTRUE(has_selection_requirement)) {
       warning(
         paste0(
-          "The minimum-cost problem has no feature targets, positive minimum/equality area constraint, ",
+          "The minimum-cost problem has no feature targets, positive minimum/equality area or action-count constraint, ",
           "or locked-in decisions. The all-zero solution may therefore be optimal. ",
           "Add a selection requirement if an empty solution is not intended."
         ),
@@ -534,6 +545,12 @@
   mtype <- as.character(args$model_type)[1]
   oargs <- args$objective_args %||% list()
 
+  if (.pa_uses_aggregate_effects(x) && mtype %in% c("maximizeBenefits", "minimizeLosses")) {
+    .pa_joint_objective_terms(x, if (mtype == "minimizeLosses") "loss" else oargs$benefit_col %||% "effect",
+                             oargs$actions, oargs$features)
+    return(x)
+  }
+
   has_actions_model <- .has_rows(x$data$dist_actions_model)
   has_effects_model <- .has_rows(x$data$dist_effects_model)
   has_targets <- !is.null(x$data$targets) &&
@@ -582,7 +599,7 @@
       )
     }
 
-    bcol <- as.character(oargs$benefit_col %||% "benefit")[1]
+    bcol <- as.character(oargs$benefit_col %||% "effect")[1]
 
     if (!(bcol %in% names(x$data$dist_effects_model))) {
       .pa_abort(
@@ -604,82 +621,14 @@
       de <- de[de$internal_feature %in% as.integer(feats), , drop = FALSE]
     }
 
-    obj_alias <- .pa_active_objective_alias(x) %||% "maximizeBenefits"
-
     if (!.has_rows(de)) {
-
-      feature_msg <- ""
-      if (!is.null(feats)) {
-        feature_names <- .pa_feature_names_from_internal_ids(x, as.integer(feats))
-        feature_msg <- paste0(
-          "\nSelected feature(s): ",
-          paste(feature_names, collapse = ", "),
-          "."
-        )
-      }
-
-      action_msg <- ""
-      if (!is.null(acts)) {
-        action_names <- .pa_action_names_from_internal_ids(x, as.integer(acts))
-        action_msg <- paste0(
-          "\nSelected action(s): ",
-          paste(action_names, collapse = ", "),
-          "."
-        )
-      }
-
-      if (identical(bcol, "amount_after")) {
-        .pa_abort(
-          "Objective '", obj_alias, "' has no positive non-zero representation coefficients.",
-          feature_msg,
-          action_msg,
-          "\nBecause this is an implicit simple conservation model, ",
-          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
-          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
-        )
-      } else {
-        .pa_abort(
-          "Objective '", obj_alias, "' has no positive non-zero benefit coefficients.",
-          feature_msg,
-          action_msg,
-          "\nThis objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.",
-          "\nFor add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects()."
-        )
-      }
+      .pa_abort("Objective 'maximizeBenefits' has no matching effect rows for its action/feature subset.")
     }
-
     bb <- as.numeric(de[[bcol]])
-
-    if (!any(is.finite(bb) & bb > .Machine$double.eps, na.rm = TRUE)) {
-
-      feature_msg <- ""
-      if (!is.null(feats)) {
-        feature_names <- .pa_feature_names_from_internal_ids(x, as.integer(feats))
-        feature_msg <- paste0(
-          "\nSelected feature(s): ",
-          paste(feature_names, collapse = ", "),
-          "."
-        )
-      }
-
-      action_msg <- ""
-      if (!is.null(acts)) {
-        action_names <- .pa_action_names_from_internal_ids(x, as.integer(acts))
-        action_msg <- paste0(
-          "\nSelected action(s): ",
-          paste(action_names, collapse = ", "),
-          "."
-        )
-      }
-
-      .pa_abort(
-        "Objective '", obj_alias, "' has no positive non-zero benefit coefficients.",
-        feature_msg,
-        action_msg,
-        "\nThis objective cannot be used as a benefit objective because all selected effects are zero, missing, or non-positive.",
-        "\nFor add_objective_max_benefit(), the selected feature(s) must have positive action effects in add_effects()."
-      )
+    if (anyNA(bb) || any(!is.finite(bb))) {
+      .pa_abort("Objective 'maximizeBenefits' coefficient column contains NA or non-finite values.")
     }
+    # Negative and identically zero net objectives are valid.
   }
 
   if (identical(mtype, "minimizeLosses")) {
@@ -900,7 +849,14 @@
   needs <- args$needs %||% list()
   need_z <- isTRUE(needs$z)
 
-  op <- rcpp_new_optimization_problem()
+  # Reserve for the actual core rather than a million slots in every
+  # temporary MO model. Native vectors grow when auxiliaries are added.
+  core_columns <- nrow(x$data$pu) + nrow(x$data$dist_actions_model)
+  op <- rcpp_new_optimization_problem(
+    nrow = as.integer(max(4096, 2 * core_columns)),
+    ncol = as.integer(max(4096, core_columns)),
+    ncell = as.integer(max(100000, 4 * core_columns))
+  )
 
   # registry placeholder for future MO updates (constraint/objective IDs)
   x$data$model_registry <- list(
@@ -997,6 +953,7 @@
   if (!exists("rcpp_reset_objective", mode = "function")) {
     .pa_abort("Missing rcpp_reset_objective() in the package.")
   }
+  if (identical(mtype, "maximizeBenefits")) modelsense <- oargs$effect_sense %||% "max"
   rcpp_reset_objective(op, modelsense)
 
 
@@ -1008,10 +965,18 @@
     if (!exists("rcpp_prepare_objective_min_cost", mode = "function")) .pa_abort("Missing rcpp_prepare_objective_min_cost().")
     if (!exists("rcpp_add_objective_min_cost",     mode = "function")) .pa_abort("Missing rcpp_add_objective_min_cost().")
 
+    # Keep native row indices: only the cost contribution is scoped, never
+    # the feasible decisions or the global planning-unit cost component.
+    da_cost <- x$data$dist_actions_model
+    if (!is.null(oargs$actions)) {
+      action_ids <- .pa_resolve_action_subset(x, oargs$actions)$internal_id
+      da_cost <- da_cost[da_cost$internal_action %in% action_ids, , drop = FALSE]
+    }
+
     rcpp_prepare_objective_min_cost(
       op,
       pu_data = x$data$pu,
-      dist_actions_data = x$data$dist_actions_model,
+      dist_actions_data = da_cost,
       include_pu_cost = isTRUE(oargs$include_pu_cost %||% TRUE),
       include_action_cost = isTRUE(oargs$include_action_cost %||% TRUE),
       block_name = "objective_min_cost",
@@ -1021,7 +986,7 @@
     res <- rcpp_add_objective_min_cost(
       op,
       pu_data = x$data$pu,
-      dist_actions_data = x$data$dist_actions_model,
+      dist_actions_data = da_cost,
       include_pu_cost = isTRUE(oargs$include_pu_cost %||% TRUE),
       include_action_cost = isTRUE(oargs$include_action_cost %||% TRUE),
       weight = 1.0
@@ -1030,6 +995,16 @@
     objective_id <- "min_cost"
 
   } else if (identical(mtype, "maximizeBenefits")) {
+
+    if (.pa_uses_aggregate_effects(x)) {
+      vector <- .pa_joint_objective_vector(x, oargs$benefit_col %||% "effect",
+                                           oargs$actions, oargs$features)
+      rcpp_model_set_objective_vector(op, vector, modelsense)
+      x$data$model_args$modelsense <- modelsense
+      x$data$model_args$objective_id <- if (modelsense == "min") "min_effect" else (x$data$model_args$objective_id %||% "max_effect")
+      x$data$model_registry$objective <- list(type = mtype, id = x$data$model_args$objective_id, joint_effects = TRUE)
+      return(x)
+    }
 
     if (!exists("rcpp_prepare_objective_max_benefit", mode = "function")) {
       .pa_abort("Missing rcpp_prepare_objective_max_benefit().")
@@ -1043,7 +1018,7 @@
       .pa_abort("Missing x$data$dist_effects_model for objective 'maximizeBenefits'.")
     }
 
-    bcol <- as.character(oargs$benefit_col %||% "benefit")[1]
+    bcol <- as.character(oargs$benefit_col %||% "effect")[1]
 
     if (is.na(bcol) || !nzchar(bcol)) {
       .pa_abort("`benefit_col` must be a non-empty string.")
@@ -1074,10 +1049,8 @@
       de <- de[de$internal_feature %in% as.integer(feats), , drop = FALSE]
     }
 
-    # The C++ objective builder expects a column named 'benefit'. For the usual
-    # benefit objective this is already the canonical column. If a different
-    # coefficient column is requested, for example 'amount_after' in the implicit
-    # conservation model, copy it locally into 'benefit' before calling C++.
+    # C++ expects a column named 'benefit'; supply signed effects in a local
+    # copy while preserving the canonical positive/loss reporting components.
     de$benefit <- as.numeric(de[[bcol]])
 
     if (anyNA(de$benefit) || any(!is.finite(de$benefit))) {
@@ -1097,29 +1070,6 @@
 
     coef_x <- as.numeric(prep$coef_x)
 
-    if (is.null(coef_x) ||
-        length(coef_x) == 0L ||
-        !any(is.finite(coef_x) & abs(coef_x) > .Machine$double.eps, na.rm = TRUE)) {
-
-      obj_alias <- .pa_active_objective_alias(x) %||% "maximizeBenefits"
-
-      if (identical(bcol, "amount_after")) {
-        .pa_abort(
-          "Objective '", obj_alias, "' produced an empty or zero representation vector.",
-          "\nBecause this is an implicit simple conservation model, ",
-          "add_objective_max_benefit() uses 'amount_after' as its coefficient source.",
-          "\nCheck that dist_features contains positive amounts for the selected feature(s)."
-        )
-      } else {
-        .pa_abort(
-          "Objective '", obj_alias, "' produced an empty or zero objective vector.",
-          "\nThis usually means that the selected feature(s) have no positive non-zero effects ",
-          "for the feasible action set.",
-          "\nCheck add_effects(), especially the `feature` column and the selected `features=` argument."
-        )
-      }
-    }
-
     res <- rcpp_add_objective_max_benefit(
       op,
       coef_x = coef_x,
@@ -1128,9 +1078,19 @@
       tag = as.character(oargs$tag %||% "")[1]
     )
 
-    objective_id <- "max_benefit"
+    rcpp_model_set_objective_vector(op, rcpp_optimization_problem_as_list(op)$obj, modelsense)
+    objective_id <- if (modelsense == "min") "min_effect" else (x$data$model_args$objective_id %||% "max_effect")
 
   } else if (identical(mtype, "minimizeLosses")) {
+
+    if (.pa_uses_aggregate_effects(x)) {
+      vector <- .pa_joint_objective_vector(x, "loss", oargs$actions, oargs$features)
+      rcpp_model_set_objective_vector(op, vector, "min")
+      x$data$model_args$modelsense <- "min"
+      x$data$model_args$objective_id <- "min_loss"
+      x$data$model_registry$objective <- list(type = mtype, id = "min_loss", joint_effects = TRUE)
+      return(x)
+    }
 
     if (!exists("rcpp_prepare_objective_min_loss", mode = "function")) {
       .pa_abort("Missing rcpp_prepare_objective_min_loss().")
@@ -1406,6 +1366,8 @@
   }
 
   x <- .pa_apply_action_max_per_pu_default(x)
+  x <- .pa_apply_action_cardinality_if_present(x)
+  x <- .pa_apply_action_relations_if_present(x)
 
   if (exists(".pa_apply_area_constraints_if_present", mode = "function")) {
     x <- .pa_apply_area_constraints_if_present(x)
@@ -1447,11 +1409,21 @@
     stop("Missing rcpp_add_action_max_per_pu().", call. = FALSE)
   }
 
+  # Only explicit TOTAL maxima or equalities replace the implicit maximum.
+  # Do not pass an empty filtered vector to C++: there it means all units.
+  specs <- x$data$constraints$action_cardinality
+  covered <- .pa_action_cardinality_covered_pu(specs)
+  default_pu <- integer()
+  if (length(covered)) {
+    default_pu <- unique(as.integer(da$internal_pu[!da$pu %in% covered]))
+    if (!length(default_pu)) return(x)
+  }
+
   res <- rcpp_add_action_max_per_pu(
     x$data$model_ptr,
     dist_actions_data = da,
     max_per_pu = 1L,
-    internal_pu_ids = integer(),
+    internal_pu_ids = default_pu,
     internal_action_ids = integer()
   )
 

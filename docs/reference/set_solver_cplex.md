@@ -2,7 +2,10 @@
 
 Convenience wrapper around
 [`set_solver`](https://josesalgr.github.io/multiscape/reference/set_solver.md)
-that sets `solver = "cplex"`.
+that sets `solver = "cplex"`. A solver can be configured only once per
+problem. Calling this wrapper after any solver setter raises an error.
+Derive alternatives from the same problem before its first solver
+configuration.
 
 ## Usage
 

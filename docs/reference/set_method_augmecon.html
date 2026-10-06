@@ -33,7 +33,7 @@ solve."><meta property="og:image" content="https://josesalgr.github.io/multiscap
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -41,7 +41,7 @@ solve."><meta property="og:image" content="https://josesalgr.github.io/multiscap
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,12 @@ solve."><meta property="og:image" content="https://josesalgr.github.io/multiscap
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -184,7 +189,29 @@ configuration stored in <code>x$data$method</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Use this method when one objective should be optimized directly, the
+    <p><strong>Numerical precision</strong></p>
+<p>MO solves may multiply the complete scalar objective by a bounded positive
+factor to make small augmentation terms visible to the solver. This
+preserves the criterion and reported values remain in the original units.
+CBC and Gurobi use precise feasibility, integrality, and optimality defaults;
+explicit <code>solver_params</code> supplied to <code><a href="set_solver.html">set_solver</a></code> override
+these defaults. Secondary bounds are
+checked by reevaluating the selected decisions. Effective parameters,
+objective scaling, and epsilon checks are stored in solution diagnostics.
+After an optimal augmented solve, a second pass fixes the attained primary
+value and maximizes normalized slack. This refines numerically unresolved
+secondary improvements without replacing the original augmented criterion.
+It starts from the first solution, uses the remaining per-run time limit,
+and preserves the first pass's
+global status/gap; refinement details are recorded in diagnostics.
+Exact MILP methods still operate with floating-point arithmetic. Algebraically
+equivalent formulations can return different plans at numerical boundaries
+or among tied alternatives; bit-for-bit reproduction is not guaranteed.</p>
+<p>A problem can have only one explicitly configured multi-objective method.
+A second call to any <code>set_method_*()</code> function raises an error. To
+compare methods or run designs, derive alternatives from the same problem
+before configuring its method.</p>
+<p>Use this method when one objective should be optimized directly, the
 remaining objectives should be controlled through epsilon levels, and weakly
 efficient solutions should be reduced through the augmented formulation.</p>
 <p><strong>General idea</strong></p>
@@ -376,7 +403,7 @@ programming problems. <em>Applied Mathematics and Computation</em>, 213(2),
 <span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_min_loss.html">add_objective_min_loss</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"loss"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Automatic epsilon grids generated later during solve()</span></span></span>

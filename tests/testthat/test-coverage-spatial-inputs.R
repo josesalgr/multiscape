@@ -102,7 +102,7 @@ test_that("raster effects are extracted over vector planning units", {
   skip_if_not_installed("terra")
   skip_if_not_installed("sf")
   withr::local_options(lifecycle_verbosity = "error")
-  p <- make_round3_spatial_problem(action_based = TRUE)
+  p <- make_round3_spatial_problem(action_based = TRUE, with_effects = FALSE)
 
   template <- terra::rast(
     nrows = 2, ncols = 2, xmin = 0, xmax = 2, ymin = 0, ymax = 2,

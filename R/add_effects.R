@@ -6,6 +6,11 @@
 #' user-defined reference scenario.
 #'
 #' @details
+#' Effects can be defined only once per problem. A second call, including through
+#' \code{add_benefits()} or \code{add_losses()}, raises an error. Supply the
+#' complete effects table in one call. To compare effect scenarios, build
+#' separate problems from the object before effects were added.
+#'
 #' The feature distribution supplied to \code{create_problem()} defines the
 #' reference amounts. The reference can describe current conditions, a future
 #' without intervention, or existing management. Action outcomes and references
@@ -42,6 +47,40 @@
 #' A positive effect denotes an increase, not necessarily an improvement:
 #' whether increasing a feature is desirable depends on the objective.
 #' Zero effects are retained and have an outcome equal to the reference amount.
+#'
+#' \strong{Joint effects of action sets}
+#'
+#' In the modern table or raster interface, \code{action} can also identify a
+#' set registered with \code{add_action_sets()}. Supply the total outcome or
+#' total change of that combination, not an interaction coefficient. Individual
+#' and joint effects belong in the same single call. Set members must share an
+#' available PU; a global row expands only over such units. Explicit joint rows
+#' with unavailable members raise an error. Legacy component filtering is not
+#' supported for joint effects.
+#'
+#' The original canonical totals are preserved in \code{effects_original} and
+#' \code{joint_effects}; original table input is preserved in \code{effects_input}.
+#' \code{dist_effects} continues to contain individual actions only. The separate
+#' \code{effect_terms} table stores signed corrections: for set S, subtract all
+#' supplied proper-subset corrections from its supplied total change.
+#' Unspecified individual effects and interactions are explicitly assumed zero,
+#' recorded in \code{effects_meta}. This is a modelling assumption, not evidence
+#' that unobserved interactions are absent.
+#'
+#' Compilation adds an exact AND auxiliary only for a feasible PU/set with a
+#' non-zero correction. It is continuous on `0 <= y <= 1`, determined by the binary
+#' members, shared across features, and activated independently of coefficient
+#' sign or optimization method. Cardinality still determines allowed action
+#' counts; registration and effects do not force joint selection. Inferred
+#' negative feature outcomes are excluded from the feasible set.
+#'
+#' Benefit objectives maximize total signed change, including negative effects
+#' and interaction corrections. Loss objectives minimize the negative part of
+#' the final joint change per PU/feature, rather than treating a negative
+#' correction as a loss by itself. Concurrent individual effects are additive
+#' when no interaction is supplied. Targets use the joint outcome and count the
+#' reference once per unit in their action scope. Solution summaries report
+#' signed net change and its final positive/negative parts separately.
 #'
 #' \strong{Raster inputs}
 #'
@@ -110,6 +149,21 @@
 #' ))
 #' p_effect$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
 #'
+#' # Joint totals in one call: 30 + 20 + interaction 20 = total 70.
+#' joint_base <- create_problem(
+#'   data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+#'   data.frame(pu = 10L, feature = 1L, amount = 100)
+#' ) |>
+#'   add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+#'   add_action_sets(list(restore_control = c("restore", "control"))) |>
+#'   add_constraint_action_cardinality(2, "max")
+#' joint <- joint_base |>
+#'   add_effects(data.frame(
+#'     action = c("restore", "control", "restore_control"),
+#'     feature = "habitat", effect = c(30, 20, 70)
+#'   ))
+#' joint$data$effect_terms[, c("action", "total_effect", "effect")]
+#'
 #' # Raster example: one polygon contains two cells with reference amounts 40, 60.
 #' r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,
 #'                  ymin = 0, ymax = 1, crs = "EPSG:3857")
@@ -142,7 +196,9 @@ add_effects <- function(
     raster_aggregation = c("sum", "mean"),
     raster_type = c("effect", "outcome")
 ) {
-
+  assertthat::assert_that(!is.null(x), msg = "x is NULL")
+  .pa_assert_unconfigured(x, c("dist_effects", "dist_benefit", "dist_loss"),
+                         "Effects", "add_effects() (including add_benefits()/add_losses())")
   legacy_type <- !missing(effect_type)
   legacy_aggregation <- !missing(effect_aggregation)
   legacy_component <- !missing(component)
@@ -165,6 +221,12 @@ add_effects <- function(
     stop("outcome and relative_change define their own interpretation; omit effect_type.", call. = FALSE)
   }
   if (legacy_type || legacy_aggregation || legacy_component || legacy_raster || length(legacy_columns) > 0L) {
+    caller <- sys.function(sys.parent())
+    user_env <- if (identical(caller, add_benefits) || identical(caller, add_losses)) {
+      parent.frame(2)
+    } else {
+      parent.frame()
+    }
     lifecycle::deprecate_warn(
       "1.3.0", I("The legacy effects interface of `add_effects()`"),
       details = paste(
@@ -173,7 +235,8 @@ add_effects <- function(
         "and raster_aggregation/raster_type for raster inputs.",
         "Legacy calls retain their existing behavior."
       ),
-      id = "multiscape-add-effects-legacy"
+      id = "multiscape-add-effects-legacy",
+      user_env = user_env
     )
   }
   if (!legacy_aggregation) effect_aggregation <- match.arg(raster_aggregation)
@@ -199,6 +262,12 @@ add_effects <- function(
   pu_raster_id <- x$data$pu_raster_id
   x <- .pa_clone_data(x)
   if (inherits(pu_raster_id, "SpatRaster")) x$data$pu_raster_id <- pu_raster_id
+
+  joint_context <- .pa_joint_effects_input(
+    x, effects, !legacy_type && !legacy_component && !legacy_aggregation &&
+      !length(legacy_columns) && !legacy_raster
+  )
+  if (!is.null(joint_context)) x <- joint_context$problem
 
   pu    <- x$data$pu
   feats <- x$data$features
@@ -616,7 +685,9 @@ add_effects <- function(
         )
 
         ex <- terra::extract(r, pu_v, fun = fun, na.rm = TRUE)
-        ex <- ex[match(pu_ids, ex[[1]]), , drop = FALSE]
+        # terra::extract returns polygon row numbers, not external PU IDs.
+        polygon_rows <- if (legacy_type || legacy_raster) pu_ids else seq_along(pu_ids)
+        ex <- ex[match(polygon_rows, ex[[1]]), , drop = FALSE]
         mat <- as.matrix(ex[, -1, drop = FALSE])
       }
 
@@ -1126,6 +1197,7 @@ add_effects <- function(
     amount_after = "baseline + benefit - loss"
   )
 
+  if (!is.null(joint_context)) x <- .pa_finish_joint_effects(x, joint_context)
   x
 }
 
@@ -1135,6 +1207,8 @@ add_effects <- function(
 #' @description
 #' Convenience wrapper around \code{\link{add_effects}} that keeps only positive
 #' effects, that is, rows with \code{benefit > 0}.
+#' Effects share a single definition with \code{add_effects()} and
+#' \code{add_losses()}; a second definition raises an error.
 #'
 #' @inheritParams add_effects
 #' @param benefits Alias of \code{effects}, kept for backwards compatibility.
@@ -1191,6 +1265,8 @@ add_benefits <- function(
 #' @description
 #' Convenience wrapper around \code{\link{add_effects}} that keeps only negative
 #' effects, represented by rows with \code{loss > 0}.
+#' Effects share a single definition with \code{add_effects()} and
+#' \code{add_benefits()}; a second definition raises an error.
 #'
 #' @inheritParams add_effects
 #' @param losses Alias of \code{effects}, used for symmetry with

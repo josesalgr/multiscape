@@ -1,0 +1,273 @@
+# Joint effects and interactions between management actions
+
+Supply the **total effect of executing a combination** in the same call
+as its individual effects. The package preserves those totals and
+calculates signed interaction corrections, rather than attributing
+portions to individual actions.
+
+``` r
+base <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_action_sets(data.frame(set = c("restore_control", "restore_control"),
+                             action = c("restore", "control"))) |>
+  add_constraint_action_cardinality(2, "max")
+effects <- data.frame(action = c("restore", "control", "restore_control"),
+                      feature = "habitat", effect = c(30, 20, 70))
+problem <- add_effects(base, effects)
+problem$data$effect_terms[, c("action", "total_effect", "effect")]
+#>            action total_effect effect
+#> 1         control           20     20
+#> 2         restore           30     30
+#> 3 restore_control           70     20
+```
+
+The pair correction is `70 - 30 - 20 = 20`. Selecting both yields 70,
+while restoration alone yields 30. Registration and effects do not force
+selection; cardinality controls capacity and logical relations control
+permitted groups.
+
+The modern `action` field accepts atomic IDs or registered set IDs.
+`effect`, `outcome`, and `relative_change` keep their meanings, sharing
+the same reference:
+
+``` r
+outcomes <- data.frame(action = effects$action, feature = "habitat", outcome = c(130, 120, 170))
+changes <- data.frame(action = effects$action, feature = "habitat", relative_change = c(.3, .2, .7))
+outcome_problem <- add_effects(base, outcomes)
+relative_problem <- add_effects(base, changes)
+stopifnot(isTRUE(all.equal(problem$data$effect_terms, outcome_problem$data$effect_terms)),
+          isTRUE(all.equal(problem$data$effect_terms, relative_problem$data$effect_terms)))
+```
+
+Modern raster lists can likewise include names of registered sets, with
+the same layer order, aggregation, reference, and interpretation rules
+as individual rasters. Legacy component filtering is rejected for sets.
+With no `pu`, a joint row expands only over units where every member has
+an available pair. Explicit joint rows with unavailable members are
+rejected. Later locks or incompatible constraints can make a supplied
+combination unreachable without removing its original observation.
+
+## Preserve inputs and record assumptions
+
+``` r
+problem$data$effects_input
+#>            action feature effect
+#> 1         restore habitat     30
+#> 2         control habitat     20
+#> 3 restore_control habitat     70
+problem$data$joint_effects[, c("action", "effect", "action_outcome")]
+#>            action effect action_outcome
+#> 3 restore_control     70            170
+problem$data$effects_meta[c("missing_interactions", "missing_individual_effects")]
+#> $missing_interactions
+#> [1] "zero"
+#> 
+#> $missing_individual_effects
+#> [1] "zero"
+```
+
+`effects_input` preserves the original table; `effects_original`
+preserves all canonical totals; `joint_effects` contains supplied set
+totals; `effect_terms` contains signed corrections. `dist_effects`
+retains individual rows for compatibility. Different set names cannot
+provide duplicate membership totals for one PU/feature. Zero corrections
+remain preserved as input observations.
+
+Unspecified individual effects and interactions are **assumed zero**.
+This is an explicit model assumption, not evidence that an unobserved
+interaction is absent. For three actions, subtract individual and
+supplied pair corrections:
+
+\\\delta\_{ABC}=E(ABC)-E(A)-E(B)-E(C)-\delta\_{AB}-\delta\_{AC}-\delta\_{BC}.\\
+
+The rule extends to larger sets. No unprovided subsets are generated
+automatically.
+
+## Exact activation and model size
+
+For set \\S\\, compilation adds a continuous auxiliary satisfying:
+
+\\0\le y\_{i,S}\le1,\quad y\_{i,S}\le x\_{i,a}\\ (a\in S),\quad
+y\_{i,S}\ge\sum\_{a\in S}x\_{i,a}-\|S\|+1.\\
+
+Binary member decisions determine it exactly, even with negative
+coefficients or economic objectives. One PU/membership variable is
+shared across features. Only reachable, non-zero corrections need
+auxiliaries. Availability, known cardinality limits, and exclusions can
+eliminate combinations. Inferred negative final feature amounts are
+excluded through linear outcome constraints.
+
+Ten actions have 1,013 subsets of size two or greater, but only
+non-zero, reachable corrections contribute variables. Sparse
+interactions limit growth; solution time still depends on the full model
+and the number of MO runs.
+
+## Solve with all three MO methods
+
+The benefit objective maximizes signed change, including all individual
+contributions and the pair correction. Each method selects both actions,
+with benefit 70 and action cost 2.
+
+``` r
+mo_base <- problem |>
+  add_constraint_action_cardinality(1, "min") |>
+  add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
+  add_objective_max_effect(alias = "benefit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE)
+methods <- list(
+  weighted = set_method_weighted_sum(mo_base, aliases = c("cost", "benefit"),
+    normalize_weights = FALSE, runs = set_runs_manual(data.frame(weight_cost = 1, weight_benefit = 1))),
+  epsilon = set_method_epsilon_constraint(mo_base, primary = "cost", aliases = c("cost", "benefit"),
+    runs = set_runs_manual(data.frame(eps_benefit = 69))),
+  augmecon = set_method_augmecon(mo_base, primary = "cost", aliases = c("cost", "benefit"),
+    runs = set_runs_manual(data.frame(eps_benefit = 69)))
+)
+```
+
+``` r
+solutions <- lapply(methods, solve)
+lapply(solutions, get_objectives)
+#> $weighted
+#>   solution_id cost benefit
+#> 1           1    2      70
+#> 
+#> $epsilon
+#>   solution_id cost benefit
+#> 1           1    2      70
+#> 
+#> $augmecon
+#>   solution_id cost benefit
+#> 1           1    2      70
+for (solution in solutions) {
+  objective <- get_objectives(solution)
+  feature <- get_features(solution)
+  stopifnot(objective$cost == 2, objective$benefit == 70,
+            feature$selected_baseline == 100, feature$selected_amount_after == 170)
+}
+```
+
+## Negative interactions, net benefit, and final loss
+
+``` r
+negative_input <- effects
+negative_input$effect[negative_input$action == "restore_control"] <- 40
+negative <- add_effects(base, negative_input)
+negative$data$effect_terms[, c("action", "total_effect", "effect")]
+#>            action total_effect effect
+#> 1         control           20     20
+#> 2         restore           30     30
+#> 3 restore_control           40    -10
+economic <- negative |>
+  add_profit(c(restore = 10, control = 9)) |>
+  add_objective_max_profit(alias = "profit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE)
+```
+
+``` r
+solution <- solve(economic)
+get_features(solution)
+#>   feature feature_name baseline_total selected_baseline selected_amount_after
+#> 1       1      habitat            100               100                   140
+#>   selected_benefit selected_loss selected_net selected_fraction_of_baseline
+#> 1               40             0           40                           1.4
+stopifnot(get_features(solution)$selected_net == 40,
+          get_features(solution)$selected_benefit == 40,
+          get_features(solution)$selected_loss == 0,
+          get_features(solution)$selected_amount_after == 140)
+```
+
+The correction is -10, but the final change is +40. The summary reports
+benefit 40 and loss zero, counting the selected reference once. It does
+not classify the negative correction as an ecological loss by itself.
+
+[`add_objective_max_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.md)
+now optimizes that signed net change. Earlier versions counted positive
+effects only; models with negative effects can change their solutions.
+No separate net-benefit function is needed.
+
+``` r
+benefit_problem <- negative |> add_objective_max_effect(alias = "benefit")
+loss_problem <- negative |>
+  add_constraint_action_cardinality(2, "equal") |>
+  add_objective_min_loss(alias = "loss")
+#> Warning: `add_objective_min_loss()` was deprecated in multiscape 1.4.0.
+#> i Use add_objective_min_effect() only when minimizing signed change is
+#>   intended. It is not an equivalent replacement: this legacy function retains
+#>   the negative-part criterion after aggregation within each unit and feature.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
+```
+
+``` r
+benefit_solution <- solve(set_solver_cbc(benefit_problem, gap_limit = 0, verbose = FALSE))
+loss_solution <- solve(set_solver_cbc(loss_problem, gap_limit = 0, verbose = FALSE))
+stopifnot(get_objectives(benefit_solution)$benefit == 40,
+          get_objectives(loss_solution)$loss == 0)
+```
+
+For signed change \\\Delta\_{if}\\ after combining scoped actions, the
+two criteria are \\\max \sum\_{i,f}\Delta\_{if}\\ and \\\min
+\sum\_{i,f}\max(-\Delta\_{if},0)\\. Gains can offset deterioration in
+the benefit objective. In the loss objective, gains in one unit or
+feature cannot cancel losses in another. Both retain independent action
+and feature scopes. An interaction belongs to an action scope only if
+every member belongs to it.
+
+Loss is linearized exactly using finite bounds derived from the signed
+coefficients. Mixed-sign PU/feature expressions require one continuous
+loss variable and one binary sign variable; sign-compatible expressions
+need no such auxiliaries. The constraints make the loss exact even if it
+is a secondary objective or has zero weight. All required scoped
+expressions are prepared in the common model used by weighted-sum,
+epsilon-constraint, and AUGMECON.
+
+``` r
+deteriorating_input <- effects
+deteriorating_input$effect[deteriorating_input$action == "restore_control"] <- -10
+deteriorating <- add_effects(base, deteriorating_input) |>
+  add_constraint_action_cardinality(2, "equal")
+```
+
+``` r
+net_solution <- deteriorating |> add_objective_max_effect(alias = "benefit") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
+loss_solution <- deteriorating |> add_objective_min_loss(alias = "loss") |>
+  set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
+stopifnot(get_objectives(net_solution)$benefit == -10,
+          get_objectives(loss_solution)$loss == 10,
+          get_features(loss_solution)$selected_amount_after == 90)
+```
+
+The pair correction is now -60; the objective counts the final change of
+-10, and the final loss is 10. It does not count the correction’s
+magnitude as loss.
+
+## Targets on joint outcomes
+
+Targets require the reference plus the joint change. With reference 100
+and joint change +40, selecting both actions contributes 140, rather
+than adding the two individual post-action amounts (130 + 120).
+Action-scoped targets count the reference only when at least one scoped
+action is selected in the unit.
+
+``` r
+target_problem <- negative |>
+  add_constraint_targets_absolute(140) |>
+  add_objective_min_cost(alias = "cost")
+```
+
+``` r
+target_solution <- solve(set_solver_cbc(target_problem, gap_limit = 0, verbose = FALSE))
+get_targets(target_solution)
+#>   solution_id feature feature_name target_level total_available target achieved
+#> 1           1       1      habitat          140              NA    140      140
+#>   gap  met
+#> 1   0 TRUE
+stopifnot(get_objectives(target_solution)$cost == 2,
+          get_features(target_solution)$selected_amount_after == 140,
+          get_targets(target_solution)$achieved == 140)
+```

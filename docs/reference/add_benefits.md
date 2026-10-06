@@ -3,6 +3,11 @@
 Convenience wrapper around
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
 that keeps only positive effects, that is, rows with `benefit > 0`.
+Effects share a single definition with
+[`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
+and
+[`add_losses()`](https://josesalgr.github.io/multiscape/reference/add_losses.md);
+a second definition raises an error.
 
 ## Usage
 

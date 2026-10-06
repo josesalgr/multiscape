@@ -37,6 +37,10 @@ rcpp_add_base_variables <- function(x, pu_data, dist_actions_data, dist_features
     .Call(`_multiscape_rcpp_add_base_variables`, x, pu_data, dist_actions_data, dist_features_data, add_z)
 }
 
+rcpp_add_joint_effect_variables <- function(model_ptr, members0) {
+    .Call(`_multiscape_rcpp_add_joint_effect_variables`, model_ptr, members0)
+}
+
 rcpp_add_linear_constraint <- function(model_ptr, j0, x, sense, rhs, name = "", block_name = "linear_constraint", tag = "") {
     .Call(`_multiscape_rcpp_add_linear_constraint`, model_ptr, j0, x, sense, rhs, name, block_name, tag)
 }
@@ -91,6 +95,14 @@ rcpp_add_pu_locks <- function(x, pu_data, block_name = "pu_locks", tag = "") {
 
 rcpp_add_target_recovery <- function(x, features_data, dist_actions_data, dist_benefit_data, target_col, tol = 1e-12) {
     .Call(`_multiscape_rcpp_add_target_recovery`, x, features_data, dist_actions_data, dist_benefit_data, target_col, tol)
+}
+
+rcpp_add_effect_loss_variables <- function(model_ptr, columns0, coefficients) {
+    .Call(`_multiscape_rcpp_add_effect_loss_variables`, model_ptr, columns0, coefficients)
+}
+
+rcpp_add_effect_selection_variables <- function(model_ptr, members0) {
+    .Call(`_multiscape_rcpp_add_effect_selection_variables`, model_ptr, members0)
 }
 
 rcpp_model_add_columns <- function(x, obj, lb, ub, vtype, names = NULL, block_name = "augmecon_slacks", tag = "") {

@@ -131,17 +131,14 @@ entries include:
 
 - `solver_params`.
 
-**Incremental update semantics**
+**Single configuration**
 
-This function updates solver settings incrementally.
-
-If an argument is supplied as `NULL`, the previously stored value is
-kept unchanged. Therefore, repeated calls can be used to modify only
-selected components of the solver configuration.
-
-For example, a user may first configure the solver backend and time
-limit, and later update only the optimality gap or only a
-backend-specific parameter.
+Solver settings can be configured only once per problem, including
+through backend wrappers. A second call raises an error, even if the
+arguments are identical. Supply all settings together. Arguments left as
+`NULL` use solver defaults. Reading defaults does not count as explicit
+configuration. To compare configurations, derive each alternative from
+the same problem before the first solver call.
 
 **Gap limit**
 
@@ -207,9 +204,7 @@ Additional backend-specific parameters can be passed in two ways:
 
 - through additional named arguments in `...`.
 
-These two sources are merged, and the result is then merged with any
-previously stored `solver_params`. Existing parameters are therefore
-preserved unless explicitly overwritten.
+These two sources are merged within the single configuration call.
 
 This is particularly useful for backend-specific controls such as node
 selection, emphasis parameters, tolerances, or heuristics.
@@ -281,25 +276,19 @@ x1$data$solve_args
 #> list()
 #> 
 
-# Update only selected settings
+# Define an alternative from the common unconfigured problem
 x2 <- set_solver(
-  x1,
+  x,
   gap_limit = 0.05,
   solver_params = list(randomSeed = 123)
 )
 
 x2$data$solve_args
 #> $solver
-#> [1] "cbc"
+#> [1] "auto"
 #> 
 #> $gap_limit
 #> [1] 0.05
-#> 
-#> $time_limit
-#> [1] 300
-#> 
-#> $verbose
-#> [1] TRUE
 #> 
 #> $solver_params
 #> $solver_params$randomSeed

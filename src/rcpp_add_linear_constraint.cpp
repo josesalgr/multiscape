@@ -54,7 +54,9 @@ Rcpp::List rcpp_add_linear_constraint(SEXP model_ptr,
     vals.push_back(val);
   }
 
-  if (cols.empty()) {
+  // An explicitly empty row represents a constant bound, e.g. a zero-loss
+  // secondary objective. Still reject accidentally emptied malformed input.
+  if (cols.empty() && j0.size() > 0) {
     Rcpp::stop("Linear constraint has no non-zero coefficients after filtering.");
   }
 

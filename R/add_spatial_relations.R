@@ -129,7 +129,9 @@ NULL
 #'
 #' The final relation is stored in \code{x$data$spatial_relations[[name]]}.
 #'
-#' If a relation with the same \code{name} already exists, it is replaced.
+#' Calls accumulate relations with distinct names. If a relation with the same
+#' \code{name} already exists, an error is raised, including through spatial
+#' constructors. To change it, rebuild from the problem before it was added.
 #'
 #' @param x A \code{Problem} object created with \code{\link{create_problem}}.
 #' @param relations A \code{data.frame} describing relation edges. It must

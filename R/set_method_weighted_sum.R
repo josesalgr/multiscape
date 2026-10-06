@@ -12,6 +12,19 @@
 #' used later by \code{\link{solve}}.
 #'
 #' @details
+#' MO solves may multiply the complete scalar criterion by a bounded positive
+#' factor to improve its numerical visibility. This does not change the weights
+#' or preference ordering, and returned objective values retain their original
+#' units. CBC and Gurobi use precise numerical defaults; explicit
+#' \code{solver_params} supplied to \code{\link{set_solver}} override them.
+#' Effective settings and the scalar factor
+#' are recorded in each solution's \code{diagnostics$solver_args}.
+#'
+#' A problem can have only one explicitly configured multi-objective method.
+#' A second call to any \code{set_method_*()} function raises an error. To
+#' compare methods or run designs, derive alternatives from the same problem
+#' before configuring its method.
+#'
 #' Use this method when several registered objectives should be combined into a
 #' single scalar optimization problem through explicit preference weights.
 #'
@@ -225,7 +238,7 @@
 #'     example_data$effect_assumptions
 #'   ) |>
 #'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_max_benefit(alias = "benefit")
+#'   add_objective_max_effect(alias = "benefit")
 #'
 #' # Automatic weight grid
 #' x1 <- set_method_weighted_sum(
@@ -308,6 +321,7 @@ set_method_weighted_sum <- function(x,
                                     objective_scaling = FALSE,
                                     control = NULL) {
   stopifnot(inherits(x, "Problem"))
+  .pa_assert_unconfigured(x, "method", "Multi-objective method", "set_method_*()")
 
   if (exists(".pa_clone_data", mode = "function")) {
     x <- .pa_clone_data(x)

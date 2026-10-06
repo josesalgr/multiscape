@@ -25,7 +25,7 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -33,7 +33,7 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,12 @@ in x$data$method, to be used later by solve."><meta property="og:image" content=
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -168,7 +173,17 @@ configuration stored in <code>x$data$method</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Use this method when one objective should be optimized directly while the
+    <p>CBC and Gurobi use precise numerical defaults for MO solves. Explicit
+<code>solver_params</code> supplied to <code><a href="set_solver.html">set_solver</a></code> take precedence.
+Secondary bounds are checked against
+reevaluated selected decisions, with violations and numerical tolerances
+recorded in each solution's <code>diagnostics$epsilon_checks</code>. Floating-point
+roundoff and tied plans still preclude guaranteed bit-for-bit reproduction.</p>
+<p>A problem can have only one explicitly configured multi-objective method.
+A second call to any <code>set_method_*()</code> function raises an error. To
+compare methods or run designs, derive alternatives from the same problem
+before configuring its method.</p>
+<p>Use this method when one objective should be optimized directly while the
 remaining objectives are controlled through explicit performance thresholds.</p>
 <p><strong>General idea</strong></p>
 <p>Suppose that \(m \ge 2\) objective functions have already been registered
@@ -234,7 +249,7 @@ have already been registered under aliases. These aliases are typically
 created by calling objective setters with an <code>alias</code> argument, for
 example:</p><div class="sourceCode"><pre><code><span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">add_objective_min_fragmentation</span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"frag"</span><span class="op">)</span></span></code></pre></div>
 
@@ -319,7 +334,7 @@ stored and then used by <code><a href="solve.html">solve</a></code>.</p>
 <span class="r-in"><span>    <span class="va">example_data</span><span class="op">$</span><span class="va">effect_assumptions</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_min_cost.html">add_objective_min_cost</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"cost"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_benefit.html">add_objective_max_benefit</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_objective_max_effect.html">add_objective_max_effect</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"benefit"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_objective_min_loss.html">add_objective_min_loss</a></span><span class="op">(</span>alias <span class="op">=</span> <span class="st">"loss"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Automatic epsilon grid for two objectives</span></span></span>

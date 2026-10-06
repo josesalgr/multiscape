@@ -68,7 +68,7 @@ test_that("add_effects validates baselines, feasibility and raster-list shape", 
   )
 
   skip_if_not_installed("terra")
-  p <- make_round3_spatial_problem(action_based = TRUE)
+  p <- make_round3_spatial_problem(action_based = TRUE, with_effects = FALSE)
   r <- terra::rast(nrows = 1, ncols = 1, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
   terra::values(r) <- 1
   expect_error(multiscape::add_effects(p, list(r), raster_type = "effect"), "named list")

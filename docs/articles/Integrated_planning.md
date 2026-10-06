@@ -33,8 +33,8 @@ network with a fixed amount of forest restoration. Existing conservation
 areas are treated as prior commitments and remain unchanged. The
 optimizer decides where to add restoration within the surrounding
 productive matrix while balancing five separate objectives:
-implementation cost and the baseline levels of four ecosystem services
-inside the selected restoration portfolio.
+implementation cost and the deficits to common service ceilings in the
+selected restoration portfolio.
 
 The example addresses the following planning question:
 
@@ -63,41 +63,47 @@ The total restoration cost is
 
 where \\c_i^R\\ is the local cost of restoring unit \\i\\.
 
-For each ecosystem service \\f\\, the model also minimizes
+For each ecosystem service \\f\\, define a common ceiling \\M_f\\ as the
+largest reference amount observed in the eligible restoration units. The
+effect assigned to restoration is the deficit to that ceiling:
 
-\\ O_f(r)=\sum\_{i \in \mathcal{I}\_R}q\_{if}r_i, \\
+\\ \Delta\_{if}=M_f-q\_{if},\qquad
+B_f(r)=\sum\_{i\in\mathcal{I}\_R}(M_f-q\_{if})r_i. \\
 
-where \\q\_{if}\\ is the normalized baseline amount of service \\f\\
-currently provided by unit \\i\\. This quantity can be interpreted as
-the total baseline service level contained in the selected restoration
-portfolio. Minimizing it directs restoration towards units with lower
-current provision of that service.
-
-This interpretation is important. A low value does not mean that a site
-is ecologically unimportant, nor does it prove that restoration will
-generate a large future gain. It indicates only that the site is
-comparatively deficient in the service represented by that layer and
-that selecting it avoids placing restoration in areas where that service
-is already strongly expressed.
+Here \\q\_{if}\\ is the reference amount currently provided by unit
+\\i\\. The four service objectives maximize \\B_f\\, while
+implementation cost is minimized. A larger benefit means that
+restoration is allocated to a stronger current deficit relative to the
+common ceiling.
 
 The complete objective vector is
 
-\\ \min \left\\ C(r), O\_{\mathrm{control}}(r), O\_{\mathrm{carbon}}(r),
-O\_{\mathrm{water}}(r), O\_{\mathrm{sediment}}(r) \right\\. \\
+\\ \left\\\min C(r),\\ \max B\_{\mathrm{control}}(r), \max
+B\_{\mathrm{carbon}}(r),\\ \max B\_{\mathrm{water}}(r), \max
+B\_{\mathrm{sediment}}(r)\right\\. \\
 
-The four ecosystem-service objectives are retained separately because
-their spatial patterns differ. The model therefore searches for low-cost
-restoration portfolios that target several types of ecological deficit
-without assuming that one unit of carbon, water yield, sediment
-retention, and biological control are directly interchangeable.
+Every plan restores exactly \\K\\ equal-area units. Consequently,
 
-These objectives describe baseline conditions at candidate restoration
-sites. They do not estimate the changes caused by restoration.
-Consequently,
+\\ B_f(r)=K M_f-\sum_i q\_{if}r_i. \\
+
+The first term is constant across plans. Maximizing this deficit
+therefore preserves the former criterion of minimizing current service
+provision in the restoration portfolio. This equivalence requires fixed
+effort, a common ceiling within each feature, and one restoration action
+per unit. It does not apply automatically to varying restoration effort
+or concurrent restoration actions.
+
+The ceiling is an explicit accounting assumption for deficit-based
+prioritization. It is not an estimated ecological response to
+restoration. A low current value does not establish that a site can
+reach the ceiling or will respond more strongly than another site.
+Applications with estimated outcomes should supply those estimates to
 [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
-is not required here. A model intended to predict post- restoration
-gains would need action-specific effects and one or more benefit
-objectives.
+instead.
+
+The four services remain separate objectives because their spatial
+patterns differ; no exchange weights between services are imposed in
+advance.
 
 ## Landscape and ecosystem-service data
 
@@ -108,11 +114,14 @@ excluded from intervention.
 
 Four normalized raster layers describe current ecosystem-service
 provision: rodent and lagomorph control, carbon stock, seasonal water
-yield, and sediment retention. Values range from 0 to 1 within each
-layer. Higher values indicate stronger current provision of the
-corresponding service; lower values indicate areas where that service is
-comparatively weak and where restoration may help address an existing
-ecological deficit.
+yield, and sediment retention. Raster-cell values range from 0 to 1
+within each layer.
+[`create_problem()`](https://josesalgr.github.io/multiscape/reference/create_problem.md)
+sums these values inside each planning unit, so the stored reference
+amounts can exceed 1. Higher values indicate stronger current provision
+of the corresponding service; lower values indicate areas where that
+service is comparatively weak and where restoration may help address an
+existing ecological deficit.
 
 ``` r
 library(multiscape)
@@ -262,6 +271,8 @@ layers are used to compare alternative locations for that fixed effort.
 
 ``` r
 unit_area <- stats::median(sim_pu_sf$area)
+stopifnot(all(is.finite(sim_pu_sf$area)),
+          all(abs(sim_pu_sf$area - unit_area) < 1e-8))
 total_commitment_units <- ceiling(0.20 * nrow(sim_pu_sf))
 restoration_target_units <- total_commitment_units - nrow(conservation_units)
 restoration_target_area <- restoration_target_units * unit_area
@@ -279,14 +290,51 @@ problem <- problem |>
   )
 ```
 
+## Express restoration effects as deficits
+
+For each feature, use the maximum reference amount among eligible
+restoration units as a common ceiling. Supplying this ceiling as
+`outcome` makes
+[`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
+compute the signed effect as ceiling minus local reference. The ceilings
+share the units of the aggregated reference amounts.
+
+``` r
+restoration_ceilings <- problem$data$dist_features |>
+  filter(pu %in% restoration_units$pu) |>
+  group_by(feature) |>
+  summarise(outcome = max(amount), .groups = "drop")
+
+restoration_effects <- restoration_ceilings |>
+  mutate(action = "restoration")
+
+problem <- problem |>
+  add_effects(restoration_effects)
+
+restoration_ceilings
+#> # A tibble: 4 x 2
+#>   feature outcome
+#>     <int>   <dbl>
+#> 1       1    7.71
+#> 2       2    7.79
+#> 3       3    7.19
+#> 4       4    3.36
+```
+
+Only restoration contributes effects in this accounting scope. The fixed
+conservation network remains visible in the maps but contributes no
+restoration benefit. The common ceiling makes every restoration effect
+non-negative here; `max_benefit()` also supports signed effects when
+other outcomes imply losses.
+
 ## Register five restoration objectives
 
 The model registers five atomic objectives, each of which retains a
 distinct interpretation.
 
 The first objective minimizes the explicit cost of the selected
-restoration actions. The other four objectives minimize the current
-amount of each ecosystem service contained within the restoration
+restoration actions. The other four objectives maximize the deficit to
+the common ceiling for each ecosystem service in the restoration
 portfolio. In practical terms, they encourage the optimizer to direct
 restoration towards sites with low baseline carbon stock, low seasonal
 water yield, low sediment retention, or low rodent and lagomorph
@@ -300,7 +348,7 @@ additional restoration portfolio.
 
 Keeping the four services separate is deliberate. A site selected
 because it has low carbon stock may still have high water yield, so no
-single restoration portfolio is expected to minimize all four service
+single restoration portfolio is expected to maximize all four deficit
 totals simultaneously.
 
 ``` r
@@ -311,22 +359,22 @@ problem <- problem |>
     include_action_cost = TRUE,
     actions = "restoration"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_effect(
     features = "L1_control_inv",
     actions = "restoration",
     alias = "rodent_control"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_effect(
     features = "L1_stock_inv",
     actions = "restoration",
     alias = "carbon_stock"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_effect(
     features = "L1_rend_inv",
     actions = "restoration",
     alias = "water_yield"
   ) |>
-  add_objective_min_intervention_impact(
+  add_objective_max_effect(
     features = "L1_reten_inv",
     actions = "restoration",
     alias = "sediment_retention"
@@ -347,15 +395,15 @@ AUGMECON is used instead as an a posteriori method. Cost is treated as
 the primary objective, while the four ecosystem-service objectives
 become explicit epsilon constraints. Each run asks a different version
 of the same management question: what is the least-cost restoration
-portfolio that also satisfies a particular combination of limits on the
-baseline services contained in the selected sites?
+portfolio that also satisfies a particular combination of minimum
+deficit benefits at the selected sites?
 
 `set_runs_grid(3)` constructs three epsilon levels for each of the four
 secondary objectives from their payoff ranges. Their Cartesian product
 produces \\3^4=81\\ requested configurations. These configurations
-sample contrasting combinations of ecosystem-service requirements, from
-relatively permissive limits to combinations that force restoration
-strongly towards low-service areas.
+sample contrasting combinations of minimum deficit benefits, from
+relatively permissive requirements to combinations that force
+restoration strongly towards low-service areas.
 
 The grid is intentionally small for a vignette involving more than
 30,000 planning units. It is sufficient to demonstrate the
@@ -399,9 +447,27 @@ about 18 minutes on the system used to prepare this vignette. Re-solving
 all 81 configurations whenever the vignette or package website is built
 would add substantial and unnecessary computational cost.
 
-The vignette therefore loads a precomputed `SolutionSet`. This object
-preserves the action assignments, objective values, solver status, and
-run metadata needed for the remaining analysis.
+The vignette therefore loads a precomputed `SolutionSet`. Its plans were
+originally optimized by minimizing reference amounts. The cached object
+has been migrated to deficit benefits by evaluating the same selected
+actions, using the exact fixed-effort identity above. Objective values,
+optimization senses, epsilon bounds, feature summaries, and model
+vectors have been updated; the spatial allocations and original solver
+diagnostics are retained. No new optimization is implied by this
+migration.
+
+The affine identity establishes equivalence for fixed restoration
+effort; it does not guarantee bit-for-bit reproduction after
+reoptimization. A fresh solver run can select different plans at
+numerical epsilon boundaries or among plans of equal cost. Current MO
+solves use precise solver defaults, scale the scalar criterion without
+changing its meaning, and check secondary bounds against reevaluated
+decisions. Inspect each stored solution’s `diagnostics$epsilon_checks`
+and `diagnostics$solver_args` when regenerating the analysis. The
+historical cached plans retain their original diagnostics.
+
+This object preserves the action assignments, objective values, solver
+status, and run metadata needed for the remaining analysis.
 
 ``` r
 solutions <- readRDS(file.path(
@@ -473,39 +539,39 @@ get_runs(efficient_solutions)
 #> 16     81          81 optimal   0.3240001 0.000000e+00
 get_objectives(efficient_solutions, format = "wide")
 #>    solution_id     cost rodent_control carbon_stock water_yield
-#> 1           23 258716.2       1495.492     8711.409   10027.200
-#> 2           24 258701.0       1493.568     8711.404   10027.187
-#> 3           26 148168.2       1511.004    10014.317   10027.200
-#> 4           27 148167.4       1539.062    10014.318   10027.200
-#> 5           41 215254.0       1511.468     8711.411    9148.542
-#> 6           42 208536.5       2098.464     8711.411    9148.542
-#> 7           44 147312.3       1511.469    10014.300    9148.542
-#> 8           45 141545.5       2520.960    10014.303    9148.543
-#> 9           50 150860.0       1511.470     8711.403   10027.165
-#> 10          51 147406.2       2058.816     8711.412   10027.080
-#> 11          53 121961.2       1511.469    10014.318   10027.198
-#> 12          54 119665.0       2362.490    10009.051   10027.176
-#> 13          71 147154.9       1511.467    10014.300    9148.543
-#> 14          72 140495.7       2521.595    10014.310    9148.543
-#> 15          80 121774.2       1511.470    10014.311   10027.172
-#> 16          81 118753.5       2521.662    10014.318   10027.201
+#> 1           23 258716.2       14789.95     7750.003    5166.418
+#> 2           24 258701.0       14791.88     7750.008    5166.432
+#> 3           26 148168.2       14774.44     6447.096    5166.419
+#> 4           27 148167.4       14746.38     6447.095    5166.418
+#> 5           41 215254.0       14773.98     7750.001    6045.077
+#> 6           42 208536.5       14186.98     7750.002    6045.076
+#> 7           44 147312.3       14773.98     6447.113    6045.077
+#> 8           45 141545.5       13764.49     6447.110    6045.076
+#> 9           50 150860.0       14773.98     7750.010    5166.454
+#> 10          51 147406.2       14226.63     7750.001    5166.539
+#> 11          53 121961.2       14773.98     6447.095    5166.420
+#> 12          54 119665.0       13922.96     6452.362    5166.443
+#> 13          71 147154.9       14773.98     6447.112    6045.076
+#> 14          72 140495.7       13763.85     6447.102    6045.076
+#> 15          80 121774.2       14773.98     6447.102    5166.447
+#> 16          81 118753.5       13763.78     6447.094    5166.418
 #>    sediment_retention
-#> 1        5.511997e-07
-#> 2        7.745541e-07
-#> 3        6.396928e-07
-#> 4        6.396928e-07
-#> 5        2.858626e+01
-#> 6        3.174687e+01
-#> 7        3.613481e+01
-#> 8        3.613296e+01
-#> 9        2.334568e+01
-#> 10       3.310843e+01
-#> 11       3.613522e+01
-#> 12       3.613518e+01
-#> 13       5.123982e+01
-#> 14       7.186292e+01
-#> 15       5.388135e+01
-#> 16       7.227048e+01
+#> 1            7095.274
+#> 2            7095.274
+#> 3            7095.274
+#> 4            7095.274
+#> 5            7066.688
+#> 6            7063.527
+#> 7            7059.139
+#> 8            7059.141
+#> 9            7071.928
+#> 10           7062.165
+#> 11           7059.139
+#> 12           7059.139
+#> 13           7044.034
+#> 14           7023.411
+#> 15           7041.393
+#> 16           7023.003
 ```
 
 The reduction from 81 requested configurations to a smaller set of
@@ -528,10 +594,10 @@ results around a simpler management question:
 > from sites with high current ecosystem-service provision and towards
 > sites with lower baseline service levels?
 
-All five objectives are minimized. Accordingly, an improvement in an
-ecosystem- service objective means that the selected restoration
-portfolio contains less of that service at baseline than the least-cost
-portfolio. In the logic of this example, the plan is targeting a
+Cost is minimized and the four deficit benefits are maximized. An
+improvement in a service objective means a larger deficit benefit than
+in the least-cost portfolio and, at fixed effort, a lower selected
+reference amount. In the logic of this example, the plan is targeting a
 stronger current deficit for that service. It does **not** mean that the
 service has already increased after restoration.
 
@@ -539,9 +605,9 @@ service has already increased after restoration.
 
 Each panel compares an efficient plan with the least-cost restoration
 plan, which is located at zero on both axes. Moving to the right means
-accepting a higher implementation cost. Moving upwards means reducing
-the baseline amount of the corresponding ecosystem service inside the
-selected restoration sites.
+accepting a higher implementation cost. Moving upwards means increasing
+the deficit benefit of the corresponding service relative to the
+least-cost restoration plan.
 
 A higher point therefore represents a portfolio that directs restoration
 more strongly towards locations where that service is currently low.
@@ -550,8 +616,8 @@ range differs among services and because equal percentage changes need
 not have equal ecological or policy significance.
 
 A point below zero would indicate that a more expensive plan selects
-sites with a higher baseline level of that service than the least-cost
-plan.
+sites with a smaller deficit benefit for that service than the
+least-cost plan.
 
 ![](integrated-ecosystem-services-cost-service-improvement-1.png)
 
@@ -578,9 +644,9 @@ ecological reason may be unattractive for another.
 The heatmap summarizes the full five-objective profile of every retained
 plan. Solutions are ordered from lowest to highest cost. Within each
 objective column, values are normalized across the observed efficient
-set. Blue indicates the best observed value for a minimized objective,
-red the worst, and intermediate colours show relative performance
-between those extremes.
+set. Blue indicates the best observed value for each objective (low cost
+or high benefit), red the worst, and intermediate colours show relative
+performance between those extremes.
 
 This normalization supports visual comparison but does not make the
 objectives commensurable. It does not imply that cost and ecosystem
@@ -617,17 +683,17 @@ with high baseline values of another service.
     ties = "first"
   )
   extremes
-#>    solution_id          objective sense bound  role        value
-#> 1           81               cost   min   min  best 1.187535e+05
-#> 2           23               cost   min   max worst 2.587162e+05
-#> 3           24     rodent_control   min   min  best 1.493568e+03
-#> 4           81     rodent_control   min   max worst 2.521662e+03
-#> 5           50       carbon_stock   min   min  best 8.711403e+03
-#> 6           81       carbon_stock   min   max worst 1.001432e+04
-#> 7           41        water_yield   min   min  best 9.148542e+03
-#> 8           81        water_yield   min   max worst 1.002720e+04
-#> 9           23 sediment_retention   min   min  best 5.511997e-07
-#> 10          81 sediment_retention   min   max worst 7.227048e+01
+#>    solution_id          objective sense bound  role      value
+#> 1           81               cost   min   min  best 118753.490
+#> 2           23               cost   min   max worst 258716.180
+#> 3           81     rodent_control   max   min worst  13763.784
+#> 4           24     rodent_control   max   max  best  14791.878
+#> 5           81       carbon_stock   max   min worst   6447.094
+#> 6           50       carbon_stock   max   max  best   7750.010
+#> 7           81        water_yield   max   min worst   5166.418
+#> 8           41        water_yield   max   max  best   6045.077
+#> 9           81 sediment_retention   max   min worst   7023.003
+#> 10          23 sediment_retention   max   max  best   7095.274
 ```
 
 With five objectives, a two-dimensional geometric knee is not
@@ -643,9 +709,9 @@ does not replace stakeholder preferences.
 For ecological interpretation, the analysis also calculates distance to
 an ideal defined only by the four ecosystem-service objectives. We refer
 to this as *joint ecosystem-service regret*. A value of zero would mean
-that one plan simultaneously attains the best observed baseline-service
-total for all four services. Larger values indicate increasing distance
-from that joint deficit- targeting profile.
+that one plan simultaneously attains the largest observed deficit
+benefit for all four services. Larger values indicate increasing
+distance from that joint deficit- targeting profile.
 
 Plotting this distance against additional cost keeps the financial and
 ecological dimensions visible. Because each service is normalized to its
@@ -678,7 +744,7 @@ alternatives; it does not alter the AUGMECON formulation.
     "knee_rank"
   )]
 #>   solution_id   cost rodent_control carbon_stock water_yield sediment_retention
-#> 1          41 215254       1511.468     8711.411    9148.542           28.58626
+#> 1          41 215254       14773.98     7750.001    6045.077           7066.688
 #>   knee_score knee_rank
 #> 1   0.644435         1
 
@@ -724,31 +790,31 @@ balancing cost with all four deficits.
     #> 3                            Rodent-control best          24
     #> 4                              Carbon-stock best          50
     #> 5                        Sediment-retention best          23
-    #>   additional_cost_percent rodent_control_reduction_percent
-    #> 1                     0.0                              0.0
-    #> 2                    81.3                             40.1
-    #> 3                   117.8                             40.8
-    #> 4                    27.0                             40.1
-    #> 5                   117.9                             40.7
-    #>   carbon_stock_reduction_percent water_yield_reduction_percent
-    #> 1                              0                           0.0
-    #> 2                             13                           8.8
-    #> 3                             13                           0.0
-    #> 4                             13                           0.0
-    #> 5                             13                           0.0
-    #>   sediment_retention_reduction_percent
-    #> 1                                  0.0
-    #> 2                                 60.4
-    #> 3                                100.0
-    #> 4                                 67.7
-    #> 5                                100.0
+    #>   additional_cost_percent rodent_control_benefit_increase_percent
+    #> 1                     0.0                                     0.0
+    #> 2                    81.3                                     7.3
+    #> 3                   117.8                                     7.5
+    #> 4                    27.0                                     7.3
+    #> 5                   117.9                                     7.5
+    #>   carbon_stock_benefit_increase_percent water_yield_benefit_increase_percent
+    #> 1                                   0.0                                    0
+    #> 2                                  20.2                                   17
+    #> 3                                  20.2                                    0
+    #> 4                                  20.2                                    0
+    #> 5                                  20.2                                    0
+    #>   sediment_retention_benefit_increase_percent
+    #> 1                                         0.0
+    #> 2                                         0.6
+    #> 3                                         1.0
+    #> 4                                         0.7
+    #> 5                                         1.0
 
-Positive percentages in the service columns represent reductions in
-baseline service levels inside the restoration portfolio relative to the
-least-cost plan. For example, a positive carbon-stock value means that
-the plan restores sites with lower current carbon stock than those
-selected by the least-cost portfolio. It should not be interpreted as a
-measured increase in carbon after restoration.
+Positive percentages in the service columns represent increases in
+deficit benefits relative to the least-cost plan. For example, a
+positive carbon-stock value means that the plan restores sites with
+lower current carbon stock than those selected by the least-cost
+portfolio. It should not be interpreted as a measured increase in carbon
+after restoration.
 
 The table provides the numerical context for the maps by showing the
 additional cost required to achieve each spatial redirection.
@@ -851,20 +917,21 @@ water, sediment retention, and biological control can point to different
 restoration priorities.
 
 This interpretation must remain within the limits of the data and
-formulation. Low baseline service provision is not equivalent to high
-restoration potential. A degraded site may respond strongly to
-intervention, weakly, or only after a long time. Conversely, a site with
-high current service provision could still benefit from restoration. The
-model identifies where current service deficits and implementation costs
-favour intervention; it does not predict the ecological response
-produced by that intervention.
+formulation. The deficit effects assume a common service ceiling. Low
+baseline service provision is not evidence of high realized restoration
+potential. A degraded site may respond strongly to intervention, weakly,
+or only after a long time. Conversely, a site with high current service
+provision could still benefit from restoration. The model identifies
+where current service deficits and implementation costs favour
+intervention; it does not predict the ecological response produced by
+that intervention.
 
 A more complete application could combine the present deficit-based
-objectives with action-specific estimates of expected restoration gain,
-feasibility, time to recovery, land-use opportunity cost, connectivity,
-or future climate risk. Those additions would distinguish more
-explicitly between *where services are currently low* and *where
-restoration is expected to improve them most*.
+objectives with empirically estimated action outcomes, feasibility, time
+to recovery, land-use opportunity cost, connectivity, or future climate
+risk. Those additions would distinguish more explicitly between *where
+services are currently low* and *where restoration is expected to
+improve them most*.
 
 Finally, the generated alternatives depend on the epsilon design. The 81
 requested boundary configurations provide a transparent first

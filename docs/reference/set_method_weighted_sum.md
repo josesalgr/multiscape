@@ -76,6 +76,20 @@ stored in `x$data$method`.
 
 ## Details
 
+MO solves may multiply the complete scalar criterion by a bounded
+positive factor to improve its numerical visibility. This does not
+change the weights or preference ordering, and returned objective values
+retain their original units. CBC and Gurobi use precise numerical
+defaults; explicit `solver_params` supplied to
+[`set_solver`](https://josesalgr.github.io/multiscape/reference/set_solver.md)
+override them. Effective settings and the scalar factor are recorded in
+each solution's `diagnostics$solver_args`.
+
+A problem can have only one explicitly configured multi-objective
+method. A second call to any `set_method_*()` function raises an error.
+To compare methods or run designs, derive alternatives from the same
+problem before configuring its method.
+
 Use this method when several registered objectives should be combined
 into a single scalar optimization problem through explicit preference
 weights.
@@ -282,7 +296,7 @@ x <- create_problem(
     example_data$effect_assumptions
   ) |>
   add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit")
+  add_objective_max_effect(alias = "benefit")
 
 # Automatic weight grid
 x1 <- set_method_weighted_sum(

@@ -57,7 +57,7 @@
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -221,7 +221,7 @@ get_pu <- function(x, solution = NULL, ...) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -362,6 +362,12 @@ get_actions <- function(x, solution = NULL, ...) {
 #' \code{solution} was not requested explicitly, the \code{solution_id} column is removed
 #' for convenience.
 #'
+#' Positive gains and losses are split after combining actions within each unit
+#' and feature. With matching action/feature scopes, the benefit objective
+#' corresponds to the sum of \code{selected_net}, and the loss objective to the
+#' sum of \code{selected_loss}. \code{selected_benefit} remains a descriptive
+#' positive-gain component and is not the signed benefit objective.
+#'
 #' This function summarizes feature outcomes in the result. It is different from
 #' \code{\link{get_targets}}, which focuses on target achievement.
 #'
@@ -400,7 +406,7 @@ get_actions <- function(x, solution = NULL, ...) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -668,7 +674,7 @@ get_features <- function(x, solution = NULL, ...) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -825,7 +831,7 @@ get_targets <- function(x, solution = NULL, ...) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -938,7 +944,7 @@ get_solution_vector <- function(x, solution = NULL, ...) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -1070,7 +1076,7 @@ get_runs <- function(x) {
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -1177,7 +1183,7 @@ get_objectives <- function(x,
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -1444,7 +1450,7 @@ get_objective_specs <- function(x) {
 #'     alias = "cost",
 #'     include_pu_cost = FALSE
 #'   ) |>
-#'   add_objective_max_benefit(
+#'   add_objective_max_effect(
 #'     alias = "benefit"
 #'   ) |>
 #'   set_method_weighted_sum(
@@ -1545,10 +1551,11 @@ get_solution_states <- function(x) {
   }
 
   key <- paste(selection$solution_id, selection$pu, sep = "\r")
+  rows_by_key <- split(seq_len(nrow(selection)), key)
 
   rows <- lapply(seq_len(nrow(base)), function(i) {
     current_key <- paste(base$solution_id[i], base$pu[i], sep = "\r")
-    idx <- which(key == current_key)
+    idx <- rows_by_key[[current_key]]
 
     selected_actions <- if (length(idx) == 0L) {
       character(0)

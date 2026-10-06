@@ -67,6 +67,9 @@ Convenience wrapper around \code{\link{set_solver}} that stores
 
 This function does not solve the model. It only updates the stored solver
 configuration.
+A solver can be configured only once per problem. Calling this wrapper after
+any solver setter raises an error. Derive alternatives from the same problem
+before its first solver configuration.
 }
 \examples{
 # Load a complete simulated planning problem.

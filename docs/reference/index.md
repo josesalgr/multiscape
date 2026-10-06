@@ -15,6 +15,10 @@ consequences.
 
 - [`add_actions()`](https://josesalgr.github.io/multiscape/reference/add_actions.md)
   : Add management actions to a planning problem
+- [`add_action_sets()`](https://josesalgr.github.io/multiscape/reference/add_action_sets.md)
+  : Register sets of management actions
+- [`get_action_sets()`](https://josesalgr.github.io/multiscape/reference/get_action_sets.md)
+  : Inspect registered action sets
 - [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
   : Add action effects to a planning problem
 - [`add_benefits()`](https://josesalgr.github.io/multiscape/reference/add_benefits.md)
@@ -37,6 +41,14 @@ or action decisions.
   : Add area constraint
 - [`add_constraint_budget()`](https://josesalgr.github.io/multiscape/reference/add_constraint_budget.md)
   : Add budget constraint
+- [`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md)
+  : Constrain the number of actions in each planning unit
+- [`add_constraint_action_requires()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.md)
+  : Require companion actions in each planning unit
+- [`add_constraint_action_excludes()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.md)
+  : Make actions mutually exclusive within each planning unit
+- [`add_constraint_action_together()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.md)
+  : Select actions together within each planning unit
 - [`add_constraint_locked_actions()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_actions.md)
   : Add locked action decisions to a planning problem
 - [`add_constraint_locked_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_planning_units.md)
@@ -62,21 +74,19 @@ relationships among planning units.
 
 ## Atomic objectives
 
-Add ecological, economic, intervention, and spatial objectives to the
-planning problem.
+Add ecological, economic, and spatial objectives to the planning
+problem.
 
 - [`add_objective_min_cost()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.md)
   : Add objective: minimize cost
-- [`add_objective_max_benefit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md)
-  : Add objective: maximize benefit
-- [`add_objective_min_loss()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md)
-  : Add objective: minimize loss
+- [`add_objective_max_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.md)
+  : Add objective: maximize signed effect
+- [`add_objective_min_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_effect.md)
+  : Minimize signed effects relative to the reference
 - [`add_objective_max_profit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_profit.md)
   : Add objective: maximize profit
 - [`add_objective_max_net_profit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_net_profit.md)
   : Add objective: maximize net profit
-- [`add_objective_min_intervention_impact()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.md)
-  : Add objective: minimize intervention impact
 - [`add_objective_min_fragmentation_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.md)
   : Add objective: minimize planning-unit fragmentation
 - [`add_objective_min_fragmentation_action()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.md)
@@ -247,6 +257,12 @@ documentation.
 
 Functions retained temporarily for backward compatibility.
 
+- [`add_objective_max_benefit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md)
+  : Deprecated benefit objective
+- [`add_objective_min_loss()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md)
+  : Deprecated objective: minimize loss
+- [`add_objective_min_intervention_impact()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.md)
+  **\[deprecated\]** : Add objective: minimize intervention impact
 - [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
   **\[deprecated\]** : Add locked planning units to a problem
 - [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)

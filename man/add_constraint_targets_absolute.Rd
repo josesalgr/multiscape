@@ -45,6 +45,11 @@ it possible to combine multiple target rules, including targets associated
 with different action subsets.
 }
 \details{
+Calls accumulate targets for distinct feature/action scopes. A second target
+for the same feature and action scope raises an error immediately, even if
+it uses relative units or a different label. To change a target, rebuild
+from the problem before it was added.
+
 Use this function when target requirements are naturally expressed in the
 original units of the modelled feature contributions, rather than as
 proportions of reference-scenario totals.
@@ -53,8 +58,8 @@ Let \eqn{\mathcal{F}} denote the set of features. For each targeted feature
 \eqn{f \in \mathcal{F}}, this function stores an absolute target threshold
 \eqn{T_f \ge 0}.
 
-When the optimization model is built, each such target is interpreted as a
-lower-bound constraint of the form:
+With at most one action per unit, each target is interpreted as a
+lower-bound constraint on post-action amounts of the form:
 \deqn{
 \sum_{(i,a) \in \mathcal{D}_f^{\star}} c_{iaf} x_{ia} \ge T_f,
 }
@@ -75,6 +80,14 @@ In the absolute case, the stored target threshold is simply:
 T_f = t_f,
 }
 where \eqn{t_f} is the user-supplied target value for feature \eqn{f}.
+
+With concurrent actions, the model instead combines signed changes within
+each unit and feature and counts the reference once:
+\deqn{\sum_i \left(r_{if} s_i^{\star} + \Delta_{if}^{\star}(x)\right) \ge T_f.}
+Here \eqn{s_i^{\star}} indicates that at least one action in the target scope
+is selected. Joint corrections contribute only when every member belongs
+to that scope. Individual effects are additive when no interaction is supplied.
+The same aggregation is used to report target achievement.
 
 The \code{actions} argument restricts which actions may contribute toward
 achievement of the target, but it does not modify the value of \eqn{T_f}

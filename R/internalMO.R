@@ -200,7 +200,12 @@
   if (is.null(act_raw) || length(act_raw) == 0L) {
     act_int <- all_actions
   } else {
-    act_int <- as.integer(act_raw)
+    numeric_ids <- suppressWarnings(as.integer(act_raw))
+    act_int <- if (all(!is.na(numeric_ids)) && all(numeric_ids %in% all_actions)) {
+      numeric_ids
+    } else {
+      .pa_resolve_action_subset(base_superset, act_raw)$internal_id
+    }
     act_int <- sort(unique(act_int[is.finite(act_int) & !is.na(act_int)]))
   }
 
@@ -328,9 +333,13 @@
       )))
     }
     if (inc_act) {
+      # Cost setters store external ids. Resolve them before the shared IR
+      # evaluator, where numeric selectors denote internal column ids.
+      action_internal <- if (is.null(actions)) NULL else
+        as.character(.pa_resolve_action_subset(x, actions)$internal_id)
       terms <- c(terms, list(list(
         type = "action_cost",
-        actions = actions
+        actions = action_internal
       )))
     }
 
@@ -350,17 +359,18 @@
   # ------------------------------------------------------------------
   # max_benefit
   # ------------------------------------------------------------------
-  if (identical(id, "max_benefit")) {
-    bcol    <- .c1(a$benefit_col, "benefit")
+  if (id %in% c("max_benefit", "max_effect", "min_effect")) {
+    bcol    <- .c1(a$benefit_col, "effect")
     actions <- .chr(a$actions)
     feats   <- .chr(a$features)
 
+    a$effect_sense <- if (id == "min_effect") "min" else "max"
     a$benefit_col <- bcol
     a$actions     <- actions
     a$features    <- feats
 
     return(list(
-      sense = "max",
+      sense = if (id == "min_effect") "min" else "max",
       terms = list(list(
         type = "benefit",
         benefit_col = bcol,
@@ -578,6 +588,8 @@
   map <- list(
     min_cost = "minimizeCosts",
     max_benefit = "maximizeBenefits",
+    max_effect = "maximizeBenefits",
+    min_effect = "maximizeBenefits",
     max_profit = "maximizeProfit",
     min_loss = "minimizeLosses",
     max_net_profit = "maximizeNetProfit",
@@ -848,7 +860,7 @@
       )
     )
 
-    solutions[[r]] <- one$solution
+    solutions[r] <- list(one$solution)
     status[r]  <- as.character(one$status %||% NA_character_)
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
@@ -1100,7 +1112,7 @@
       stop_on_error = stop_on_error
     )
 
-    solutions[[r]] <- one$solution
+    solutions[r] <- list(one$solution)
     status[r]  <- as.character(one$status %||% NA_character_)
     runtime[r] <- as.numeric(one$runtime %||% NA_real_)
     gap[r]     <- as.numeric(one$gap %||% NA_real_)
@@ -1680,6 +1692,13 @@
 
     } else if (identical(type, "benefit")) {
 
+      if (.pa_uses_aggregate_effects(base_superset)) {
+        current <- rcpp_optimization_problem_as_list(op)$obj
+        vector <- .pa_joint_objective_vector(base_superset, t$benefit_col %||% "effect", t$actions, t$features)
+        rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
+        next
+      }
+
       de_sub <- .subset_dist_effects(
         df = base_superset$data$dist_effects_model,
         actions = t$actions,
@@ -1696,6 +1715,11 @@
           stop("dist_effects_model must contain column '", nm, "' for benefit objective.", call. = FALSE)
         }
       }
+
+      # Canonical positive/loss components remain unchanged for reporting.
+      bcol <- t$benefit_col %||% "effect"
+      if (!bcol %in% names(de_sub)) stop("Missing benefit coefficient column '", bcol, "'.", call. = FALSE)
+      de_sub$benefit <- as.numeric(de_sub[[bcol]])
 
       prep <- rcpp_prepare_objective_max_benefit(
         x = op,
@@ -1714,6 +1738,13 @@
       )
 
     } else if (identical(type, "loss")) {
+
+      if (.pa_uses_aggregate_effects(base_superset)) {
+        current <- rcpp_optimization_problem_as_list(op)$obj
+        vector <- .pa_joint_objective_vector(base_superset, "loss", t$actions, t$features)
+        rcpp_model_set_objective_vector(op, as.numeric(current) + vector, "min")
+        next
+      }
 
       de_sub <- .subset_dist_effects(
         df = base_superset$data$dist_effects_model,
@@ -2185,13 +2216,133 @@
   # base$data$results <- NULL
   # base$data$runtime_updates <- NULL
 
+  # MO scalar objectives can contain very small augmentation/weight terms
+  # next to monetary costs. Request numerically precise solves while keeping
+  # the user's explicit solver parameters authoritative.
+  base$data$runtime_updates <- base$data$runtime_updates %||% list()
+  base$data$runtime_updates$mo_numeric <- TRUE
+
   out <- .pa_solve_single_problem(
     base,
     gap_limit = gap_limit,
     time_limit = time_limit
   )
 
+  if (identical(spec$type, "augmecon") && identical(out$diagnostics$status_code, 0L)) {
+    out <- .pamo_refine_augmecon(base, out, spec)
+  }
+
+  if (spec$type %in% c("epsilon_constraint", "augmecon")) {
+    values <- stats::setNames(vapply(names(spec$eps), function(a)
+      .pamo_eval_alias_on_solution(base, out, a), numeric(1)), names(spec$eps))
+    senses <- vapply(specs_all[names(values)], function(s) s$sense, character(1))
+    effective <- out$diagnostics$solver_args$effective_solver_params %||% list()
+    feasibility_tol <- as.numeric(effective$FeasibilityTol %||%
+                                    effective$primalTolerance %||% 1e-7)
+    out$diagnostics$epsilon_checks <- .pamo_check_secondary_values(
+      values, senses, spec$eps, spec$eps_tol, feasibility_tol
+    )
+    out$solution$alias_values <- values
+  }
+
   .pamo_extract_solution(out)
+}
+
+.pamo_refine_augmecon <- function(base, original, spec) {
+  cache <- base$data$mo_cache$augmecon
+  primary <- .pamo_eval_alias_on_solution(base, original, spec$primary)
+  original_secondary <- stats::setNames(vapply(names(spec$eps), function(a)
+    .pamo_eval_alias_on_solution(base, original, a), numeric(1)), names(spec$eps))
+  senses <- vapply(.pamo_get_objective_specs(base, names(spec$eps)),
+                   function(s) s$sense, character(1))
+  ranges <- as.numeric(spec$secondary_ranges)
+  levels <- as.numeric(unlist(spec$eps, use.names = FALSE))
+  relaxation <- vapply(names(spec$eps), function(a)
+    as.numeric(spec$eps_tol[[a]] %||% 0), numeric(1))
+  score <- function(p, secondary) {
+    canon <- if (cache$ir_primary$sense == "max") -p else p
+    slack <- ifelse(senses == "max", secondary - levels - relaxation,
+                     levels + relaxation - secondary)
+    canon - spec$augmentation * sum(slack / ranges)
+  }
+  original_score <- score(primary, original_secondary)
+  settings <- .pa_get_solve_args(base, gap_limit = spec$gap_limit, time_limit = spec$time_limit)
+  effective <- original$diagnostics$solver_args$effective_solver_params %||% list()
+  limit <- as.numeric(effective$TimeLimit %||% effective$sec %||% settings$time_limit)
+  remaining <- limit - original$diagnostics$runtime
+  if (!is.finite(remaining)) remaining <- settings$time_limit
+  if (remaining <= 0) {
+    original$diagnostics$augmentation_refinement <- "time_limit"
+    return(original)
+  }
+
+  # Refine only on the attained primary level. Removing monetary coefficients
+  # from this pass makes the normalized slack criterion numerically visible.
+  # The first pass still solves the user's complete augmented scalar objective.
+  v <- .pamo_objvec_from_ir(base, cache$ir_primary)
+  nz <- which(v != 0)
+  rcpp_add_linear_constraint(base$data$model_ptr, as.integer(nz - 1L),
+    as.numeric(v[nz]), "=", primary, name = "augmecon_primary_fix",
+    block_name = "augmecon_primary_fix")
+  base <- .pa_refresh_model_snapshot(base)
+  reward <- numeric(length(v))
+  reward[cache$slack_cols_0based + 1L] <- -1 / ranges
+  base$data$runtime_updates <- list(obj = reward, modelsense = "min", mo_numeric = TRUE,
+                                    start = original$solution$vector)
+  base$data$meta$model_dirty <- FALSE
+  # Raw solver parameters also obey the remaining per-run budget.
+  if (!is.null(settings$solver_params$TimeLimit)) base$data$solve_args$solver_params$TimeLimit <- remaining
+  if (!is.null(settings$solver_params$sec)) base$data$solve_args$solver_params$sec <- as.character(remaining)
+  t0 <- Sys.time()
+  refined <- tryCatch(.pa_solve_single_problem(base, gap_limit = spec$gap_limit,
+    time_limit = remaining), error = function(e) e)
+  elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  original$diagnostics$runtime <- original$diagnostics$runtime + elapsed
+  if (inherits(refined, "error")) {
+    original$diagnostics$augmentation_refinement <- conditionMessage(refined)
+    return(original)
+  }
+  p <- .pamo_eval_alias_on_solution(base, refined, spec$primary)
+  secondary <- stats::setNames(vapply(names(spec$eps), function(a)
+    .pamo_eval_alias_on_solution(base, refined, a), numeric(1)), names(spec$eps))
+  candidate_score <- score(p, secondary)
+  precision <- 32 * .Machine$double.eps * max(1, abs(primary), abs(original_score))
+  if (abs(p - primary) > precision || candidate_score > original_score + precision) {
+    original$diagnostics$augmentation_refinement <- "original_retained"
+    return(original)
+  }
+  # Retain the first pass's global status/gap and settings. The refinement is
+  # optimal on a restricted primary level, not a new global proof by itself.
+  first_diagnostics <- original$diagnostics
+  first_diagnostics$augmentation_refinement <- list(
+    status_code = refined$diagnostics$status_code, primary = primary,
+    original_objective = original_score, refined_objective = candidate_score,
+    solver_args = refined$diagnostics$solver_args)
+  refined$diagnostics <- first_diagnostics
+  refined$solution$objective <- candidate_score
+  refined
+}
+
+.pamo_check_secondary_values <- function(values, senses, eps, eps_tol = NULL,
+                                          feasibility_tol = 1e-9) {
+  aliases <- names(values)
+  levels <- as.numeric(unlist(eps[aliases], use.names = FALSE))
+  relaxation <- vapply(aliases, function(a) as.numeric(eps_tol[[a]] %||% 0), numeric(1))
+  limits <- ifelse(senses == "max", levels - relaxation, levels + relaxation)
+  violations <- pmax(0, ifelse(senses == "max", limits - values, values - limits))
+  # Allow floating-point accumulation/cancellation, not the old 1e-6 default
+  # solver tolerance. Explicit solver tolerances remain authoritative.
+  tolerance <- pmax(feasibility_tol, 1e-12 * pmax(1, abs(values), abs(limits)))
+  valid <- is.finite(values) & violations <= tolerance
+  if (any(!valid)) {
+    bad <- aliases[!valid][1]
+    stop("Solver returned a numerically invalid solution: secondary objective '",
+         bad, "' violates its epsilon bound after evaluating the selected decisions.",
+         call. = FALSE)
+  }
+  data.frame(alias = aliases, sense = unname(senses), value = unname(values),
+             epsilon = levels, limit = limits, violation = unname(violations),
+             tolerance = unname(tolerance), valid = unname(valid))
 }
 
 .pamo_apply_epsilon_constraint <- function(base, ir, eps, sense = c("min","max"),
@@ -2214,7 +2365,6 @@
   }
 
   idx <- which(v != 0)
-  if (length(idx) == 0) stop("epsilon objvec has no non-zero coefficients.", call. = FALSE)
 
   # add row: sum(v[j]*x[j]) <= eps
 
@@ -2642,13 +2792,57 @@
     return(as.numeric(val))
   }
 
-  # if (length(terms) == 1L && identical(terms[[1]]$type %||% "", "action_boundary_cut")) {
-  #   val <- .pamo_eval_action_boundary_cut_on_solution(x, solution, terms[[1]])
-  #   return(as.numeric(val))
-  # }
+  if (length(terms) == 1L && identical(terms[[1]]$type %||% "", "action_boundary_cut")) {
+    return(as.numeric(.pamo_eval_action_boundary_cut_on_solution(x, solution, terms[[1]])))
+  }
+
+  # Standard selection costs need no new MILP or auxiliary-variable snapshot.
+  # Use the solved model's exact variable layout and canonical cost tables.
+  cost_terms <- length(terms) > 0L && all(vapply(terms, function(t) {
+    t$type %in% c("pu_cost", "action_cost") && is.null(t$features)
+  }, logical(1)))
+  if (cost_terms) {
+    problem <- solution$problem %||% x
+    ml <- problem$data$model_list
+    da <- problem$data$dist_actions_model %||% problem$data$dist_actions
+    pu <- problem$data$pu
+    values <- .pamo_get_solution_vector(solution)
+    val <- 0
+    for (t in terms) {
+      if (identical(t$type, "pu_cost")) {
+        w <- values[seq_len(nrow(pu))]
+        selected <- which(w > 0.5)
+        val <- val + sum(pu$cost[selected])
+      } else {
+        ids <- suppressWarnings(as.integer(t$actions))
+        action_ids <- if (length(ids) && all(!is.na(ids)) && all(ids %in% problem$data$actions$internal_id)) {
+          ids
+        } else {
+          .pa_resolve_action_subset(problem, t$actions)$internal_id
+        }
+        rows <- which(da$internal_action %in% action_ids)
+        x_offset <- as.integer(ml$x_offset %||% nrow(pu))
+        internal_row <- da$internal_row %||% seq_len(nrow(da))
+        xv <- values[x_offset + internal_row[rows]]
+        selected <- which(xv > 0.5)
+        val <- val + sum(da$cost[rows[selected]])
+      }
+    }
+    return(as.numeric(val))
+  }
 
   # resto de objetivos: evaluaciÃ³n por objvec
   base_eval <- .pamo_prepare_superset_model(x, list(ir))
+
+  # Scoped loss auxiliaries need not occupy the same columns when rebuilt for
+  # evaluation. Evaluate ecological changes from the atomic action decisions,
+  # not from a prefix of the solution's auxiliary columns.
+  if (.pa_uses_aggregate_effects(base_eval) && length(terms) == 1L &&
+      terms[[1]]$type %in% c("benefit", "loss")) {
+    term <- terms[[1]]
+    return(.pa_eval_aggregate_effect_objective(base_eval,
+      .pamo_get_solution_vector(solution), term$type, term$actions, term$features))
+  }
 
   obj_vec <- .pamo_objvec_from_ir(base_eval, ir)
   sol_vec <- .pamo_get_solution_vector(solution)
@@ -2666,6 +2860,12 @@
 
   # permitir evaluar objetivos 'base' sobre soluciones de un superset
   sol_use <- as.numeric(sol_vec[seq_len(n_obj)])
+
+  # Evaluate the implemented binary decisions, as the spatial summaries and
+  # legacy impact evaluator do. Solver integrality noise must not become an
+  # ecological amount or an automatic epsilon endpoint.
+  binary <- base_eval$data$model_list$vtype == "B"
+  sol_use[binary] <- as.numeric(sol_use[binary] > 0.5)
 
   val_engine <- sum(as.numeric(obj_vec) * sol_use, na.rm = TRUE)
 
@@ -2709,7 +2909,9 @@
 
   nz <- which(abs(obj_vec) > 0)
   if (length(nz) == 0L) {
-    stop("Alias '", alias, "' produced an empty objective vector.", call. = FALSE)
+    rcpp_add_linear_constraint(base_eval$data$model_ptr, integer(), numeric(), "<=",
+      as.numeric(rhs + tol), name = name %||% paste0("eps_bound_", alias))
+    return(.pa_refresh_model_snapshot(base_eval))
   }
 
   if (is.null(name)) {
@@ -3031,7 +3233,8 @@
       y_action = isTRUE(need_y_act),
       y_intervention = FALSE,
       u_intervention = isTRUE(need_u_int),
-      u_intervention_actions = u_int_actions
+      u_intervention_actions = u_int_actions,
+      effect_loss_scopes = Filter(function(t) identical(t$type, "loss"), all_terms)
     ),
     relation_name = if (length(rel_names) == 1L) rel_names[1] else NULL
   )
@@ -3171,7 +3374,12 @@
   if (is.null(act_raw) || length(act_raw) == 0L) {
     act_int <- all_actions
   } else {
-    act_int <- as.integer(act_raw)
+    numeric_ids <- suppressWarnings(as.integer(act_raw))
+    act_int <- if (all(!is.na(numeric_ids)) && all(numeric_ids %in% all_actions)) {
+      numeric_ids
+    } else {
+      .pa_resolve_action_subset(sol_problem %||% x, act_raw)$internal_id
+    }
     act_int <- sort(unique(act_int))
   }
 

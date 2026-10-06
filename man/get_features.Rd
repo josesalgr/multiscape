@@ -90,6 +90,12 @@ the result contains a \code{solution_id} column but only a single solution is pr
 \code{solution} was not requested explicitly, the \code{solution_id} column is removed
 for convenience.
 
+Positive gains and losses are split after combining actions within each unit
+and feature. With matching action/feature scopes, the benefit objective
+corresponds to the sum of \code{selected_net}, and the loss objective to the
+sum of \code{selected_loss}. \code{selected_benefit} remains a descriptive
+positive-gain component and is not the signed benefit objective.
+
 This function summarizes feature outcomes in the result. It is different from
 \code{\link{get_targets}}, which focuses on target achievement.
 }
@@ -112,7 +118,7 @@ problem <- create_problem(
   ) |>
   add_constraint_targets_relative(0.05) |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-  add_objective_max_benefit(alias = "benefit") |>
+  add_objective_max_effect(alias = "benefit") |>
   set_method_weighted_sum(
     aliases = c("cost", "benefit"),
     runs = set_runs_grid(n = 3),

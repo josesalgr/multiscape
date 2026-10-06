@@ -106,6 +106,8 @@ test_that("fragmentation compilation validates relation structure and indices", 
 
 
 test_that("intervention-impact compilation validates required data", {
+  # Historical objective coverage during the deprecation transition.
+  withr::local_options(lifecycle_verbosity = "quiet")
   p <- make_round3_action_problem(with_effects = TRUE)
   impact <- multiscape::add_objective_min_intervention_impact(
     p, actions = "restoration", alias = "impact"

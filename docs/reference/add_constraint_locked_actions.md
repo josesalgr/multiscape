@@ -98,6 +98,11 @@ planning-unit geometry, and planning units are matched spatially using
 
 **Conflict checking**
 
+Calls accumulate compatible locks and preserve omitted arguments.
+Repeating the same lock is idempotent. Changing an existing locked-in
+pair to locked-out, or vice versa, raises an error. To change a lock,
+rebuild from the problem before it was added.
+
 A given `(pu, action)` pair cannot be simultaneously requested in both
 `locked_in` and `locked_out`. Such overlaps are rejected.
 
@@ -134,6 +139,9 @@ p <- create_problem(
     example_data$actions,
     cost = example_data$action_costs
   )
+
+# Keep the base to compare independent lock specifications
+actions_base <- p
 
 # Lock a few feasible decisions
 p <- add_constraint_locked_actions(
@@ -281,7 +289,7 @@ p$data$dist_actions
 
 # Named-list interface
 p2 <- add_constraint_locked_actions(
-  x = p,
+  x = actions_base,
   locked_in = list(
     protect = c(1, 3)
   ),
@@ -298,7 +306,7 @@ p2$data$dist_actions
 #> 66   2 restore 2.18      3           2               2           1
 #> 3    3 protect 1.25      2           3               1           1
 #> 67   3 restore 2.06      0           3               2           1
-#> 4    4 protect 1.35      3           4               1           1
+#> 4    4 protect 1.35      0           4               1           1
 #> 68   4 restore 1.94      0           4               2           1
 #> 5    5 protect 1.45      0           5               1           1
 #> 69   5 restore 1.82      0           5               2           1

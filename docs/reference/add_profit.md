@@ -42,12 +42,15 @@ add_profit(x, profit = NULL)
 
   - a `data.frame(pu, action, profit)` defining pair-specific profit.
 
+  Profit can be defined only once per problem, including explicit zero
+  profit. A second call raises an error. To compare profit scenarios,
+  build separate problems from the object before profit was added.
+
 ## Value
 
-An updated `Problem` object with a stored profit table created or
-replaced. The stored table contains columns `pu`, `action`, `profit`,
-`internal_pu`, and `internal_action`, and includes only rows with
-non-zero profit.
+An updated `Problem` object with a stored profit table created. The
+stored table contains columns `pu`, `action`, `profit`, `internal_pu`,
+and `internal_action`, and includes only rows with non-zero profit.
 
 ## Details
 

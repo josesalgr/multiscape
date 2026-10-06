@@ -295,7 +295,7 @@ NULL
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
 #'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'     add_objective_max_benefit(alias = "benefit") |>
+#'     add_objective_max_effect(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
 #'       runs = set_runs_grid(n = 3),
@@ -459,7 +459,7 @@ plot_spatial <- function(
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
 #'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'     add_objective_max_benefit(alias = "benefit") |>
+#'     add_objective_max_effect(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
 #'       runs = set_runs_grid(n = 3),
@@ -702,7 +702,7 @@ plot_spatial_pu <- function(
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
 #'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'     add_objective_max_benefit(alias = "benefit") |>
+#'     add_objective_max_effect(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
 #'       runs = set_runs_grid(n = 3),
@@ -1060,7 +1060,7 @@ plot_spatial_actions <- function(
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
 #'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'     add_objective_max_benefit(alias = "benefit") |>
+#'     add_objective_max_effect(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
 #'       runs = set_runs_grid(n = 3),
@@ -1398,7 +1398,7 @@ plot_spatial_features <- function(
 #'     ) |>
 #'     add_constraint_targets_relative(0.05) |>
 #'     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'     add_objective_max_benefit(alias = "benefit") |>
+#'     add_objective_max_effect(alias = "benefit") |>
 #'     set_method_weighted_sum(
 #'       aliases = c("cost", "benefit"),
 #'       runs = set_runs_grid(n = 3),

@@ -63,7 +63,7 @@ test_that("run control validates logical scalar inputs", {
 })
 
 
-test_that("solver configuration validates logging and preserves incremental parameters", {
+test_that("solver configuration validates logging and rejects repeated assignment", {
   p <- make_round4_problem() |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost")
@@ -102,11 +102,11 @@ test_that("solver configuration validates logging and preserves incremental para
   expect_equal(out$data$solve_args$solver_params$alpha, 1)
   expect_equal(out$data$solve_args$solver_params$beta, 2)
 
-  out2 <- multiscape::set_solver(
+  expect_error(multiscape::set_solver(
     out,
     solver = "cbc",
     solver_params = list(alpha = 9)
-  )
-  expect_equal(out2$data$solve_args$solver_params$alpha, 9)
-  expect_equal(out2$data$solve_args$solver_params$beta, 2)
+  ), "already defined")
+  expect_equal(out$data$solve_args$solver_params$alpha, 1)
+  expect_equal(out$data$solve_args$solver_params$beta, 2)
 })

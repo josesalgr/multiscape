@@ -191,7 +191,7 @@
 #   ) |>
 #   add_constraint_targets_relative(0.05) |>
 #   add_objective_min_cost(alias = "cost") |>
-#   add_objective_max_benefit(alias = "benefit") |>
+#   add_objective_max_effect(alias = "benefit") |>
 #   set_method_weighted_sum(
 #     aliases = c("cost", "benefit"),
 #     runs = set_runs_manual(

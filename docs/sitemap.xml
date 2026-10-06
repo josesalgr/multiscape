@@ -1,9 +1,14 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://josesalgr.github.io/multiscape/404.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Action_cardinality.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Action_relations.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Action_sets.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/articles/choosing_multi_objective_method.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/articles/index.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/articles/Integrated_planning.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Joint_effects.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/articles/multiscape.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/articles/Repeated_calls.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/articles/reserve-design-rwanda.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/authors.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/CONTRIBUTING.html</loc></url>
@@ -12,7 +17,12 @@
 <url><loc>https://josesalgr.github.io/multiscape/news/index.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_actions.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_action_max_per_pu.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_action_sets.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_benefits.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_area.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_area_max.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_constraint_area_min.html</loc></url>
@@ -25,10 +35,12 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_effects.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_losses.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_max_net_profit.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_max_profit.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_action_fragmentation.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_effect.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.html</loc></url>
@@ -50,6 +62,7 @@
 <url><loc>https://josesalgr.github.io/multiscape/reference/frontier_knee.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/frontier_neighbors.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_actions.html</loc></url>
+<url><loc>https://josesalgr.github.io/multiscape/reference/get_action_sets.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_features.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_objectives.html</loc></url>
 <url><loc>https://josesalgr.github.io/multiscape/reference/get_objective_specs.html</loc></url>

@@ -1,3 +1,105 @@
+# multiscape 1.4.0
+
+* Added `add_objective_max_effect()` and `add_objective_min_effect()` for signed
+  changes relative to the reference, including action interactions. Their
+  arguments are `x`, `actions`, `features`, and `alias`.
+* `add_objective_max_benefit()` is deprecated with lifecycle and delegates to
+  `add_objective_max_effect()`, retaining the development branch's signed-net
+  behavior. The published positive-only behavior changed earlier in this branch.
+* `add_objective_min_loss()` is deprecated but retains its original final
+  negative-part criterion. `min_effect()` is not an equivalent replacement:
+  it minimizes signed change and permits compensation. No removal date is set.
+
+* Added an educational Meseta Ibérica action-planning tutorial, bundled inputs,
+  and a runnable script covering spatial-cost trade-offs and spatial analyses.
+* Improved prototype/data-cloning memory use and indexed planning-unit analyses.
+* Bounded polygon/raster extraction buffers to avoid eager full-raster allocation
+  failures when building large landscape examples.
+
+## Other changes
+
+- Fixed single-objective `min_cost` action scopes so they agree with the MO
+  cost criterion; planning-unit costs remain global and feasible actions retain
+  their original indices.
+- Fixed CBC crashes/short solution vectors caused by trailing empty matrix
+  rows or columns, including fully locked legacy impact models. A redundant
+  bound row preserves dimensions without changing the feasible decisions.
+- MO solves use bounded positive scalar-objective rescaling, with values
+  returned in their original units. CBC and Gurobi receive precise numerical
+  defaults; explicit solver parameters take precedence. Epsilon bounds are
+  checked against reevaluated selected decisions and checks/effective settings
+  are recorded in solution diagnostics. Binary integrality noise no longer
+  enters objective evaluation or automatic epsilon endpoints.
+- After an optimal AUGMECON solve, refine normalized slacks at the attained
+  primary level within the remaining time limit. The original augmented
+  criterion and global status/gap are preserved and refinement is recorded.
+- Native model allocation reserves memory according to the actual core size
+  rather than one million rows/columns for every temporary MO model.
+
+- Deprecated `add_objective_min_intervention_impact()` with `lifecycle`. It keeps
+  its original behavior and arguments until removal in a future release. New
+  workflows express action consequences through effects and net benefit.
+  The forest-restoration example now uses deficit effects with a common ceiling
+  per feature and fixed restoration effort, documenting the equivalence and its
+  limits. Cached plans are migrated by exact affine evaluation of their decisions.
+
+- **Changed behavior:** `add_objective_max_benefit()` now maximizes signed net
+  change relative to the reference, including negative individual effects and
+  interaction corrections. Earlier versions counted positive effects only;
+  models with negative effects may select different plans. Names and public
+  arguments are unchanged; no separate net-benefit function is introduced.
+- `add_objective_min_loss()` retains its loss-only criterion, with the negative
+  part computed after combining actions within each planning unit and feature.
+  Exact loss auxiliaries support mixed signs, overlapping scopes, zero weights,
+  secondary bounds, and payoff/lexicographic solves in all three MO methods.
+- Concurrent individual effects are additive unless joint totals are supplied.
+  Ecological targets and result summaries count the reference once per selected
+  unit in their action scope, using signed joint changes for final outcomes.
+  `selected_benefit` remains the positive-gain metric; `selected_net` matches
+  the signed benefit objective when their scopes coincide.
+
+- Modern `add_effects()` tables and rasters accept registered action sets as
+  total joint outcomes, effects, or relative changes. Original totals and input
+  tables are preserved separately from sparse signed subset corrections.
+  Missing interactions/individual effects are explicitly assumed zero.
+  Exact continuous AND auxiliaries are shared across features, created only
+  for feasible non-zero corrections, and integrated into single-objective and
+  all three MO formulations. Inferred negative outcomes are excluded.
+  Joint solution summaries aggregate signed changes per PU/feature and count
+  the selected reference once. Signed ecological objectives and concurrent
+  targets use the final aggregation described above.
+- Added `add_constraint_action_requires()` (all/any companions),
+  `add_constraint_action_excludes()` (at most one group member), and
+  `add_constraint_action_together()` (all or none), scoped separately by PU.
+  Distinct rules accumulate; duplicate identities and names are errors.
+  Unavailable actions are treated as zero, including missing pairs, exclusions,
+  and filtered non-finite costs. Relations use the same compiled feasible set
+  for single-objective, weighted-sum, epsilon-constraint, and AUGMECON methods.
+  They do not lift the default action-count limit or introduce joint effects.
+- Defined a strict repeated-call contract without adding public arguments.
+  Actions, effects (including legacy wrappers), profit, solver settings, MO
+  methods, and unaliased objectives can be defined only once per problem.
+  Second definitions raise an error instead of replacing data or settings.
+  Distinct sets, constraints, spatial names, and objective aliases accumulate.
+  Locks accumulate compatible states and reject inversions in either call order.
+  Targets reject duplicate feature/action scopes immediately, including across
+  absolute and relative calls. Budget identity includes cost components and
+  area identity includes its measure. Compare configurations by deriving each
+  alternative from a common problem before its first definition.
+- Added `add_constraint_action_cardinality()` for per-unit minimum, maximum,
+  or exact action counts. Repeated calls support distinct spatial and action
+  scopes; explicit total maxima/equalities replace the implicit one-action
+  limit only in their covered units. Rules are compiled for single-objective
+  and multi-objective methods, including concurrent economic and ecological
+  workflows with final feature aggregation.
+- Added `add_action_sets()` for named lists or long membership tables and
+  `get_action_sets()` for inspecting definitions. Actions can belong to several
+  sets. Definitions are independent of action feasibility, selection rules,
+  costs, and effects; registering them does not enable simultaneous actions.
+- Action-set registration validates members and identifier conflicts, adds new
+  sets across calls, and preserves the original problem. Action catalogs are
+  fixed after their first definition, protecting dependent sets and indices.
+
 # multiscape 1.3.0
 
 - `add_effects()` now accepts exactly one of `effect`, `outcome`, or

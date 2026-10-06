@@ -27,6 +27,16 @@ NULL
 #' }
 #'
 #' @details
+#' \strong{Repeated calls}
+#'
+#' Action catalogues, effects, profit, solver configuration, multi-objective
+#' methods, and unaliased single objectives can each be defined once. A second
+#' definition raises an error. Action sets, named spatial relations, aliased
+#' objectives, and distinct constraints accumulate; duplicate definitions are
+#' rejected. Locks accumulate compatible states, allow identical repeats, and
+#' reject contradictory states. To compare scenarios or configurations, derive
+#' each alternative from a common problem before the relevant definition.
+#'
 #' \strong{Conceptual role}
 #'
 #' The \code{Problem} class is designed for a data-first and modular workflow.
@@ -88,6 +98,9 @@ NULL
 #'   \item{\code{pu}}{Planning-unit table.}
 #'   \item{\code{features}}{Feature table.}
 #'   \item{\code{actions}}{Action catalog.}
+#'   \item{\code{action_sets}}{Named combinations of actions, stored as a long
+#'   table of set--action memberships. These definitions do not impose joint
+#'   selection or change the optimization model.}
 #'   \item{\code{dist_features}}{Planning unit--feature baseline amounts.}
 #'   \item{\code{dist_actions}}{Feasible planning unit--action pairs.}
 #'   \item{\code{dist_effects}}{Action effects by planning unit, action, and
@@ -97,7 +110,13 @@ NULL
 #'   \item{\code{pu_coords}}{Planning-unit coordinates when available.}
 #'   \item{\code{spatial_relations}}{Registered spatial relations.}
 #'   \item{\code{targets}}{Stored target specifications.}
-#'   \item{\code{constraints}}{Stored user-defined constraints.}
+#'   \item{\code{constraints}}{Stored user-defined constraints, including
+#'   per-unit action counts in \code{constraints$action_cardinality} and logical
+#'   relations in \code{constraints$action_relations}.}
+#'   \item{\code{effects_original}, \code{joint_effects}, \code{effect_terms}}{
+#'   Canonical supplied totals, supplied joint totals, and their signed subset
+#'   corrections, when registered sets occur in modern effect input. Missing
+#'   interactions are assumed zero as recorded in \code{effects_meta}.}
 #'   \item{\code{objectives}}{Registered atomic objectives for single- or
 #'   multi-objective workflows.}
 #'   \item{\code{method}}{Stored multi-objective method configuration, when
@@ -182,6 +201,8 @@ NULL
 #' @seealso
 #' \code{\link{create_problem}},
 #' \code{\link{add_actions}},
+#' \code{\link{add_action_sets}},
+#' \code{\link{add_constraint_action_cardinality}},
 #' \code{\link{add_effects}},
 #' \code{\link{add_constraint_targets_absolute}},
 #' \code{\link{solve}}
@@ -325,7 +346,7 @@ NULL
 }
 
 .pa_effects_summary <- function(self) {
-  de <- self$data$dist_effects
+  de <- self$data$effects_original %||% self$data$dist_effects
   dp <- self$data$dist_profit
 
   out <- list(
@@ -416,6 +437,8 @@ NULL
   out <- list(
     area_constraints = 0L,
     budget_constraints = 0L,
+    action_cardinality_constraints = 0L,
+    action_relation_constraints = 0L,
     pu_locked_in = 0L,
     pu_locked_out = 0L,
     action_locked_in = 0L,
@@ -423,6 +446,12 @@ NULL
   )
 
   cons <- self$data$constraints %||% list()
+  if (is.data.frame(cons$action_cardinality)) {
+    out$action_cardinality_constraints <- nrow(cons$action_cardinality)
+  }
+  if (is.data.frame(cons$action_relations)) {
+    out$action_relation_constraints <- nrow(cons$action_relations)
+  }
 
   # area constraints
   if (is.list(cons) && !is.null(cons$area)) {
@@ -774,6 +803,15 @@ Problem <- pproto(
         " {ch$v}{ch$j}{ch$b}actions:         {act_sum$n} total ({act_sum$preview})",
         .envir = environment()
       )
+      action_sets <- self$data$action_sets
+      if (is.data.frame(action_sets) && nrow(action_sets) > 0L) {
+        n_sets <- length(unique(action_sets$set))
+        n_memberships <- nrow(action_sets)
+        cli::cli_text(
+          " {ch$v}{ch$j}{ch$b}action sets:     {n_sets} defined ({n_memberships} memberships)",
+          .envir = environment()
+        )
+      }
       cli::cli_text(" {ch$v}{ch$j}{ch$b}feasible action pairs:    {n_dist_act} feasible rows",
                     .envir = environment())
 
@@ -797,6 +835,12 @@ Problem <- pproto(
       cli::cli_text(" {ch$v}{ch$j}{ch$b}effect input:    {eff_sum$effect_input}",
                     .envir = environment())
       cli::cli_text(" {ch$v}{ch$j}{ch$b}effect signs:    {eff_sum$effect_signs}",
+                    .envir = environment())
+    }
+
+    if (isTRUE(self$data$effects_meta$joint_effects)) {
+      n_joint <- nrow(self$data$joint_effects)
+      cli::cli_text(" {ch$v}{ch$j}{ch$b}joint effects: {n_joint} supplied rows; missing interactions assumed zero",
                     .envir = environment())
     }
 
@@ -1009,6 +1053,22 @@ Problem <- pproto(
           )
         }
       }
+    }
+
+    if (cons_sum$action_cardinality_constraints > 0L) {
+      n_cardinality <- cons_sum$action_cardinality_constraints
+      cli::cli_text(
+        " {ch$v}{ch$j}{ch$b}action cardinality: {n_cardinality} registered rules",
+        .envir = environment()
+      )
+    }
+
+    if (cons_sum$action_relation_constraints > 0L) {
+      n_relations <- cons_sum$action_relation_constraints
+      cli::cli_text(
+        " {ch$v}{ch$j}{ch$b}action relations: {n_relations} registered rules",
+        .envir = environment()
+      )
     }
 
     pu_lock_total <- cons_sum$pu_locked_in + cons_sum$pu_locked_out

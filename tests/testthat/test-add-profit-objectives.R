@@ -133,6 +133,8 @@ test_that("max net profit compiles and solves", {
 
 
 test_that("loss and intervention impact objectives compile", {
+  # Historical objective coverage during the deprecation transition.
+  withr::local_options(lifecycle_verbosity = "quiet")
   p_loss <- make_round2_action_problem(with_effects = TRUE) |>
     multiscape::add_objective_min_loss(alias = "loss")
 
