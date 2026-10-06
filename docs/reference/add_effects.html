@@ -13,7 +13,7 @@ user-defined reference scenario."><meta property="og:image" content="https://jos
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -21,7 +21,7 @@ user-defined reference scenario."><meta property="og:image" content="https://jos
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,7 +32,12 @@ user-defined reference scenario."><meta property="og:image" content="https://jos
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -122,7 +127,11 @@ to select the new raster interface.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The feature distribution supplied to <code><a href="create_problem.html">create_problem()</a></code> defines the
+    <p>Effects can be defined only once per problem. A second call, including through
+<code><a href="add_benefits.html">add_benefits()</a></code> or <code><a href="add_losses.html">add_losses()</a></code>, raises an error. Supply the
+complete effects table in one call. To compare effect scenarios, build
+separate problems from the object before effects were added.</p>
+<p>The feature distribution supplied to <code><a href="create_problem.html">create_problem()</a></code> defines the
 reference amounts. The reference can describe current conditions, a future
 without intervention, or existing management. Action outcomes and references
 must share units and, for future scenarios, the same time horizon.</p>
@@ -151,6 +160,35 @@ These components cannot both be positive for a single triple.
 A positive effect denotes an increase, not necessarily an improvement:
 whether increasing a feature is desirable depends on the objective.
 Zero effects are retained and have an outcome equal to the reference amount.</p>
+<p><strong>Joint effects of action sets</strong></p>
+<p>In the modern table or raster interface, <code>action</code> can also identify a
+set registered with <code><a href="add_action_sets.html">add_action_sets()</a></code>. Supply the total outcome or
+total change of that combination, not an interaction coefficient. Individual
+and joint effects belong in the same single call. Set members must share an
+available PU; a global row expands only over such units. Explicit joint rows
+with unavailable members raise an error. Legacy component filtering is not
+supported for joint effects.</p>
+<p>The original canonical totals are preserved in <code>effects_original</code> and
+<code>joint_effects</code>; original table input is preserved in <code>effects_input</code>.
+<code>dist_effects</code> continues to contain individual actions only. The separate
+<code>effect_terms</code> table stores signed corrections: for set S, subtract all
+supplied proper-subset corrections from its supplied total change.
+Unspecified individual effects and interactions are explicitly assumed zero,
+recorded in <code>effects_meta</code>. This is a modelling assumption, not evidence
+that unobserved interactions are absent.</p>
+<p>Compilation adds an exact AND auxiliary only for a feasible PU/set with a
+non-zero correction. It is continuous on <code>0 &lt;= y &lt;= 1</code>, determined by the binary
+members, shared across features, and activated independently of coefficient
+sign or optimization method. Cardinality still determines allowed action
+counts; registration and effects do not force joint selection. Inferred
+negative feature outcomes are excluded from the feasible set.</p>
+<p>Benefit objectives maximize total signed change, including negative effects
+and interaction corrections. Loss objectives minimize the negative part of
+the final joint change per PU/feature, rather than treating a negative
+correction as a loss by itself. Concurrent individual effects are additive
+when no interaction is supplied. Targets use the joint outcome and count the
+reference once per unit in their action scope. Solution summaries report
+signed net change and its final positive/negative parts separately.</p>
 <p><strong>Raster inputs</strong></p>
 <p>Supply a named list of <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code> objects, one per action.
 Names must match action identifiers. Each raster must have one layer per
@@ -200,6 +238,25 @@ their original order. New table inputs need no interpretation argument.</p>
 <span class="r-in"><span><span class="va">p_effect</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">dist_effects</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reference_amount"</span>, <span class="st">"effect"</span>, <span class="st">"action_outcome"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   reference_amount effect action_outcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              100     50            150</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Joint totals in one call: 30 + 20 + interaction 20 = total 70.</span></span></span>
+<span class="r-in"><span><span class="va">joint_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">10L</span>, cost <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1L</span>, name <span class="op">=</span> <span class="st">"habitat"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">10L</span>, feature <span class="op">=</span> <span class="fl">1L</span>, amount <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"control"</span><span class="op">)</span><span class="op">)</span>, cost <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_action_sets.html">add_action_sets</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>restore_control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"control"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"max"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">joint</span> <span class="op">&lt;-</span> <span class="va">joint_base</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">add_effects</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"control"</span>, <span class="st">"restore_control"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    feature <span class="op">=</span> <span class="st">"habitat"</span>, effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">20</span>, <span class="fl">70</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">joint</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">effect_terms</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"action"</span>, <span class="st">"total_effect"</span>, <span class="st">"effect"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            action total_effect effect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         control           20     20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         restore           30     30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 restore_control           70     20</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Raster example: one polygon contains two cells with reference amounts 40, 60.</span></span></span>
 <span class="r-in"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span>nrows <span class="op">=</span> <span class="fl">1</span>, ncols <span class="op">=</span> <span class="fl">2</span>, xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">2</span>,</span></span>

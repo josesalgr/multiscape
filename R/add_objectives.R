@@ -211,7 +211,7 @@ add_objective_min_cost <- function(
 #' @return An updated Problem object.
 #' @export
 add_objective_max_benefit <- function(x, actions = NULL, features = NULL, alias = NULL) {
-  lifecycle::deprecate_warn("1.3.0", "add_objective_max_benefit()",
+  lifecycle::deprecate_warn("1.4.0", "add_objective_max_benefit()",
     "add_objective_max_effect()", user_env = parent.frame())
   add_objective_max_effect(x, actions, features, alias)
 }
@@ -368,7 +368,7 @@ add_objective_max_effect <- function(
 
 #' @title Deprecated objective: minimize loss
 #' @section Lifecycle:
-#' Deprecated since 1.3.0. Legacy calls retain the negative-part criterion.
+#' Deprecated since 1.4.0. Legacy calls retain the negative-part criterion.
 #' add_objective_min_effect() is not a mathematically equivalent replacement.
 #'
 #' @description
@@ -459,7 +459,7 @@ add_objective_min_loss <- function(
     features = NULL,
     alias = NULL
 ) {
-  lifecycle::deprecate_warn("1.3.0", "add_objective_min_loss()",
+  lifecycle::deprecate_warn("1.4.0", "add_objective_min_loss()",
     details = paste("Use add_objective_min_effect() only when minimizing signed change is intended.",
       "It is not an equivalent replacement: this legacy function retains",
       "the negative-part criterion after aggregation within each unit and feature."),
@@ -1227,7 +1227,7 @@ add_objective_min_intervention_impact <- function(
     alias = NULL
 ) {
   lifecycle::deprecate_warn(
-    "1.3.0",
+    "1.4.0",
     "add_objective_min_intervention_impact()",
     details = paste(
       "This function will be removed in a future version of multiscape.",

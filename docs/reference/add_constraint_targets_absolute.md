@@ -58,6 +58,11 @@ target table.
 
 ## Details
 
+Calls accumulate targets for distinct feature/action scopes. A second
+target for the same feature and action scope raises an error
+immediately, even if it uses relative units or a different label. To
+change a target, rebuild from the problem before it was added.
+
 Use this function when target requirements are naturally expressed in
 the original units of the modelled feature contributions, rather than as
 proportions of reference-scenario totals.
@@ -66,9 +71,10 @@ Let \\\mathcal{F}\\ denote the set of features. For each targeted
 feature \\f \in \mathcal{F}\\, this function stores an absolute target
 threshold \\T_f \ge 0\\.
 
-When the optimization model is built, each such target is interpreted as
-a lower-bound constraint of the form: \$\$ \sum\_{(i,a) \in
-\mathcal{D}\_f^{\star}} c\_{iaf} x\_{ia} \ge T_f, \$\$ where:
+With at most one action per unit, each target is interpreted as a
+lower-bound constraint on post-action amounts of the form: \$\$
+\sum\_{(i,a) \in \mathcal{D}\_f^{\star}} c\_{iaf} x\_{ia} \ge T_f, \$\$
+where:
 
 - \\i \in \mathcal{I}\\ indexes planning units,
 
@@ -85,6 +91,15 @@ a lower-bound constraint of the form: \$\$ \sum\_{(i,a) \in
 In the absolute case, the stored target threshold is simply: \$\$ T_f =
 t_f, \$\$ where \\t_f\\ is the user-supplied target value for feature
 \\f\\.
+
+With concurrent actions, the model instead combines signed changes
+within each unit and feature and counts the reference once: \$\$\sum_i
+\left(r\_{if} s_i^{\star} + \Delta\_{if}^{\star}(x)\right) \ge T_f.\$\$
+Here \\s_i^{\star}\\ indicates that at least one action in the target
+scope is selected. Joint corrections contribute only when every member
+belongs to that scope. Individual effects are additive when no
+interaction is supplied. The same aggregation is used to report target
+achievement.
 
 The `actions` argument restricts which actions may contribute toward
 achievement of the target, but it does not modify the value of \\T_f\\
@@ -140,8 +155,8 @@ p1$data$targets
 #> 1       1 actions    ge    absolute          3          NA            3    <NA>
 #> 2       2 actions    ge    absolute          3          NA            3    <NA>
 #>   label                created_at feature_name
-#> 1  <NA> 2026-10-01 11:05:58.35701     woodland
-#> 2  <NA> 2026-10-01 11:05:58.35701     riparian
+#> 1  <NA> 2026-10-06 19:16:39.13223     woodland
+#> 2  <NA> 2026-10-06 19:16:39.13223     riparian
 
 # Different targets by feature
 p2 <- add_constraint_targets_absolute(
@@ -153,8 +168,8 @@ p2$data$targets
 #> 1       1 actions    ge    absolute          4          NA            4    <NA>
 #> 2       2 actions    ge    absolute          2          NA            2    <NA>
 #>   label                 created_at feature_name
-#> 1  <NA> 2026-10-01 11:05:58.427627     woodland
-#> 2  <NA> 2026-10-01 11:05:58.427627     riparian
+#> 1  <NA> 2026-10-06 19:16:39.137523     woodland
+#> 2  <NA> 2026-10-06 19:16:39.137523     riparian
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_absolute(
@@ -167,6 +182,6 @@ p3$data$targets
 #> 1       1 actions    ge    absolute          2          NA            2 protect
 #> 2       2 actions    ge    absolute          2          NA            2 protect
 #>   label                 created_at feature_name
-#> 1  <NA> 2026-10-01 11:05:58.432282     woodland
-#> 2  <NA> 2026-10-01 11:05:58.432282     riparian
+#> 1  <NA> 2026-10-06 19:16:39.142692     woodland
+#> 2  <NA> 2026-10-06 19:16:39.142692     riparian
 ```

@@ -41,6 +41,15 @@ add_objective_min_fragmentation_pu(
 
 An updated `Problem` object.
 
+## Repeated calls
+
+With `alias = NULL`, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an
+error. Aliased definitions preserve an explicitly configured single
+objective. To compare alternatives, start from the problem before its
+objective was added.
+
 ## See also
 
 [`add_objective_min_fragmentation_planning_units`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_planning_units.md)

@@ -37,7 +37,7 @@ create_problem()
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -45,7 +45,7 @@ create_problem()
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,12 @@ create_problem()
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -100,7 +105,15 @@ create_problem()
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Conceptual role</strong></p>
+    <p><strong>Repeated calls</strong></p>
+<p>Action catalogues, effects, profit, solver configuration, multi-objective
+methods, and unaliased single objectives can each be defined once. A second
+definition raises an error. Action sets, named spatial relations, aliased
+objectives, and distinct constraints accumulate; duplicate definitions are
+rejected. Locks accumulate compatible states, allow identical repeats, and
+reject contradictory states. To compare scenarios or configurations, derive
+each alternative from a common problem before the relevant definition.</p>
+<p><strong>Conceptual role</strong></p>
 <p>The <code>Problem</code> class is designed for a data-first and modular workflow.
 User-facing functions do not usually modify a solver object directly. Instead,
 they enrich the <code>Problem</code> object by storing new specifications in its
@@ -149,6 +162,11 @@ specification, metadata, and, when available, built-model information.</p></dd>
 <dt><code>actions</code></dt>
 <dd><p>Action catalog.</p></dd>
 
+<dt><code>action_sets</code></dt>
+<dd><p>Named combinations of actions, stored as a long
+table of set–action memberships. These definitions do not impose joint
+selection or change the optimization model.</p></dd>
+
 <dt><code>dist_features</code></dt>
 <dd><p>Planning unit–feature baseline amounts.</p></dd>
 
@@ -175,7 +193,14 @@ feature.</p></dd>
 <dd><p>Stored target specifications.</p></dd>
 
 <dt><code>constraints</code></dt>
-<dd><p>Stored user-defined constraints.</p></dd>
+<dd><p>Stored user-defined constraints, including
+per-unit action counts in <code>constraints$action_cardinality</code> and logical
+relations in <code>constraints$action_relations</code>.</p></dd>
+
+<dt><code>effects_original</code>, <code>joint_effects</code>, <code>effect_terms</code></dt>
+<dd><p>Canonical supplied totals, supplied joint totals, and their signed subset
+corrections, when registered sets occur in modern effect input. Missing
+interactions are assumed zero as recorded in <code>effects_meta</code>.</p></dd>
 
 <dt><code>objectives</code></dt>
 <dd><p>Registered atomic objectives for single- or
@@ -288,6 +313,8 @@ a built optimization model.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="create_problem.html">create_problem</a></code>,
 <code><a href="add_actions.html">add_actions</a></code>,
+<code><a href="add_action_sets.html">add_action_sets</a></code>,
+<code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality</a></code>,
 <code><a href="add_effects.html">add_effects</a></code>,
 <code><a href="add_constraint_targets_absolute.html">add_constraint_targets_absolute</a></code>,
 <code><a href="solve.html">solve</a></code></p></div>

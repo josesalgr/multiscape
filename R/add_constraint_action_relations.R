@@ -126,11 +126,14 @@ NULL
   x <- .pa_refresh_model_snapshot(x)
   offset <- as.integer(x$data$model_list$x_offset)
   da <- x$data$dist_actions_model
+  rows_by_pu <- split(seq_len(nrow(da)), da$pu)
   registry <- vector("list", nrow(specs))
   for (k in seq_len(nrow(specs))) {
     rows <- list()
     for (id in specs$pu[[k]]) {
-      pairs <- da[da$pu == id, , drop = FALSE]
+      indices <- rows_by_pu[[as.character(id)]]
+      if (is.null(indices)) indices <- integer()
+      pairs <- da[indices, , drop = FALSE]
       columns <- stats::setNames(offset + as.integer(pairs$internal_row) - 1L, pairs$action)
       members <- specs$actions[[k]]
       available <- intersect(members, names(columns))

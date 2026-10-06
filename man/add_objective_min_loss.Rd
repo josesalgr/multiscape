@@ -50,7 +50,7 @@ avoiding intervention altogether should not be an acceptable solution.
 }
 \section{Lifecycle}{
 
-Deprecated since 1.3.0. Legacy calls retain the negative-part criterion.
+Deprecated since 1.4.0. Legacy calls retain the negative-part criterion.
 add_objective_min_effect() is not a mathematically equivalent replacement.
 }
 

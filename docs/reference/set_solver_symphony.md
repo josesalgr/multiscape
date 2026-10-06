@@ -5,7 +5,10 @@ Convenience wrapper around
 that stores `solver = "symphony"` in the problem object.
 
 This function does not solve the model. It only updates the stored
-solver configuration.
+solver configuration. A solver can be configured only once per problem.
+Calling this wrapper after any solver setter raises an error. Derive
+alternatives from the same problem before its first solver
+configuration.
 
 ## Usage
 

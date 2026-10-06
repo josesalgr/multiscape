@@ -11,7 +11,7 @@
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +30,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -80,6 +85,20 @@
 
         </dt>
         <dd>Add management actions to a planning problem</dd>
+
+        <dt>
+
+          <code><a href="add_action_sets.html">add_action_sets()</a></code>
+
+        </dt>
+        <dd>Register sets of management actions</dd>
+
+        <dt>
+
+          <code><a href="get_action_sets.html">get_action_sets()</a></code>
+
+        </dt>
+        <dd>Inspect registered action sets</dd>
 
         <dt>
 
@@ -148,6 +167,34 @@
 
         <dt>
 
+          <code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code>
+
+        </dt>
+        <dd>Constrain the number of actions in each planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_requires.html">add_constraint_action_requires()</a></code>
+
+        </dt>
+        <dd>Require companion actions in each planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_excludes.html">add_constraint_action_excludes()</a></code>
+
+        </dt>
+        <dd>Make actions mutually exclusive within each planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_together.html">add_constraint_action_together()</a></code>
+
+        </dt>
+        <dd>Select actions together within each planning unit</dd>
+
+        <dt>
+
           <code><a href="add_constraint_locked_actions.html">add_constraint_locked_actions()</a></code>
 
         </dt>
@@ -213,7 +260,7 @@
       </dl></div><div class="section level2">
       <h2 id="atomic-objectives">Atomic objectives<a class="anchor" aria-label="anchor" href="#atomic-objectives"></a></h2>
 
-      <div class="section-desc"><p>Add ecological, economic, intervention, and spatial objectives to the planning problem.</p></div>
+      <div class="section-desc"><p>Add ecological, economic, and spatial objectives to the planning problem.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -229,17 +276,17 @@
 
         <dt>
 
-          <code><a href="add_objective_max_benefit.html">add_objective_max_benefit()</a></code>
+          <code><a href="add_objective_max_effect.html">add_objective_max_effect()</a></code>
 
         </dt>
-        <dd>Add objective: maximize benefit</dd>
+        <dd>Add objective: maximize signed effect</dd>
 
         <dt>
 
-          <code><a href="add_objective_min_loss.html">add_objective_min_loss()</a></code>
+          <code><a href="add_objective_min_effect.html">add_objective_min_effect()</a></code>
 
         </dt>
-        <dd>Add objective: minimize loss</dd>
+        <dd>Minimize signed effects relative to the reference</dd>
 
         <dt>
 
@@ -254,13 +301,6 @@
 
         </dt>
         <dd>Add objective: maximize net profit</dd>
-
-        <dt>
-
-          <code><a href="add_objective_min_intervention_impact.html">add_objective_min_intervention_impact()</a></code>
-
-        </dt>
-        <dd>Add objective: minimize intervention impact</dd>
 
         <dt>
 
@@ -714,6 +754,27 @@
 
 
       <dl><dt>
+
+          <code><a href="add_objective_max_benefit.html">add_objective_max_benefit()</a></code>
+
+        </dt>
+        <dd>Deprecated benefit objective</dd>
+
+        <dt>
+
+          <code><a href="add_objective_min_loss.html">add_objective_min_loss()</a></code>
+
+        </dt>
+        <dd>Deprecated objective: minimize loss</dd>
+
+        <dt>
+
+          <code><a href="add_objective_min_intervention_impact.html">add_objective_min_intervention_impact()</a></code>
+          <span class="badge lifecycle lifecycle-deprecated">deprecated</span>
+        </dt>
+        <dd>Add objective: minimize intervention impact</dd>
+
+        <dt>
 
           <code><a href="add_constraint_locked_pu.html">add_constraint_locked_pu()</a></code>
           <span class="badge lifecycle lifecycle-deprecated">deprecated</span>

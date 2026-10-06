@@ -1,4 +1,4 @@
-# Development API migration
+# multiscape 1.4.0
 
 * Added `add_objective_max_effect()` and `add_objective_min_effect()` for signed
   changes relative to the reference, including action interactions. Their
@@ -10,7 +10,13 @@
   negative-part criterion. `min_effect()` is not an equivalent replacement:
   it minimizes signed change and permits compensation. No removal date is set.
 
-# multiscape (development version)
+* Added an educational Meseta Ibérica action-planning tutorial, bundled inputs,
+  and a runnable script covering spatial-cost trade-offs and spatial analyses.
+* Improved prototype/data-cloning memory use and indexed planning-unit analyses.
+* Bounded polygon/raster extraction buffers to avoid eager full-raster allocation
+  failures when building large landscape examples.
+
+## Other changes
 
 - Fixed single-objective `min_cost` action scopes so they agree with the MO
   cost criterion; planning-unit costs remain global and feasible actions retain

@@ -1551,10 +1551,11 @@ get_solution_states <- function(x) {
   }
 
   key <- paste(selection$solution_id, selection$pu, sep = "\r")
+  rows_by_key <- split(seq_len(nrow(selection)), key)
 
   rows <- lapply(seq_len(nrow(base)), function(i) {
     current_key <- paste(base$solution_id[i], base$pu[i], sep = "\r")
-    idx <- which(key == current_key)
+    idx <- rows_by_key[[current_key]]
 
     selected_actions <- if (length(idx) == 0L) {
       character(0)

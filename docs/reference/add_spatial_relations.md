@@ -95,7 +95,10 @@ relations; they are not interpreted as directed self-dependencies.
 
 The final relation is stored in `x$data$spatial_relations[[name]]`.
 
-If a relation with the same `name` already exists, it is replaced.
+Calls accumulate relations with distinct names. If a relation with the
+same `name` already exists, an error is raised, including through
+spatial constructors. To change it, rebuild from the problem before it
+was added.
 
 ## See also
 

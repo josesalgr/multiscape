@@ -104,12 +104,13 @@ and factor values are interpreted using common logical strings such as
 `"true"`, `"t"`, `"1"`, `"yes"`, and `"y"`. Missing values are treated
 as `FALSE`.
 
-**Replacement behaviour**
+**Repeated calls**
 
-Each call to `add_constraint_locked_planning_units()` replaces any
-existing `locked_in` and `locked_out` columns in the planning-unit
-table. In other words, the function defines the complete current set of
-locked planning units; it does not merge new values with previous ones.
+Calls accumulate compatible locks and preserve omitted arguments.
+Repeating the same lock is idempotent. A planning unit cannot be locked
+in after it was locked out, or vice versa. Conflicts with existing
+action locks are also rejected. To change a lock, rebuild from the
+problem before it was added.
 
 **Consistency checks**
 

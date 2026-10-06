@@ -7,9 +7,6 @@ template:
   logo: man/figures/logo.png
   bslib:
     bootswatch: flatly
-  includes:
-    in_header: |
-      <link rel="stylesheet" href="extra.css">
   params:
     docsearch:
       api_key: f00985ff93067595b4da97a65fe69f1a
@@ -96,8 +93,6 @@ reference:
       - add_objective_min_cost
       - add_objective_max_effect
       - add_objective_min_effect
-      - add_objective_max_benefit
-      - add_objective_min_loss
       - add_objective_max_profit
       - add_objective_max_net_profit
       - add_objective_min_fragmentation_planning_units
@@ -230,6 +225,8 @@ reference:
     desc: >
       Functions retained temporarily for backward compatibility.
     contents:
+      - add_objective_max_benefit
+      - add_objective_min_loss
       - add_objective_min_intervention_impact
       - add_constraint_locked_pu
       - add_objective_min_fragmentation_pu

@@ -135,20 +135,21 @@ NULL
   x <- .pa_refresh_model_snapshot(x)
   x0 <- as.integer(x$data$model_list$x_offset)
   da <- x$data$dist_actions_model
+  rows_by_pu <- split(seq_len(nrow(da)), da$pu)
   registry <- vector("list", nrow(specs))
   for (k in seq_len(nrow(specs))) {
     action_ids <- specs$actions[[k]]
     rows <- list()
     for (id in specs$pu[[k]]) {
-      keep <- da$pu == id
-      if (!is.null(action_ids)) keep <- keep & da$action %in% action_ids
+      indices <- rows_by_pu[[as.character(id)]]
+      if (!is.null(action_ids)) indices <- indices[da$action[indices] %in% action_ids]
       # Empty sums satisfy zero lower/equality bounds and all upper bounds.
       # Impossible positive lower/equality bounds have already been rejected.
-      if (!any(keep)) next
+      if (!length(indices)) next
       rows[[as.character(id)]] <- rcpp_add_linear_constraint(
         x$data$model_ptr,
-        j0 = x0 + as.integer(da$internal_row[keep]) - 1L,
-        x = rep(1, sum(keep)),
+        j0 = x0 + as.integer(da$internal_row[indices]) - 1L,
+        x = rep(1, length(indices)),
         sense = switch(specs$sense[k], min = ">=", max = "<=", equal = "=="),
         rhs = specs$count[k],
         name = paste0(specs$name[k], "_pu_", id),

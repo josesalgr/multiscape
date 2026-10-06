@@ -1,10 +1,7 @@
-# Add objective: minimize loss
+# Deprecated objective: minimize loss
 
-Define an objective that minimizes the total negative effects generated
-by selected actions on selected features.
-
-This objective is based on the canonical effects table and uses only the
-non-negative `loss` component.
+Minimize deterioration relative to the reference scenario. Positive
+changes in other planning units or features do not offset these losses.
 
 ## Usage
 
@@ -41,35 +38,43 @@ An updated `Problem` object.
 
 ## Details
 
-Use this function when harmful ecological effects should be minimized
-explicitly, without offsetting them against beneficial effects.
+Let \\\Delta\_{if}(x)\\ be the signed change for planning unit \\i\\ and
+feature \\f\\, after combining selected individual actions and their
+interaction corrections. The objective is \$\$\min \sum\_{i,f}
+\max(-\Delta\_{if}(x), 0).\$\$ The positive/negative split is applied
+after joint aggregation within each unit and feature, before summing
+across units or features. A negative interaction correction does not
+itself represent a loss if the final change remains positive.
+Conversely, gains elsewhere cannot cancel deterioration.
 
-Let \\\ell\_{iaf} \ge 0\\ denote the stored loss associated with
-planning unit \\i\\, action \\a\\, and feature \\f\\.
+With one action per unit this retains the existing loss-only criterion.
+With concurrent actions, an exact MILP linearization represents
+mixed-sign final losses in single-objective and all multi-objective
+methods, including when loss is constrained, has zero weight, or is
+evaluated after another objective is optimized. Non-negative effects
+give a valid zero-loss objective.
 
-If no subsets are supplied, the objective can be written as:
+Action and feature subsets follow
+[`add_objective_max_benefit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md):
+an interaction is included only when all of its members belong to the
+scope. An unselected unit contributes zero loss. Use targets or other
+objectives if avoiding intervention altogether should not be an
+acceptable solution.
 
-\$\$ \min \sum\_{(i,a,f) \in \mathcal{R}} \ell\_{iaf} \\ x\_{ia}. \$\$
+## Lifecycle
 
-where \\\mathcal{R}\\ denotes the set of stored loss rows and \\x\_{ia}
-\in \\0,1\\\\ indicates whether action \\a\\ is selected in planning
-unit \\i\\.
+Deprecated since 1.4.0. Legacy calls retain the negative-part criterion.
+add_objective_min_effect() is not a mathematically equivalent
+replacement.
 
-If `actions` is provided, only rows whose action belongs to the selected
-subset contribute to the objective.
+## Repeated calls
 
-If `features` is provided, only rows whose feature belongs to the
-selected subset contribute to the objective.
-
-More generally, letting \\\mathcal{R}^{\star}\\ be the subset induced by
-the selected actions and features, the objective is:
-
-\$\$ \min \sum\_{(i,a,f) \in \mathcal{R}^{\star}} \ell\_{iaf} \\
-x\_{ia}. \$\$
-
-This objective minimizes harmful effects only. It does not offset losses
-against benefits unless benefits are handled elsewhere through
-additional objectives or constraints.
+With `alias = NULL`, one explicit single objective can be defined per
+problem; a second unaliased definition raises an error. With an alias,
+objectives accumulate under distinct names; a repeated alias raises an
+error. Aliased definitions preserve an explicitly configured single
+objective. To compare alternatives, start from the problem before its
+objective was added.
 
 ## See also
 
@@ -97,6 +102,10 @@ p <- create_problem(
   )
 
 p1 <- add_objective_min_loss(p)
+#> Warning: `add_objective_min_loss()` was deprecated in multiscape 1.4.0.
+#> i Use add_objective_min_effect() only when minimizing signed change is
+#>   intended. It is not an equivalent replacement: this legacy function retains
+#>   the negative-part criterion after aggregation within each unit and feature.
 p1$data$model_args
 #> $model_type
 #> [1] "minimizeLosses"

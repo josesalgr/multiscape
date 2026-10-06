@@ -64,7 +64,7 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
   # Use the package namespace as the parent environment so proto methods can
   # still find internal helpers such as .pa_cli_box_chars().
   new_proto <- function(...) {
-    ns <- parent.env(environment())
+    ns <- environment(pproto)
 
     proto::proto(
       envir = new.env(parent = ns),
@@ -3595,6 +3595,7 @@ available_to_solve <- function(package = ""){
         x2,
         y2,
         fun = fun,
+        max_cells_in_memory = 1e6,
         progress = FALSE
       )
     )
@@ -4042,7 +4043,16 @@ available_to_solve <- function(package = ""){
 
 
 .pa_deepcopy_data <- function(d) {
-  unserialize(serialize(d, NULL))
+  # R vectors and data frames use copy-on-modification. Serializing all input
+  # tables for every setter creates large transient buffers unnecessarily.
+  # Clone reference objects explicitly; preserve list attributes and scopes.
+  if (is.environment(d) || isS4(d)) return(unserialize(serialize(d, NULL)))
+  if (is.list(d) && !is.data.frame(d)) {
+    out <- lapply(d, .pa_deepcopy_data)
+    attributes(out) <- attributes(d)
+    return(out)
+  }
+  d
 }
 
 .pa_clone_data <- function(x, drop_model = TRUE) {
@@ -4052,7 +4062,13 @@ available_to_solve <- function(package = ""){
   y <- pproto(NULL, x)
 
   # ahora sí, sustituir data por una copia profunda
-  y$data <- .pa_deepcopy_data(x$data)
+  d <- x$data
+  if (isTRUE(drop_model)) {
+    d$model_ptr <- NULL
+    d$model_index <- NULL
+    d$model_list <- NULL
+  }
+  y$data <- .pa_deepcopy_data(d)
 
   if (isTRUE(drop_model)) {
     y$data$model_ptr   <- NULL

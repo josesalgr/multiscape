@@ -27,7 +27,7 @@ with different action subsets."><meta property="og:image" content="https://joses
   gtag('js', new Date());
 
   gtag('config', 'G-6YB8F3838H');
-</script><link rel="stylesheet" href="extra.css"></head><body>
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -35,7 +35,7 @@ with different action subsets."><meta property="og:image" content="https://joses
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,12 @@ with different action subsets."><meta property="og:image" content="https://joses
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
@@ -153,7 +158,14 @@ unit \(i\),</p></li>
 \(f\),</p></li>
 <li><p>\(\mathcal{D}_f^{\star}\) is the subset of planning unit–action
 pairs allowed to count toward the target for feature \(f\).</p></li>
-</ul><p>The <code>actions</code> argument restricts which actions may contribute toward
+</ul><p>With concurrent actions, the model instead combines signed changes within
+each unit and feature and counts the reference once:
+$$\sum_i \left(r_{if} s_i^{\star} + \Delta_{if}^{\star}(x)\right) \ge T_f.$$
+Here \(s_i^{\star}\) indicates that at least one action in the target scope
+is selected. Joint corrections contribute only when every member belongs
+to that scope. Individual effects are additive when no interaction is supplied.
+The same aggregation is used to report target achievement.</p>
+<p>The <code>actions</code> argument restricts which actions may contribute toward
 target achievement, but it does not affect the baseline amount \(B_f\) used
 to compute the threshold. In other words, relative targets are always scaled
 against the full landscape reference scenario.</p>
@@ -167,7 +179,10 @@ supplied in several equivalent forms, including:</p><ul><li><p>a single numeric 
 </ul><p>If <code>targets</code> does not explicitly identify features:</p><ul><li><p>if <code>features = NULL</code>, the target is applied to all features,</p></li>
 <li><p>if <code>features</code> is supplied, the target values are interpreted with
 respect to that feature set.</p></li>
-</ul><p>Relative targets must lie in \([0,1]\).</p>
+</ul><p>Relative targets must lie in \([0,1]\).
+A second target for the same feature and action scope raises an error,
+including when an absolute target already exists. Labels and threshold
+values do not change target identity.</p>
 <p>Repeated calls append new target rules rather than replacing previous ones.
 This allows cumulative target modelling, including multiple rules on the same
 feature with different contributing action subsets.</p>
@@ -200,8 +215,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.3    14.08761     4.226283</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge relative_baseline        0.3    13.44903     4.034709</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.807187     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.807187     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-06 19:16:39.521824     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    &lt;NA&gt;  &lt;NA&gt; 2026-10-06 19:16:39.521824     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Require 20% for one selected feature</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_relative</span><span class="op">(</span></span></span>
@@ -212,8 +227,8 @@ feature with different contributing action subsets.</p>
 <span class="r-in"><span><span class="va">p2</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">targets</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   feature    type sense       target_unit target_raw basis_total target_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-01 11:05:58.811556     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                created_at feature_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    &lt;NA&gt;  &lt;NA&gt; 2026-10-06 19:16:39.52598     woodland</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Restrict which actions count toward target achievement</span></span></span>
 <span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_relative</span><span class="op">(</span></span></span>
@@ -226,8 +241,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge relative_baseline        0.2    13.44903     2.689806</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   actions label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 protect  &lt;NA&gt; 2026-10-01 11:05:58.815776     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 protect  &lt;NA&gt; 2026-10-01 11:05:58.815776     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 protect  &lt;NA&gt; 2026-10-06 19:16:39.530224     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 protect  &lt;NA&gt; 2026-10-06 19:16:39.530224     riparian</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

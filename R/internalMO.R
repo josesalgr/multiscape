@@ -200,7 +200,12 @@
   if (is.null(act_raw) || length(act_raw) == 0L) {
     act_int <- all_actions
   } else {
-    act_int <- as.integer(act_raw)
+    numeric_ids <- suppressWarnings(as.integer(act_raw))
+    act_int <- if (all(!is.na(numeric_ids)) && all(numeric_ids %in% all_actions)) {
+      numeric_ids
+    } else {
+      .pa_resolve_action_subset(base_superset, act_raw)$internal_id
+    }
     act_int <- sort(unique(act_int[is.finite(act_int) & !is.na(act_int)]))
   }
 
@@ -2787,10 +2792,44 @@
     return(as.numeric(val))
   }
 
-  # if (length(terms) == 1L && identical(terms[[1]]$type %||% "", "action_boundary_cut")) {
-  #   val <- .pamo_eval_action_boundary_cut_on_solution(x, solution, terms[[1]])
-  #   return(as.numeric(val))
-  # }
+  if (length(terms) == 1L && identical(terms[[1]]$type %||% "", "action_boundary_cut")) {
+    return(as.numeric(.pamo_eval_action_boundary_cut_on_solution(x, solution, terms[[1]])))
+  }
+
+  # Standard selection costs need no new MILP or auxiliary-variable snapshot.
+  # Use the solved model's exact variable layout and canonical cost tables.
+  cost_terms <- length(terms) > 0L && all(vapply(terms, function(t) {
+    t$type %in% c("pu_cost", "action_cost") && is.null(t$features)
+  }, logical(1)))
+  if (cost_terms) {
+    problem <- solution$problem %||% x
+    ml <- problem$data$model_list
+    da <- problem$data$dist_actions_model %||% problem$data$dist_actions
+    pu <- problem$data$pu
+    values <- .pamo_get_solution_vector(solution)
+    val <- 0
+    for (t in terms) {
+      if (identical(t$type, "pu_cost")) {
+        w <- values[seq_len(nrow(pu))]
+        selected <- which(w > 0.5)
+        val <- val + sum(pu$cost[selected])
+      } else {
+        ids <- suppressWarnings(as.integer(t$actions))
+        action_ids <- if (length(ids) && all(!is.na(ids)) && all(ids %in% problem$data$actions$internal_id)) {
+          ids
+        } else {
+          .pa_resolve_action_subset(problem, t$actions)$internal_id
+        }
+        rows <- which(da$internal_action %in% action_ids)
+        x_offset <- as.integer(ml$x_offset %||% nrow(pu))
+        internal_row <- da$internal_row %||% seq_len(nrow(da))
+        xv <- values[x_offset + internal_row[rows]]
+        selected <- which(xv > 0.5)
+        val <- val + sum(da$cost[rows[selected]])
+      }
+    }
+    return(as.numeric(val))
+  }
 
   # resto de objetivos: evaluaciÃ³n por objvec
   base_eval <- .pamo_prepare_superset_model(x, list(ir))
@@ -3335,7 +3374,12 @@
   if (is.null(act_raw) || length(act_raw) == 0L) {
     act_int <- all_actions
   } else {
-    act_int <- as.integer(act_raw)
+    numeric_ids <- suppressWarnings(as.integer(act_raw))
+    act_int <- if (all(!is.na(numeric_ids)) && all(numeric_ids %in% all_actions)) {
+      numeric_ids
+    } else {
+      .pa_resolve_action_subset(sol_problem %||% x, act_raw)$internal_id
+    }
     act_int <- sort(unique(act_int))
   }
 

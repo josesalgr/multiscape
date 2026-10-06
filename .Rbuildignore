@@ -19,3 +19,7 @@ CRAN-RELEASE
 ^codecov\.yml$
 ^data-raw/rwanda/rwanda-reserve-inputs\.rds$
 ^data-raw/rwanda/rwanda-reserve-results\.rds$
+
+^examples$
+^tests/testthat/Rplots\.pdf$
+^\.git$

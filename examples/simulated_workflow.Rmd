@@ -1,0 +1,762 @@
+---
+title: "Simulated multi-objective workflow"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+
+## Getting started
+
+### The planning problem
+
+The following example represents a stylised **multi-objective multi-use spatial planning
+problem**. The landscape is divided into 64 planning units and contains two
+ecological features: woodland and riparian habitat. Each planning unit can
+remain unmanaged or be assigned to one of two mutually exclusive management
+actions: **protection** or **restoration**.
+
+For every planning unit \(i\) and action \(a\), the model defines a binary
+decision variable \(x_{ia}\). The variable equals 1 when action \(a\) is
+assigned to planning unit \(i\), and 0 otherwise. Because the actions are
+mutually exclusive, at most one action can be selected in each planning unit.
+A planning unit may also remain without intervention.
+
+The analysis asks:
+
+> How does the spatial allocation of protection and restoration change as
+> progressively larger implementation budgets become available, and how much
+> additional ecological benefit can be obtained?
+
+For each planning unit, `amount` is a synthetic **relative feature amount**.
+Baseline values range from 0 to 1: a value of 0 represents no local amount of
+the feature, whereas 1 is the largest baseline amount represented in the
+simulated landscape. Intermediate values are continuous relative amounts, not
+probabilities of occurrence or binary presence--absence observations.
+Woodland forms a north-western hotspot, whereas riparian habitat follows a
+diagonal corridor.
+
+The 0--1 scale applies to the baseline values only. Because these are relative
+indices rather than probabilities or proportions, action-induced final amounts
+may exceed 1. For example, doubling a baseline amount of 0.6 produces a final
+relative amount of 1.2.
+
+All inputs are included with `multiscape`:
+
+```{r example-data}
+# load packages
+library(multiscape)
+library(dplyr)
+
+# Load a complete simulated planning problem.
+example_data <- load_sim_multiaction()
+```
+
+The object contains the following linked tables:
+
+- `planning_units`: planning-unit identifiers, geometries, and baseline costs;
+- `features`: identifiers and names of the ecological features;
+- `dist_features`: baseline feature amounts by planning unit;
+- `actions`: the available management actions;
+- `action_costs`: the cost of each feasible planning-unit--action combination;
+- `effects`: the expected effect of each action on each feature; and
+- `effect_assumptions`: the coefficients used to generate the simulated
+  effects.
+
+The simulated baseline feature amounts are shown below.
+
+```{r example-features, echo=FALSE, fig.width=8.5, fig.height=4.8}
+feature_map <- sf::st_as_sf(merge(
+  example_data$planning_units,
+  merge(
+    example_data$dist_features,
+    example_data$features,
+    by.x = "feature",
+    by.y = "id"
+  ),
+  by.x = "id",
+  by.y = "pu"
+))
+feature_map$feature_label <- factor(
+  feature_map$name,
+  levels = c("woodland", "riparian"),
+  labels = c("Woodland", "Riparian habitat")
+)
+
+ggplot2::ggplot(feature_map) +
+  ggplot2::geom_sf(
+    ggplot2::aes(fill = amount),
+    colour = "white",
+    linewidth = 0.18
+  ) +
+  ggplot2::facet_wrap(~feature_label, nrow = 1) +
+  ggplot2::scale_fill_gradientn(
+    colours = c("#F7FCF5", "#C7E9C0", "#74C476", "#238B45", "#00441B"),
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.50, 0.75, 1),
+    name = "Relative feature amount"
+  ) +
+  ggplot2::coord_sf(expand = FALSE) +
+  ggplot2::guides(
+    fill = ggplot2::guide_colourbar(
+      title.position = "top",
+      title.hjust = 0.5,
+      barwidth = grid::unit(11, "cm"),
+      barheight = grid::unit(0.45, "cm")
+    )
+  ) +
+  ggplot2::theme_minimal(base_size = 11) +
+  ggplot2::theme(
+    panel.grid = ggplot2::element_blank(),
+    axis.text = ggplot2::element_blank(),
+    axis.title = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank(),
+    strip.text = ggplot2::element_text(face = "bold", size = 11),
+    legend.position = "bottom",
+    legend.margin = ggplot2::margin(t = 4),
+    plot.margin = ggplot2::margin(5, 8, 5, 8)
+  )
+```
+
+### Stage 1: Create the base problem
+
+[`create_problem()`](https://josesalgr.github.io/multiscape/reference/create_problem.html)
+establishes the spatial domain and the ecological features
+being planned. Here, `planning_units` contains the 64 geometries, `features`
+defines the feature catalogue, and `dist_features` links every planning unit to
+its woodland and riparian amounts. The planning-unit `cost` column is retained
+in the problem, although the objective used below includes only
+action-specific implementation costs.
+
+```{r example-stage-1}
+# Initialise the problem using planning-unit geometries and baseline feature
+# amounts.
+problem <- create_problem(
+  pu = example_data$planning_units,
+  features = example_data$features,
+  dist_features = example_data$dist_features,
+  cost = "cost"
+)
+```
+
+### Stage 2: Define actions and their effects
+
+[`add_actions()`](https://josesalgr.github.io/multiscape/reference/add_actions.html)
+registers protection and restoration as alternative management
+uses, associates each action with its local implementation cost, and defines
+the feasible planning-unit--action combinations. Both actions are available
+throughout this landscape. The model permits at most one selected action per
+planning unit, while leaving a unit unmanaged remains feasible.
+
+Effects describe changes relative to the reference scenario in `dist_features`.
+[`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.html)
+accepts exactly one of three columns:
+
+- `effect`: signed absolute change;
+- `outcome`: expected amount under the action;
+- `relative_change`: proportional change (`0.25` means +25%).
+
+With a reference amount of 100, `effect = 30`, `outcome = 130`, and
+`relative_change = 0.30` all describe the same result. A positive effect means
+an increase; whether that is desirable depends on the feature and objective.
+The reference may represent current conditions, a future without intervention,
+or existing management. Outcomes and references must share units and horizon.
+
+This example supplies relative changes by action and feature. The package
+expands them over feasible planning units. A reference of 0.6 and
+`relative_change = 1` produce an effect of 0.6 and an outcome of 1.2.
+Legacy `effect_type`, `multiplier`, and `delta` inputs remain supported with
+a lifecycle deprecation warning.
+
+```{r example-stage-2}
+# Inspect the assumptions used to generate their
+# ecological effects, and the first planning-unit--action--feature records.
+example_data$effect_assumptions
+
+problem <- problem |>
+  add_actions(
+    actions = example_data$actions,
+    cost = example_data$action_costs
+  ) |>
+  add_effects(
+    effects = example_data$effect_assumptions
+  )
+```
+
+### Repeated calls and alternative configurations
+
+Actions, effects, profit, solver settings, an MO method, and an unaliased
+single objective can each be defined **once per problem**. A second call raises
+an error, even with identical inputs. This also applies to solver and effects
+wrappers. Put all solver settings and the complete effects table in their first
+calls. Defaults do not count as an explicit configuration.
+
+Distinct action sets, objective aliases, spatial relation names, and constraint
+definitions accumulate. Duplicate definitions raise an error. Absolute and
+relative targets share the same feature/action-scope identity. Locks accumulate
+compatible states; identical repeats are allowed and contradictions are rejected.
+
+To compare configurations, keep a common problem before the setting to vary:
+
+```{r independent-solver-settings}
+cbc_problem <- problem |> set_solver_cbc(gap_limit = 0, time_limit = 60)
+gurobi_problem <- problem |> set_solver_gurobi(gap_limit = 0, time_limit = 60)
+```
+
+Both alternatives have their own solver configuration. Apply the same pattern
+when comparing effect scenarios, MO methods, or run designs. See the
+[repeated-call contract](https://josesalgr.github.io/multiscape/articles/Repeated_calls.html)
+for identities, accumulation rules, and migration examples.
+
+### Optional: register action sets
+
+[`add_action_sets()`](https://josesalgr.github.io/multiscape/reference/add_action_sets.html)
+records named combinations of existing actions. It accepts a named list or a
+long table with columns `set` and `action`. One action may belong to several
+sets. The following independent example defines restoration with threat control
+and restoration with fencing:
+
+```{r action-set-definitions}
+actions_problem <- create_problem(
+  pu = data.frame(id = 1:2, cost = 1),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = 1:2, feature = 1L, amount = 10)
+) |>
+  add_actions(
+    actions = data.frame(id = c("restore", "control", "fence")),
+    cost = 1
+  )
+
+memberships <- data.frame(
+  set = c("restore_control", "restore_control", "restore_fence", "restore_fence"),
+  action = c("restore", "control", "restore", "fence")
+)
+sets_problem <- add_action_sets(actions_problem, memberships)
+get_action_sets(sets_problem)
+
+# The named-list input produces the same definitions.
+list_problem <- add_action_sets(actions_problem, list(
+  restore_control = c("restore", "control"),
+  restore_fence = c("restore", "fence")
+))
+identical(get_action_sets(sets_problem), get_action_sets(list_problem))
+```
+
+Registering sets leaves the individual actions and their feasible pairs intact.
+It does not require joint selection, introduce interactions, or enable multiple
+selected actions per unit. Modern `add_effects()` accepts set identifiers for
+total joint effects. Objectives and constraints still receive individual action ids.
+The [action-set vignette](https://josesalgr.github.io/multiscape/articles/Action_sets.html)
+explains validation and adding new sets across calls.
+
+### Optional: configure action counts per unit
+
+[`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.html)
+sets a minimum, maximum, or exact number of individual actions in each specified
+planning unit. Multiple calls can define different capacities or constrain
+particular action subsets. This independent example allows up to four actions
+in unit 10 and two in unit 20; unit 30 keeps the default maximum of one:
+
+```{r action-cardinality-definitions}
+count_problem <- create_problem(
+  pu = data.frame(id = c(10L, 20L, 30L), cost = 1),
+  features = data.frame(id = 1L, name = "woodland"),
+  dist_features = data.frame(pu = c(10L, 20L, 30L), feature = 1L, amount = 10)
+) |>
+  add_actions(
+    data.frame(id = c("restore", "control", "fence", "monitor")), cost = 1
+  ) |>
+  add_constraint_action_cardinality(4, "max", pu = 10L) |>
+  add_constraint_action_cardinality(2, "max", pu = 20L) |>
+  add_constraint_action_cardinality(
+    1, "min", actions = c("restore", "control"), pu = c(10L, 20L)
+  )
+count_problem$data$constraints$action_cardinality
+```
+
+An explicit total maximum or equality (`actions = NULL`) replaces the implicit
+one-action maximum only in the units it covers. Subset rules and minima alone
+retain that default. Overlapping explicit rules must all be satisfied;
+later calls do not overwrite earlier ones. Registering a set adds no counted
+decision. The optional `name` labels a constraint independently of objective aliases.
+
+Concurrent actions support cost/profit workflows and registered joint effects.
+Mixed-sign benefit/loss objectives and concurrent ecological targets remain
+protected until final feature aggregation is implemented. The main ecological
+example below retains its one-action maximum. See the
+[action-cardinality vignette](https://josesalgr.github.io/multiscape/articles/Action_cardinality.html)
+for exact counts, subset rules, and a solved economic example.
+
+### Optional: define logical relations between actions
+
+Logical relations constrain **which actions can be selected together in each
+unit**. They complement cardinality, which controls how many actions can be
+selected. Distinct calls accumulate; duplicate definitions or names are errors.
+
+```{r action-relation-definitions}
+relations_problem <- actions_problem |>
+  add_constraint_action_cardinality(3, "max") |>
+  # Restoration needs threat control in unit 1.
+  add_constraint_action_requires("restore", "control", pu = 1L) |>
+  # In unit 2, either control or fencing is sufficient.
+  add_constraint_action_requires(
+    "restore", c("control", "fence"), sense = "any", pu = 2L
+  ) |>
+  # Control and fencing are alternative interventions in both units.
+  add_constraint_action_excludes(c("control", "fence"))
+
+# A separate alternative implements restoration and control together or neither.
+together_problem <- actions_problem |>
+  add_constraint_action_cardinality(2, "max") |>
+  add_constraint_action_together(c("restore", "control"))
+relations_problem$data$constraints$action_relations
+```
+
+`requires` is directional: selecting control does not force restoration.
+`together` requires all group members or none; `excludes` permits at most one
+member, including zero. An unavailable companion prevents an all dependency;
+an any dependency can use the remaining companions. An unavailable together
+member prevents the whole group. These rules
+apply to the feasible set shared by all optimization methods. They introduce
+no ecological interaction coefficients. See the
+[action-relations vignette](https://josesalgr.github.io/multiscape/articles/Action_relations.html)
+for solved examples, set members, scope, and compatibility with cardinality.
+
+### Optional: supply joint action effects
+
+Supply total joint effects alongside individual effects in **one call** to
+`add_effects()`. The package preserves supplied totals and computes signed
+interaction corrections. The following independent example has a reference
+amount of 100 and a joint change of 70:
+
+```{r joint-effect-definitions}
+joint_problem <- create_problem(
+  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(pu = 10L, feature = 1L, amount = 100)
+) |>
+  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
+  add_action_sets(list(restore_control = c("restore", "control"))) |>
+  add_constraint_action_cardinality(2, "max") |>
+  add_effects(data.frame(
+    action = c("restore", "control", "restore_control"),
+    feature = "habitat", effect = c(30, 20, 70)
+  ))
+joint_problem$data$effect_terms[, c("action", "total_effect", "effect")]
+```
+
+The pair correction is `70 - 30 - 20 = 20`. An exact AND auxiliary contributes
+it only when both members are selected, and is shared across features. Only
+non-zero, reachable corrections need auxiliaries. `outcome`, `relative_change`,
+and modern raster lists can also describe registered sets. Missing individual
+effects and interactions are explicitly assumed zero, as recorded in
+`effects_meta`. These assumptions do not establish empirical absence of
+interactions.
+
+The [joint-effects vignette](https://josesalgr.github.io/multiscape/articles/Joint_effects.html)
+includes solved examples with all three MO methods and negative interactions.
+Public benefit/loss objectives currently require sign-compatible coefficients;
+mixed cases and concurrent ecological targets await the next aggregation stage.
+Joint solution summaries already evaluate final signed effects and count the
+selected reference once.
+
+### Stage 3: Define the constraints
+
+[`add_constraint_targets_relative()`](https://josesalgr.github.io/multiscape/reference/add_constraint_targets_relative.html)
+requires the selected actions to generate gains equivalent
+to at least 10% of the total baseline amount of **each feature separately**.
+Targets restrict the feasible set; they are not additional objectives. Other
+applications could introduce budgets, area requirements, locked decisions, or
+spatial constraints at this stage.
+
+```{r example-stage-3, message=TRUE}
+# Require action-induced gains of at least 10% of the total baseline amount of
+# woodland and at least 10% of the total baseline amount of riparian habitat.
+problem <- problem |>
+  add_constraint_targets_relative(0.10)
+```
+
+### Stage 4: Define the objectives
+
+Objectives are registered independently so they can later be combined using
+different multi-objective methods.
+[`add_objective_min_cost()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_cost.html)
+minimises the total
+implementation cost of the selected actions. Planning-unit costs are excluded
+because the example defines economic expenditure through the action-specific
+cost table.
+[`add_objective_max_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
+maximises total ecological benefit, calculated
+as the sum of action-induced gains across selected planning units and features.
+
+Because woodland and riparian effects use the same relative scale and no
+feature-specific weights are supplied, the example gives both features equal
+weight in the benefit objective. See the
+[`add_objective_max_effect()` reference](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
+for the complete definition of the objective, its available arguments, and
+how feature contributions are aggregated.
+
+```{r example-stage-4, message=TRUE}
+problem <- problem |>
+  # Minimise action-specific implementation costs. Planning-unit costs are
+  # excluded because expenditure is represented by the action-cost table.
+  add_objective_min_cost(
+    alias = "cost",
+    include_pu_cost = FALSE,
+    include_action_cost = TRUE
+  ) |>
+  # Maximise the sum of action-induced ecological gains across both features.
+  add_objective_max_effect(alias = "benefit")
+```
+
+The summary confirms that the spatial inputs, actions, effects, constraints,
+and two objectives are present. It also shows that the multi-objective method
+and solver have not yet been selected.
+
+````{r example-stage-4-1, message=TRUE}
+# Print the complete formulation before selecting a multi-objective method
+# and optimisation solver.
+problem
+````
+
+### Configure the multi-objective method
+
+The registered objectives define what the plans should achieve; the
+multi-objective method determines how the trade-off between them is explored.
+Here,
+[`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.html)
+treats ecological benefit as the primary
+objective and evaluates six increasingly permissive limits on total cost. For
+each cost limit, the model identifies the feasible plan with the greatest
+ecological benefit.
+
+With `lexicographic = TRUE`, solutions tied on the primary benefit objective are
+refined by minimising cost. This prevents the method from returning an
+unnecessarily expensive plan when a less costly plan attains the same benefit.
+The six limits are generated by
+[`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.html).
+The example uses Gurobi through
+[`set_solver_gurobi()`](https://josesalgr.github.io/multiscape/reference/set_solver_gurobi.html),
+which requires the Gurobi R package and a valid licence.
+
+```{r example-method}
+problem <- problem |>
+  # Maximise benefit under six alternative limits on total cost.
+  # Lexicographic refinement selects the least-cost plan among solutions tied
+  # on the primary objective.
+  set_method_epsilon_constraint(
+    primary = "benefit",
+    runs = set_runs_grid(6),
+    lexicographic = TRUE
+  ) |>
+  set_solver_gurobi(gap_limit = 0)
+```
+
+### Solve the problem
+
+[`solve()`](https://josesalgr.github.io/multiscape/reference/solve.html) returns a
+`SolutionSet` containing the solver status, objective
+values, selected action assignments, and run-level information for every
+epsilon-constraint problem.
+[`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.html)
+extracts the resulting objective
+values, with one row per stored solution and one column per objective.
+
+```{r example-solve}
+solutions <- solve(problem)
+get_objectives(solutions, format = "wide")
+```
+
+### Link run configurations to stored solutions
+
+A multi-objective method evaluates a sequence of optimisation configurations.
+[`get_runs()`](https://josesalgr.github.io/multiscape/reference/get_runs.html)
+returns the registry of these configurations together with their solver
+outcomes and, when available, the identifier of the solution they produced.
+
+```{r example-runs}
+runs <- get_runs(solutions)
+runs
+```
+
+Each row records one attempted run configuration. `run_id` identifies the
+configuration, including its epsilon limit and solver outcome. A run is not
+itself a solution: an infeasible configuration, a run that terminates without a
+feasible solution, or a run affected by a solver error may have no associated
+`solution_id`. When a run does produce a solution that is retained in the
+`SolutionSet`, `solution_id` identifies that stored solution for subsequent
+extraction, comparison, and mapping. In this example, all configured runs
+produce stored solutions.
+
+The treatment of infeasible runs, runs without a solution, and unexpected
+errors can be controlled with
+[`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.html).
+Depending on these settings, solving can stop when a failed configuration is
+encountered or retain the failed run in the run history without an associated
+solution.
+
+This distinction is important when reading the figures below. With
+`label_runs = TRUE`, `plot_tradeoff()` labels points using `run_id`, whereas
+functions that extract or map stored plans generally use `solution_id`.
+`get_runs()` provides the link between the run configurations and the solutions
+that were successfully stored.
+
+## Interpret the solutions
+
+### Objective space: performance and trade-offs
+
+Each point below represents a stored spatial solution generated by one
+epsilon-constraint run. The plot is produced with
+[`plot_tradeoff()`](https://josesalgr.github.io/multiscape/reference/plot_tradeoff.html).
+With lexicographic refinement, the returned plans are
+intended to lie on the **observed efficient frontier**. This is the frontier
+represented by the six runs evaluated here, not necessarily every attainable
+trade-off in the complete discrete solution space.
+
+The horizontal axis shows the cost actually incurred by each solution, which
+may be lower than the upper cost limit imposed in its run. The vertical axis
+shows total ecological benefit, obtained by summing the action-induced gains
+across both features and all selected planning units. Moving from left to right
+therefore reveals how the maximum observed ecological benefit changes as more
+expensive plans become available.
+
+```{r example-tradeoff, fig.width=6.5, fig.height=4.5, fig.keep="last"}
+plot_tradeoff(
+  solutions,
+  objectives = c("cost", "benefit"),
+  connect = TRUE,
+  label_runs = TRUE
+) +
+  ggplot2::labs(
+    x = "Total implementation cost (cost units)",
+    y = "Total ecological gain (relative-amount units)"
+  )
+```
+
+The curve rises rapidly at first and becomes flatter near its high-benefit end.
+In this region, substantial increases in implementation cost produce only small
+additional ecological gains. The result illustrates declining marginal returns
+and helps identify where further expenditure has comparatively little effect.
+
+### Identify a compromise solution
+
+A multi-objective analysis should consider both **objective space**, which
+describes how well each plan performs, and **decision space**, which describes
+where actions are allocated.
+[`frontier_knee()`](https://josesalgr.github.io/multiscape/reference/frontier_knee.html)
+identifies an empirical compromise on the observed frontier:
+a solution near the point where additional ecological gains begin to require
+comparatively large increases in cost.
+
+```{r example-knee}
+knee <- frontier_knee(
+  solutions,
+  objectives = c("cost", "benefit")
+)
+knee |> dplyr::select(solution_id, cost, benefit, knee_score, method)
+```
+
+The knee is a decision aid rather than a universally optimal answer. Its
+location depends on the solutions included in the observed frontier, the
+normalisation of the objectives, and the geometric criterion used to calculate
+the knee score. It should therefore be interpreted alongside policy
+preferences and the spatial characteristics of the selected plan.
+
+[`frontier_extremes()`](https://josesalgr.github.io/multiscape/reference/frontier_extremes.html) and
+[`frontier_distances()`](https://josesalgr.github.io/multiscape/reference/frontier_distances.html) provide complementary views of
+the observed objective space. They identify the objective-wise extremes and
+calculate each solution's normalised distance from the observed ideal and
+nadir points.
+
+```{r example-frontier-diagnostics}
+frontier_extremes(
+  solutions,
+  objectives = c("cost", "benefit"),
+  ties = "first"
+)
+
+frontier_distances(
+  solutions,
+  objectives = c("cost", "benefit")
+)
+```
+
+### Decision space: spatial prescriptions
+
+Plans that are close in objective space can still prescribe different actions
+in different locations.
+[`plot_spatial_actions()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.html)
+complements the trade-off plot
+by showing how protection and restoration are reallocated as the cost limit is
+relaxed. Planning units shown only through the base layer receive no management
+action in the corresponding solution. In the call below, `solutions = 1:6`
+selects **solution IDs**, not run IDs; the preceding run registry provides the
+link between the two identifiers.
+
+```{r example-maps, fig.width=10, fig.height=6.5}
+plot_spatial_actions(
+  solutions,
+  solutions = 1:6,
+  fill_values = c(
+    protect = "#2E7D32",
+    restore = "#E69F00"
+  ),
+  base_alpha = 0.12
+)
+```
+
+The sequence of maps should be interpreted together with the baseline feature
+patterns. Protection and restoration may expand into new planning units as
+larger budgets become available, but actions can also be substituted or
+relocated when a different spatial combination produces greater benefit under
+the active cost limit.
+
+### Compare spatial similarity
+
+Similar objective values do not necessarily imply similar spatial
+prescriptions.
+[`selection_similarity()`](https://josesalgr.github.io/multiscape/reference/selection_similarity.html)
+compares the sets of selected
+planning-unit--action pairs for every pair of solutions. Jaccard similarity is
+useful here because it focuses on jointly selected assignments and does not
+inflate similarity through planning units that remain unmanaged in both plans.
+
+A value of 1 indicates identical sets of selected assignments, whereas 0
+indicates that the two solutions share no selected planning-unit--action pair.
+Rows and columns correspond to solution identifiers, and the diagonal is always
+1 because every solution is identical to itself.
+
+```{r example-similarity}
+selection_similarity(
+  solutions,
+  metric = "jaccard",
+  format = "matrix"
+)
+```
+
+### Identify recurrent action assignments
+
+[`selection_frequency()`](https://josesalgr.github.io/multiscape/reference/selection_frequency.html)
+calculates how often each planning-unit--action pair is
+selected across the solution set. In this example, frequency is the proportion
+of the six solutions containing a particular assignment. High frequency
+indicates recurrence across the explored trade-offs, but it should not, on its
+own, be interpreted as ecological irreplaceability.
+
+```{r example-frequency}
+action_frequency <- selection_frequency(solutions)
+head(
+  action_frequency[order(-action_frequency$frequency), ],
+  10
+)
+```
+
+### Link objective performance to spatial change
+
+Objective-space proximity does not necessarily imply similar spatial
+prescriptions.
+[`frontier_neighbors()`](https://josesalgr.github.io/multiscape/reference/frontier_neighbors.html)
+identifies local neighbours along the observed objective-space trade-off. Here,
+solutions are oriented towards increasing ecological benefit, matching the
+progression from lower- to higher-budget plans used above.
+[`linkage_distances()`](https://josesalgr.github.io/multiscape/reference/linkage_distances.html)
+then compares those same solution pairs in objective and decision space.
+
+```{r example-linkage}
+neighbors <- frontier_neighbors(
+  solutions,
+  objectives = c("benefit", "cost")
+)
+
+linkage <- linkage_distances(
+  solutions,
+  objectives = c("cost", "benefit"),
+  pairs = neighbors,
+  decision_metric = "jaccard"
+)
+
+linkage |>
+  dplyr::select(
+    from_solution,
+    to_solution,
+    objective_distance,
+    decision_distance,
+    changed_planning_units
+  )
+```
+
+The two distances describe different aspects of the same comparison:
+`objective_distance` measures separation in normalised objective space,
+whereas `decision_distance` measures dissimilarity between spatial action
+allocations. Keeping them separate makes it possible to identify similar
+levels of performance that require substantially different spatial plans.
+
+[`linkage_transition()`](https://josesalgr.github.io/multiscape/reference/linkage_transition.html)
+provides a more detailed view of a selected comparison. Here, we examine the
+transition from solution 3 to solution 4.
+
+```{r example-transition}
+transition <- linkage_transition(
+  solutions,
+  from = 3,
+  to = 4,
+  objectives = c("cost", "benefit")
+)
+
+transition
+```
+
+The printed summary reports objective and decision distances, the number of
+planning units whose state changes, and the corresponding changes in each
+objective. Detailed planning-unit, action, and state-transition tables remain
+available within the returned object.
+
+[`linkage_turnover()`](https://josesalgr.github.io/multiscape/reference/linkage_turnover.html)
+extends these local comparisons by relating decision-space turnover to the
+associated objective-space change. Its `reconfiguration_rate` highlights local
+transitions that require comparatively large spatial changes for a given
+separation in objective performance.
+
+```{r example-turnover}
+turnover <- linkage_turnover(
+  solutions,
+  objectives = c("cost", "benefit"),
+  pairs = neighbors,
+  decision_metric = "jaccard"
+)
+
+turnover |>
+  dplyr::select(
+    from_solution,
+    to_solution,
+    objective_distance,
+    decision_distance,
+    reconfiguration_rate
+  )
+```
+
+Informative pairs can then be selected reproducibly with
+[`linkage_contrasts()`](https://josesalgr.github.io/multiscape/reference/linkage_contrasts.html).
+For example, the contrasts below identify the local transitions with the
+largest spatial reconfiguration relative to objective-space change.
+
+```{r example-contrasts}
+linkage_contrasts(
+  turnover,
+  type = "high_reconfiguration",
+  n = 2
+) |>
+  dplyr::select(
+    contrast_rank,
+    contrast_type,
+    from_solution,
+    to_solution,
+    objective_distance,
+    decision_distance,
+    reconfiguration_rate
+  )
+```
+
+`selection_consistency()` provides a complementary decision-space summary of
+which planning-unit states recur or vary across the alternatives considered.
+
