@@ -117,7 +117,7 @@
 #' example:
 #' \preformatted{
 #' x <- x |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   add_objective_min_cost(alias = "cost") |>
 #'   add_objective_min_fragmentation(alias = "frag")
 #' }
@@ -260,7 +260,7 @@
 #'     example_data$effect_assumptions
 #'   ) |>
 #'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   add_objective_min_loss(alias = "loss")
 #'
 #' # Automatic epsilon grid for two objectives

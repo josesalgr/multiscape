@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_objectives.R
 \name{add_objective_min_loss}
 \alias{add_objective_min_loss}
-\title{Add objective: minimize loss}
+\title{Deprecated objective: minimize loss}
 \usage{
 add_objective_min_loss(x, actions = NULL, features = NULL, alias = NULL)
 }
@@ -48,6 +48,12 @@ interaction is included only when all of its members belong to the scope.
 An unselected unit contributes zero loss. Use targets or other objectives if
 avoiding intervention altogether should not be an acceptable solution.
 }
+\section{Lifecycle}{
+
+Deprecated since 1.3.0. Legacy calls retain the negative-part criterion.
+add_objective_min_effect() is not a mathematically equivalent replacement.
+}
+
 \section{Repeated calls}{
 
 With \code{alias = NULL}, one explicit single objective can be defined per

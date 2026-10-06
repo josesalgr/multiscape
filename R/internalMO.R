@@ -354,17 +354,18 @@
   # ------------------------------------------------------------------
   # max_benefit
   # ------------------------------------------------------------------
-  if (identical(id, "max_benefit")) {
+  if (id %in% c("max_benefit", "max_effect", "min_effect")) {
     bcol    <- .c1(a$benefit_col, "effect")
     actions <- .chr(a$actions)
     feats   <- .chr(a$features)
 
+    a$effect_sense <- if (id == "min_effect") "min" else "max"
     a$benefit_col <- bcol
     a$actions     <- actions
     a$features    <- feats
 
     return(list(
-      sense = "max",
+      sense = if (id == "min_effect") "min" else "max",
       terms = list(list(
         type = "benefit",
         benefit_col = bcol,
@@ -582,6 +583,8 @@
   map <- list(
     min_cost = "minimizeCosts",
     max_benefit = "maximizeBenefits",
+    max_effect = "maximizeBenefits",
+    min_effect = "maximizeBenefits",
     max_profit = "maximizeProfit",
     min_loss = "minimizeLosses",
     max_net_profit = "maximizeNetProfit",

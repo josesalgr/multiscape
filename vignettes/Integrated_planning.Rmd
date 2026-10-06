@@ -361,22 +361,22 @@ problem <- problem |>
     include_action_cost = TRUE,
     actions = "restoration"
   ) |>
-  add_objective_max_benefit(
+  add_objective_max_effect(
     features = "L1_control_inv",
     actions = "restoration",
     alias = "rodent_control"
   ) |>
-  add_objective_max_benefit(
+  add_objective_max_effect(
     features = "L1_stock_inv",
     actions = "restoration",
     alias = "carbon_stock"
   ) |>
-  add_objective_max_benefit(
+  add_objective_max_effect(
     features = "L1_rend_inv",
     actions = "restoration",
     alias = "water_yield"
   ) |>
-  add_objective_max_benefit(
+  add_objective_max_effect(
     features = "L1_reten_inv",
     actions = "restoration",
     alias = "sediment_retention"

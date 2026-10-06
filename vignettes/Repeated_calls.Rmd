@@ -67,7 +67,7 @@ Define all solver parameters in one call. Setting a solver does not run it.
 objectives_base <- high_effect |>
   add_constraint_targets_absolute(50) |>
   add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit")
+  add_objective_max_effect(alias = "benefit")
 
 cbc_problem <- objectives_base |>
   set_solver_cbc(gap_limit = 0, time_limit = 60)

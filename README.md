@@ -433,14 +433,14 @@ using different multi-objective methods.
 minimises the total implementation cost of the selected actions.
 Planning-unit costs are excluded because the example defines economic
 expenditure through the action-specific cost table.
-[`add_objective_max_benefit()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
+[`add_objective_max_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
 maximises total signed ecological change relative to the reference
 scenario. Positive changes increase the objective; negative changes
 reduce it. Joint interactions are included before aggregation. Costs
 remain a separate objective.
 
 **Changed behavior:** earlier versions counted positive effects only.
-`add_objective_max_benefit()` now counts gains minus deteriorations.
+`add_objective_max_effect()` now counts gains minus deteriorations.
 Existing models with negative effects can produce different plans.
 Feature summaries retain `selected_benefit` for positive gains,
 `selected_loss` for deterioration, and `selected_net` for the signed
@@ -451,7 +451,7 @@ deterioration.
 Because woodland and riparian effects use the same relative scale and no
 feature-specific weights are supplied, the example gives both features
 equal weight in the benefit objective. See the
-[`add_objective_max_benefit()`
+[`add_objective_max_effect()`
 reference](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.html)
 for the complete definition of the objective, its available arguments,
 and how feature contributions are aggregated.
@@ -466,7 +466,7 @@ problem <- problem |>
     include_action_cost = TRUE
   ) |>
   # Maximise the sum of action-induced ecological gains across both features.
-  add_objective_max_benefit(alias = "benefit")
+  add_objective_max_effect(alias = "benefit")
 ```
 
 The summary confirms that the spatial inputs, actions, effects,
@@ -978,7 +978,7 @@ A planning problem can combine:
 
 `add_objective_min_intervention_impact()` is deprecated and retained
 temporarily for compatibility. New deficit-based restoration workflows
-use `add_effects()` and `add_objective_max_benefit()`; see the
+use `add_effects()` and `add_objective_max_effect()`; see the
 forest-restoration vignette for the fixed-effort assumptions needed to
 preserve the old prioritization criterion.
 

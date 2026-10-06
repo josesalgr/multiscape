@@ -953,6 +953,7 @@
   if (!exists("rcpp_reset_objective", mode = "function")) {
     .pa_abort("Missing rcpp_reset_objective() in the package.")
   }
+  if (identical(mtype, "maximizeBenefits")) modelsense <- oargs$effect_sense %||% "max"
   rcpp_reset_objective(op, modelsense)
 
 
@@ -998,10 +999,10 @@
     if (.pa_uses_aggregate_effects(x)) {
       vector <- .pa_joint_objective_vector(x, oargs$benefit_col %||% "effect",
                                            oargs$actions, oargs$features)
-      rcpp_model_set_objective_vector(op, vector, "max")
-      x$data$model_args$modelsense <- "max"
-      x$data$model_args$objective_id <- "max_benefit"
-      x$data$model_registry$objective <- list(type = mtype, id = "max_benefit", joint_effects = TRUE)
+      rcpp_model_set_objective_vector(op, vector, modelsense)
+      x$data$model_args$modelsense <- modelsense
+      x$data$model_args$objective_id <- if (modelsense == "min") "min_effect" else (x$data$model_args$objective_id %||% "max_effect")
+      x$data$model_registry$objective <- list(type = mtype, id = x$data$model_args$objective_id, joint_effects = TRUE)
       return(x)
     }
 
@@ -1077,7 +1078,8 @@
       tag = as.character(oargs$tag %||% "")[1]
     )
 
-    objective_id <- "max_benefit"
+    rcpp_model_set_objective_vector(op, rcpp_optimization_problem_as_list(op)$obj, modelsense)
+    objective_id <- if (modelsense == "min") "min_effect" else (x$data$model_args$objective_id %||% "max_effect")
 
   } else if (identical(mtype, "minimizeLosses")) {
 

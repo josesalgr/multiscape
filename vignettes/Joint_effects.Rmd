@@ -104,7 +104,7 @@ actions, with benefit 70 and action cost 2.
 mo_base <- problem |>
   add_constraint_action_cardinality(1, "min") |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-  add_objective_max_benefit(alias = "benefit") |>
+  add_objective_max_effect(alias = "benefit") |>
   set_solver_cbc(gap_limit = 0, verbose = FALSE)
 methods <- list(
   weighted = set_method_weighted_sum(mo_base, aliases = c("cost", "benefit"),
@@ -153,12 +153,12 @@ The correction is -10, but the final change is +40. The summary reports benefit
 40 and loss zero, counting the selected reference once. It does not classify
 the negative correction as an ecological loss by itself.
 
-`add_objective_max_benefit()` now optimizes that signed net change. Earlier
+`add_objective_max_effect()` now optimizes that signed net change. Earlier
 versions counted positive effects only; models with negative effects can change
 their solutions. No separate net-benefit function is needed.
 
 ```{r signed-objectives}
-benefit_problem <- negative |> add_objective_max_benefit(alias = "benefit")
+benefit_problem <- negative |> add_objective_max_effect(alias = "benefit")
 loss_problem <- negative |>
   add_constraint_action_cardinality(2, "equal") |>
   add_objective_min_loss(alias = "loss")
@@ -193,7 +193,7 @@ deteriorating <- add_effects(base, deteriorating_input) |>
 ```
 
 ```{r solve-deterioration, eval=requireNamespace("rcbc", quietly = TRUE)}
-net_solution <- deteriorating |> add_objective_max_benefit(alias = "benefit") |>
+net_solution <- deteriorating |> add_objective_max_effect(alias = "benefit") |>
   set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
 loss_solution <- deteriorating |> add_objective_min_loss(alias = "loss") |>
   set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()

@@ -341,7 +341,7 @@ x <- create_problem(
     example_data$effect_assumptions
   ) |>
   add_objective_min_cost(alias = "cost") |>
-  add_objective_max_benefit(alias = "benefit") |>
+  add_objective_max_effect(alias = "benefit") |>
   add_objective_min_loss(alias = "loss")
 
 # Automatic epsilon grids generated later during solve()

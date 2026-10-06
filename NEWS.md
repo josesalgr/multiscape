@@ -1,3 +1,15 @@
+# Development API migration
+
+* Added `add_objective_max_effect()` and `add_objective_min_effect()` for signed
+  changes relative to the reference, including action interactions. Their
+  arguments are `x`, `actions`, `features`, and `alias`.
+* `add_objective_max_benefit()` is deprecated with lifecycle and delegates to
+  `add_objective_max_effect()`, retaining the development branch's signed-net
+  behavior. The published positive-only behavior changed earlier in this branch.
+* `add_objective_min_loss()` is deprecated but retains its original final
+  negative-part criterion. `min_effect()` is not an equivalent replacement:
+  it minimizes signed change and permits compensation. No removal date is set.
+
 # multiscape (development version)
 
 - Fixed single-objective `min_cost` action scopes so they agree with the MO

@@ -238,7 +238,7 @@
 #'     example_data$effect_assumptions
 #'   ) |>
 #'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_max_benefit(alias = "benefit")
+#'   add_objective_max_effect(alias = "benefit")
 #'
 #' # Automatic weight grid
 #' x1 <- set_method_weighted_sum(

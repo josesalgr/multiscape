@@ -69,7 +69,7 @@
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -401,7 +401,7 @@ frontier_extremes <- function(x,
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -803,7 +803,7 @@ frontier_distances <- function(
 #'   ) |>
 #'   add_constraint_targets_relative(0.05) |>
 #'   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-#'   add_objective_max_benefit(alias = "benefit") |>
+#'   add_objective_max_effect(alias = "benefit") |>
 #'   set_method_weighted_sum(
 #'     aliases = c("cost", "benefit"),
 #'     runs = set_runs_grid(n = 3),
@@ -1402,7 +1402,7 @@ frontier_knee <- function(x,
 #'     alias = "cost",
 #'     include_pu_cost = FALSE
 #'   ) |>
-#'   add_objective_max_benefit(
+#'   add_objective_max_effect(
 #'     alias = "benefit"
 #'   ) |>
 #'   set_method_weighted_sum(

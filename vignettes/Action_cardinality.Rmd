@@ -187,7 +187,7 @@ ecological <- create_problem(
   add_effects(data.frame(action = c("restore", "control"),
                         feature = "habitat", effect = c(30, -20))) |>
   add_constraint_targets_absolute(110) |>
-  add_objective_max_benefit(alias = "benefit")
+  add_objective_max_effect(alias = "benefit")
 ```
 
 ```{r additive-ecological-solution, eval=requireNamespace("rcbc", quietly = TRUE)}
