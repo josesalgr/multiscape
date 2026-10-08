@@ -215,8 +215,9 @@ deficit.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"sim_pu_sf"</span>, package <span class="op">=</span> <span class="st">"multiscape"</span><span class="op">)</span></span>
-<span><span class="va">ecosystem_services</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_sim_features_raster.html">load_sim_features_raster</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">service_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_ecosystem_services.html">load_ecosystem_services</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">planning_units</span> <span class="op">&lt;-</span> <span class="va">service_data</span><span class="op">$</span><span class="va">planning_units</span></span>
+<span><span class="va">ecosystem_services</span> <span class="op">&lt;-</span> <span class="va">service_data</span><span class="op">$</span><span class="va">feature_raster</span></span>
 <span></span>
 <span><span class="va">service_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  L1_control_inv <span class="op">=</span> <span class="st">"Rodent and lagomorph control"</span>,</span>
@@ -225,7 +226,7 @@ deficit.</p>
 <span>  L1_reten_inv <span class="op">=</span> <span class="st">"Sediment retention"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">planning_units</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 30496</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ecosystem_services</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "L1_control_inv" "L1_stock_inv"   "L1_rend_inv"    "L1_reten_inv"</span></span></code></pre></div>
@@ -259,7 +260,7 @@ restoration is a variable decision. The conservation network is
 inherited from previous policy commitments and remains spatially fixed
 across all solutions.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">planning_attributes</span> <span class="op">&lt;-</span> <span class="va">sim_pu_sf</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">planning_attributes</span> <span class="op">&lt;-</span> <span class="va">planning_units</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">id</span>, <span class="va">cost</span>, <span class="va">area</span>, <span class="va">locked_in</span>, <span class="va">locked_out</span><span class="op">)</span></span>
 <span></span>
@@ -314,7 +315,7 @@ action costs defined for restoration. This avoids counting the same cost
 component twice.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
-<span>  pu <span class="op">=</span> <span class="va">sim_pu_sf</span>,</span>
+<span>  pu <span class="op">=</span> <span class="va">planning_units</span>,</span>
 <span>  features <span class="op">=</span> <span class="va">ecosystem_services</span>,</span>
 <span>  cost <span class="op">=</span> <span class="st">"cost"</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -339,10 +340,10 @@ concerns the amount of land restored, while the four ecosystem-service
 layers are used to compare alternative locations for that fixed
 effort.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">unit_area</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>          <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">$</span><span class="va">area</span> <span class="op">-</span> <span class="va">unit_area</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">total_commitment_units</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fl">0.20</span> <span class="op">*</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sim_pu_sf</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">unit_area</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">planning_units</span><span class="op">$</span><span class="va">area</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">planning_units</span><span class="op">$</span><span class="va">area</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>          <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">planning_units</span><span class="op">$</span><span class="va">area</span> <span class="op">-</span> <span class="va">unit_area</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">total_commitment_units</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fl">0.20</span> <span class="op">*</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">planning_units</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">restoration_target_units</span> <span class="op">&lt;-</span> <span class="va">total_commitment_units</span> <span class="op">-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">conservation_units</span><span class="op">)</span></span>
 <span><span class="va">restoration_target_area</span> <span class="op">&lt;-</span> <span class="va">restoration_target_units</span> <span class="op">*</span> <span class="va">unit_area</span></span>
 <span></span>

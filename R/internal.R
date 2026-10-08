@@ -128,31 +128,6 @@ pproto <- function(`_class` = NULL, `_inherit` = NULL, ...) {
 #'
 #' @param ... A list of members to add to the new `pproto` object.
 #'
-#' @examples
-#' # set seed for reproducibility
-#' set.seed(14)
-#'
-#' ## Load data
-#' data(sim_pu_data, sim_features_data, sim_dist_features_data,
-#' sim_threats_data, sim_dist_threats_data, sim_sensitivity_data,
-#' sim_boundary_data)
-#'
-#' ## Create data instance
-#' problem_data <- create_problem(
-#'   pu = sim_pu_data, features = sim_features_data, dist_features = sim_dist_features_data,
-#'   threats = sim_threats_data, dist_threats = sim_dist_threats_data,
-#'   sensitivity = sim_sensitivity_data, boundary = sim_boundary_data
-#' )
-#'
-#' ## Create optimization model
-#' problem_model <- problem(x = problem_data, blm = 1)
-#'
-#' ## Solve the optimization model
-#' s <- solve(a = problem_model, solver = "gurobi", gap_limit = 0.01, output_file = FALSE)
-#'
-#' ## get status of solution
-#' getStatus(s)
-#'
 #' @noRd
 getStatus <- function(x) {
   # Preferred structure: Solution with diagnostics

@@ -11,6 +11,8 @@ An object of class \code{sf}.
 data(sim_pu)
 }
 \description{
-Example planning units as an \code{sf} object for package examples and tests.
+Historical Meseta-related planning units: 11,109 spatial cells with unit
+cost 1. These are distinct from \code{sim_pu_sf} and are not the complete
+Meseta tutorial inputs. Prefer \code{\link[=load_meseta]{load_meseta()}} for that tutorial.
 }
 \keyword{datasets}

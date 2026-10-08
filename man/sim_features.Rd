@@ -11,6 +11,8 @@ A data frame with feature identifiers and names.
 data(sim_features)
 }
 \description{
-Example feature table for package examples and tests.
+Historical Meseta-related catalogue of 155 features, retained for
+compatibility. These do not belong to the compact simulated example.
+Prefer \code{\link[=load_meseta]{load_meseta()}} for the complete tutorial inputs.
 }
 \keyword{datasets}

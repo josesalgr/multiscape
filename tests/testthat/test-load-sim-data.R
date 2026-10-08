@@ -47,3 +47,29 @@ test_that("load_sim_multiaction returns complete and consistent inputs", {
   expect_true(all(example_data$effects$action %in% example_data$actions$id))
   expect_true(all(example_data$effects$feature %in% example_data$features$id))
 })
+
+test_that("load_meseta preserves every supplied tutorial input", {
+  expected <- readRDS(system.file("extdata", "meseta_iberica_inputs.rds", package = "multiscape"))
+  actual <- load_meseta()
+  expect_identical(actual, expected)
+  expect_named(actual, c("planning_units", "features", "dist_features", "actions",
+    "action_costs", "outcomes", "targets", "boundary", "provenance"))
+  expect_s3_class(actual$planning_units, "sf")
+  expect_equal(nrow(actual$planning_units), 11109L)
+  expect_equal(nrow(actual$features), 155L)
+  expect_equal(nrow(actual$actions), 4L)
+})
+
+test_that("ecosystem-services loader preserves the paired historical inputs", {
+  historical <- new.env(parent = emptyenv())
+  utils::data("sim_pu_sf", package = "multiscape", envir = historical)
+  actual <- load_ecosystem_services()
+  expect_named(actual, c("planning_units", "feature_raster"))
+  expect_identical(actual$planning_units, historical$sim_pu_sf)
+  expect_equal(nrow(actual$planning_units), 30496L)
+  old_raster <- load_sim_features_raster()
+  expect_true(terra::compareGeom(actual$feature_raster, old_raster))
+  expect_identical(names(actual$feature_raster), names(old_raster))
+  cells <- unique(as.integer(seq(1, terra::ncell(old_raster), length.out = 100)))
+  expect_equal(terra::extract(actual$feature_raster, cells), terra::extract(old_raster, cells))
+})
