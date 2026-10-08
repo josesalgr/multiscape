@@ -1,4 +1,4 @@
-# Meseta Ibérica: formulation, trade-offs and spatial comparison
+# Meseta Iberica: formulation, trade-offs and spatial comparison
 
 # install-cran
 install.packages("multiscape")
@@ -11,7 +11,25 @@ remotes::install_github("josesalgr/multiscape")
 
 # meseta-inputs
 library(multiscape)
+
 meseta <- load_meseta()
+
+data.frame(
+  planning_units = nrow(meseta$planning_units),
+  features = nrow(meseta$features),
+  actions = nrow(meseta$actions)
+)
+
+meseta$actions
+
+# meseta-map
+plot(
+  sf::st_geometry(meseta$planning_units),
+  border = "grey75",
+  col = "grey95",
+  lwd = 0.15,
+  axes = FALSE
+)
 
 # meseta-inspect
 head(meseta$action_costs)
@@ -92,7 +110,9 @@ performance$scalar_objective <- performance$cost + 0.5 * performance$spatial
 performance
 
 # meseta-targets
-head(get_targets(solutions))
+target_achievement <- get_targets(solutions)
+head(target_achievement)
+all(target_achievement$met)
 
 # meseta-maps
 plot_spatial_actions(
@@ -151,4 +171,3 @@ linkage_transition(
   alternatives, from = 1, to = 2, objectives = c("cost", "spatial")
 )
 head(selection_consistency(alternatives))
-
