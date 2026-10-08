@@ -1,6 +1,9 @@
 # Simulated feature distribution
 
-Example distribution of feature amounts across planning units.
+Historical Meseta-related distribution with 348,021 rows, paired with
+`sim_pu` and `sim_features`. It is not the zero credited comparison
+reference used in the introductory tutorial. Prefer
+[`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md).
 
 ## Usage
 

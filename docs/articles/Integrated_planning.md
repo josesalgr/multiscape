@@ -129,8 +129,9 @@ library(dplyr)
 library(ggplot2)
 library(terra)
 
-data("sim_pu_sf", package = "multiscape")
-ecosystem_services <- load_sim_features_raster()
+service_data <- load_ecosystem_services()
+planning_units <- service_data$planning_units
+ecosystem_services <- service_data$feature_raster
 
 service_labels <- c(
   L1_control_inv = "Rodent and lagomorph control",
@@ -139,7 +140,7 @@ service_labels <- c(
   L1_reten_inv = "Sediment retention"
 )
 
-nrow(sim_pu_sf)
+nrow(planning_units)
 #> [1] 30496
 names(ecosystem_services)
 #> [1] "L1_control_inv" "L1_stock_inv"   "L1_rend_inv"    "L1_reten_inv"
@@ -181,7 +182,7 @@ inherited from previous policy commitments and remains spatially fixed
 across all solutions.
 
 ``` r
-planning_attributes <- sim_pu_sf |>
+planning_attributes <- planning_units |>
   sf::st_drop_geometry() |>
   select(id, cost, area, locked_in, locked_out)
 
@@ -241,7 +242,7 @@ component twice.
 
 ``` r
 problem <- create_problem(
-  pu = sim_pu_sf,
+  pu = planning_units,
   features = ecosystem_services,
   cost = "cost"
 ) |>
@@ -270,10 +271,10 @@ concerns the amount of land restored, while the four ecosystem-service
 layers are used to compare alternative locations for that fixed effort.
 
 ``` r
-unit_area <- stats::median(sim_pu_sf$area)
-stopifnot(all(is.finite(sim_pu_sf$area)),
-          all(abs(sim_pu_sf$area - unit_area) < 1e-8))
-total_commitment_units <- ceiling(0.20 * nrow(sim_pu_sf))
+unit_area <- stats::median(planning_units$area)
+stopifnot(all(is.finite(planning_units$area)),
+          all(abs(planning_units$area - unit_area) < 1e-8))
+total_commitment_units <- ceiling(0.20 * nrow(planning_units))
 restoration_target_units <- total_commitment_units - nrow(conservation_units)
 restoration_target_area <- restoration_target_units * unit_area
 

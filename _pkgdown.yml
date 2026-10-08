@@ -214,12 +214,20 @@ reference:
 
   - title: "Example data"
     desc: >
-      Simulated datasets and data loaders used in package examples and
-      documentation.
+      Three complete entry points: a compact simulated example, the Meseta
+      tutorial, and the integrated ecosystem-services example.
+    contents:
+      - load_sim_multiaction
+      - load_meseta
+      - load_ecosystem_services
+
+  - title: "Historical data access"
+    desc: >
+      Earlier data objects and the raster-only loader remain available for
+      compatibility. Prefer the complete example loaders above.
     contents:
       - starts_with("sim_")
       - load_sim_features_raster
-      - load_sim_multiaction
 
   - title: "Deprecated functions"
     desc: >

@@ -1,4 +1,4 @@
-# Generate the small spatial multi-action example used in the README.
+# Generate the small spatial multi-action example used in function examples and the simulated workflow.
 # Run this script from the package root when the dataset needs to be rebuilt.
 
 grid <- sf::st_make_grid(

@@ -22,6 +22,10 @@ column, retained for compatibility. New examples use \code{effect_assumptions}.}
 data(sim_multiaction)
 }
 \description{
+Prefer \code{\link[=load_sim_multiaction]{load_sim_multiaction()}} as the entry point to this dataset.
+Direct \code{data()} access remains available for compatibility.
+}
+\details{
 A compact example dataset containing all inputs needed to build a
 multi-objective spatial planning problem with protection and restoration as
 mutually exclusive candidate actions.

@@ -11,6 +11,8 @@ A data frame linking planning units and features with an \code{amount} column.
 data(sim_dist_features)
 }
 \description{
-Example distribution of feature amounts across planning units.
+Historical Meseta-related distribution with 348,021 rows, paired with
+\code{sim_pu} and \code{sim_features}. It is not the zero credited comparison
+reference used in the introductory tutorial. Prefer \code{\link[=load_meseta]{load_meseta()}}.
 }
 \keyword{datasets}

@@ -1,8 +1,10 @@
 # Simulated spatial multi-action planning inputs
 
-A compact example dataset containing all inputs needed to build a
-multi-objective spatial planning problem with protection and restoration
-as mutually exclusive candidate actions.
+Prefer
+[`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
+as the entry point to this dataset. Direct
+[`data()`](https://rdrr.io/r/utils/data.html) access remains available
+for compatibility.
 
 ## Usage
 
@@ -43,3 +45,9 @@ A named list with seven components:
 
   Explicit signed changes in the historical `delta` column, retained for
   compatibility. New examples use `effect_assumptions`.
+
+## Details
+
+A compact example dataset containing all inputs needed to build a
+multi-objective spatial planning problem with protection and restoration
+as mutually exclusive candidate actions.

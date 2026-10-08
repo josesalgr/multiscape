@@ -9,6 +9,10 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 }
 remotes::install_github("josesalgr/multiscape")
 
+# meseta-inputs
+library(multiscape)
+meseta <- load_meseta()
+
 # meseta-inspect
 head(meseta$action_costs)
 head(meseta$outcomes)

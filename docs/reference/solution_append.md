@@ -161,7 +161,7 @@ if (requireNamespace("rcbc", quietly = TRUE)) {
 }
 #>   run_id solution_id  status runtime gap
 #> 1      1           1 optimal    0.02   0
-#> 2      2           2 optimal    0.00   0
-#> 3      3           3 optimal    0.00   0
-#> 4      4           4 optimal    0.00   0
+#> 2      2           2 optimal    0.01   0
+#> 3      3           3 optimal    0.01   0
+#> 4      4           4 optimal    0.01   0
 ```

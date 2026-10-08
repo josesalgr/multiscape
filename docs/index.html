@@ -117,6 +117,32 @@
 <div class="section level3">
 <h3 id="the-planning-problem">The planning problem<a class="anchor" aria-label="anchor" href="#the-planning-problem"></a>
 </h3>
+<p>The package provides three entry points for example data:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Loader</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code><a href="reference/load_sim_multiaction.html">load_sim_multiaction()</a></code></td>
+<td>A compact simulated problem for function examples</td>
+</tr>
+<tr>
+<td><code><a href="reference/load_meseta.html">load_meseta()</a></code></td>
+<td>The complete inputs for the introductory tutorial below</td>
+</tr>
+<tr>
+<td><code><a href="reference/load_ecosystem_services.html">load_ecosystem_services()</a></code></td>
+<td>Planning units and raster layers for the integrated-planning vignette</td>
+</tr>
+</tbody>
+</table>
+<p>Each loader returns a named list. Planning units are <code>sf</code> objects; other components are tables or, for ecosystem services, a <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code>. Historical <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> access remains available for compatibility. The Rwanda vignette uses externally prepared data, and the technical vignettes construct small examples directly in their code.</p>
 <p>The Meseta Ibérica offers a concrete question for spatial action planning:</p>
 <blockquote>
 <p>Where should alternative landscape strategies be selected to meet species and ecosystem-service targets at low cost, while keeping the resulting action maps spatially cohesive?</p>
@@ -125,9 +151,7 @@
 <p>Here we formulate a straightforward multiscape problem: select at most one management strategy in each cell. Each cell-strategy combination has a cost and an expected outcome. The example teaches this formulation using available Meseta data; the separate technical reproduction of Prioriactions is not part of this introductory workflow.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://josesalgr.github.io/multiscape/">multiscape</a></span><span class="op">)</span></span>
-<span><span class="va">meseta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
-<span>  <span class="st">"extdata"</span>, <span class="st">"meseta_iberica_inputs.rds"</span>, package <span class="op">=</span> <span class="st">"multiscape"</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">meseta</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_meseta.html">load_meseta</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">meseta</span><span class="op">$</span><span class="va">actions</span></span>
 <span><span class="co">#&gt;   id          name</span></span>
 <span><span class="co">#&gt; 1  1 Afforestation</span></span>

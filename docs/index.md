@@ -94,6 +94,22 @@ The function that creates it in this branch is
 
 ### The planning problem
 
+The package provides three entry points for example data:
+
+| Loader | Purpose |
+|----|----|
+| [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md) | A compact simulated problem for function examples |
+| [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md) | The complete inputs for the introductory tutorial below |
+| [`load_ecosystem_services()`](https://josesalgr.github.io/multiscape/reference/load_ecosystem_services.md) | Planning units and raster layers for the integrated-planning vignette |
+
+Each loader returns a named list. Planning units are `sf` objects; other
+components are tables or, for ecosystem services, a
+[`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html).
+Historical [`data()`](https://rdrr.io/r/utils/data.html) access remains
+available for compatibility. The Rwanda vignette uses externally
+prepared data, and the technical vignettes construct small examples
+directly in their code.
+
 The Meseta Ibérica offers a concrete question for spatial action
 planning:
 
@@ -120,9 +136,7 @@ Prioriactions is not part of this introductory workflow.
 
 ``` r
 library(multiscape)
-meseta <- readRDS(system.file(
-  "extdata", "meseta_iberica_inputs.rds", package = "multiscape"
-))
+meseta <- load_meseta()
 meseta$actions
 #>   id          name
 #> 1  1 Afforestation

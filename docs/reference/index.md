@@ -235,8 +235,20 @@ Compile and inspect the underlying optimization model.
 
 ## Example data
 
-Simulated datasets and data loaders used in package examples and
-documentation.
+Three complete entry points: a compact simulated example, the Meseta
+tutorial, and the integrated ecosystem-services example.
+
+- [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
+  : Load the simulated spatial multi-action example
+- [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md)
+  : Load the Meseta Iberica spatial action example
+- [`load_ecosystem_services()`](https://josesalgr.github.io/multiscape/reference/load_ecosystem_services.md)
+  : Load the ecosystem-services spatial example
+
+## Historical data access
+
+Earlier data objects and the raster-only loader remain available for
+compatibility. Prefer the complete example loaders above.
 
 - [`sim_dist_features`](https://josesalgr.github.io/multiscape/reference/sim_dist_features.md)
   : Simulated feature distribution
@@ -250,8 +262,6 @@ documentation.
   : Simulated planning units
 - [`load_sim_features_raster()`](https://josesalgr.github.io/multiscape/reference/load_sim_features_raster.md)
   : Example feature raster
-- [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
-  : Load the simulated spatial multi-action example
 
 ## Deprecated functions
 

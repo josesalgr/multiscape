@@ -11,6 +11,8 @@ An object of class \code{sf}.
 data(sim_pu_sf)
 }
 \description{
-Example planning units as an \code{sf} object for package examples and tests.
+Historical ecosystem-services planning units: 30,496 spatial cells.
+These are distinct from \code{sim_pu}. Prefer \code{\link[=load_ecosystem_services]{load_ecosystem_services()}}
+to load the matching planning units and feature raster.
 }
 \keyword{datasets}

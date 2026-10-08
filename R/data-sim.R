@@ -1,6 +1,8 @@
 #' Simulated planning units
 #'
-#' Example planning units as an `sf` object for package examples and tests.
+#' Historical ecosystem-services planning units: 30,496 spatial cells.
+#' These are distinct from `sim_pu`. Prefer [load_ecosystem_services()]
+#' to load the matching planning units and feature raster.
 #'
 #' @format An object of class `sf`.
 #' @usage data(sim_pu_sf)
@@ -8,7 +10,9 @@
 
 #' Simulated planning units
 #'
-#' Example planning units as an `sf` object for package examples and tests.
+#' Historical Meseta-related planning units: 11,109 spatial cells with unit
+#' cost 1. These are distinct from `sim_pu_sf` and are not the complete
+#' Meseta tutorial inputs. Prefer [load_meseta()] for that tutorial.
 #'
 #' @format An object of class `sf`.
 #' @usage data(sim_pu)
@@ -16,7 +20,9 @@
 
 #' Simulated features
 #'
-#' Example feature table for package examples and tests.
+#' Historical Meseta-related catalogue of 155 features, retained for
+#' compatibility. These do not belong to the compact simulated example.
+#' Prefer [load_meseta()] for the complete tutorial inputs.
 #'
 #' @format A data frame with feature identifiers and names.
 #' @usage data(sim_features)
@@ -24,13 +30,18 @@
 
 #' Simulated feature distribution
 #'
-#' Example distribution of feature amounts across planning units.
+#' Historical Meseta-related distribution with 348,021 rows, paired with
+#' `sim_pu` and `sim_features`. It is not the zero credited comparison
+#' reference used in the introductory tutorial. Prefer [load_meseta()].
 #'
 #' @format A data frame linking planning units and features with an `amount` column.
 #' @usage data(sim_dist_features)
 "sim_dist_features"
 
 #' Simulated spatial multi-action planning inputs
+#'
+#' Prefer [load_sim_multiaction()] as the entry point to this dataset.
+#' Direct `data()` access remains available for compatibility.
 #'
 #' A compact example dataset containing all inputs needed to build a
 #' multi-objective spatial planning problem with protection and restoration as

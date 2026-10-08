@@ -1,3 +1,6 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -100,6 +103,20 @@ The function that creates it in this branch is `create_problem()`.
 
 ### The planning problem
 
+The package provides three entry points for example data:
+
+| Loader | Purpose |
+| --- | --- |
+| `load_sim_multiaction()` | A compact simulated problem for function examples |
+| `load_meseta()` | The complete inputs for the introductory tutorial below |
+| `load_ecosystem_services()` | Planning units and raster layers for the integrated-planning vignette |
+
+Each loader returns a named list. Planning units are `sf` objects; other
+components are tables or, for ecosystem services, a `terra::SpatRaster`.
+Historical `data()` access remains available for compatibility. The Rwanda
+vignette uses externally prepared data, and the technical vignettes construct
+small examples directly in their code.
+
 The Meseta Ibérica offers a concrete question for spatial action planning:
 
 > Where should alternative landscape strategies be selected
@@ -124,9 +141,7 @@ of this introductory workflow.
 
 ``` r
 library(multiscape)
-meseta <- readRDS(system.file(
-  "extdata", "meseta_iberica_inputs.rds", package = "multiscape"
-))
+meseta <- load_meseta()
 meseta$actions
 #>   id          name
 #> 1  1 Afforestation

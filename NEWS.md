@@ -1,3 +1,13 @@
+# Development version
+
+* Added `load_meseta()` and `load_ecosystem_services()` alongside
+  `load_sim_multiaction()` as the three complete example-data entry points.
+  Updated the README and integrated-planning vignette; historical `data()`
+  and raster-only access remain unchanged for compatibility.
+* Clarified historical dataset identities and separated their reference index
+  from the complete example loaders. Removed an obsolete internal example
+  that referenced unavailable datasets.
+
 # multiscape 1.4.0
 
 * Added `add_objective_max_effect()` and `add_objective_min_effect()` for signed
