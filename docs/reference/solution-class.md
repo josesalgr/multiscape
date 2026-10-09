@@ -25,6 +25,7 @@ The `Solution` class represents the output of one optimization run.
 It should be understood as the single-run counterpart of the modelling
 workflow:
 
+
     Problem -> solve() -> Solution
 
 Thus, a `Solution` object does not replace the original `Problem`;

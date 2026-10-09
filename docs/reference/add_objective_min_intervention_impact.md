@@ -111,7 +111,7 @@ p <- create_problem(
   add_constraint_area(2, "equal", tolerance = 0, actions = "restore") |>
   add_objective_max_benefit(features = "service", actions = "restore")
 #> Warning: `add_objective_max_benefit()` was deprecated in multiscape 1.4.0.
-#> i Please use `add_objective_max_effect()` instead.
+#> ℹ Please use `add_objective_max_effect()` instead.
 p$data$model_args
 #> $model_type
 #> [1] "maximizeBenefits"

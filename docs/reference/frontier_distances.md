@@ -88,6 +88,7 @@ input `SolutionSet` is filtered.
 
 To calculate distances using only non-dominated solutions, first use:
 
+
     x_nd <- solution_filter(x, nondominated = TRUE)
     frontier_distances(x_nd)
 

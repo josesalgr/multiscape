@@ -12,13 +12,19 @@ A named list containing:
 \item{planning_units}{An \code{sf} object with 11,109 planning units.}
 \item{features}{A catalogue of 155 features.}
 \item{dist_features}{The explicit comparison reference used in the tutorial.}
-\item{actions}{A catalogue of four management strategies.}
+\item{actions}{A catalogue of four management strategies, with readable
+character identifiers in \code{id} (also provided in \code{name}).}
 \item{action_costs}{Costs by planning unit and action.}
 \item{outcomes}{Outcomes by planning unit, action and feature.}
 \item{targets}{Representation targets for all features.}
 \item{boundary}{The supplied weighted spatial relation. Replacing it with
 a newly derived boundary can change the optimization problem.}
-\item{provenance}{Data sources and preparation notes.}
+\item{provenance}{Data sources and preparation notes.
+\code{action_id_lookup} records the original numeric \code{source_id} and the
+returned character \code{id} for each action.}
+\item{maps}{Ready-to-plot \code{sf} views: \code{costs}, \code{DENMINO}, \code{CISJUNC},
+\code{MLE}, \code{AGRICULTURE} and \code{ROS}. Each view contains four strategy columns
+and geometry, so \code{plot()} displays the four action scenarios directly.}
 }
 }
 \description{
@@ -26,8 +32,30 @@ Load the complete inputs used by the introductory README tutorial. These
 earlier available data support an adaptation of the Meseta case study, not
 an exact reproduction of the final 2025 article.
 }
+\details{
+The action identifiers in \code{actions$id}, \code{action_costs$action} and
+\code{outcomes$action} consistently use \code{Afforestation}, \code{BAU}, \code{FarmReturn}
+and \code{Firesmart}. The tables can be passed directly to \code{\link[=add_actions]{add_actions()}} and
+\code{\link[=add_effects]{add_effects()}}, without recoding identifiers. Scripts that explicitly
+select numeric action identifiers must use these names instead.
+Original identifiers remain available in \code{provenance$action_id_lookup}.
+All amounts, costs, targets, reference values and geometries are preserved.
+Planning-unit costs are retained; use \code{include_pu_cost = FALSE} in
+\code{\link[=add_objective_min_cost]{add_objective_min_cost()}} to count only action implementation costs.
+Maps are derived when loading, without storing additional copies of
+geometry in package data.
+Map columns use the names in \code{actions$name}; rows follow \code{planning_units}
+order, and row names contain planning-unit identifiers.
+
+The five feature maps illustrate contrasting action scenarios (three species
+and two ecosystem-service features), not ecological importance. Missing
+outcome rows are displayed as zero, following the dataset convention.
+These maps describe inputs under each action, not optimized selections.
+}
 \examples{
 meseta <- load_meseta()
 names(meseta)
 meseta$actions
+plot(meseta$maps$costs)
+plot(meseta$maps$DENMINO)
 }

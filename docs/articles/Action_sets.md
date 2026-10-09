@@ -9,6 +9,7 @@ membership is many-to-many.
 ## Register the individual actions first
 
 ``` r
+
 problem <- create_problem(
   pu = data.frame(id = 1:2, cost = c(1, 2)),
   features = data.frame(id = 1L, name = "woodland"),
@@ -33,6 +34,7 @@ The list names are set identifiers; each vector contains registered
 action ids.
 
 ``` r
+
 list_problem <- add_action_sets(problem, list(
   restore_control = c("restore", "control"),
   restore_fence = c("restore", "fence")
@@ -51,6 +53,7 @@ Each row defines one membership. An action can occur in several rows as
 long as it belongs to different sets.
 
 ``` r
+
 memberships <- data.frame(
   set = c("restore_control", "restore_control", "restore_fence", "restore_fence"),
   action = c("restore", "control", "restore", "fence")
@@ -72,6 +75,7 @@ order by
 The input problem is preserved:
 
 ``` r
+
 get_action_sets(problem)
 #> [1] set    action
 #> <0 rows> (or 0-length row.names)
@@ -82,6 +86,7 @@ get_action_sets(problem)
 Subsequent calls add new sets without replacing existing definitions:
 
 ``` r
+
 extended_problem <- table_problem |>
   add_action_sets(list(control_fence = c("control", "fence")))
 get_action_sets(extended_problem)
@@ -117,6 +122,7 @@ preserved. The same definitions can therefore describe candidate
 combinations without deciding their management rules.
 
 ``` r
+
 identical(problem$data$actions, table_problem$data$actions)
 #> [1] TRUE
 identical(problem$data$dist_actions, table_problem$data$dist_actions)

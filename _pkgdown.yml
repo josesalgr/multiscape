@@ -51,7 +51,6 @@ reference:
     contents:
       - add_actions
       - add_action_sets
-      - get_action_sets
       - add_effects
       - add_benefits
       - add_losses
@@ -144,6 +143,7 @@ reference:
       - get_solution_states
       - get_features
       - get_targets
+      - get_action_sets
 
   - title: "Manage solution sets"
     desc: >

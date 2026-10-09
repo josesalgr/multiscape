@@ -148,6 +148,7 @@ have already been registered under aliases. These aliases are typically
 created by calling objective setters with an `alias` argument, for
 example:
 
+
     x <- x |>
       add_objective_min_cost(alias = "cost") |>
       add_objective_min_fragmentation(alias = "frag")

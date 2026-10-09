@@ -103,7 +103,7 @@ p <- create_problem(
 
 p1 <- add_objective_min_loss(p)
 #> Warning: `add_objective_min_loss()` was deprecated in multiscape 1.4.0.
-#> i Use add_objective_min_effect() only when minimizing signed change is
+#> ℹ Use add_objective_min_effect() only when minimizing signed change is
 #>   intended. It is not an equivalent replacement: this legacy function retains
 #>   the negative-part criterion after aggregation within each unit and feature.
 p1$data$model_args

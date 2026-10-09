@@ -319,32 +319,32 @@ p1 <- create_problem(
 )
 print(p1)
 #> A multiscape object (<Problem>)
-#> +-data
-#> |+-planning units: <data.frame> (64 total)
-#> |+-costs: min: 0, max: 0
-#> |\-features: 2 total ("woodland", "riparian")
-#> \-actions and effects
-#> |+-actions: none
-#> |+-feasible action pairs: none
-#> |+-effect data: none
-#> |\-profit data: none
-#> \-spatial
-#> |+-geometry: sf (64 rows)
-#> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
-#> |\-relations: none
-#> \-targets and constraints
-#> |+-targets: none
-#> |+-area constraints: none
-#> |+-budget constraints: none
-#> |+-planning-unit locks: none
-#> |\-action locks: none
-#> \-model
-#> |+-status: not built yet (will build in solve())
-#> |+-objectives: none
-#> |+-method: single-objective
-#> |+-solver: not set (auto)
-#> |\-checks: incomplete (no objective registered)
-#> # i Use `x$data` to inspect stored tables and model snapshots.
+#> ├─data
+#> │├─planning units: <data.frame> (64 total)
+#> │├─costs: min: 0, max: 0
+#> │└─features: 2 total ("woodland", "riparian")
+#> └─actions and effects
+#> │├─actions: none
+#> │├─feasible action pairs: none
+#> │├─effect data: none
+#> │└─profit data: none
+#> └─spatial
+#> │├─geometry: sf (64 rows)
+#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
+#> │└─relations: none
+#> └─targets and constraints
+#> │├─targets: none
+#> │├─area constraints: none
+#> │├─budget constraints: none
+#> │├─planning-unit locks: none
+#> │└─action locks: none
+#> └─model
+#> │├─status: not built yet (will build in solve())
+#> │├─objectives: none
+#> │├─method: single-objective
+#> │├─solver: not set (auto)
+#> │└─checks: incomplete (no objective registered)
+#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 
 # Tabular mode: use the same data without geometry.
 p2 <- create_problem(
@@ -355,30 +355,30 @@ p2 <- create_problem(
 )
 print(p2)
 #> A multiscape object (<Problem>)
-#> +-data
-#> |+-planning units: <data.frame> (64 total)
-#> |+-costs: min: 0, max: 0
-#> |\-features: 2 total ("woodland", "riparian")
-#> \-actions and effects
-#> |+-actions: none
-#> |+-feasible action pairs: none
-#> |+-effect data: none
-#> |\-profit data: none
-#> \-spatial
-#> |+-geometry: none
-#> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
-#> |\-relations: none
-#> \-targets and constraints
-#> |+-targets: none
-#> |+-area constraints: none
-#> |+-budget constraints: none
-#> |+-planning-unit locks: none
-#> |\-action locks: none
-#> \-model
-#> |+-status: not built yet (will build in solve())
-#> |+-objectives: none
-#> |+-method: single-objective
-#> |+-solver: not set (auto)
-#> |\-checks: incomplete (no objective registered)
-#> # i Use `x$data` to inspect stored tables and model snapshots.
+#> ├─data
+#> │├─planning units: <data.frame> (64 total)
+#> │├─costs: min: 0, max: 0
+#> │└─features: 2 total ("woodland", "riparian")
+#> └─actions and effects
+#> │├─actions: none
+#> │├─feasible action pairs: none
+#> │├─effect data: none
+#> │└─profit data: none
+#> └─spatial
+#> │├─geometry: none
+#> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)
+#> │└─relations: none
+#> └─targets and constraints
+#> │├─targets: none
+#> │├─area constraints: none
+#> │├─budget constraints: none
+#> │├─planning-unit locks: none
+#> │└─action locks: none
+#> └─model
+#> │├─status: not built yet (will build in solve())
+#> │├─objectives: none
+#> │├─method: single-objective
+#> │├─solver: not set (auto)
+#> │└─checks: incomplete (no objective registered)
+#> # ℹ Use `x$data` to inspect stored tables and model snapshots.
 ```

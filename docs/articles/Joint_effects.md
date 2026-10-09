@@ -6,6 +6,7 @@ calculates signed interaction corrections, rather than attributing
 portions to individual actions.
 
 ``` r
+
 base <- create_problem(
   data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
   data.frame(pu = 10L, feature = 1L, amount = 100)
@@ -34,6 +35,7 @@ The modern `action` field accepts atomic IDs or registered set IDs.
 the same reference:
 
 ``` r
+
 outcomes <- data.frame(action = effects$action, feature = "habitat", outcome = c(130, 120, 170))
 changes <- data.frame(action = effects$action, feature = "habitat", relative_change = c(.3, .2, .7))
 outcome_problem <- add_effects(base, outcomes)
@@ -53,6 +55,7 @@ combination unreachable without removing its original observation.
 ## Preserve inputs and record assumptions
 
 ``` r
+
 problem$data$effects_input
 #>            action feature effect
 #> 1         restore habitat     30
@@ -112,6 +115,7 @@ contributions and the pair correction. Each method selects both actions,
 with benefit 70 and action cost 2.
 
 ``` r
+
 mo_base <- problem |>
   add_constraint_action_cardinality(1, "min") |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
@@ -128,6 +132,7 @@ methods <- list(
 ```
 
 ``` r
+
 solutions <- lapply(methods, solve)
 lapply(solutions, get_objectives)
 #> $weighted
@@ -152,6 +157,7 @@ for (solution in solutions) {
 ## Negative interactions, net benefit, and final loss
 
 ``` r
+
 negative_input <- effects
 negative_input$effect[negative_input$action == "restore_control"] <- 40
 negative <- add_effects(base, negative_input)
@@ -167,6 +173,7 @@ economic <- negative |>
 ```
 
 ``` r
+
 solution <- solve(economic)
 get_features(solution)
 #>   feature feature_name baseline_total selected_baseline selected_amount_after
@@ -189,12 +196,13 @@ effects only; models with negative effects can change their solutions.
 No separate net-benefit function is needed.
 
 ``` r
+
 benefit_problem <- negative |> add_objective_max_effect(alias = "benefit")
 loss_problem <- negative |>
   add_constraint_action_cardinality(2, "equal") |>
   add_objective_min_loss(alias = "loss")
 #> Warning: `add_objective_min_loss()` was deprecated in multiscape 1.4.0.
-#> i Use add_objective_min_effect() only when minimizing signed change is
+#> ℹ Use add_objective_min_effect() only when minimizing signed change is
 #>   intended. It is not an equivalent replacement: this legacy function retains
 #>   the negative-part criterion after aggregation within each unit and feature.
 #> This warning is displayed once per session.
@@ -203,6 +211,7 @@ loss_problem <- negative |>
 ```
 
 ``` r
+
 benefit_solution <- solve(set_solver_cbc(benefit_problem, gap_limit = 0, verbose = FALSE))
 loss_solution <- solve(set_solver_cbc(loss_problem, gap_limit = 0, verbose = FALSE))
 stopifnot(get_objectives(benefit_solution)$benefit == 40,
@@ -226,6 +235,7 @@ expressions are prepared in the common model used by weighted-sum,
 epsilon-constraint, and AUGMECON.
 
 ``` r
+
 deteriorating_input <- effects
 deteriorating_input$effect[deteriorating_input$action == "restore_control"] <- -10
 deteriorating <- add_effects(base, deteriorating_input) |>
@@ -233,6 +243,7 @@ deteriorating <- add_effects(base, deteriorating_input) |>
 ```
 
 ``` r
+
 net_solution <- deteriorating |> add_objective_max_effect(alias = "benefit") |>
   set_solver_cbc(gap_limit = 0, verbose = FALSE) |> solve()
 loss_solution <- deteriorating |> add_objective_min_loss(alias = "loss") |>
@@ -255,12 +266,14 @@ Action-scoped targets count the reference only when at least one scoped
 action is selected in the unit.
 
 ``` r
+
 target_problem <- negative |>
   add_constraint_targets_absolute(140) |>
   add_objective_min_cost(alias = "cost")
 ```
 
 ``` r
+
 target_solution <- solve(set_solver_cbc(target_problem, gap_limit = 0, verbose = FALSE))
 get_targets(target_solution)
 #>   solution_id feature feature_name target_level total_available target achieved

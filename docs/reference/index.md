@@ -17,8 +17,6 @@ consequences.
   : Add management actions to a planning problem
 - [`add_action_sets()`](https://josesalgr.github.io/multiscape/reference/add_action_sets.md)
   : Register sets of management actions
-- [`get_action_sets()`](https://josesalgr.github.io/multiscape/reference/get_action_sets.md)
-  : Inspect registered action sets
 - [`add_effects()`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
   : Add action effects to a planning problem
 - [`add_benefits()`](https://josesalgr.github.io/multiscape/reference/add_benefits.md)
@@ -147,6 +145,8 @@ target outcomes from stored solutions.
   : Get feature summary from a solution set
 - [`get_targets()`](https://josesalgr.github.io/multiscape/reference/get_targets.md)
   : Get target achievement summary from a solution set
+- [`get_action_sets()`](https://josesalgr.github.io/multiscape/reference/get_action_sets.md)
+  : Inspect registered action sets
 
 ## Manage solution sets
 
@@ -272,19 +272,18 @@ Functions retained temporarily for backward compatibility.
 - [`add_objective_min_loss()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md)
   : Deprecated objective: minimize loss
 - [`add_objective_min_intervention_impact()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_intervention_impact.md)
-  **\[deprecated\]** : Add objective: minimize intervention impact
+  **\[obsoleta\]** : Add objective: minimize intervention impact
 - [`add_constraint_locked_pu()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_pu.md)
-  **\[deprecated\]** : Add locked planning units to a problem
+  **\[obsoleta\]** : Add locked planning units to a problem
 - [`add_objective_min_fragmentation_pu()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_pu.md)
-  **\[deprecated\]** : Add objective: minimize planning-unit
-  fragmentation
+  **\[obsoleta\]** : Add objective: minimize planning-unit fragmentation
 - [`get_pu()`](https://josesalgr.github.io/multiscape/reference/get_pu.md)
-  **\[deprecated\]** : Get planning-unit results from a solution set
+  **\[obsoleta\]** : Get planning-unit results from a solution set
 - [`plot_spatial_pu()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_pu.md)
-  **\[deprecated\]** : Plot selected planning units in space
+  **\[obsoleta\]** : Plot selected planning units in space
 - [`run_grid()`](https://josesalgr.github.io/multiscape/reference/run_grid.md)
-  **\[deprecated\]** : Define an automatic multi-objective run grid
+  **\[obsoleta\]** : Define an automatic multi-objective run grid
 - [`run_manual()`](https://josesalgr.github.io/multiscape/reference/run_manual.md)
-  **\[deprecated\]** : Define a manual multi-objective run design
+  **\[obsoleta\]** : Define a manual multi-objective run design
 - [`mo_control()`](https://josesalgr.github.io/multiscape/reference/mo_control.md)
-  **\[deprecated\]** : Control multi-objective run behavior
+  **\[obsoleta\]** : Control multi-objective run behavior

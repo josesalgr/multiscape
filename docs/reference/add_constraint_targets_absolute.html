@@ -45,10 +45,10 @@ with different action subsets."><meta property="og:image" content="https://joses
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
     <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
-    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -204,8 +204,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          3          NA            3    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          3          NA            3    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-08 10:40:56.559274     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-08 10:40:56.559274     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-09 22:32:50.530299     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-09 22:32:50.530299     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Different targets by feature</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_absolute</span><span class="op">(</span></span></span>
@@ -217,8 +217,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          4          NA            4    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          2          NA            2    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-08 10:40:56.566029     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-08 10:40:56.566029     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-09 22:32:50.538448     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-09 22:32:50.538448     riparian</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Restrict which actions count toward target achievement</span></span></span>
 <span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_targets_absolute</span><span class="op">(</span></span></span>
@@ -231,8 +231,8 @@ feature with different contributing action subsets.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 actions    ge    absolute          2          NA            2 protect</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2 actions    ge    absolute          2          NA            2 protect</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   label                 created_at feature_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-08 10:40:56.569104     woodland</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-08 10:40:56.569104     riparian</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  &lt;NA&gt; 2026-10-09 22:32:50.545307     woodland</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  &lt;NA&gt; 2026-10-09 22:32:50.545307     riparian</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -241,7 +241,7 @@ feature with different contributing action subsets.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Núria Aquilué.</p>
+  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Victoria Madrid-Ayala, Sara Pineda-Zapata, Núria Aquilué.</p>
 </div>
 
 <div class="pkgdown-footer-right">

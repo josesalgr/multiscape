@@ -292,6 +292,7 @@ combinations should be explored.
 For example, with one primary objective and two secondary objectives, a
 manual run design may contain:
 
+
     data.frame(
       eps_cost = c(4, 6, 8),
       eps_loss = c(0, 1, 1)

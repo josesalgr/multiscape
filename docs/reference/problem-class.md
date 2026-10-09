@@ -13,6 +13,7 @@ optimization model or model snapshot.
 In other words, `Problem` is the persistent object that connects the
 full `multiscape` workflow:
 
+
     create_problem()
     -> add_*() / set_*()
     -> solve()

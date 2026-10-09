@@ -32,6 +32,7 @@ return an independent problem, so alternatives can share that common
 base.
 
 ``` r
+
 base <- create_problem(
   pu = data.frame(id = 1:3, cost = 1, area = 10),
   features = data.frame(id = 1L, name = "woodland"),
@@ -61,6 +62,7 @@ Define all solver parameters in one call. Setting a solver does not run
 it.
 
 ``` r
+
 objectives_base <- high_effect |>
   add_constraint_targets_absolute(50) |>
   add_objective_min_cost(alias = "cost") |>
@@ -123,6 +125,7 @@ required companion has the same identity under `sense = "all"` and
 `sense = "any"`.
 
 ``` r
+
 constrained <- actions_base |>
   add_action_sets(list(restore_control = c("restore", "control"))) |>
   add_action_sets(list(restore_fence = c("restore", "fence"))) |>
@@ -156,6 +159,7 @@ contributing action subsets can accumulate.
 ## Accumulate compatible locks
 
 ``` r
+
 locked <- actions_base |>
   add_constraint_locked_planning_units(locked_in = 1) |>
   add_constraint_locked_planning_units(locked_out = 3) |>

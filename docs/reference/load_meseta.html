@@ -37,10 +37,10 @@ an exact reproduction of the final 2025 article."><meta property="og:image" cont
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
     <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
-    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -82,7 +82,8 @@ an exact reproduction of the final 2025 article.</p>
 <dd><p>The explicit comparison reference used in the tutorial.</p></dd>
 
 <dt>actions</dt>
-<dd><p>A catalogue of four management strategies.</p></dd>
+<dd><p>A catalogue of four management strategies, with readable
+character identifiers in <code>id</code> (also provided in <code>name</code>).</p></dd>
 
 <dt>action_costs</dt>
 <dd><p>Costs by planning unit and action.</p></dd>
@@ -98,24 +99,55 @@ an exact reproduction of the final 2025 article.</p>
 a newly derived boundary can change the optimization problem.</p></dd>
 
 <dt>provenance</dt>
-<dd><p>Data sources and preparation notes.</p></dd>
+<dd><p>Data sources and preparation notes.
+<code>action_id_lookup</code> records the original numeric <code>source_id</code> and the
+returned character <code>id</code> for each action.</p></dd>
+
+<dt>maps</dt>
+<dd><p>Ready-to-plot <code>sf</code> views: <code>costs</code>, <code>DENMINO</code>, <code>CISJUNC</code>,
+<code>MLE</code>, <code>AGRICULTURE</code> and <code>ROS</code>. Each view contains four strategy columns
+and geometry, so <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> displays the four action scenarios directly.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The action identifiers in <code>actions$id</code>, <code>action_costs$action</code> and
+<code>outcomes$action</code> consistently use <code>Afforestation</code>, <code>BAU</code>, <code>FarmReturn</code>
+and <code>Firesmart</code>. The tables can be passed directly to <code><a href="add_actions.html">add_actions()</a></code> and
+<code><a href="add_effects.html">add_effects()</a></code>, without recoding identifiers. Scripts that explicitly
+select numeric action identifiers must use these names instead.
+Original identifiers remain available in <code>provenance$action_id_lookup</code>.
+All amounts, costs, targets, reference values and geometries are preserved.
+Planning-unit costs are retained; use <code>include_pu_cost = FALSE</code> in
+<code><a href="add_objective_min_cost.html">add_objective_min_cost()</a></code> to count only action implementation costs.
+Maps are derived when loading, without storing additional copies of
+geometry in package data.
+Map columns use the names in <code>actions$name</code>; rows follow <code>planning_units</code>
+order, and row names contain planning-unit identifiers.</p>
+<p>The five feature maps illustrate contrasting action scenarios (three species
+and two ecosystem-service features), not ecological importance. Missing
+outcome rows are displayed as zero, following the dataset convention.
+These maps describe inputs under each action, not optimized selections.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">meseta</span> <span class="op">&lt;-</span> <span class="fu">load_meseta</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "planning_units" "features"       "dist_features"  "actions"       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "action_costs"   "outcomes"       "targets"        "boundary"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [9] "provenance"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "planning_units" "features"       "dist_features"  "actions"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "action_costs"   "outcomes"       "targets"        "boundary"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "provenance"     "maps"          </span>
 <span class="r-in"><span><span class="va">meseta</span><span class="op">$</span><span class="va">actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   id          name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 Afforestation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2           BAU</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3    FarmReturn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4     Firesmart</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              id          name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Afforestation Afforestation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           BAU           BAU</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    FarmReturn    FarmReturn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     Firesmart     Firesmart</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">maps</span><span class="op">$</span><span class="va">costs</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="load_meseta-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">maps</span><span class="op">$</span><span class="va">DENMINO</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="load_meseta-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -123,7 +155,7 @@ a newly derived boundary can change the optimization problem.</p></dd>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Núria Aquilué.</p>
+  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Victoria Madrid-Ayala, Sara Pineda-Zapata, Núria Aquilué.</p>
 </div>
 
 <div class="pkgdown-footer-right">

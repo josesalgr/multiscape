@@ -18,6 +18,7 @@ Counts are integers, so exact counts do not use a numerical tolerance.
 ## Define the actions
 
 ``` r
+
 problem <- create_problem(
   pu = data.frame(id = c(10L, 20L, 30L), cost = 7),
   features = data.frame(id = 1L, name = "woodland"),
@@ -36,6 +37,7 @@ counted actions, even if one member also belongs to another set.
 ## Different capacities in different units
 
 ``` r
+
 capacities <- problem |>
   add_constraint_action_cardinality(4, "max", pu = 10L, name = "capacity_10") |>
   add_constraint_action_cardinality(2, "max", pu = 20L, name = "capacity_20")
@@ -53,6 +55,7 @@ actions. `pu = NULL` applies the rule to all currently registered units.
 ## Require actions from a subset
 
 ``` r
+
 required <- capacities |>
   add_constraint_action_cardinality(
     1, "min", actions = c("restore", "control"), pu = c(10L, 20L),
@@ -72,6 +75,7 @@ For example, after permitting three total actions per unit, a second
 rule can allow at most one from the restoration/control subset:
 
 ``` r
+
 subset_capacity <- problem |>
   add_constraint_action_cardinality(3, "max") |>
   add_constraint_action_cardinality(1, "max", actions = c("restore", "control"))
@@ -85,6 +89,7 @@ necessary here.
 ## Exact counts and combined bounds
 
 ``` r
+
 exact <- problem |>
   add_constraint_action_cardinality(2, "equal", pu = 10L) |>
   add_constraint_action_cardinality(0, "equal", pu = 20L)
@@ -97,6 +102,7 @@ default. To require at least two actions while allowing up to four,
 supply both bounds:
 
 ``` r
+
 bounded <- problem |>
   add_constraint_action_cardinality(4, "max", pu = 10L) |>
   add_constraint_action_cardinality(2, "min", pu = 10L)
@@ -107,6 +113,7 @@ maximum of four covers units 10 and 20, and a maximum of two covers
 units 20 and 30, the effective capacities are four, two, and two:
 
 ``` r
+
 overlapping <- problem |>
   add_constraint_action_cardinality(4, "max", pu = c(10L, 20L)) |>
   add_constraint_action_cardinality(2, "max", pu = c(20L, 30L))
@@ -139,12 +146,14 @@ two in unit 20, and one in unit 30 are optimal when every action has
 positive profit and no other resource limit applies:
 
 ``` r
+
 economic <- capacities |>
   add_profit(c(restore = 8, control = 4, fence = 2, monitor = 1)) |>
   add_objective_max_profit(alias = "profit")
 ```
 
 ``` r
+
 if (requireNamespace("rcbc", quietly = TRUE)) {
   solution <- solve(set_solver_cbc(economic, verbose = FALSE, gap_limit = 0))
   selected <- get_actions(solution)
@@ -180,6 +189,7 @@ unit and feature. Solution summaries and ecological targets count the
 selected reference once.
 
 ``` r
+
 ecological <- create_problem(
   data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
   data.frame(pu = 10L, feature = 1L, amount = 100)
@@ -193,6 +203,7 @@ ecological <- create_problem(
 ```
 
 ``` r
+
 solution <- solve(set_solver_cbc(ecological, gap_limit = 0, verbose = FALSE))
 get_objectives(solution)
 #>   solution_id benefit

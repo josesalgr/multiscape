@@ -49,10 +49,10 @@ attributes."><meta property="og:image" content="https://josesalgr.github.io/mult
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
     <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
-    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -324,32 +324,32 @@ the resulting problem.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape object (<span style="color: #5F87AF; font-weight: bold;">&lt;Problem&gt;</span>)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> +-<span style="color: #87AF5F; font-weight: bold;">data</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-planning units: <span style="color: #5F87AF; font-weight: bold;">&lt;data.frame&gt;</span> (64 total)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-costs: min: 0, max: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-features: 2 total ("woodland", "riparian")</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">actions and effects</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-actions: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-feasible action pairs: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-effect data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-profit data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">spatial</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-geometry: sf (64 rows)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-relations: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">targets and constraints</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-targets: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-area constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-budget constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-planning-unit locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-action locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">model</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-status: <span style="color: #D7AF00; font-weight: bold;">not built yet (will build in solve())</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-objectives: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-method: <span style="color: #87AF5F; font-weight: bold;">single-objective</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-solver: <span style="color: #949494;">not set (auto)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># i Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">data</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning units: <span style="color: #5F87AF; font-weight: bold;">&lt;data.frame&gt;</span> (64 total)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─costs: min: 0, max: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─features: 2 total ("woodland", "riparian")</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">actions and effects</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─actions: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─feasible action pairs: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─effect data: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─profit data: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">spatial</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─geometry: sf (64 rows)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─relations: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">targets and constraints</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─targets: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─area constraints: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─budget constraints: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning-unit locks: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─action locks: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">model</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─status: <span style="color: #D7AF00; font-weight: bold;">not built yet (will build in solve())</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─method: <span style="color: #87AF5F; font-weight: bold;">single-objective</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─solver: <span style="color: #949494;">not set (auto)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Tabular mode: use the same data without geometry.</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">create_problem</span><span class="op">(</span></span></span>
@@ -360,32 +360,32 @@ the resulting problem.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="va">p2</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape object (<span style="color: #5F87AF; font-weight: bold;">&lt;Problem&gt;</span>)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> +-<span style="color: #87AF5F; font-weight: bold;">data</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-planning units: <span style="color: #5F87AF; font-weight: bold;">&lt;data.frame&gt;</span> (64 total)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-costs: min: 0, max: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-features: 2 total ("woodland", "riparian")</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">actions and effects</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-actions: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-feasible action pairs: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-effect data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-profit data: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">spatial</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-geometry: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-relations: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">targets and constraints</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-targets: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-area constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-budget constraints: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-planning-unit locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-action locks: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">model</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-status: <span style="color: #D7AF00; font-weight: bold;">not built yet (will build in solve())</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-objectives: <span style="color: #949494;">none</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-method: <span style="color: #87AF5F; font-weight: bold;">single-objective</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-solver: <span style="color: #949494;">not set (auto)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># i Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">data</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning units: <span style="color: #5F87AF; font-weight: bold;">&lt;data.frame&gt;</span> (64 total)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─costs: min: 0, max: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─features: 2 total ("woodland", "riparian")</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">actions and effects</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─actions: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─feasible action pairs: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─effect data: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─profit data: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">spatial</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─geometry: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─coordinates: 64 rows (x: 0.5..7.5, y: 0.5..7.5)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─relations: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">targets and constraints</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─targets: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─area constraints: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─budget constraints: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─planning-unit locks: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─action locks: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">model</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─status: <span style="color: #D7AF00; font-weight: bold;">not built yet (will build in solve())</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: <span style="color: #949494;">none</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─method: <span style="color: #87AF5F; font-weight: bold;">single-objective</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─solver: <span style="color: #949494;">not set (auto)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─checks: <span style="color: #D7AF00; font-weight: bold;">incomplete (no objective registered)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use </span><span style="color: #5F875F;">`x$data`</span> to inspect stored tables and model snapshots.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -394,7 +394,7 @@ the resulting problem.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Núria Aquilué.</p>
+  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Victoria Madrid-Ayala, Sara Pineda-Zapata, Núria Aquilué.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -49,10 +49,10 @@ as multi-run SolutionSet objects."><meta property="og:image" content="https://jo
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
     <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
-    <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -233,24 +233,24 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 <span class="r-in"><span>  <span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="va">solset</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A multiscape solution set (<span style="color: #5F87AF; font-weight: bold;">&lt;SolutionSet&gt;</span>)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> +-<span style="color: #87AF5F; font-weight: bold;">method</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-name: <span style="color: #5F875F;">`single`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-objectives: 1 (cost)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-run design: unspecified</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">content</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-design rows: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-attempted runs: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-stored solutions: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-without solution: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-statuses: optimal: 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-runtime: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-gap: 0</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |+-design columns: none</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-objective columns: value_cost</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> \-<span style="color: #87AF5F; font-weight: bold;">objective ranges</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> |\-cost: 2.1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># i Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ├─<span style="color: #87AF5F; font-weight: bold;">method</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─name: <span style="color: #5F875F;">`single`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─objectives: 1 (cost)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─run design: unspecified</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">content</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design rows: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─attempted runs: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─stored solutions: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─without solution: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">run summary</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─statuses: optimal: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─runtime: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─gap: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │├─design columns: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─objective columns: value_cost</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> └─<span style="color: #87AF5F; font-weight: bold;">objective ranges</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> │└─cost: 2.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;"># ℹ Use get_runs(), get_objectives(), get_pu(), and get_actions() to inspect</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">results.</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
@@ -261,7 +261,7 @@ calling <code><a href="set_solver.html">set_solver</a></code> or one of its conv
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Núria Aquilué.</p>
+  <p>Developed by José Salgado-Rojas, Matías Moreno-Faguett, Victoria Madrid-Ayala, Sara Pineda-Zapata, Núria Aquilué.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -20,6 +20,7 @@ by MO methods.
 ## Define a common base
 
 ``` r
+
 base <- create_problem(
   pu = data.frame(id = c(10L, 20L), cost = 5),
   features = data.frame(id = 1L, name = "woodland"),
@@ -41,6 +42,7 @@ lift the default total maximum.
 ## Require all or any companions
 
 ``` r
+
 dependencies <- base |>
   add_constraint_action_requires(
     "restore", c("control", "monitor"), pu = 10L, name = "restore_requirements"
@@ -68,6 +70,7 @@ group to be selected. Triggering and required groups must be disjoint.
 ## Exclude alternatives or implement a group together
 
 ``` r
+
 exclusive <- base |>
   add_constraint_action_excludes(c("control", "fence"), name = "protection_choice")
 
@@ -86,6 +89,7 @@ constraints permit it.
 ## Use registered action-set members explicitly
 
 ``` r
+
 sets <- base |>
   add_action_sets(data.frame(
     set = c("restore_control", "restore_control"),
@@ -138,6 +142,7 @@ fencing alone at 6. The two-action capacity prevents adding fencing to
 the restoration group.
 
 ``` r
+
 economic <- create_problem(
   pu = data.frame(id = 10L, cost = 5),
   features = data.frame(id = 1L, name = "woodland"),
@@ -152,6 +157,7 @@ economic <- create_problem(
 ```
 
 ``` r
+
 solution <- solve(economic)
 get_actions(solution)
 #>   solution_id pu  action cost status action_area selected
@@ -175,6 +181,7 @@ definitions, aliases, and method signatures are unchanged. For example,
 add a cost objective to the economic base and choose a profit threshold:
 
 ``` r
+
 mo <- economic |>
   add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
   set_method_epsilon_constraint(
@@ -184,6 +191,7 @@ mo <- economic |>
 ```
 
 ``` r
+
 mo_solution <- solve(mo)
 #> Warning: The minimum-cost problem has no feature targets, positive
 #> minimum/equality area or action-count constraint, or locked-in decisions. The

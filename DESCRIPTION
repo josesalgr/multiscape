@@ -30,6 +30,16 @@ Authors@R: c(
         role = c('aut'),
         comment = c(ORCID = "0009-0003-6561-234X")
     ),
+    person('Victoria', 'Madrid-Ayala',
+        email='victoria.madrid@ctfc.cat', 
+        role = c('aut'),
+        comment = c(ORCID = "0009-0008-5678-3418")
+    ),
+    person('Sara', 'Pineda-Zapata',
+        email='sara.pineda.zapata@uef.fi', 
+        role = c('aut'),
+        comment = c(ORCID = "0009-0006-8014-0098")
+    ),
     person('Núria', 'Aquilué',
         email='nuria.aquilue@ctfc.cat', 
         role = c('aut'),
