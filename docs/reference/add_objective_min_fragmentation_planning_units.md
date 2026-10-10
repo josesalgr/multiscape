@@ -1,12 +1,7 @@
-# Add objective: minimize planning-unit fragmentation
+# Add objective: minimise planning-unit fragmentation
 
-Define an objective that minimizes planning-unit fragmentation over a
-stored spatial relation.
-
-This objective acts on the planning-unit selection pattern through the
-binary planning-unit variables \\w_i\\. It is therefore appropriate when
-spatial cohesion is to be encouraged at the level of the selected
-planning-unit set as a whole.
+Encourage cohesion of the selected planning units, regardless of which
+action is implemented within each unit.
 
 ## Usage
 
@@ -46,57 +41,24 @@ An updated `Problem` object.
 
 ## Details
 
-Use this function when spatial cohesion should be encouraged at the
-level of the selected planning-unit set as a whole.
+This objective uses planning-unit selection variables \\w_i\\ and a
+spatial relation registered with
+[`add_spatial_relations()`](https://josesalgr.github.io/multiscape/reference/add_spatial_relations.md)
+or
+[`add_spatial_boundary()`](https://josesalgr.github.io/multiscape/reference/add_spatial_boundary.md).
+Relation weights \\\omega\_{ij}\\ are scaled by `weight_multiplier`.
 
-Let \\\mathcal{I}\\ denote the set of planning units and let \\w_i \in
-\\0,1\\\\ indicate whether planning unit \\i \in \mathcal{I}\\ is
-selected.
+The underlying model uses \\y\_{ij}=w_i \land w_j\\ to record whether
+neighbouring units are both selected, encouraging spatially consolidated
+selections. Action identities do not enter this spatial criterion:
+adjacent units receiving different actions are part of the same selected
+planning-unit set.
 
-Let the chosen spatial relation define a set of weighted pairs with
-weights \\\omega\_{ij} \ge 0\\. These relation weights are interpreted
-by the model builder after scaling by \\\lambda =\\ `weight_multiplier`.
-
-The internal preparation step constructs one auxiliary variable
-\\y\_{ij} \in \[0,1\]\\ for each unique non-diagonal undirected edge
-\\(i,j)\\ with \\i \< j\\. The intended semantics is: \$\$ y\_{ij} = w_i
-\land w_j. \$\$
-
-This is enforced by the standard linearization: \$\$ y\_{ij} \le w_i,
-\$\$ \$\$ y\_{ij} \le w_j, \$\$ \$\$ y\_{ij} \ge w_i + w_j - 1. \$\$
-
-Thus, \\y\_{ij}=1\\ if and only if both planning units \\i\\ and \\j\\
-are selected, and \\y\_{ij}=0\\ otherwise.
-
-The exact objective coefficients are assembled later by the model
-builder from:
-
-- the planning-unit variables \\w_i\\,
-
-- the edge-conjunction variables \\y\_{ij}\\,
-
-- the stored relation weights \\\omega\_{ij}\\,
-
-- and the multiplier \\\lambda\\.
-
-Conceptually, the resulting objective is a boundary- or relation-based
-compactness functional that penalizes exposed or weakly connected
-selected patterns while rewarding adjacency among selected planning
-units.
-
-In the common case where `relation_name = "boundary"` and the relation
-was built with
-[`add_spatial_boundary`](https://josesalgr.github.io/multiscape/reference/add_spatial_boundary.md),
-the objective corresponds to a boundary-length-style fragmentation
-penalty.
-
-Setting `weight_multiplier = 0` removes the contribution of the spatial
-relation from the objective after scaling.
-
-This objective does not distinguish between different actions within the
-same planning unit. If action-specific spatial cohesion is required, use
-[`add_objective_min_fragmentation_action`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.md)
-instead.
+Without another requirement, selecting no units can be optimal. Combine
+this objective with a budget equality, an area requirement, or an
+ecological target that ensures meaningful management activity. For
+action-specific cohesion, see
+[`add_objective_min_fragmentation_action()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_fragmentation_action.md).
 
 ## Repeated calls
 
@@ -117,45 +79,34 @@ objective was added.
 ## Examples
 
 ``` r
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Select a cohesive set of 12 planning units
+#
+# With one feasible action costing one unit, a budget equality
+# forces exactly 12 selected units. Without this requirement,
+# minimising fragmentation alone could select no units.
+sim <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
+  add_actions(data.frame(id = "restore"), cost = 1) |>
+  add_spatial_boundary(name = "boundary", include_self = TRUE) |>
+  add_constraint_budget(12, "equal", include_pu_cost = FALSE) |>
+  add_objective_min_fragmentation_planning_units(
+    relation_name = "boundary", alias = "pu_fragmentation"
   )
 
-p <- add_spatial_boundary(
-  x = p,
-  name = "boundary",
-  include_self = TRUE,
-  edge_factor = 1
-)
+# Cohesion is evaluated for the selected planning-unit pattern,
+# irrespective of action identity. No additional objective is used.
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  get_objectives(solutions, format = "wide")
+  print(plot_spatial_planning_units(solutions))
+}
 
-p <- add_objective_min_fragmentation_planning_units(
-  p,
-  relation_name = "boundary"
-)
 
-p$data$model_args
-#> $model_type
-#> [1] "minimizeFragmentation"
-#> 
-#> $objective_id
-#> [1] "min_fragmentation"
-#> 
-#> $objective_args
-#> $objective_args$relation_name
-#> [1] "boundary"
-#> 
-#> $objective_args$weight_multiplier
-#> [1] 1
-#> 
-#> 
 ```

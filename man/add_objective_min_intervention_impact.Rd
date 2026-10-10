@@ -55,7 +55,7 @@ available during the transition.
 
 This function will be removed in a future version of multiscape. New workflows
 should express action consequences with \code{\link{add_effects}} and optimize
-signed changes with \code{\link{add_objective_max_benefit}}.
+signed changes with \code{\link{add_objective_max_effect}}.
 
 This is not an automatic replacement. For deficit-based prioritization,
 let \eqn{q_{if}} be the reference amount and \eqn{M_f} a common ceiling for
@@ -89,11 +89,11 @@ p <- create_problem(
   add_actions(data.frame(id = "restore"), cost = 1) |>
   add_effects(data.frame(action = "restore", feature = "service", outcome = 1)) |>
   add_constraint_area(2, "equal", tolerance = 0, actions = "restore") |>
-  add_objective_max_benefit(features = "service", actions = "restore")
+  add_objective_max_effect(features = "service", actions = "restore")
 p$data$model_args
 
 }
 \seealso{
-\code{\link{add_objective_max_benefit}},
+\code{\link{add_objective_max_effect}},
 \code{\link{add_objective_min_loss}}
 }

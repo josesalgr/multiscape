@@ -3,111 +3,54 @@
 #' @title Add profit to a planning problem
 #'
 #' @description
-#' Define economic profit values for feasible planning unit--action pairs and
-#' store them in a profit table.
-#'
-#' Profit is stored separately from ecological effects. In particular,
-#' \code{profit} is not the same as ecological \code{benefit} or
-#' \code{loss} as represented in \code{\link{add_effects}}. This separation
-#' allows the package to distinguish economic returns from ecological
-#' consequences when building objectives, constraints, and reporting summaries.
+#' Assign economic returns to feasible planning-unit--action pairs. Returns
+#' may be positive, zero, or negative and are stored separately from
+#' implementation costs and ecological effects.
 #'
 #' @details
-#' \strong{When to use \code{add_profit()}.}
+#' \strong{Economic returns and implementation costs}
 #'
-#' Use this function when economic returns, penalties, or other action-specific
-#' financial values are part of the planning problem. Typical downstream uses
-#' include objectives such as \code{\link{add_objective_max_profit}} and
-#' \code{\link{add_objective_max_net_profit}}.
+#' An economic return \eqn{\pi_{ia}} is the monetary contribution associated
+#' with selecting action \eqn{a} in planning unit \eqn{i}. Positive values
+#' represent gains or revenues; negative values represent penalties or
+#' economic losses. A zero value contributes no profit.
 #'
-#' Let \eqn{\mathcal{I}} denote the set of planning units and
-#' \eqn{\mathcal{A}} the set of actions. Let
-#' \eqn{\mathcal{D} \subseteq \mathcal{I} \times \mathcal{A}} denote the set of
-#' feasible planning unit--action pairs currently stored in the problem.
-#'
-#' This function assigns to each feasible pair \eqn{(i,a) \in \mathcal{D}} a
-#' numeric profit value \eqn{\pi_{ia} \in \mathbb{R}} and stores the result in a
-#' profit table.
-#'
-#' Thus, the stored table can be interpreted as a mapping
-#' \deqn{
-#' \pi : \mathcal{D} \to \mathbb{R},
-#' }
-#' where \eqn{\pi_{ia}} represents the economic return associated with selecting
-#' action \eqn{a} in planning unit \eqn{i}.
-#'
-#' Profit values may be positive, zero, or negative. Positive values represent
-#' gains or revenues, zero represents no net profit contribution, and negative
-#' values can be used to encode penalties or net economic losses.
-#'
-#' The stored table contains:
-#' \itemize{
-#'   \item \code{pu}: external planning-unit id,
-#'   \item \code{action}: action id,
-#'   \item \code{profit}: numeric profit value,
-#'   \item \code{internal_pu}: internal planning-unit index,
-#'   \item \code{internal_action}: internal action index.
-#' }
+#' Profit is registered independently of planning-unit and action costs.
+#' \code{add_objective_max_profit()} maximises the sum of registered returns,
+#' whereas \code{add_objective_max_net_profit()} can subtract implementation
+#' costs. If your profit inputs already account for these costs, avoid
+#' subtracting them again when configuring the objective. Economic returns
+#' should not be confused with the signed ecological changes registered
+#' using \code{add_effects()}.
 #'
 #' \strong{Supported input formats}
 #'
-#' The \code{profit} argument may be specified in several ways:
+#' The \code{profit} argument accepts:
 #' \itemize{
-#'   \item \code{NULL}: assign profit 0 to all feasible \code{(pu, action)}
-#'   pairs,
-#'   \item a numeric scalar: assign the same profit value to all feasible pairs,
-#'   \item a named numeric vector: names are action ids, assigning one global
-#'   profit value per action,
-#'   \item a \code{data.frame(action, profit)}: assign one global profit value
-#'   per action,
-#'   \item a \code{data.frame(pu, action, profit)}: assign pair-specific profit
-#'   values.
+#'   \item \code{NULL}: zero profit for all feasible pairs;
+#'   \item one numeric value: the same profit for every feasible pair;
+#'   \item a named numeric vector: one profit value per named action;
+#'   \item \code{data.frame(action, profit)}: one profit value per action;
+#'   \item \code{data.frame(pu, action, profit)}: values specific to
+#'     individual planning-unit--action pairs.
 #' }
 #'
-#' When action-level profit is supplied, the same profit value is assigned to
-#' all feasible planning units for that action. When pair-specific profit is
-#' supplied, only the listed \code{(pu, action)} pairs receive explicit values;
-#' unmatched feasible pairs are interpreted as zero-profit pairs.
+#' An action-level value applies to all feasible planning units for that
+#' action. A pair-specific table permits spatially varying returns. Feasible
+#' pairs not specified in the input receive profit zero.
 #'
-#' \strong{Storage behaviour}
+#' \strong{Storage and use in planning}
 #'
-#' This function stores only rows with non-zero profit values. Feasible pairs
-#' whose final profit is zero are omitted from the stored profit table.
-#' Missing values produced during matching or joins are treated as zero before
-#' this filtering step. Therefore, the resulting table is a sparse
-#' representation of economic returns over the feasible decision space.
+#' Only non-zero values are stored in \code{dist_profit}. Zero-profit pairs
+#' are omitted from the table but remain feasible. The stored columns are
+#' \code{pu}, \code{action}, \code{profit}, \code{internal_pu}, and
+#' \code{internal_action}. Calling \code{add_profit()} neither selects actions
+#' nor modifies feasible actions or ecological effects; the values are used
+#' later by objectives, constraints, and solution summaries.
 #'
-#' \strong{Data-only behaviour}
-#'
-#' This function is purely data-oriented. It does not build or modify the
-#' optimization model, and it does not change feasibility. It simply assigns
-#' profit values to rows already present in the feasible action table.
-#'
-#' In particular:
-#' \itemize{
-#'   \item it does not add new feasible \code{(pu, action)} pairs,
-#'   \item it does not remove infeasible pairs,
-#'   \item it does not apply solver-side filtering such as dropping locked-out
-#'   decisions,
-#'   \item it does not modify ecological effect tables.
-#' }
-#'
-#' Any such filtering is expected to occur later when model-ready tables are
-#' prepared, typically during the build stage invoked by \code{solve()}.
-#'
-#' \strong{Use in optimization}
-#'
-#' Profit values stored by this function can later be used in objectives such as
-#' \code{\link{add_objective_max_profit}} or
-#' \code{\link{add_objective_max_net_profit}}, in derived budget expressions, or
-#' in reporting and summary functions.
-#'
-#' For example, if \eqn{x_{ia} \in \{0,1\}} denotes whether action \eqn{a} is
-#' selected in planning unit \eqn{i}, then a profit-maximization objective
-#' typically takes the form
-#' \deqn{
-#' \max \sum_{(i,a) \in \mathcal{D}} \pi_{ia} x_{ia}.
-#' }
+#' Profit can be defined only once per problem, including when supplying
+#' \code{NULL}. To compare economic scenarios, start from the same problem
+#' before profit was added.
 #'
 #' @param x A \code{Problem} object created with \code{\link{create_problem}}. It
 #'   must already contain feasible actions and an action catalogue; run
@@ -135,45 +78,112 @@
 #'   includes only rows with non-zero profit.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE 1: Create a planning problem with feasible actions
+#'
+#' # The bundled 64-unit landscape has protection and restoration
+#' # alternatives. Action implementation costs are registered separately
+#' # from the economic returns introduced below.
+#'
+#' sim <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
 #'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
+#'     actions = sim$actions,
+#'     cost = sim$action_costs
 #'   )
 #'
-#' # 1) Constant profit for every feasible (pu, action)
-#' p1 <- add_profit(p, profit = 10)
-#' p1$data$dist_profit
+#' # EXAMPLE 2: A constant economic return
 #'
-#' # 2) Profit per action using a named vector
-#' pr <- c(protect = 50, restore = -5)
-#' p2 <- add_profit(p, profit = pr)
-#' p2$data$dist_profit
+#' # Suppose implementing any feasible action generates 10 monetary units,
+#' # regardless of the action or its location. A scalar is applied to all
+#' # feasible planning-unit--action pairs.
 #'
-#' # 3) Profit per action using a data frame
-#' pr_df <- data.frame(
+#' p_constant <- add_profit(p, profit = 10)
+#' head(p_constant$data$dist_profit[, c("pu", "action", "profit")])
+#'
+#' # EXAMPLE 3: Action-specific returns
+#'
+#' # Protection generates +50 monetary units, whereas restoration incurs
+#' # an economic penalty of -5 units. A named vector assigns a value to
+#' # every feasible planning unit where that action is available.
+#'
+#' returns <- c(protect = 50, restore = -5)
+#' p_action <- add_profit(p, profit = returns)
+#' head(p_action$data$dist_profit[, c("pu", "action", "profit")])
+#'
+#' # The same action-level values can be supplied as a data frame.
+#' # These alternatives start from the same base problem because profit
+#' # can be defined only once per problem.
+#'
+#' p_action_table <- add_profit(p, data.frame(
 #'   action = c("protect", "restore"),
-#'   profit = c(40, 15)
-#' )
-#' p3 <- add_profit(p, profit = pr_df)
-#' p3$data$dist_profit
+#'   profit = c(50, -5)
+#' ))
+#' head(p_action_table$data$dist_profit[, c("pu", "action", "profit")])
 #'
-#' # 4) Profit per (pu, action) pair
-#' pr_pair <- data.frame(
+#' # EXAMPLE 4: Location-specific economic returns
+#'
+#' # The same action can have different returns across planning units.
+#' # Protection provides +100 in unit 1 and +80 in unit 2; restoration
+#' # provides +30 in unit 3. Unlisted feasible pairs receive zero profit.
+#'
+#' local_returns <- data.frame(
 #'   pu = c(1, 2, 3),
 #'   action = c("protect", "protect", "restore"),
 #'   profit = c(100, 80, 30)
 #' )
-#' p4 <- add_profit(p, profit = pr_pair)
-#' p4$data$dist_profit
+#' p_local <- add_profit(p, profit = local_returns)
+#'
+#' # Only the three non-zero contributions are stored. This does not
+#' # make any of the other, zero-profit action pairs infeasible.
+#' p_local$data$dist_profit[, c("pu", "action", "profit")]
+#'
+#' # EXAMPLE 5: Explicitly specify no economic return
+#'
+#' # NULL assigns zero to every feasible pair. The resulting sparse
+#' # profit table is empty, even though the actions remain available.
+#'
+#' p_zero <- add_profit(p, profit = NULL)
+#' nrow(p_zero$data$dist_profit)
+#'
+#' # EXAMPLE 6: Map spatially varying potential returns
+#'
+#' # The simulated planning units include geometry and an x-coordinate.
+#' # Give restoration a hypothetical return that increases from west to
+#' # east. These are potential returns, not selected management actions.
+#' # No optimiser or solver is needed to visualise the input values.
+#'
+#' if (requireNamespace("sf", quietly = TRUE)) {
+#'   spatial_returns <- data.frame(
+#'     pu = sim$planning_units$id,
+#'     action = "restore",
+#'     profit = 20 + 5 * sim$planning_units$x
+#'   )
+#'
+#'   p_spatial <- add_profit(p, profit = spatial_returns)
+#'
+#'   # Attach the registered restoration returns to the geometry.
+#'   values <- subset(
+#'     p_spatial$data$dist_profit,
+#'     action == "restore",
+#'     select = c("pu", "profit")
+#'   )
+#'   mapped <- merge(
+#'     sim$planning_units,
+#'     values,
+#'     by.x = "id", by.y = "pu", all.x = TRUE
+#'   )
+#'
+#'   # This map describes where restoration could generate economic
+#'   # returns, not where optimisation has selected restoration.
+#'   plot(mapped["profit"],
+#'        main = "Potential economic return from restoration")
+#' }
 #'
 #' @seealso
 #' \code{\link{add_actions}},
@@ -189,7 +199,7 @@ add_profit <- function(
   .pa_assert_unconfigured(x, "dist_profit", "Profit", "add_profit()")
   # ---- checks: x
   assertthat::assert_that(!is.null(x), msg = "x is NULL")
-  assertthat::assert_that(!is.null(x$data), msg = "x does not look like a mulstiscape Problem object")
+  assertthat::assert_that(!is.null(x$data), msg = "x does not look like a multiscape Problem object")
   assertthat::assert_that(!is.null(x$data$pu), msg = "x$data$pu is missing. Run create_problem() first.")
   assertthat::assert_that(!is.null(x$data$dist_actions), msg = "No actions found. Run add_actions() first.")
   assertthat::assert_that(!is.null(x$data$actions), msg = "No action catalog found. Run add_actions() first.")

@@ -90,40 +90,38 @@ To compare alternatives, start from the problem before its objective was added.
 }
 
 \examples{
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
-
-profit <- example_data$action_costs
-profit$profit <- 10 - profit$cost
-profit$cost <- NULL
+# EXAMPLE: Maximise returns minus implementation costs
+#
+# Use the same west-to-east profit pattern as above, but now
+# charge 9.5 monetary units for every selected action. Some
+# locations may no longer generate a positive net return.
+sim <- load_sim_multiaction()
+returns <- sim$action_costs[, c("pu", "action")]
+x_coord <- sim$planning_units$x[
+  match(returns$pu, sim$planning_units$id)
+]
+returns$profit <- ifelse(
+  returns$action == "protect", 12 - x_coord, 4 + x_coord
+)
 
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
-  ) |>
-  add_profit(profit)
+  add_actions(sim$actions, cost = 9.5) |>
+  add_profit(returns) |>
+  add_objective_max_net_profit(include_pu_cost = FALSE, alias = "net_profit")
 
-p1 <- add_objective_max_net_profit(p)
-p1$data$model_args
-
-p2 <- add_objective_max_net_profit(
-  p,
-  include_pu_cost = FALSE,
-  include_action_cost = TRUE
-)
-p2$data$model_args
-
-p3 <- add_objective_max_net_profit(
-  p,
-  actions = "restore"
-)
-p3$data$model_args
+# Unlike gross profit maximisation, leaving a unit unmanaged
+# can now be optimal when its best return is below its cost.
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  get_objectives(solutions, format = "wide")
+  print(plot_spatial_actions(solutions, layout = "single"))
+}
 
 }
 \seealso{

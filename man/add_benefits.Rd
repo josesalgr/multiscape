@@ -12,18 +12,17 @@ add_benefits(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} object created by \code{\link{create_problem}}
-with feasible actions defined by \code{\link{add_actions}}.}
+\item{x}{A \code{Problem} created by \code{\link{create_problem}} with
+feasible actions already defined by \code{\link{add_actions}}.}
 
 \item{benefits}{Alias of \code{effects}, kept for backwards compatibility.}
 
 \item{effect_type}{Deprecated interpretation argument: \code{"delta"}
-for changes or \code{"after"} for action amounts. With historical
-multipliers, delta means reference times multiplier; after means an outcome
-equal to reference times multiplier. Omit for new table inputs.}
+for signed changes or \code{"after"} for expected amounts. Legacy
+multipliers retain their original interpretation; omit for modern tables.}
 
 \item{effect_aggregation}{Deprecated raster aggregation argument; use
-\code{raster_aggregation}.}
+\code{raster_aggregation} instead.}
 }
 \value{
 An updated \code{Problem} object containing:
@@ -35,10 +34,11 @@ only the benefit component.}
 }
 }
 \description{
-Convenience wrapper around \code{\link{add_effects}} that keeps only positive
-effects, that is, rows with \code{benefit > 0}.
-Effects share a single definition with \code{add_effects()} and
-\code{add_losses()}; a second definition raises an error.
+Legacy convenience wrapper around \code{\link{add_effects}} that retains
+only positive signed changes (\code{effect > 0}). Positive change does not
+necessarily imply an ecological benefit. For new code, prefer
+\code{add_effects()} to retain signed effects of both directions.
+Effects can be defined only once per problem.
 }
 \seealso{
 \code{\link{add_effects}},

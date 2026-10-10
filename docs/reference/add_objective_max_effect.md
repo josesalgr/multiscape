@@ -82,92 +82,41 @@ objective was added.
 
 ## See also
 
-[`add_objective_min_loss`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md),
+[`add_objective_min_effect`](https://josesalgr.github.io/multiscape/reference/add_objective_min_effect.md),
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
 
 ## Examples
 
 ``` r
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Maximise woodland gain in a fixed number of units
+#
+# The bundled landscape has spatially varying woodland reference
+# amounts. Assume restoration increases these amounts by 50%.
+# The absolute signed effect is therefore larger where the
+# reference amount is greater.
+sim <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
-  ) |>
-  add_effects(
-    example_data$effect_assumptions
-  )
+  add_actions(data.frame(id = "restore"), cost = 1) |>
+  add_effects(data.frame(
+    action = "restore", feature = "woodland", relative_change = 0.50
+  )) |>
+  add_constraint_budget(12, "equal", include_pu_cost = FALSE) |>
+  add_objective_max_effect(features = "woodland", alias = "woodland_gain")
 
-p1 <- add_objective_max_effect(p)
-p1$data$model_args
-#> $model_type
-#> [1] "maximizeBenefits"
-#> 
-#> $objective_id
-#> [1] "max_effect"
-#> 
-#> $objective_args
-#> $objective_args$effect_sense
-#> [1] "max"
-#> 
-#> $objective_args$actions
-#> NULL
-#> 
-#> $objective_args$features
-#> NULL
-#> 
-#> 
+# Every restoration costs one monetary unit, so exactly 12 units
+# must be managed. The objective favours the largest woodland gains.
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  get_objectives(solutions, format = "wide")
+  print(plot_spatial_actions(solutions, layout = "single"))
+}
 
-p2 <- add_objective_max_effect(
-  p,
-  actions = "restore"
-)
-p2$data$model_args
-#> $model_type
-#> [1] "maximizeBenefits"
-#> 
-#> $objective_id
-#> [1] "max_effect"
-#> 
-#> $objective_args
-#> $objective_args$effect_sense
-#> [1] "max"
-#> 
-#> $objective_args$actions
-#> [1] 2
-#> 
-#> $objective_args$features
-#> NULL
-#> 
-#> 
 
-p3 <- add_objective_max_effect(
-  p,
-  features = 1
-)
-p3$data$model_args
-#> $model_type
-#> [1] "maximizeBenefits"
-#> 
-#> $objective_id
-#> [1] "max_effect"
-#> 
-#> $objective_args
-#> $objective_args$effect_sense
-#> [1] "max"
-#> 
-#> $objective_args$actions
-#> NULL
-#> 
-#> $objective_args$features
-#> [1] 1
-#> 
-#> 
 ```

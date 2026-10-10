@@ -109,50 +109,43 @@ the feasible action table. Afterwards, any planning-unit-level
 ensuring consistency with planning-unit exclusions.
 }
 \examples{
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
-
+# Build a small spatial planning problem with two available actions.
+sim <- load_sim_multiaction()
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
-  )
+  add_actions(sim$actions, cost = sim$action_costs)
 
-# Keep the base to compare independent lock specifications
-actions_base <- p
-
-# Lock a few feasible decisions
-p <- add_constraint_locked_actions(
-  x = p,
+# EXAMPLE 1: Fix individual planning-unit/action decisions.
+# Protection must be selected in unit 1, restoration in unit 2,
+# and protection cannot be selected in unit 4.
+locked <- add_constraint_locked_actions(
+  p,
   locked_in = data.frame(
-    pu = c(1, 2),
-    action = c("protect", "restore")
+    pu = c(1, 2), action = c("protect", "restore")
   ),
-  locked_out = data.frame(
-    pu = c(4),
-    action = c("protect")
-  )
+  locked_out = data.frame(pu = 4, action = "protect")
 )
 
-p$data$dist_actions
+# Only show modified decisions: 2 = locked in, 3 = locked out.
+# All remaining feasible decisions retain status 0 (free).
+subset(locked$data$dist_actions, status \%in\% c(2L, 3L),
+       select = c(pu, action, status))
 
-# Named-list interface
-p2 <- add_constraint_locked_actions(
-  x = actions_base,
-  locked_in = list(
-    protect = c(1, 3)
-  ),
-  locked_out = list(
-    restore = c(2)
-  )
+# EXAMPLE 2: Specify the same locks using a named list.
+# List names are action IDs; values are planning-unit IDs.
+locked_list <- add_constraint_locked_actions(
+  p,
+  locked_in = list(protect = 1, restore = 2),
+  locked_out = list(protect = 4)
 )
 
-p2$data$dist_actions
+# Both input formats lead to the same decision statuses.
+identical(locked$data$dist_actions$status,
+          locked_list$data$dist_actions$status)
 
 }
 \seealso{

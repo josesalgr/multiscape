@@ -133,35 +133,35 @@ NULL
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE: Minimum-cost management with a woodland target
+#' #
+#' # Use the 64 planning-unit landscape. The hypothetical outcome of 1
+#' # credits one unit of woodland for either action in each selected unit.
+#' # A target of 12 therefore requires at least 12 interventions.
+#' sim <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
-#'   )
+#'   add_actions(sim$actions, cost = sim$action_costs) |>
+#'   add_effects(data.frame(
+#'     action = c("protect", "restore"),
+#'     feature = "woodland", outcome = 1
+#'   )) |>
+#'   add_constraint_targets_absolute(12, features = "woodland") |>
+#'   add_objective_min_cost(include_pu_cost = FALSE, alias = "cost")
 #'
-#' p1 <- add_objective_min_cost(p)
-#' p1$data$model_args
-#'
-#' p2 <- add_objective_min_cost(
-#'   p,
-#'   include_pu_cost = FALSE,
-#'   include_action_cost = TRUE
-#' )
-#' p2$data$model_args
-#'
-#' p3 <- add_objective_min_cost(
-#'   p,
-#'   actions = "restore"
-#' )
-#' p3$data$model_args
+#' # The solver selects the least costly set of actions that meets the target.
+#' # This is a single-objective model: no set_method_*() call is needed.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
 #'
 #' @seealso
 #' \code{\link{add_objective_max_profit}},
@@ -212,29 +212,77 @@ add_objective_min_cost <- function(
 #' @export
 add_objective_max_benefit <- function(x, actions = NULL, features = NULL, alias = NULL) {
   lifecycle::deprecate_warn("1.4.0", "add_objective_max_benefit()",
-    "add_objective_max_effect()", user_env = parent.frame())
+                            "add_objective_max_effect()", user_env = parent.frame())
   add_objective_max_effect(x, actions, features, alias)
 }
 
-#' Minimize signed effects relative to the reference
-#' @description Minimize the sum of signed effects, including joint interaction
-#' corrections. Increases and decreases can compensate across units and features.
-#' @details This is not the loss-only criterion. Effects are summed in their
-#' original units; aggregate only commensurate features or deliberate sums.
-#' An unselected unit contributes zero effect. Action subsets include joint
-#' corrections only when every member belongs to the subset.
+#' @title Add objective: minimise signed effect
+#'
+#' @description
+#' Minimise total signed changes relative to the reference. Whether
+#' a decrease is desirable depends on the feature being optimised.
+#'
+#' @details
+#' For the selected actions and features, this objective minimises
+#' \eqn{\sum_{i,f} \Delta_{if}(x)}, where \eqn{\Delta_{if}(x)}
+#' is the signed change after accounting for joint effects. Increases
+#' and decreases can offset one another across units or features.
+#'
+#' For instance, minimising signed fuel-load change favours reductions
+#' in fuel load. Specify a feature subset when features are measured in
+#' incompatible units. Unselected units contribute zero change, and
+#' implementation costs are not subtracted.
+#'
+#' This differs from the deprecated \code{add_objective_min_loss()},
+#' which penalises only the negative part of aggregated changes.
+#'
 #' @inheritParams add_objective_max_effect
 #' @return An updated Problem object.
 #' @seealso [add_objective_max_effect()], [add_objective_min_loss()]
+#' @examples
+#' # EXAMPLE: Minimise the signed change in fuel load
+#' #
+#' # Use the geometry from the bundled 64-unit landscape, with a simple
+#' # hypothetical fuel-load feature that increases from west to east.
+#' # A 25% reduction has a NEGATIVE signed effect, so minimising the
+#' # effect favours the units with the greatest fuel-load reduction.
+#' sim <- load_sim_multiaction()
+#'
+#' p <- create_problem(
+#'   pu = sim$planning_units,
+#'   features = data.frame(id = 1L, name = "fuel_load"),
+#'   dist_features = data.frame(
+#'     pu = sim$planning_units$id, feature = 1L,
+#'     amount = 10 + sim$planning_units$x
+#'   ),
+#'   cost = "cost"
+#' ) |>
+#'   add_actions(data.frame(id = "thin"), cost = 1) |>
+#'   add_effects(data.frame(
+#'     action = "thin", feature = "fuel_load", relative_change = -0.25
+#'   )) |>
+#'   add_constraint_budget(12, "equal", include_pu_cost = FALSE) |>
+#'   add_objective_min_effect(features = "fuel_load", alias = "fuel_reduction")
+#'
+#' # With one monetary unit per action, the budget equality selects
+#' # exactly 12 units. Without it, this negative-effect objective
+#' # could favour implementing the action everywhere.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
+#'
 #' @export
 add_objective_min_effect <- function(x, actions = NULL, features = NULL, alias = NULL) {
   stopifnot(inherits(x, "Problem"))
   a <- if (is.null(actions)) NULL else .pa_resolve_action_subset(x, actions)$internal_id
   f <- if (is.null(features)) NULL else .pa_resolve_feature_subset(x, features)$internal_id
   .pa_set_active_and_register_objective(x, model_type = "maximizeBenefits",
-    objective_id = "min_effect", objective_args = list(effect_sense = "min",
-      actions = if (is.null(a)) NULL else as.integer(a),
-      features = if (is.null(f)) NULL else as.integer(f)), sense = "min", alias = alias)
+                                        objective_id = "min_effect", objective_args = list(effect_sense = "min",
+                                                                                           actions = if (is.null(a)) NULL else as.integer(a),
+                                                                                           features = if (is.null(f)) NULL else as.integer(f)), sense = "min", alias = alias)
 }
 
 #' @title Add objective: maximize signed effect
@@ -287,40 +335,38 @@ add_objective_min_effect <- function(x, actions = NULL, features = NULL, alias =
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE: Maximise woodland gain in a fixed number of units
+#' #
+#' # The bundled landscape has spatially varying woodland reference
+#' # amounts. Assume restoration increases these amounts by 50%.
+#' # The absolute signed effect is therefore larger where the
+#' # reference amount is greater.
+#' sim <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
-#'   ) |>
-#'   add_effects(
-#'     example_data$effect_assumptions
-#'   )
+#'   add_actions(data.frame(id = "restore"), cost = 1) |>
+#'   add_effects(data.frame(
+#'     action = "restore", feature = "woodland", relative_change = 0.50
+#'   )) |>
+#'   add_constraint_budget(12, "equal", include_pu_cost = FALSE) |>
+#'   add_objective_max_effect(features = "woodland", alias = "woodland_gain")
 #'
-#' p1 <- add_objective_max_effect(p)
-#' p1$data$model_args
-#'
-#' p2 <- add_objective_max_effect(
-#'   p,
-#'   actions = "restore"
-#' )
-#' p2$data$model_args
-#'
-#' p3 <- add_objective_max_effect(
-#'   p,
-#'   features = 1
-#' )
-#' p3$data$model_args
+#' # Every restoration costs one monetary unit, so exactly 12 units
+#' # must be managed. The objective favours the largest woodland gains.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
 #'
 #' @seealso
-#' \code{\link{add_objective_min_loss}},
+#' \code{\link{add_objective_min_effect}},
 #' \code{\link{add_effects}}
 #'
 #' @section Repeated calls:
@@ -460,10 +506,10 @@ add_objective_min_loss <- function(
     alias = NULL
 ) {
   lifecycle::deprecate_warn("1.4.0", "add_objective_min_loss()",
-    details = paste("Use add_objective_min_effect() only when minimizing signed change is intended.",
-      "It is not an equivalent replacement: this legacy function retains",
-      "the negative-part criterion after aggregation within each unit and feature."),
-    user_env = parent.frame())
+                            details = paste("Use add_objective_min_effect() only when minimizing signed change is intended.",
+                                            "It is not an equivalent replacement: this legacy function retains",
+                                            "the negative-part criterion after aggregation within each unit and feature."),
+                            user_env = parent.frame())
   stopifnot(inherits(x, "Problem"))
 
   action_subset <- NULL
@@ -540,33 +586,38 @@ add_objective_min_loss <- function(
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
-#'
-#' profit <- example_data$action_costs
-#' profit$profit <- 10 - profit$cost
-#' profit$cost <- NULL
+#' # EXAMPLE: Maximise gross economic return across the landscape
+#' #
+#' # Assign hypothetical profits that favour protection in the west
+#' # and restoration in the east. All values are positive.
+#' sim <- load_sim_multiaction()
+#' returns <- sim$action_costs[, c("pu", "action")]
+#' x_coord <- sim$planning_units$x[
+#'   match(returns$pu, sim$planning_units$id)
+#' ]
+#' returns$profit <- ifelse(
+#'   returns$action == "protect", 12 - x_coord, 4 + x_coord
+#' )
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
-#'   ) |>
-#'   add_profit(profit)
+#'   add_actions(sim$actions, cost = 9.5) |>
+#'   add_profit(returns) |>
+#'   add_objective_max_profit(alias = "profit")
 #'
-#' p1 <- add_objective_max_profit(p)
-#' p1$data$model_args
-#'
-#' p2 <- add_objective_max_profit(
-#'   p,
-#'   actions = "restore"
-#' )
-#' p2$data$model_args
+#' # Implementation costs are NOT deducted in this objective.
+#' # With positive returns and at most one action per unit, the
+#' # model chooses the more profitable action in each unit.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
 #'
 #' @seealso
 #' \code{\link{add_objective_min_cost}},
@@ -671,40 +722,38 @@ add_objective_max_profit <- function(
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
-#'
-#' profit <- example_data$action_costs
-#' profit$profit <- 10 - profit$cost
-#' profit$cost <- NULL
+#' # EXAMPLE: Maximise returns minus implementation costs
+#' #
+#' # Use the same west-to-east profit pattern as above, but now
+#' # charge 9.5 monetary units for every selected action. Some
+#' # locations may no longer generate a positive net return.
+#' sim <- load_sim_multiaction()
+#' returns <- sim$action_costs[, c("pu", "action")]
+#' x_coord <- sim$planning_units$x[
+#'   match(returns$pu, sim$planning_units$id)
+#' ]
+#' returns$profit <- ifelse(
+#'   returns$action == "protect", 12 - x_coord, 4 + x_coord
+#' )
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
-#'   ) |>
-#'   add_profit(profit)
+#'   add_actions(sim$actions, cost = 9.5) |>
+#'   add_profit(returns) |>
+#'   add_objective_max_net_profit(include_pu_cost = FALSE, alias = "net_profit")
 #'
-#' p1 <- add_objective_max_net_profit(p)
-#' p1$data$model_args
-#'
-#' p2 <- add_objective_max_net_profit(
-#'   p,
-#'   include_pu_cost = FALSE,
-#'   include_action_cost = TRUE
-#' )
-#' p2$data$model_args
-#'
-#' p3 <- add_objective_max_net_profit(
-#'   p,
-#'   actions = "restore"
-#' )
-#' p3$data$model_args
+#' # Unlike gross profit maximisation, leaving a unit unmanaged
+#' # can now be optimal when its best return is below its cost.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
 #'
 #' @seealso
 #' \code{\link{add_objective_max_profit}},
@@ -750,73 +799,29 @@ add_objective_max_net_profit <- function(
   )
 }
 
-#' @title Add objective: minimize planning-unit fragmentation
+#' @title Add objective: minimise planning-unit fragmentation
 #'
 #' @description
-#' Define an objective that minimizes planning-unit fragmentation over a stored
-#' spatial relation.
-#'
-#' This objective acts on the planning-unit selection pattern through the binary
-#' planning-unit variables \eqn{w_i}. It is therefore appropriate when spatial
-#' cohesion is to be encouraged at the level of the selected planning-unit set
-#' as a whole.
+#' Encourage cohesion of the selected planning units, regardless of
+#' which action is implemented within each unit.
 #'
 #' @details
-#' Use this function when spatial cohesion should be encouraged at the level of
-#' the selected planning-unit set as a whole.
+#' This objective uses planning-unit selection variables \eqn{w_i} and
+#' a spatial relation registered with \code{add_spatial_relations()} or
+#' \code{add_spatial_boundary()}. Relation weights \eqn{\omega_{ij}}
+#' are scaled by \code{weight_multiplier}.
 #'
-#' Let \eqn{\mathcal{I}} denote the set of planning units and let
-#' \eqn{w_i \in \{0,1\}} indicate whether planning unit \eqn{i \in \mathcal{I}}
-#' is selected.
+#' The underlying model uses \eqn{y_{ij}=w_i \land w_j} to record
+#' whether neighbouring units are both selected, encouraging spatially
+#' consolidated selections. Action identities do not enter this spatial
+#' criterion: adjacent units receiving different actions are part of the
+#' same selected planning-unit set.
 #'
-#' Let the chosen spatial relation define a set of weighted pairs with weights
-#' \eqn{\omega_{ij} \ge 0}. These relation weights are interpreted by the model
-#' builder after scaling by \eqn{\lambda =} \code{weight_multiplier}.
-#'
-#' The internal preparation step constructs one auxiliary variable
-#' \eqn{y_{ij} \in [0,1]} for each unique non-diagonal undirected edge
-#' \eqn{(i,j)} with \eqn{i < j}. The intended semantics is:
-#' \deqn{
-#' y_{ij} = w_i \land w_j.
-#' }
-#'
-#' This is enforced by the standard linearization:
-#' \deqn{
-#' y_{ij} \le w_i,
-#' }
-#' \deqn{
-#' y_{ij} \le w_j,
-#' }
-#' \deqn{
-#' y_{ij} \ge w_i + w_j - 1.
-#' }
-#'
-#' Thus, \eqn{y_{ij}=1} if and only if both planning units \eqn{i} and
-#' \eqn{j} are selected, and \eqn{y_{ij}=0} otherwise.
-#'
-#' The exact objective coefficients are assembled later by the model builder
-#' from:
-#' \itemize{
-#'   \item the planning-unit variables \eqn{w_i},
-#'   \item the edge-conjunction variables \eqn{y_{ij}},
-#'   \item the stored relation weights \eqn{\omega_{ij}},
-#'   \item and the multiplier \eqn{\lambda}.
-#' }
-#'
-#' Conceptually, the resulting objective is a boundary- or relation-based
-#' compactness functional that penalizes exposed or weakly connected selected
-#' patterns while rewarding adjacency among selected planning units.
-#'
-#' In the common case where \code{relation_name = "boundary"} and the relation
-#' was built with \code{\link{add_spatial_boundary}}, the objective corresponds
-#' to a boundary-length-style fragmentation penalty.
-#'
-#' Setting \code{weight_multiplier = 0} removes the contribution of the spatial
-#' relation from the objective after scaling.
-#'
-#' This objective does not distinguish between different actions within the same
-#' planning unit. If action-specific spatial cohesion is required, use
-#' \code{\link{add_objective_min_fragmentation_action}} instead.
+#' Without another requirement, selecting no units can be optimal.
+#' Combine this objective with a budget equality, an area requirement,
+#' or an ecological target that ensures meaningful management activity.
+#' For action-specific cohesion, see
+#' \code{add_objective_min_fragmentation_action()}.
 #'
 #' @param x A \code{Problem} object.
 #' @param relation_name Character string giving the name of the spatial relation
@@ -830,33 +835,34 @@ add_objective_max_net_profit <- function(
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE: Select a cohesive set of 12 planning units
+#' #
+#' # With one feasible action costing one unit, a budget equality
+#' # forces exactly 12 selected units. Without this requirement,
+#' # minimising fragmentation alone could select no units.
+#' sim <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
+#'   add_actions(data.frame(id = "restore"), cost = 1) |>
+#'   add_spatial_boundary(name = "boundary", include_self = TRUE) |>
+#'   add_constraint_budget(12, "equal", include_pu_cost = FALSE) |>
+#'   add_objective_min_fragmentation_planning_units(
+#'     relation_name = "boundary", alias = "pu_fragmentation"
 #'   )
 #'
-#' p <- add_spatial_boundary(
-#'   x = p,
-#'   name = "boundary",
-#'   include_self = TRUE,
-#'   edge_factor = 1
-#' )
-#'
-#' p <- add_objective_min_fragmentation_planning_units(
-#'   p,
-#'   relation_name = "boundary"
-#' )
-#'
-#' p$data$model_args
+#' # Cohesion is evaluated for the selected planning-unit pattern,
+#' # irrespective of action identity. No additional objective is used.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_planning_units(solutions))
+#' }
 #'
 #' @seealso
 #' \code{\link{add_spatial_boundary}},
@@ -955,98 +961,26 @@ add_objective_min_fragmentation_pu <- function(
   )
 }
 
-#' @title Add objective: minimize action fragmentation
+#' @title Add objective: minimise action fragmentation
 #'
 #' @description
-#' Define an objective that minimizes fragmentation at the action level over a
-#' stored spatial relation.
-#'
-#' Unlike \code{\link{add_objective_min_fragmentation_pu}}, which acts on the
-#' selected planning-unit set through \eqn{w_i}, this objective acts on the
-#' spatial arrangement of individual action decisions through the action
-#' variables \eqn{x_{ia}}.
+#' Encourage spatial cohesion separately for each selected action,
+#' rather than only for the union of managed planning units.
 #'
 #' @details
-#' Use this function when spatial cohesion should be encouraged separately for
-#' each selected action pattern.
+#' This objective uses the action-selection decisions \eqn{x_{ia}} and
+#' a previously registered spatial relation. For neighbouring units
+#' \eqn{i} and \eqn{j}, \eqn{b_{ija}=x_{ia} \land x_{ja}} represents
+#' whether the same action \eqn{a} occurs in both units. Adjacency of
+#' different actions does not form a continuous patch of either action.
 #'
-#' Let \eqn{\mathcal{I}} denote the set of planning units and let
-#' \eqn{\mathcal{A}} denote the set of actions.
+#' Use \code{actions} to select which action patterns contribute,
+#' \code{action_weights} to adjust their relative importance, and
+#' \code{weight_multiplier} to scale spatial relation weights.
 #'
-#' Let \eqn{x_{ia} \in \{0,1\}} indicate whether action \eqn{a \in \mathcal{A}}
-#' is selected in planning unit \eqn{i \in \mathcal{I}}.
-#'
-#' Let the chosen spatial relation define weighted pairs with
-#' weights \eqn{\omega_{ij} \ge 0}, and let
-#' \eqn{\lambda =} \code{weight_multiplier} be the global scaling factor applied
-#' to these weights.
-#'
-#' If \code{actions} is supplied, only the selected subset
-#' \eqn{\mathcal{A}^{\star} \subseteq \mathcal{A}} contributes to the final
-#' objective. If \code{actions = NULL}, all actions are included.
-#'
-#' The internal preparation step constructs one auxiliary variable
-#' \eqn{b_{ija} \in [0,1]} for each unique non-diagonal undirected edge
-#' \eqn{(i,j)} with \eqn{i < j} and for each action \eqn{a}. The intended
-#' semantics is:
-#' \deqn{
-#' b_{ija} = x_{ia} \land x_{ja}.
-#' }
-#'
-#' Whenever both decision variables \eqn{x_{ia}} and \eqn{x_{ja}} exist in the
-#' model, this conjunction is enforced by the linearization:
-#' \deqn{
-#' b_{ija} \le x_{ia},
-#' }
-#' \deqn{
-#' b_{ija} \le x_{ja},
-#' }
-#' \deqn{
-#' b_{ija} \ge x_{ia} + x_{ja} - 1.
-#' }
-#'
-#' If one of the two action variables does not exist because the corresponding
-#' \code{(pu, action)} pair is not feasible, the auxiliary variable is forced to
-#' zero.
-#'
-#' Therefore, \eqn{b_{ija}=1} if and only if action \eqn{a} is selected in both
-#' adjacent planning units \eqn{i} and \eqn{j}; otherwise \eqn{b_{ija}=0}.
-#'
-#' The exact objective coefficients are assembled later by the model builder
-#' from:
-#' \itemize{
-#'   \item the action decision variables \eqn{x_{ia}},
-#'   \item the edge-conjunction variables \eqn{b_{ija}},
-#'   \item the relation weights \eqn{\omega_{ij}},
-#'   \item the multiplier \eqn{\lambda},
-#'   \item and, if supplied, the action-specific weights.
-#' }
-#'
-#' If action-specific weights are provided, let \eqn{\alpha_a \ge 0} denote the
-#' weight associated with action \eqn{a}. Then the resulting objective can be
-#' interpreted as an action-wise compactness or fragmentation functional of the
-#' form:
-#' \deqn{
-#' \min \sum_{a \in \mathcal{A}^{\star}} \alpha_a \,
-#' F_a(x_{\cdot a}, b_{\cdot\cdot a}; \lambda \omega),
-#' }
-#' where \eqn{F_a} is the fragmentation expression induced by the selected
-#' relation and the internal coefficient construction for action \eqn{a}.
-#'
-#' In practical terms, this objective penalizes solutions in which the same
-#' action is spatially scattered or broken into separate patches, while allowing
-#' different actions to form different spatial patterns.
-#'
-#' This differs from planning-unit fragmentation:
-#' \itemize{
-#'   \item \code{add_objective_min_fragmentation_pu()} encourages cohesion of the
-#'   union of selected planning units,
-#'   \item \code{add_objective_min_fragmentation_action()} encourages cohesion of
-#'   each selected action pattern separately.
-#' }
-#'
-#' Setting \code{weight_multiplier = 0} removes the contribution of the spatial
-#' relation from the objective after scaling.
+#' Unlike \code{add_objective_min_fragmentation_planning_units()},
+#' this objective distinguishes action identities. Combine it with
+#' coverage or allocation requirements so an empty plan is not optimal.
 #'
 #' @param x A \code{Problem} object.
 #' @param relation_name Character string giving the name of the spatial relation
@@ -1067,38 +1001,40 @@ add_objective_min_fragmentation_pu <- function(
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE: Form separate cohesive patches for two actions
+#' #
+#' # Each action costs one unit. Two action-specific budget equalities
+#' # require exactly eight protection and eight restoration units.
+#' # The default one-action-per-unit rule prevents overlapping actions.
+#' sim <- load_sim_multiaction()
 #'
 #' p <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
-#'   )
+#'   add_actions(sim$actions, cost = 1) |>
+#'   add_spatial_boundary(name = "boundary", include_self = TRUE) |>
+#'   add_constraint_budget(
+#'     8, "equal", actions = "protect", include_pu_cost = FALSE
+#'   ) |>
+#'   add_constraint_budget(
+#'     8, "equal", actions = "restore", include_pu_cost = FALSE
+#'   ) |>
+#'   add_objective_min_fragmentation_action(relation_name = "boundary", alias = "action_fragmentation")
 #'
-#' p <- add_spatial_boundary(
-#'   x = p,
-#'   name = "boundary",
-#'   include_self = TRUE,
-#'   edge_factor = 1
-#' )
-#'
-#' p <- add_objective_min_fragmentation_action(
-#'   p,
-#'   relation_name = "boundary",
-#'   actions = "restore",
-#'   weight_multiplier = 1
-#' )
-#'
-#' p$data$model_args
+#' # Unlike planning-unit fragmentation, this objective measures
+#' # the cohesion of each action's selected units separately.
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+#'   get_objectives(solutions, format = "wide")
+#'   print(plot_spatial_actions(solutions, layout = "single"))
+#' }
 #'
 #' @seealso
-#' \code{\link{add_objective_min_fragmentation_pu}},
+#' \code{\link{add_objective_min_fragmentation_planning_units}},
 #' \code{\link{add_spatial_boundary}},
 #' \code{\link{add_spatial_relations}}
 #'
@@ -1166,7 +1102,7 @@ add_objective_min_fragmentation_action <- function(
 #' @section Migration:
 #' This function will be removed in a future version of multiscape. New workflows
 #' should express action consequences with \code{\link{add_effects}} and optimize
-#' signed changes with \code{\link{add_objective_max_benefit}}.
+#' signed changes with \code{\link{add_objective_max_effect}}.
 #'
 #' This is not an automatic replacement. For deficit-based prioritization,
 #' let \eqn{q_{if}} be the reference amount and \eqn{M_f} a common ceiling for
@@ -1204,11 +1140,11 @@ add_objective_min_fragmentation_action <- function(
 #'   add_actions(data.frame(id = "restore"), cost = 1) |>
 #'   add_effects(data.frame(action = "restore", feature = "service", outcome = 1)) |>
 #'   add_constraint_area(2, "equal", tolerance = 0, actions = "restore") |>
-#'   add_objective_max_benefit(features = "service", actions = "restore")
+#'   add_objective_max_effect(features = "service", actions = "restore")
 #' p$data$model_args
 #'
 #' @seealso
-#' \code{\link{add_objective_max_benefit}},
+#' \code{\link{add_objective_max_effect}},
 #' \code{\link{add_objective_min_loss}}
 #'
 #' @section Repeated calls:

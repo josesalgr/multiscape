@@ -14,90 +14,164 @@ add_constraint_action_requires(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} with registered actions.}
+\item{x}{A \code{Problem} with actions registered by \code{\link[=add_actions]{add_actions()}}.}
 
-\item{actions}{Non-empty vector of triggering action IDs or legacy
-\code{actions$action_set} classification labels. For excludes/together, this is
-the group of mutually exclusive or jointly selected actions and must resolve
-to at least two distinct actions. Display names and IDs registered with
-\code{\link[=add_action_sets]{add_action_sets()}} are not accepted; supply their individual members.}
+\item{actions}{Non-empty vector of triggering action IDs or existing
+\code{actions$action_set} classification labels. For excludes and together,
+this is the group of related actions and must resolve to at least two
+distinct actions. Identifiers registered through \code{\link[=add_action_sets]{add_action_sets()}} are
+not selectable actions; supply their individual members.}
 
-\item{requires}{Non-empty vector of required action IDs or legacy
+\item{requires}{Non-empty vector of companion action IDs or existing
 classification labels, disjoint from \code{actions}.}
 
-\item{sense}{\code{"all"} (default) or \code{"any"} required companions.}
+\item{sense}{\code{"all"} (default) requires every companion; \code{"any"} requires
+at least one companion.}
 
-\item{pu}{Optional vector of external planning-unit IDs. \code{NULL} applies
-the relation to all currently registered units.}
+\item{pu}{Optional external planning-unit IDs. \code{NULL} applies the rule to
+all planning units.}
 
-\item{name}{Optional non-empty, unique constraint label. A name is generated
-if omitted.}
+\item{name}{Optional unique, non-empty constraint label. If omitted, a
+label is generated automatically.}
 }
 \value{
-A new \code{Problem} with the relation appended and compiled caches
-invalidated. The input problem is preserved.
+A new \code{Problem} with the relation appended to
+\code{x$data$constraints$action_relations}. The input problem is unchanged.
 }
 \description{
-Require companion actions whenever a triggering action is selected in the
-same planning unit. \code{sense = "all"} requires every companion;
-\code{sense = "any"} requires at least one.
+Make the selection of one or more actions conditional on selecting
+companion actions in the same planning unit. With \code{sense = "all"}, every
+companion is required; with \code{sense = "any"}, at least one is required.
 }
 \details{
-For each unit and each triggering action \eqn{a}, \code{sense = "all"} adds
-\eqn{x_{i,a} \le x_{i,b}} for every required action \eqn{b}. \code{sense = "any"}
-adds \eqn{x_{i,a} \le \sum_b x_{i,b}}. Every action in \code{actions} is an
-independent trigger; selecting all of them is not a prerequisite. Triggering
-and required groups must be disjoint. With one required action, all and any
-have identical meaning and are stored canonically as all.
+\strong{How the relation works}
+
+Suppose restoration is effective only when threat control is also carried
+out. If restoration is selected, control must also be selected; if
+restoration is not selected, the relation imposes no requirement. With
+several triggering actions, each independently activates the requirement.
+
+For binary action decisions \eqn{x_{ia}}, requiring all companions gives
+\eqn{x_{ia} \le x_{ib}} for each required action \eqn{b}. Requiring any
+companion gives \eqn{x_{ia} \le \sum_b x_{ib}}. When there is only one
+companion, \code{"all"} and \code{"any"} are equivalent.
 }
 \section{Scope and feasibility}{
 
-Relations are applied separately within every unit in \code{pu}. \code{NULL} resolves
-to all currently registered units. Relations do not force any action to be
-selected and do not change the registered feasible pairs or the implicit
-one-action maximum.
-Use \code{\link[=add_constraint_action_cardinality]{add_constraint_action_cardinality()}} to permit simultaneous actions.
-An action that has no feasible pair, is locked out, or is removed because its
-cost is non-finite is treated as zero. A missing required action can therefore
-prohibit its trigger; a missing together member prohibits the other members.
-Cycles and combinations of valid relations can make the model infeasible;
-the solver determines joint feasibility, including conflicts with locks,
-budgets, and cardinality. No cross-unit dependency or temporal order is implied.
-Registered joint effects support concurrent economic and ecological
-workflows. Benefit maximizes signed joint change; loss minimizes final
-deterioration within each unit and feature. Ecological targets count the
-reference once per selected unit within their action scope.
+Each relation applies separately within each unit specified by \code{pu};
+\code{pu = NULL} applies it to all registered planning units. Relations do not
+select actions by themselves or make unavailable actions feasible.
+\strong{By default, at most one action can be selected per planning unit.}
+Use \code{\link[=add_constraint_action_cardinality]{add_constraint_action_cardinality()}} when a requires or together rule
+needs simultaneous selections. Unavailable or locked-out actions are treated
+as unselected: missing companions may prohibit a trigger, and a missing
+together member may prohibit the other members. Combined rules, budgets,
+and locks can also make a model infeasible.
+
+Relations do not imply a temporal sequence or dependencies between different
+planning units. They can be combined with joint effects registered through
+\code{\link[=add_action_sets]{add_action_sets()}}, but defining a joint effect does not itself require
+actions to be selected together.
 }
 
 \section{Repeated calls}{
 
-Distinct relations accumulate in \code{x$data$constraints$action_relations} and
-apply simultaneously. Duplicate combinations of type, action groups, sense,
-and PU scope raise an error, regardless of the name. Names must be unique
-across requires, excludes, and together relations. Ordering and repeated IDs
-in input vectors do not change identity. Names label constraints independently
-of objective aliases. To change a relation, rebuild from the preceding problem.
+Distinct rules accumulate and are enforced simultaneously. Duplicate rules
+with the same type, action groups, sense, and PU scope are rejected; names
+must be unique across requires, excludes, and together relations. To revise
+a rule, start from the problem before that rule was added.
 }
 
 \examples{
+# EXAMPLE 1: Create a problem where concurrent actions are possible
+
+# Three planning units offer restoration, control, fencing, and monitoring.
+# Allow up to three actions per unit: the default one-action maximum
+# would otherwise prevent restoration and its companions being selected.
+
 base <- create_problem(
-  pu = data.frame(id = c(10L, 20L), cost = 0),
-  features = data.frame(id = 1L),
-  dist_features = data.frame(pu = c(10L, 20L), feature = 1L, amount = 100)
+  pu = data.frame(id = c(10L, 20L, 30L), cost = 0),
+  features = data.frame(id = 1L, name = "habitat"),
+  dist_features = data.frame(
+    pu = c(10L, 20L, 30L), feature = 1L, amount = 100
+  )
 ) |>
-  add_actions(data.frame(id = c("restore", "control", "fence", "monitor")), cost = 1) |>
+  add_actions(
+    data.frame(id = c("restore", "control", "fence", "monitor")),
+    cost = 1
+  ) |>
   add_constraint_action_cardinality(3, "max")
 
-# Restoration requires threat control in unit 10.
-required <- base |>
-  add_constraint_action_requires("restore", "control", pu = 10L)
+# EXAMPLE 2: Require all companions in a specific unit
 
-# In unit 20, either control or fencing is sufficient.
-required <- required |>
-  add_constraint_action_requires(
-    "restore", c("control", "fence"), sense = "any", pu = 20L
+# In unit 10, restoration must be accompanied by both control and fencing.
+# This is a conditional requirement: it does not force restoration.
+
+required <- add_constraint_action_requires(
+  base,
+  actions = "restore",
+  requires = c("control", "fence"),
+  sense = "all",
+  pu = 10L,
+  name = "restore_with_both"
+)
+
+# EXAMPLE 3: Require at least one alternative companion
+
+# In unit 20, either control OR fencing is sufficient for restoration.
+# These rules have different PU scopes and can coexist.
+
+required <- add_constraint_action_requires(
+  required,
+  actions = "restore",
+  requires = c("control", "fence"),
+  sense = "any",
+  pu = 20L,
+  name = "restore_with_either"
+)
+
+# EXAMPLE 4: Multiple independent triggers
+
+# In unit 30, choosing either restoration or monitoring requires control.
+# The triggers need not both be selected.
+
+required <- add_constraint_action_requires(
+  required,
+  actions = c("restore", "monitor"),
+  requires = "control",
+  pu = 30L
+)
+
+# Inspect the three registered rules (not an optimised solution).
+required$data$constraints$action_relations[, c("type", "sense", "name")]
+
+# EXAMPLE 5: Map where a requirement applies (no solver needed)
+
+if (requireNamespace("sf", quietly = TRUE)) {
+  sim <- load_sim_multiaction()
+
+  # Apply the restoration-protection requirement to the first 16 cells.
+  # Both actions may be selected in these cells, so permit cardinality 2.
+  scoped_pu <- head(sim$planning_units$id, 16)
+  spatial <- create_problem(
+    pu = sim$planning_units,
+    features = sim$features,
+    dist_features = sim$dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(sim$actions, cost = sim$action_costs) |>
+    add_constraint_action_cardinality(2, "max", pu = scoped_pu) |>
+    add_constraint_action_requires(
+      "restore", "protect", pu = scoped_pu
+    )
+
+  # The map shows the SCOPE of the requirement, not selected actions.
+  mapped <- sim$planning_units
+  mapped$requirement <- ifelse(
+    mapped$id \%in\% scoped_pu, "Applies", "Does not apply"
   )
-required$data$constraints$action_relations
+  plot(mapped["requirement"], main = "Restoration requires protection")
+}
 
 }
 \seealso{

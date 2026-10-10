@@ -69,7 +69,7 @@ This function will be removed in a future version of multiscape. New
 workflows should express action consequences with
 [`add_effects`](https://josesalgr.github.io/multiscape/reference/add_effects.md)
 and optimize signed changes with
-[`add_objective_max_benefit`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md).
+[`add_objective_max_effect`](https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.md).
 
 This is not an automatic replacement. For deficit-based prioritization,
 let \\q\_{if}\\ be the reference amount and \\M_f\\ a common ceiling for
@@ -94,7 +94,7 @@ objective was added.
 
 ## See also
 
-[`add_objective_max_benefit`](https://josesalgr.github.io/multiscape/reference/add_objective_max_benefit.md),
+[`add_objective_max_effect`](https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.md),
 [`add_objective_min_loss`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md)
 
 ## Examples
@@ -109,9 +109,7 @@ p <- create_problem(
   add_actions(data.frame(id = "restore"), cost = 1) |>
   add_effects(data.frame(action = "restore", feature = "service", outcome = 1)) |>
   add_constraint_area(2, "equal", tolerance = 0, actions = "restore") |>
-  add_objective_max_benefit(features = "service", actions = "restore")
-#> Warning: `add_objective_max_benefit()` was deprecated in multiscape 1.4.0.
-#> ℹ Please use `add_objective_max_effect()` instead.
+  add_objective_max_effect(features = "service", actions = "restore")
 p$data$model_args
 #> $model_type
 #> [1] "maximizeBenefits"

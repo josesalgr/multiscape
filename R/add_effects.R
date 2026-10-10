@@ -2,190 +2,341 @@
 #'
 #' @title Add action effects to a planning problem
 #' @description
-#' Describe how feasible actions change feature amounts relative to a
-#' user-defined reference scenario.
+#' Specify the expected consequences of feasible management actions for
+#' feature amounts in planning units, relative to a reference scenario.
 #'
 #' @details
-#' Effects can be defined only once per problem. A second call, including through
-#' \code{add_benefits()} or \code{add_losses()}, raises an error. Supply the
-#' complete effects table in one call. To compare effect scenarios, build
-#' separate problems from the object before effects were added.
+#' \strong{Reference amounts, outcomes, and effects}
 #'
 #' The feature distribution supplied to \code{create_problem()} defines the
-#' reference amounts. The reference can describe current conditions, a future
-#' without intervention, or existing management. Action outcomes and references
-#' must share units and, for future scenarios, the same time horizon.
+#' reference amount \eqn{r_{if}} of feature \eqn{f} in planning unit \eqn{i}.
+#' This reference may describe current conditions, existing management, or a
+#' future without intervention. Let \eqn{y_{iaf}} be the expected amount under
+#' action \eqn{a}. Its signed effect is \eqn{e_{iaf} = y_{iaf} - r_{if}}.
+#' These quantities describe what an action changes, not whether that change
+#' is desirable. For example, increasing habitat may be desirable, whereas
+#' decreasing fuel load may also be desirable. Objectives and constraints
+#' determine how consequences are valued in a planning problem.
 #'
-#' \strong{Tabular inputs}
+#' \strong{Three alternative tabular inputs}
 #'
-#' Supply a table with \code{action}, \code{feature}, optional \code{pu}, and
-#' exactly one of these numeric columns:
+#' Provide \code{action}, \code{feature}, optionally \code{pu}, and exactly
+#' one of the following numeric columns:
 #' \itemize{
-#'   \item \code{effect}: signed absolute change relative to the reference.
-#'   \item \code{outcome}: feature amount under the action.
-#'   \item \code{relative_change}: proportional change; 0.25 means +25 percent,
-#'   zero means no change, and -0.25 means a 25 percent decrease.
+#'   \item \code{effect}: signed absolute change \eqn{e_{iaf}}.
+#'   \item \code{outcome}: expected amount \eqn{y_{iaf}} under the action.
+#'   \item \code{relative_change}: proportional change \eqn{c_{iaf}}, with
+#'     \eqn{y_{iaf} = r_{if}(1+c_{iaf})} and
+#'     \eqn{e_{iaf} = r_{if}c_{iaf}}.
 #' }
-#' If \code{pu} is omitted, each action/feature specification is expanded over
-#' feasible planning-unit/action pairs. Actions must be defined first using
-#' \code{add_actions()}; locked-out pairs are excluded. Features may be supplied
-#' as numeric identifiers or names. Duplicate keys and ambiguous columns are
-#' rejected. Values must be numeric, finite, and non-missing. Computed outcomes
-#' must be non-negative. Missing reference amounts are zero, so relative change
-#' cannot create an amount from a zero reference; use \code{effect} or
-#' \code{outcome} in that case.
+#' For a reference amount of 100, \code{effect = 30},
+#' \code{outcome = 130}, and \code{relative_change = 0.30} are equivalent.
+#' Likewise, \code{relative_change = -0.20} represents a 20 percent decrease.
+#' These input columns are alternatives, not values to supply together.
 #'
-#' \strong{Canonical representation}
+#' Actions must first be registered with \code{add_actions()}. With \code{pu},
+#' effects can vary by location; without it, each action/feature specification
+#' is expanded over feasible planning-unit/action pairs. Locked-out pairs are
+#' excluded. A feature can be identified by name or numeric identifier.
+#' Values must be finite and non-missing; resulting outcomes must be
+#' non-negative. Reference amounts and outcomes must have compatible units
+#' and, when applicable, a common time horizon. Missing reference amounts are
+#' treated as zero: a relative change cannot create a positive outcome from a
+#' zero reference, so use \code{effect} or \code{outcome} in that case.
 #'
-#' For reference amount \eqn{r_{if}} and action outcome \eqn{q_{iaf}}, the signed
-#' effect is \eqn{e_{iaf} = q_{iaf} - r_{if}}. Relative-change inputs \eqn{c_{iaf}}
-#' are converted using \eqn{e_{iaf} = r_{if} c_{iaf}}. The stored table exposes
-#' \code{reference_amount}, \code{action_outcome}, and \code{effect}. It also
-#' retains \code{amount_after} as an alias of \code{action_outcome}, plus
-#' \eqn{\mathrm{benefit} = \max(e, 0)} and \eqn{\mathrm{loss} = \max(-e, 0)}.
-#' These components cannot both be positive for a single triple.
-#' A positive effect denotes an increase, not necessarily an improvement:
-#' whether increasing a feature is desirable depends on the objective.
-#' Zero effects are retained and have an outcome equal to the reference amount.
+#' \strong{Stored representation}
 #'
-#' \strong{Joint effects of action sets}
+#' Regardless of the input format, \code{dist_effects} exposes
+#' \code{reference_amount}, \code{action_outcome}, and signed \code{effect}.
+#' For compatibility, it also retains \code{amount_after} (an alias of
+#' \code{action_outcome}) and columns named \code{benefit} and \code{loss}:
+#' these are strictly the positive and negative magnitudes of the signed
+#' change, \eqn{max(e,0)} and \eqn{max(-e,0)}, not ecological judgements.
+#' A zero effect leaves the outcome equal to the reference amount.
 #'
-#' In the modern table or raster interface, \code{action} can also identify a
-#' set registered with \code{add_action_sets()}. Supply the total outcome or
-#' total change of that combination, not an interaction coefficient. Individual
-#' and joint effects belong in the same single call. Set members must share an
-#' available PU; a global row expands only over such units. Explicit joint rows
-#' with unavailable members raise an error. Legacy component filtering is not
-#' supported for joint effects.
+#' \strong{Joint action effects}
 #'
-#' The original canonical totals are preserved in \code{effects_original} and
-#' \code{joint_effects}; original table input is preserved in \code{effects_input}.
-#' \code{dist_effects} continues to contain individual actions only. The separate
-#' \code{effect_terms} table stores signed corrections: for set S, subtract all
-#' supplied proper-subset corrections from its supplied total change.
-#' Unspecified individual effects and interactions are explicitly assumed zero,
-#' recorded in \code{effects_meta}. This is a modelling assumption, not evidence
-#' that unobserved interactions are absent.
-#'
-#' Compilation adds an exact AND auxiliary only for a feasible PU/set with a
-#' non-zero correction. It is continuous on `0 <= y <= 1`, determined by the binary
-#' members, shared across features, and activated independently of coefficient
-#' sign or optimization method. Cardinality still determines allowed action
-#' counts; registration and effects do not force joint selection. Inferred
-#' negative feature outcomes are excluded from the feasible set.
-#'
-#' Benefit objectives maximize total signed change, including negative effects
-#' and interaction corrections. Loss objectives minimize the negative part of
-#' the final joint change per PU/feature, rather than treating a negative
-#' correction as a loss by itself. Concurrent individual effects are additive
-#' when no interaction is supplied. Targets use the joint outcome and count the
-#' reference once per unit in their action scope. Solution summaries report
-#' signed net change and its final positive/negative parts separately.
+#' An \code{action} identifier may also refer to a set registered with
+#' \code{add_action_sets()}. Supply its \emph{total} joint effect or outcome,
+#' not merely the interaction increment; individual and joint effects must be
+#' supplied in the same call. In the absence of a specified interaction,
+#' concurrent individual effects are treated as additive. Unspecified terms
+#' are assumed to be zero, which is a modelling assumption. Joint effects and
+#' signed interaction corrections are retained in separate internal tables;
+#' \code{dist_effects} represents individual actions. Cardinality constraints
+#' determine whether combinations may be selected.
 #'
 #' \strong{Raster inputs}
 #'
-#' Supply a named list of \code{terra::SpatRaster} objects, one per action.
-#' Names must match action identifiers. Each raster must have one layer per
-#' feature, in the order of the problem's feature catalogue; layer names do not
-#' reorder features. The problem must contain planning-unit geometry or a
-#' planning-unit raster. Rasters are aligned to the planning-unit raster when
-#' needed. Use \code{raster_type = "effect"} for signed changes or
-#' \code{raster_type = "outcome"} for feature amounts under the action.
-#' \code{raster_aggregation} specifies \code{"sum"} or \code{"mean"} within
-#' each planning unit. Aggregated values must be comparable with the reference:
-#' do not compare a mean outcome with a reference total. Relative-change rasters
-#' are not accepted directly; prepare a tabular relative-change specification
-#' or a raster of effects/outcomes first.
+#' Supply a named list of \code{terra::SpatRaster} objects, one per action,
+#' each containing one layer per feature in feature-catalogue order. The
+#' problem must contain planning-unit polygons or a planning-unit raster.
+#' Use \code{raster_type = "effect"} for signed changes or
+#' \code{raster_type = "outcome"} for expected amounts, and choose
+#' \code{raster_aggregation = "sum"} or \code{"mean"} to aggregate values
+#' within planning units. Ensure the aggregated raster amounts are comparable
+#' with the reference; relative-change rasters are not accepted directly.
 #'
-#' \strong{Compatibility with earlier versions}
+#' \strong{Single definition and compatibility}
 #'
-#' Explicit legacy arguments \code{effect_type}, \code{effect_aggregation}, and
-#' \code{component}, and historical \code{delta}, \code{after},
-#' \code{multiplier}, \code{benefit}, and \code{loss} inputs remain supported
-#' with their existing behavior. They emit a \pkg{lifecycle} deprecation warning
-#' announcing removal in a future release. Positional legacy arguments keep
-#' their original order. New table inputs need no interpretation argument.
+#' Effects can be specified only once per problem. To compare effect scenarios,
+#' create separate problems from a common object before calling
+#' \code{add_effects()}. Historical \code{delta}, \code{after},
+#' \code{multiplier}, \code{benefit}, and \code{loss} inputs and explicit
+#' \code{effect_type}, \code{effect_aggregation}, and \code{component}
+#' arguments remain available with deprecation warnings. Use the three
+#' modern tabular columns for new code.
 #'
-#' @param x A \code{Problem} object created by \code{\link{create_problem}}
-#'   with feasible actions defined by \code{\link{add_actions}}.
-#' @param effects A table with \code{action}, \code{feature}, optional
+#' @param x A \code{Problem} created by \code{\link{create_problem}} with
+#'   feasible actions already defined by \code{\link{add_actions}}.
+#' @param effects A data frame with \code{action}, \code{feature}, optional
 #'   \code{pu}, and exactly one of \code{effect}, \code{outcome}, or
 #'   \code{relative_change}; a named list of action rasters; or \code{NULL}
-#'   to store an empty effects table. Historical input formats remain supported.
+#'   to register no effects. Historical formats remain supported.
 #' @param effect_type Deprecated interpretation argument: \code{"delta"}
-#'   for changes or \code{"after"} for action amounts. With historical
-#'   multipliers, delta means reference times multiplier; after means an outcome
-#'   equal to reference times multiplier. Omit for new table inputs.
+#'   for signed changes or \code{"after"} for expected amounts. Legacy
+#'   multipliers retain their original interpretation; omit for modern tables.
 #' @param effect_aggregation Deprecated raster aggregation argument; use
-#'   \code{raster_aggregation}.
-#' @param component Deprecated filtering argument: \code{"any"} retains all
-#'   rows, \code{"benefit"} retains positive changes, and \code{"loss"}
-#'   retains negative changes. New calls retain all components.
-#' @param raster_aggregation Raster aggregation within planning units:
-#'   \code{"sum"} (default) or \code{"mean"}.
-#' @param raster_type Raster interpretation: \code{"effect"} (default) or
-#'   \code{"outcome"}. Explicitly supply this or \code{raster_aggregation}
-#'   to select the new raster interface.
+#'   \code{raster_aggregation} instead.
+#' @param component Deprecated sign filter: \code{"any"} retains all effects,
+#'   \code{"benefit"} keeps positive changes, and \code{"loss"} keeps negative
+#'   changes. These filters do not encode ecological desirability.
+#' @param raster_aggregation Aggregate raster values using \code{"sum"}
+#'   (default) or \code{"mean"} for each planning unit.
+#' @param raster_type Interpret raster values as signed changes
+#'   (\code{"effect"}, default) or expected amounts (\code{"outcome"}).
+#'   Explicitly provide this or \code{raster_aggregation} to select the
+#'   modern raster interface.
 #' @return An updated \code{Problem} containing \code{dist_effects} and
-#'   \code{effects_meta}. Existing model coefficients remain available.
+#'   \code{effects_meta}; the stored effect table includes reference amounts,
+#'   action outcomes, signed effects, and compatibility columns.
 #'
 #' @examples
+#' # EXAMPLE 1: Equivalent ways to describe action effects
+#' #
+#' # Consider two planning units and two features: habitat and fuel load.
+#' # The reference amounts represent their values before implementing
+#' # any management action.
+#' #
+#' # In planning unit 1, habitat = 100 and fuel load = 60.
+#' # In planning unit 2, habitat = 40 and fuel load = 20.
+#'
 #' p <- create_problem(
-#'   pu = data.frame(id = 1, cost = 1),
-#'   features = data.frame(id = 1, name = "habitat"),
-#'   dist_features = data.frame(pu = 1, feature = 1, amount = 100)
+#'   pu = data.frame(id = 1:2, cost = 0),
+#'   features = data.frame(id = 1:2, name = c("habitat", "fuel")),
+#'   dist_features = data.frame(
+#'     pu = c(1, 1, 2, 2), feature = c(1, 2, 1, 2),
+#'     amount = c(100, 60, 40, 20)
+#'   )
 #' ) |>
 #'   add_actions(actions = data.frame(id = "restore"))
 #'
-#' # Equivalent ways to specify an increase from 100 to 150.
-#' p_effect <- add_effects(p, data.frame(
-#'   pu = 1, action = "restore", feature = "habitat", effect = 50
-#' ))
-#' p_outcome <- add_effects(p, data.frame(
-#'   pu = 1, action = "restore", feature = "habitat", outcome = 150
-#' ))
-#' p_relative <- add_effects(p, data.frame(
-#'   action = "restore", feature = "habitat", relative_change = 0.50
-#' ))
-#' p_effect$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
+#' # Suppose restoration increases habitat in planning unit 1
+#' # from 100 to 130. This response can be described in three
+#' # equivalent ways:
+#' #
+#' #   effect          = +30   (absolute increase)
+#' #   outcome         = 130   (amount after restoration)
+#' #   relative_change = 0.30  (30% increase)
+#' #
+#' # Each call starts from the same base problem because effects
+#' # can only be defined once per problem.
 #'
-#' # Joint totals in one call: 30 + 20 + interaction 20 = total 70.
+#' p_effect <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore", feature = "habitat", effect = 30
+#' ))
+#'
+#' p_outcome <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore", feature = "habitat", outcome = 130
+#' ))
+#'
+#' p_relative <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore", feature = "habitat",
+#'   relative_change = 0.30
+#' ))
+#'
+#' # Regardless of the input specification, multiscape stores
+#' # the reference amount, signed effect, and action outcome.
+#'
+#' p_effect$data$dist_effects[, c(
+#'   "reference_amount", "effect", "action_outcome"
+#' )]
+#'
+#'
+#' # EXAMPLE 2: Effects that apply across planning units
+#' #
+#' # The 'pu' column is optional. When omitted, the specified
+#' # change is applied to every feasible planning unit for
+#' # the corresponding action.
+#' #
+#' # Here, restoration increases habitat by 25% in both units.
+#' # Because their reference amounts differ (100 and 40),
+#' # the resulting absolute effects also differ (+25 and +10).
+#'
+#' p_global <- add_effects(p, data.frame(
+#'   action = "restore", feature = "habitat",
+#'   relative_change = 0.25
+#' ))
+#'
+#' # Inspect how the same proportional change produces
+#' # different absolute effects across planning units.
+#'
+#' p_global$data$dist_effects[, c(
+#'   "pu", "reference_amount", "effect"
+#' )]
+#'
+#'
+#' # EXAMPLE 3: Positive and negative effects
+#' #
+#' # A management action may simultaneously increase some
+#' # features and decrease others.
+#' #
+#' # Suppose restoration increases habitat from 100 to 130
+#' # but reduces fuel load from 60 to 45 in planning unit 1.
+#' #
+#' # Both responses are represented as signed effects:
+#' #
+#' #   habitat: +30
+#' #   fuel:    -15
+#' #
+#' # Importantly, the sign describes the direction of change,
+#' # not whether that change is desirable. Increasing habitat
+#' # and reducing fuel load may both support management goals.
+#'
+#' p_mixed <- add_effects(p, data.frame(
+#'   pu = 1, action = "restore",
+#'   feature = c("habitat", "fuel"),
+#'   effect = c(30, -15)
+#' ))
+#'
+#' # Inspect the direction and magnitude of each response.
+#'
+#' p_mixed$data$dist_effects[, c(
+#'   "feature_name", "effect", "action_outcome"
+#' )]
+#'
+#'
+#' # EXAMPLE 4: Spatial variation in action outcomes
+#' #
+#' # Use the bundled 64-unit landscape to illustrate how
+#' # reference amounts and action outcomes vary spatially.
+#' # No optimisation or solver is required.
+#' #
+#' # The example applies a hypothetical 25% increase in the
+#' # first feature under the first available action.
+#'
+#' if (requireNamespace("sf", quietly = TRUE)) {
+#'
+#'   # Load the spatial planning units, features, reference
+#'   # distributions, and available management actions.
+#'
+#'   sim <- load_sim_multiaction()
+#'
+#'   spatial_problem <- create_problem(
+#'     pu = sim$planning_units,
+#'     features = sim$features,
+#'     dist_features = sim$dist_features,
+#'     cost = "cost"
+#'   ) |>
+#'     add_actions(sim$actions, cost = sim$action_costs)
+#'
+#'   # Select one feature and one management action.
+#'
+#'   f <- sim$features$name[1]
+#'   a <- sim$actions$id[1]
+#'
+#'   # Define a hypothetical 25% increase relative to the
+#'   # reference amount in every feasible planning unit.
+#'   # Because reference amounts vary spatially, so do the
+#'   # resulting absolute effects and action outcomes.
+#'
+#'   spatial_problem <- add_effects(
+#'     spatial_problem,
+#'     data.frame(
+#'       action = a,
+#'       feature = f,
+#'       relative_change = 0.25
+#'     )
+#'   )
+#'
+#'   # Extract the reference and expected outcome for the
+#'   # selected feature-action combination.
+#'
+#'   vals <- subset(
+#'     spatial_problem$data$dist_effects,
+#'     action == a & feature_name == f,
+#'     select = c("pu", "reference_amount", "action_outcome")
+#'   )
+#'
+#'   # Attach these values to the planning-unit geometries
+#'   # so they can be displayed as spatial maps.
+#'
+#'   mapped <- merge(
+#'     sim$planning_units, vals,
+#'     by.x = "id", by.y = "pu", all.x = TRUE
+#'   )
+#'
+#'   # Compare reference amounts with potential outcomes.
+#'   # These maps represent the consequences of implementing
+#'   # the action, not an optimised selection of actions.
+#'
+#'   plot(mapped[c("reference_amount", "action_outcome")])
+#' }
+#'
+#'
+#' # EXAMPLE 5: Joint effects of multiple actions
+#' #
+#' # When multiple actions can be implemented together,
+#' # their combined effect need not equal the sum of their
+#' # individual effects.
+#' #
+#' # Consider two actions, 'restore' and 'control'.
+#' # Their individual effects on habitat are +30 and +20.
+#' # However, implementing both together produces a total
+#' # effect of +70 rather than +50.
+#' #
+#' # This implies an additional interaction of +20:
+#' #
+#' #   restore effect          = +30
+#' #   control effect          = +20
+#' #   additional interaction  = +20
+#' #   joint total effect      = +70
+#' #
+#' # The joint effect is supplied as the TOTAL change,
+#' # not merely the additional interaction.
+#'
 #' joint_base <- create_problem(
-#'   data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+#'   data.frame(id = 10L, cost = 0),
+#'   data.frame(id = 1L, name = "habitat"),
 #'   data.frame(pu = 10L, feature = 1L, amount = 100)
 #' ) |>
-#'   add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
-#'   add_action_sets(list(restore_control = c("restore", "control"))) |>
+#'   add_actions(
+#'     data.frame(id = c("restore", "control")),
+#'     cost = 1
+#'   ) |>
+#'   add_action_sets(
+#'     list(restore_control = c("restore", "control"))
+#'   ) |>
 #'   add_constraint_action_cardinality(2, "max")
-#' joint <- joint_base |>
-#'   add_effects(data.frame(
-#'     action = c("restore", "control", "restore_control"),
-#'     feature = "habitat", effect = c(30, 20, 70)
-#'   ))
-#' joint$data$effect_terms[, c("action", "total_effect", "effect")]
 #'
-#' # Raster example: one polygon contains two cells with reference amounts 40, 60.
-#' r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,
-#'                  ymin = 0, ymax = 1, crs = "EPSG:3857")
-#' terra::values(r) <- c(40, 60)
-#' names(r) <- "habitat"
-#' polygon <- sf::st_polygon(list(matrix(
-#'   c(0, 0, 2, 0, 2, 1, 0, 1, 0, 0), ncol = 2, byrow = TRUE
-#' )))
-#' pu <- sf::st_sf(id = 1L, cost = 1,
-#'                 geometry = sf::st_sfc(polygon, crs = 3857))
-#' p_spatial <- create_problem(pu = pu, features = r, cost = "cost") |>
-#'   add_actions(actions = data.frame(id = "restore"))
-#' terra::values(r) <- c(20, 30)
-#' p_raster <- add_effects(p_spatial, list(restore = r),
-#'                        raster_type = "effect", raster_aggregation = "sum")
-#' terra::values(r) <- c(60, 90)
-#' p_raster_outcome <- add_effects(p_spatial, list(restore = r),
-#'                                raster_type = "outcome", raster_aggregation = "sum")
-#' p_raster$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
+#' # Supply individual and joint effects in the same call.
+#' # The combined action changes habitat from 100 to 170.
 #'
-#' @seealso \code{\link{add_actions}}, \code{\link{add_benefits}},
-#'   \code{\link{add_losses}}
+#' joint <- add_effects(joint_base, data.frame(
+#'   action = c("restore", "control", "restore_control"),
+#'   feature = "habitat",
+#'   effect = c(30, 20, 70)
+#' ))
+#'
+#' # Inspect the decomposition into individual effects and
+#' # the additional correction associated with joint selection.
+#' # The joint row stores a correction of +20, ensuring that
+#' # the combined total is +70 rather than +90.
+#'
+#' joint$data$effect_terms[, c(
+#'   "action", "total_effect", "effect"
+#' )]
+#' @seealso \code{\link{add_actions}}, \code{\link{add_action_sets}}
 #' @export
 add_effects <- function(
     x,
@@ -198,7 +349,7 @@ add_effects <- function(
 ) {
   assertthat::assert_that(!is.null(x), msg = "x is NULL")
   .pa_assert_unconfigured(x, c("dist_effects", "dist_benefit", "dist_loss"),
-                         "Effects", "add_effects() (including add_benefits()/add_losses())")
+                          "Effects", "add_effects() (including add_benefits()/add_losses())")
   legacy_type <- !missing(effect_type)
   legacy_aggregation <- !missing(effect_aggregation)
   legacy_component <- !missing(component)
@@ -772,7 +923,7 @@ add_effects <- function(
       if (!all(b$action %in% action_ids)) stop("Unknown action id(s) in effects.", call. = FALSE)
       if (!("pu" %in% names(b))) {
         b <- dplyr::inner_join(da[, c("pu", "action"), drop = FALSE], b,
-                              by = "action", relationship = "many-to-many")
+                               by = "action", relationship = "many-to-many")
       }
       reference <- .baseline_amount(b$pu, b$feature)
       value <- b[[source]]
@@ -1205,10 +1356,11 @@ add_effects <- function(
 #' @title Add benefits
 #'
 #' @description
-#' Convenience wrapper around \code{\link{add_effects}} that keeps only positive
-#' effects, that is, rows with \code{benefit > 0}.
-#' Effects share a single definition with \code{add_effects()} and
-#' \code{add_losses()}; a second definition raises an error.
+#' Legacy convenience wrapper around \code{\link{add_effects}} that retains
+#' only positive signed changes (\code{effect > 0}). Positive change does not
+#' necessarily imply an ecological benefit. For new code, prefer
+#' \code{add_effects()} to retain signed effects of both directions.
+#' Effects can be defined only once per problem.
 #'
 #' @inheritParams add_effects
 #' @param benefits Alias of \code{effects}, kept for backwards compatibility.
@@ -1263,10 +1415,11 @@ add_benefits <- function(
 #' @title Add losses
 #'
 #' @description
-#' Convenience wrapper around \code{\link{add_effects}} that keeps only negative
-#' effects, represented by rows with \code{loss > 0}.
-#' Effects share a single definition with \code{add_effects()} and
-#' \code{add_benefits()}; a second definition raises an error.
+#' Legacy convenience wrapper around \code{\link{add_effects}} that retains
+#' only negative signed changes (\code{effect < 0}). Negative change does not
+#' necessarily imply an ecological loss. For new code, prefer
+#' \code{add_effects()} to retain signed effects of both directions.
+#' Effects can be defined only once per problem.
 #'
 #' @inheritParams add_effects
 #' @param losses Alias of \code{effects}, used for symmetry with

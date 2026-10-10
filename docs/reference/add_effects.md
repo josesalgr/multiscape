@@ -1,7 +1,7 @@
 # Add action effects to a planning problem
 
-Describe how feasible actions change feature amounts relative to a
-user-defined reference scenario.
+Specify the expected consequences of feasible management actions for
+feature amounts in planning units, relative to a reference scenario.
 
 ## Usage
 
@@ -21,237 +21,384 @@ add_effects(
 
 - x:
 
-  A `Problem` object created by
+  A `Problem` created by
   [`create_problem`](https://josesalgr.github.io/multiscape/reference/create_problem.md)
-  with feasible actions defined by
+  with feasible actions already defined by
   [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md).
 
 - effects:
 
-  A table with `action`, `feature`, optional `pu`, and exactly one of
-  `effect`, `outcome`, or `relative_change`; a named list of action
-  rasters; or `NULL` to store an empty effects table. Historical input
-  formats remain supported.
+  A data frame with `action`, `feature`, optional `pu`, and exactly one
+  of `effect`, `outcome`, or `relative_change`; a named list of action
+  rasters; or `NULL` to register no effects. Historical formats remain
+  supported.
 
 - effect_type:
 
-  Deprecated interpretation argument: `"delta"` for changes or `"after"`
-  for action amounts. With historical multipliers, delta means reference
-  times multiplier; after means an outcome equal to reference times
-  multiplier. Omit for new table inputs.
+  Deprecated interpretation argument: `"delta"` for signed changes or
+  `"after"` for expected amounts. Legacy multipliers retain their
+  original interpretation; omit for modern tables.
 
 - effect_aggregation:
 
-  Deprecated raster aggregation argument; use `raster_aggregation`.
+  Deprecated raster aggregation argument; use `raster_aggregation`
+  instead.
 
 - component:
 
-  Deprecated filtering argument: `"any"` retains all rows, `"benefit"`
-  retains positive changes, and `"loss"` retains negative changes. New
-  calls retain all components.
+  Deprecated sign filter: `"any"` retains all effects, `"benefit"` keeps
+  positive changes, and `"loss"` keeps negative changes. These filters
+  do not encode ecological desirability.
 
 - raster_aggregation:
 
-  Raster aggregation within planning units: `"sum"` (default) or
-  `"mean"`.
+  Aggregate raster values using `"sum"` (default) or `"mean"` for each
+  planning unit.
 
 - raster_type:
 
-  Raster interpretation: `"effect"` (default) or `"outcome"`. Explicitly
-  supply this or `raster_aggregation` to select the new raster
-  interface.
+  Interpret raster values as signed changes (`"effect"`, default) or
+  expected amounts (`"outcome"`). Explicitly provide this or
+  `raster_aggregation` to select the modern raster interface.
 
 ## Value
 
-An updated `Problem` containing `dist_effects` and `effects_meta`.
-Existing model coefficients remain available.
+An updated `Problem` containing `dist_effects` and `effects_meta`; the
+stored effect table includes reference amounts, action outcomes, signed
+effects, and compatibility columns.
 
 ## Details
 
-Effects can be defined only once per problem. A second call, including
-through
-[`add_benefits()`](https://josesalgr.github.io/multiscape/reference/add_benefits.md)
-or
-[`add_losses()`](https://josesalgr.github.io/multiscape/reference/add_losses.md),
-raises an error. Supply the complete effects table in one call. To
-compare effect scenarios, build separate problems from the object before
-effects were added.
+**Reference amounts, outcomes, and effects**
 
 The feature distribution supplied to
 [`create_problem()`](https://josesalgr.github.io/multiscape/reference/create_problem.md)
-defines the reference amounts. The reference can describe current
-conditions, a future without intervention, or existing management.
-Action outcomes and references must share units and, for future
-scenarios, the same time horizon.
+defines the reference amount \\r\_{if}\\ of feature \\f\\ in planning
+unit \\i\\. This reference may describe current conditions, existing
+management, or a future without intervention. Let \\y\_{iaf}\\ be the
+expected amount under action \\a\\. Its signed effect is \\e\_{iaf} =
+y\_{iaf} - r\_{if}\\. These quantities describe what an action changes,
+not whether that change is desirable. For example, increasing habitat
+may be desirable, whereas decreasing fuel load may also be desirable.
+Objectives and constraints determine how consequences are valued in a
+planning problem.
 
-**Tabular inputs**
+**Three alternative tabular inputs**
 
-Supply a table with `action`, `feature`, optional `pu`, and exactly one
-of these numeric columns:
+Provide `action`, `feature`, optionally `pu`, and exactly one of the
+following numeric columns:
 
-- `effect`: signed absolute change relative to the reference.
+- `effect`: signed absolute change \\e\_{iaf}\\.
 
-- `outcome`: feature amount under the action.
+- `outcome`: expected amount \\y\_{iaf}\\ under the action.
 
-- `relative_change`: proportional change; 0.25 means +25 percent, zero
-  means no change, and -0.25 means a 25 percent decrease.
+- `relative_change`: proportional change \\c\_{iaf}\\, with \\y\_{iaf} =
+  r\_{if}(1+c\_{iaf})\\ and \\e\_{iaf} = r\_{if}c\_{iaf}\\.
 
-If `pu` is omitted, each action/feature specification is expanded over
-feasible planning-unit/action pairs. Actions must be defined first using
-[`add_actions()`](https://josesalgr.github.io/multiscape/reference/add_actions.md);
-locked-out pairs are excluded. Features may be supplied as numeric
-identifiers or names. Duplicate keys and ambiguous columns are rejected.
-Values must be numeric, finite, and non-missing. Computed outcomes must
-be non-negative. Missing reference amounts are zero, so relative change
-cannot create an amount from a zero reference; use `effect` or `outcome`
-in that case.
+For a reference amount of 100, `effect = 30`, `outcome = 130`, and
+`relative_change = 0.30` are equivalent. Likewise,
+`relative_change = -0.20` represents a 20 percent decrease. These input
+columns are alternatives, not values to supply together.
 
-**Canonical representation**
+Actions must first be registered with
+[`add_actions()`](https://josesalgr.github.io/multiscape/reference/add_actions.md).
+With `pu`, effects can vary by location; without it, each action/feature
+specification is expanded over feasible planning-unit/action pairs.
+Locked-out pairs are excluded. A feature can be identified by name or
+numeric identifier. Values must be finite and non-missing; resulting
+outcomes must be non-negative. Reference amounts and outcomes must have
+compatible units and, when applicable, a common time horizon. Missing
+reference amounts are treated as zero: a relative change cannot create a
+positive outcome from a zero reference, so use `effect` or `outcome` in
+that case.
 
-For reference amount \\r\_{if}\\ and action outcome \\q\_{iaf}\\, the
-signed effect is \\e\_{iaf} = q\_{iaf} - r\_{if}\\. Relative-change
-inputs \\c\_{iaf}\\ are converted using \\e\_{iaf} = r\_{if} c\_{iaf}\\.
-The stored table exposes `reference_amount`, `action_outcome`, and
-`effect`. It also retains `amount_after` as an alias of
-`action_outcome`, plus \\\mathrm{benefit} = \max(e, 0)\\ and
-\\\mathrm{loss} = \max(-e, 0)\\. These components cannot both be
-positive for a single triple. A positive effect denotes an increase, not
-necessarily an improvement: whether increasing a feature is desirable
-depends on the objective. Zero effects are retained and have an outcome
-equal to the reference amount.
+**Stored representation**
 
-**Joint effects of action sets**
+Regardless of the input format, `dist_effects` exposes
+`reference_amount`, `action_outcome`, and signed `effect`. For
+compatibility, it also retains `amount_after` (an alias of
+`action_outcome`) and columns named `benefit` and `loss`: these are
+strictly the positive and negative magnitudes of the signed change,
+\\max(e,0)\\ and \\max(-e,0)\\, not ecological judgements. A zero effect
+leaves the outcome equal to the reference amount.
 
-In the modern table or raster interface, `action` can also identify a
-set registered with
+**Joint action effects**
+
+An `action` identifier may also refer to a set registered with
 [`add_action_sets()`](https://josesalgr.github.io/multiscape/reference/add_action_sets.md).
-Supply the total outcome or total change of that combination, not an
-interaction coefficient. Individual and joint effects belong in the same
-single call. Set members must share an available PU; a global row
-expands only over such units. Explicit joint rows with unavailable
-members raise an error. Legacy component filtering is not supported for
-joint effects.
-
-The original canonical totals are preserved in `effects_original` and
-`joint_effects`; original table input is preserved in `effects_input`.
-`dist_effects` continues to contain individual actions only. The
-separate `effect_terms` table stores signed corrections: for set S,
-subtract all supplied proper-subset corrections from its supplied total
-change. Unspecified individual effects and interactions are explicitly
-assumed zero, recorded in `effects_meta`. This is a modelling
-assumption, not evidence that unobserved interactions are absent.
-
-Compilation adds an exact AND auxiliary only for a feasible PU/set with
-a non-zero correction. It is continuous on `0 <= y <= 1`, determined by
-the binary members, shared across features, and activated independently
-of coefficient sign or optimization method. Cardinality still determines
-allowed action counts; registration and effects do not force joint
-selection. Inferred negative feature outcomes are excluded from the
-feasible set.
-
-Benefit objectives maximize total signed change, including negative
-effects and interaction corrections. Loss objectives minimize the
-negative part of the final joint change per PU/feature, rather than
-treating a negative correction as a loss by itself. Concurrent
-individual effects are additive when no interaction is supplied. Targets
-use the joint outcome and count the reference once per unit in their
-action scope. Solution summaries report signed net change and its final
-positive/negative parts separately.
+Supply its *total* joint effect or outcome, not merely the interaction
+increment; individual and joint effects must be supplied in the same
+call. In the absence of a specified interaction, concurrent individual
+effects are treated as additive. Unspecified terms are assumed to be
+zero, which is a modelling assumption. Joint effects and signed
+interaction corrections are retained in separate internal tables;
+`dist_effects` represents individual actions. Cardinality constraints
+determine whether combinations may be selected.
 
 **Raster inputs**
 
 Supply a named list of
 [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
-objects, one per action. Names must match action identifiers. Each
-raster must have one layer per feature, in the order of the problem's
-feature catalogue; layer names do not reorder features. The problem must
-contain planning-unit geometry or a planning-unit raster. Rasters are
-aligned to the planning-unit raster when needed. Use
-`raster_type = "effect"` for signed changes or `raster_type = "outcome"`
-for feature amounts under the action. `raster_aggregation` specifies
-`"sum"` or `"mean"` within each planning unit. Aggregated values must be
-comparable with the reference: do not compare a mean outcome with a
-reference total. Relative-change rasters are not accepted directly;
-prepare a tabular relative-change specification or a raster of
-effects/outcomes first.
+objects, one per action, each containing one layer per feature in
+feature-catalogue order. The problem must contain planning-unit polygons
+or a planning-unit raster. Use `raster_type = "effect"` for signed
+changes or `raster_type = "outcome"` for expected amounts, and choose
+`raster_aggregation = "sum"` or `"mean"` to aggregate values within
+planning units. Ensure the aggregated raster amounts are comparable with
+the reference; relative-change rasters are not accepted directly.
 
-**Compatibility with earlier versions**
+**Single definition and compatibility**
 
-Explicit legacy arguments `effect_type`, `effect_aggregation`, and
-`component`, and historical `delta`, `after`, `multiplier`, `benefit`,
-and `loss` inputs remain supported with their existing behavior. They
-emit a lifecycle deprecation warning announcing removal in a future
-release. Positional legacy arguments keep their original order. New
-table inputs need no interpretation argument.
+Effects can be specified only once per problem. To compare effect
+scenarios, create separate problems from a common object before calling
+`add_effects()`. Historical `delta`, `after`, `multiplier`, `benefit`,
+and `loss` inputs and explicit `effect_type`, `effect_aggregation`, and
+`component` arguments remain available with deprecation warnings. Use
+the three modern tabular columns for new code.
 
 ## See also
 
 [`add_actions`](https://josesalgr.github.io/multiscape/reference/add_actions.md),
-[`add_benefits`](https://josesalgr.github.io/multiscape/reference/add_benefits.md),
-[`add_losses`](https://josesalgr.github.io/multiscape/reference/add_losses.md)
+[`add_action_sets`](https://josesalgr.github.io/multiscape/reference/add_action_sets.md)
 
 ## Examples
 
 ``` r
+# EXAMPLE 1: Equivalent ways to describe action effects
+#
+# Consider two planning units and two features: habitat and fuel load.
+# The reference amounts represent their values before implementing
+# any management action.
+#
+# In planning unit 1, habitat = 100 and fuel load = 60.
+# In planning unit 2, habitat = 40 and fuel load = 20.
+
 p <- create_problem(
-  pu = data.frame(id = 1, cost = 1),
-  features = data.frame(id = 1, name = "habitat"),
-  dist_features = data.frame(pu = 1, feature = 1, amount = 100)
+  pu = data.frame(id = 1:2, cost = 0),
+  features = data.frame(id = 1:2, name = c("habitat", "fuel")),
+  dist_features = data.frame(
+    pu = c(1, 1, 2, 2), feature = c(1, 2, 1, 2),
+    amount = c(100, 60, 40, 20)
+  )
 ) |>
   add_actions(actions = data.frame(id = "restore"))
 
-# Equivalent ways to specify an increase from 100 to 150.
-p_effect <- add_effects(p, data.frame(
-  pu = 1, action = "restore", feature = "habitat", effect = 50
-))
-p_outcome <- add_effects(p, data.frame(
-  pu = 1, action = "restore", feature = "habitat", outcome = 150
-))
-p_relative <- add_effects(p, data.frame(
-  action = "restore", feature = "habitat", relative_change = 0.50
-))
-p_effect$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
-#>   reference_amount effect action_outcome
-#> 1              100     50            150
+# Suppose restoration increases habitat in planning unit 1
+# from 100 to 130. This response can be described in three
+# equivalent ways:
+#
+#   effect          = +30   (absolute increase)
+#   outcome         = 130   (amount after restoration)
+#   relative_change = 0.30  (30% increase)
+#
+# Each call starts from the same base problem because effects
+# can only be defined once per problem.
 
-# Joint totals in one call: 30 + 20 + interaction 20 = total 70.
+p_effect <- add_effects(p, data.frame(
+  pu = 1, action = "restore", feature = "habitat", effect = 30
+))
+
+p_outcome <- add_effects(p, data.frame(
+  pu = 1, action = "restore", feature = "habitat", outcome = 130
+))
+
+p_relative <- add_effects(p, data.frame(
+  pu = 1, action = "restore", feature = "habitat",
+  relative_change = 0.30
+))
+
+# Regardless of the input specification, multiscape stores
+# the reference amount, signed effect, and action outcome.
+
+p_effect$data$dist_effects[, c(
+  "reference_amount", "effect", "action_outcome"
+)]
+#>   reference_amount effect action_outcome
+#> 1              100     30            130
+
+
+# EXAMPLE 2: Effects that apply across planning units
+#
+# The 'pu' column is optional. When omitted, the specified
+# change is applied to every feasible planning unit for
+# the corresponding action.
+#
+# Here, restoration increases habitat by 25% in both units.
+# Because their reference amounts differ (100 and 40),
+# the resulting absolute effects also differ (+25 and +10).
+
+p_global <- add_effects(p, data.frame(
+  action = "restore", feature = "habitat",
+  relative_change = 0.25
+))
+
+# Inspect how the same proportional change produces
+# different absolute effects across planning units.
+
+p_global$data$dist_effects[, c(
+  "pu", "reference_amount", "effect"
+)]
+#>   pu reference_amount effect
+#> 1  1              100     25
+#> 2  2               40     10
+
+
+# EXAMPLE 3: Positive and negative effects
+#
+# A management action may simultaneously increase some
+# features and decrease others.
+#
+# Suppose restoration increases habitat from 100 to 130
+# but reduces fuel load from 60 to 45 in planning unit 1.
+#
+# Both responses are represented as signed effects:
+#
+#   habitat: +30
+#   fuel:    -15
+#
+# Importantly, the sign describes the direction of change,
+# not whether that change is desirable. Increasing habitat
+# and reducing fuel load may both support management goals.
+
+p_mixed <- add_effects(p, data.frame(
+  pu = 1, action = "restore",
+  feature = c("habitat", "fuel"),
+  effect = c(30, -15)
+))
+
+# Inspect the direction and magnitude of each response.
+
+p_mixed$data$dist_effects[, c(
+  "feature_name", "effect", "action_outcome"
+)]
+#>   feature_name effect action_outcome
+#> 1      habitat     30            130
+#> 2         fuel    -15             45
+
+
+# EXAMPLE 4: Spatial variation in action outcomes
+#
+# Use the bundled 64-unit landscape to illustrate how
+# reference amounts and action outcomes vary spatially.
+# No optimisation or solver is required.
+#
+# The example applies a hypothetical 25% increase in the
+# first feature under the first available action.
+
+if (requireNamespace("sf", quietly = TRUE)) {
+
+  # Load the spatial planning units, features, reference
+  # distributions, and available management actions.
+
+  sim <- load_sim_multiaction()
+
+  spatial_problem <- create_problem(
+    pu = sim$planning_units,
+    features = sim$features,
+    dist_features = sim$dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(sim$actions, cost = sim$action_costs)
+
+  # Select one feature and one management action.
+
+  f <- sim$features$name[1]
+  a <- sim$actions$id[1]
+
+  # Define a hypothetical 25% increase relative to the
+  # reference amount in every feasible planning unit.
+  # Because reference amounts vary spatially, so do the
+  # resulting absolute effects and action outcomes.
+
+  spatial_problem <- add_effects(
+    spatial_problem,
+    data.frame(
+      action = a,
+      feature = f,
+      relative_change = 0.25
+    )
+  )
+
+  # Extract the reference and expected outcome for the
+  # selected feature-action combination.
+
+  vals <- subset(
+    spatial_problem$data$dist_effects,
+    action == a & feature_name == f,
+    select = c("pu", "reference_amount", "action_outcome")
+  )
+
+  # Attach these values to the planning-unit geometries
+  # so they can be displayed as spatial maps.
+
+  mapped <- merge(
+    sim$planning_units, vals,
+    by.x = "id", by.y = "pu", all.x = TRUE
+  )
+
+  # Compare reference amounts with potential outcomes.
+  # These maps represent the consequences of implementing
+  # the action, not an optimised selection of actions.
+
+  plot(mapped[c("reference_amount", "action_outcome")])
+}
+
+
+
+# EXAMPLE 5: Joint effects of multiple actions
+#
+# When multiple actions can be implemented together,
+# their combined effect need not equal the sum of their
+# individual effects.
+#
+# Consider two actions, 'restore' and 'control'.
+# Their individual effects on habitat are +30 and +20.
+# However, implementing both together produces a total
+# effect of +70 rather than +50.
+#
+# This implies an additional interaction of +20:
+#
+#   restore effect          = +30
+#   control effect          = +20
+#   additional interaction  = +20
+#   joint total effect      = +70
+#
+# The joint effect is supplied as the TOTAL change,
+# not merely the additional interaction.
+
 joint_base <- create_problem(
-  data.frame(id = 10L, cost = 0), data.frame(id = 1L, name = "habitat"),
+  data.frame(id = 10L, cost = 0),
+  data.frame(id = 1L, name = "habitat"),
   data.frame(pu = 10L, feature = 1L, amount = 100)
 ) |>
-  add_actions(data.frame(id = c("restore", "control")), cost = 1) |>
-  add_action_sets(list(restore_control = c("restore", "control"))) |>
+  add_actions(
+    data.frame(id = c("restore", "control")),
+    cost = 1
+  ) |>
+  add_action_sets(
+    list(restore_control = c("restore", "control"))
+  ) |>
   add_constraint_action_cardinality(2, "max")
-joint <- joint_base |>
-  add_effects(data.frame(
-    action = c("restore", "control", "restore_control"),
-    feature = "habitat", effect = c(30, 20, 70)
-  ))
-joint$data$effect_terms[, c("action", "total_effect", "effect")]
+
+# Supply individual and joint effects in the same call.
+# The combined action changes habitat from 100 to 170.
+
+joint <- add_effects(joint_base, data.frame(
+  action = c("restore", "control", "restore_control"),
+  feature = "habitat",
+  effect = c(30, 20, 70)
+))
+
+# Inspect the decomposition into individual effects and
+# the additional correction associated with joint selection.
+# The joint row stores a correction of +20, ensuring that
+# the combined total is +70 rather than +90.
+
+joint$data$effect_terms[, c(
+  "action", "total_effect", "effect"
+)]
 #>            action total_effect effect
 #> 1         control           20     20
 #> 2         restore           30     30
 #> 3 restore_control           70     20
-
-# Raster example: one polygon contains two cells with reference amounts 40, 60.
-r <- terra::rast(nrows = 1, ncols = 2, xmin = 0, xmax = 2,
-                 ymin = 0, ymax = 1, crs = "EPSG:3857")
-terra::values(r) <- c(40, 60)
-names(r) <- "habitat"
-polygon <- sf::st_polygon(list(matrix(
-  c(0, 0, 2, 0, 2, 1, 0, 1, 0, 0), ncol = 2, byrow = TRUE
-)))
-pu <- sf::st_sf(id = 1L, cost = 1,
-                geometry = sf::st_sfc(polygon, crs = 3857))
-p_spatial <- create_problem(pu = pu, features = r, cost = "cost") |>
-  add_actions(actions = data.frame(id = "restore"))
-terra::values(r) <- c(20, 30)
-p_raster <- add_effects(p_spatial, list(restore = r),
-                       raster_type = "effect", raster_aggregation = "sum")
-terra::values(r) <- c(60, 90)
-p_raster_outcome <- add_effects(p_spatial, list(restore = r),
-                               raster_type = "outcome", raster_aggregation = "sum")
-p_raster$data$dist_effects[, c("reference_amount", "effect", "action_outcome")]
-#>   reference_amount effect action_outcome
-#> 1              100     50            150
 ```

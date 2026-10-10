@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_constraint_action_cardinality.R
 \name{add_constraint_action_cardinality}
 \alias{add_constraint_action_cardinality}
-\title{Constrain the number of actions in each planning unit}
+\title{Constrain the number of actions selected per planning unit}
 \usage{
 add_constraint_action_cardinality(
   x,
@@ -14,91 +14,191 @@ add_constraint_action_cardinality(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} object with registered actions.}
+\item{x}{A \code{Problem} object with actions registered using
+\code{add_actions()}.}
 
-\item{count}{A single finite, non-negative integer.}
+\item{count}{A single finite, non-negative integer giving the number of
+selected individual actions per planning unit.}
 
-\item{sense}{Required string: \code{"min"}, \code{"max"}, or \code{"equal"}.}
+\item{sense}{One of \code{"min"}, \code{"max"}, or \code{"equal"}.}
 
-\item{actions}{Optional action subset, using the standard parser for action
-ids or existing \code{actions$action_set} classification labels. \code{NULL} counts
-all actions. Identifiers defined by \code{\link[=add_action_sets]{add_action_sets()}} are not selectable
-actions and are not accepted here; supply their individual members.}
+\item{actions}{Optional subset of action identifiers or existing
+\code{actions$action_set} classification labels. \code{NULL} (default)
+counts all actions. Identifiers registered through \code{add_action_sets()}
+cannot be counted directly; use their individual member actions.}
 
-\item{pu}{Optional vector of external planning-unit ids. \code{NULL} applies
-the rule to all currently registered units.}
+\item{pu}{Optional vector of planning-unit identifiers. \code{NULL}
+(default) applies the rule separately to all planning units.}
 
-\item{name}{Optional non-empty string used to label the constraint. If
-\code{NULL}, a name is generated. This label is independent of objective aliases.}
+\item{name}{Optional name for the constraint. A unique name is generated
+when \code{NULL}.}
 }
 \value{
-A new \code{Problem} with the rule appended to
-\code{x$data$constraints$action_cardinality}. Its compiled model is invalidated;
-the input problem is preserved.
+An updated \code{Problem} with an additional rule in
+\code{x$data$constraints$action_cardinality}. The input problem is
+preserved; no optimisation is performed.
 }
 \description{
-Add a minimum, maximum, or exact count of selected individual actions in
-each of the specified planning units. Multiple rules can be added across
-calls, including different limits for different units or action subsets.
+Set a minimum, maximum, or exact number of management actions that can be
+selected in each planning unit. Rules can apply to all units, selected units,
+all actions, or a specified subset of actions.
 }
 \details{
-The constraint is applied separately to every unit in \code{pu}, rather than
-to their combined count. For each unit it constrains the sum of binary
-action-selection variables, using \code{>=}, \code{<=}, or \code{=} for \code{sense = "min"},
-\code{"max"}, or \code{"equal"}, respectively. There is no equality tolerance because
-the count is an integer. Counts refer to individual actions; registering
-an action set does not add another counted decision.
+\strong{How action cardinality works}
 
-By default, at most one action can be selected in each unit. An explicit
-rule with \code{actions = NULL} and \code{sense = "max"} or \code{"equal"} replaces that
-implicit limit in the units it covers. A minimum alone or a rule restricted
-to an action subset does not remove the implicit limit. To require at least
-two actions, also supply a total upper bound allowing two or more.
+A cardinality constraint limits the number of individual actions selected
+\emph{within each planning unit}. For example, \code{count = 2} and
+\code{sense = "max"} allow zero, one, or two actions per unit, whereas
+\code{sense = "equal"} requires exactly two. The available senses are:
+\itemize{
+\item \code{"max"}: select at most \code{count} actions.
+\item \code{"min"}: select at least \code{count} actions.
+\item \code{"equal"}: select exactly \code{count} actions.
+}
+The limit is evaluated separately for every unit covered by \code{pu};
+it is not a total number of actions across the study area.
 
-All explicit rules are enforced together, independently of call order.
-Overlapping maxima use the stricter bound; a later rule does not overwrite
-an earlier one. Duplicate combinations of planning-unit subset, action
-subset, and sense are rejected. Names must also be unique within these
-constraints. Contradictions involving multiple rules, budgets, or locks
-can still make the model infeasible; the solver reports such infeasibility.
+\strong{Default and overlapping rules}
 
-Only available planning-unit/action pairs are counted. Locked-out actions
-and pairs with invalid costs are excluded as in model compilation. A
-positive minimum or equality exceeding available actions in any scoped
-unit is rejected. An empty sum is zero, so maxima and zero bounds remain
-valid even in units without available actions.
+By default, at most one action can be selected per planning unit. To allow
+concurrent actions, specify a total maximum or exact-count rule with
+\code{actions = NULL}. That rule replaces the default one-action limit only
+in the planning units it covers. A minimum rule or a rule restricted to
+an action subset does not remove the default limit.
 
-Concurrent actions support costs, profits, ecological objectives, and targets.
-Individual effects are additive unless a joint total is supplied through a
-registered action set. Benefit maximizes signed change; loss is split after
-aggregation within each unit and feature. Targets count the reference once
-for selected units in their action scope.
+For example, to require at least two actions in a unit, first allow at
+least two with a total maximum, then add the minimum. Rules from different
+calls are enforced together; later rules do not overwrite earlier ones.
+Conflicting rules can make the problem infeasible.
+
+\strong{Restricting the scope}
+
+Supply \code{pu} to restrict a rule to particular planning units and
+\code{actions} to count only specified actions. For example, a minimum
+of one action from \code{c("restore", "control")} requires at least one
+of those actions in every covered unit. Actions excluded by the subset
+are not counted towards that particular rule.
+
+Cardinality counts individual selected actions, not the action sets
+registered with \code{add_action_sets()}. Registered sets describe joint
+effects when their member actions are selected; they are not additional
+selectable actions.
+
+\strong{Feasibility and stored rules}
+
+Only available planning-unit/action pairs can be selected. A positive
+minimum or exact count larger than the number of available actions in a
+covered unit is rejected. Conflicts with other constraints may still be
+detected only when the problem is solved. Explicit rules are stored in
+\code{x$data$constraints$action_cardinality} and do not themselves
+select actions or run an optimisation solver.
 }
 \examples{
+# EXAMPLE 1: Define the available decisions
+
+# Consider three planning units, each with four possible actions.
+# By default, the model allows at most one action in each unit.
+# Registering actions does not select any of them.
+
 problem <- create_problem(
   pu = data.frame(id = c(10L, 20L, 30L), cost = 1),
   features = data.frame(id = 1L, name = "woodland"),
-  dist_features = data.frame(pu = c(10L, 20L, 30L), feature = 1L, amount = 10)
+  dist_features = data.frame(
+    pu = c(10L, 20L, 30L), feature = 1L, amount = 10
+  )
 ) |>
-  add_actions(data.frame(id = c("restore", "control", "fence", "monitor")), cost = 1)
-
-# Different capacities: four in unit 10, two in unit 20, default one in 30.
-capacities <- problem |>
-  add_constraint_action_cardinality(4, "max", pu = 10L, name = "capacity_10") |>
-  add_constraint_action_cardinality(2, "max", pu = 20L, name = "capacity_20")
-
-# At least one action from this subset in each of those units.
-required <- capacities |>
-  add_constraint_action_cardinality(
-    1, "min", actions = c("restore", "control"), pu = c(10L, 20L)
+  add_actions(
+    data.frame(id = c("restore", "control", "fence", "monitor")),
+    cost = 1
   )
 
-# An exact total count also replaces the implicit one-action maximum.
-exact <- problem |>
-  add_constraint_action_cardinality(2, "equal", pu = 10L)
-exact$data$constraints$action_cardinality
+# EXAMPLE 2: Different capacities in different planning units
+
+# Allow up to three actions in unit 10 and up to two in unit 20.
+# Unit 30 retains the default maximum of one action.
+# A maximum permits fewer actions, including no intervention.
+
+capacities <- problem |>
+  add_constraint_action_cardinality(
+    count = 3, sense = "max", pu = 10L, name = "capacity_10"
+  ) |>
+  add_constraint_action_cardinality(
+    count = 2, sense = "max", pu = 20L, name = "capacity_20"
+  )
+
+# Inspect the registered constraints, not solved decisions.
+capacities$data$constraints$action_cardinality[
+  , c("name", "count", "sense")
+]
+
+# EXAMPLE 3: Require at least one action from a subset
+
+# In units 10 and 20, require restoration or control (or both).
+# The minimum applies separately to each unit, and only these
+# two actions count towards the requirement. The previously
+# defined total capacities remain in force.
+
+required <- capacities |>
+  add_constraint_action_cardinality(
+    count = 1, sense = "min",
+    actions = c("restore", "control"),
+    pu = c(10L, 20L), name = "management_required"
+  )
+
+# EXAMPLE 4: Require an exact count or prohibit interventions
+
+# An exact count of two overrides the default one-action maximum
+# in unit 10 and requires two distinct actions to be selected.
+
+exact <- add_constraint_action_cardinality(
+  problem, count = 2, sense = "equal", pu = 10L
+)
+
+# A zero maximum prohibits all actions in unit 30.
+# It does not exclude that unit from the planning region.
+
+no_action <- add_constraint_action_cardinality(
+  problem, count = 0, sense = "max", pu = 30L
+)
+
+# EXAMPLE 5: Map where a more flexible capacity is allowed
+
+# Use the bundled 64-unit landscape to impose a hypothetical
+# policy allowing two concurrent actions in the eastern half.
+# All other planning units retain the default maximum of one.
+# No solver is needed to visualise the scope of the rule.
+
+if (requireNamespace("sf", quietly = TRUE)) {
+  sim <- load_sim_multiaction()
+  spatial_problem <- create_problem(
+    pu = sim$planning_units,
+    features = sim$features,
+    dist_features = sim$dist_features,
+    cost = "cost"
+  ) |>
+    add_actions(sim$actions, cost = sim$action_costs)
+
+  # Identify the eastern units using the x-coordinate of their
+  # polygon centroids. The two-action limit is an upper bound,
+  # not a requirement to select two actions.
+  centres <- sf::st_coordinates(
+    sf::st_centroid(sf::st_geometry(sim$planning_units))
+  )
+  east <- centres[, 1] > stats::median(centres[, 1])
+  eastern_ids <- sim$planning_units$id[east]
+
+  spatial_problem <- add_constraint_action_cardinality(
+    spatial_problem, count = 2, sense = "max", pu = eastern_ids
+  )
+
+  # Display the geographical limits, not selected actions.
+  capacity_map <- sim$planning_units
+  capacity_map$max_actions <- ifelse(east, 2L, 1L)
+  plot(capacity_map["max_actions"], main = "Maximum actions per unit")
+}
 
 }
 \seealso{
-\code{\link[=add_actions]{add_actions()}}, \code{\link[=add_action_sets]{add_action_sets()}}, \code{\link[=add_constraint_budget]{add_constraint_budget()}}
+\code{\link{add_actions}}, \code{\link{add_action_sets}},
+\code{\link{add_constraint_budget}}
 }

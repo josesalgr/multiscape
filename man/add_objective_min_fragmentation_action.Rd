@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_objectives.R
 \name{add_objective_min_fragmentation_action}
 \alias{add_objective_min_fragmentation_action}
-\title{Add objective: minimize action fragmentation}
+\title{Add objective: minimise action fragmentation}
 \usage{
 add_objective_min_fragmentation_action(
   x,
@@ -39,95 +39,23 @@ multi-objective workflows.}
 An updated \code{Problem} object.
 }
 \description{
-Define an objective that minimizes fragmentation at the action level over a
-stored spatial relation.
-
-Unlike \code{\link{add_objective_min_fragmentation_pu}}, which acts on the
-selected planning-unit set through \eqn{w_i}, this objective acts on the
-spatial arrangement of individual action decisions through the action
-variables \eqn{x_{ia}}.
+Encourage spatial cohesion separately for each selected action,
+rather than only for the union of managed planning units.
 }
 \details{
-Use this function when spatial cohesion should be encouraged separately for
-each selected action pattern.
+This objective uses the action-selection decisions \eqn{x_{ia}} and
+a previously registered spatial relation. For neighbouring units
+\eqn{i} and \eqn{j}, \eqn{b_{ija}=x_{ia} \land x_{ja}} represents
+whether the same action \eqn{a} occurs in both units. Adjacency of
+different actions does not form a continuous patch of either action.
 
-Let \eqn{\mathcal{I}} denote the set of planning units and let
-\eqn{\mathcal{A}} denote the set of actions.
+Use \code{actions} to select which action patterns contribute,
+\code{action_weights} to adjust their relative importance, and
+\code{weight_multiplier} to scale spatial relation weights.
 
-Let \eqn{x_{ia} \in \{0,1\}} indicate whether action \eqn{a \in \mathcal{A}}
-is selected in planning unit \eqn{i \in \mathcal{I}}.
-
-Let the chosen spatial relation define weighted pairs with
-weights \eqn{\omega_{ij} \ge 0}, and let
-\eqn{\lambda =} \code{weight_multiplier} be the global scaling factor applied
-to these weights.
-
-If \code{actions} is supplied, only the selected subset
-\eqn{\mathcal{A}^{\star} \subseteq \mathcal{A}} contributes to the final
-objective. If \code{actions = NULL}, all actions are included.
-
-The internal preparation step constructs one auxiliary variable
-\eqn{b_{ija} \in [0,1]} for each unique non-diagonal undirected edge
-\eqn{(i,j)} with \eqn{i < j} and for each action \eqn{a}. The intended
-semantics is:
-\deqn{
-b_{ija} = x_{ia} \land x_{ja}.
-}
-
-Whenever both decision variables \eqn{x_{ia}} and \eqn{x_{ja}} exist in the
-model, this conjunction is enforced by the linearization:
-\deqn{
-b_{ija} \le x_{ia},
-}
-\deqn{
-b_{ija} \le x_{ja},
-}
-\deqn{
-b_{ija} \ge x_{ia} + x_{ja} - 1.
-}
-
-If one of the two action variables does not exist because the corresponding
-\code{(pu, action)} pair is not feasible, the auxiliary variable is forced to
-zero.
-
-Therefore, \eqn{b_{ija}=1} if and only if action \eqn{a} is selected in both
-adjacent planning units \eqn{i} and \eqn{j}; otherwise \eqn{b_{ija}=0}.
-
-The exact objective coefficients are assembled later by the model builder
-from:
-\itemize{
-\item the action decision variables \eqn{x_{ia}},
-\item the edge-conjunction variables \eqn{b_{ija}},
-\item the relation weights \eqn{\omega_{ij}},
-\item the multiplier \eqn{\lambda},
-\item and, if supplied, the action-specific weights.
-}
-
-If action-specific weights are provided, let \eqn{\alpha_a \ge 0} denote the
-weight associated with action \eqn{a}. Then the resulting objective can be
-interpreted as an action-wise compactness or fragmentation functional of the
-form:
-\deqn{
-\min \sum_{a \in \mathcal{A}^{\star}} \alpha_a \,
-F_a(x_{\cdot a}, b_{\cdot\cdot a}; \lambda \omega),
-}
-where \eqn{F_a} is the fragmentation expression induced by the selected
-relation and the internal coefficient construction for action \eqn{a}.
-
-In practical terms, this objective penalizes solutions in which the same
-action is spatially scattered or broken into separate patches, while allowing
-different actions to form different spatial patterns.
-
-This differs from planning-unit fragmentation:
-\itemize{
-\item \code{add_objective_min_fragmentation_pu()} encourages cohesion of the
-union of selected planning units,
-\item \code{add_objective_min_fragmentation_action()} encourages cohesion of
-each selected action pattern separately.
-}
-
-Setting \code{weight_multiplier = 0} removes the contribution of the spatial
-relation from the objective after scaling.
+Unlike \code{add_objective_min_fragmentation_planning_units()},
+this objective distinguishes action identities. Combine it with
+coverage or allocation requirements so an empty plan is not optimal.
 }
 \section{Repeated calls}{
 
@@ -139,39 +67,41 @@ To compare alternatives, start from the problem before its objective was added.
 }
 
 \examples{
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Form separate cohesive patches for two actions
+#
+# Each action costs one unit. Two action-specific budget equalities
+# require exactly eight protection and eight restoration units.
+# The default one-action-per-unit rule prevents overlapping actions.
+sim <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
-  )
+  add_actions(sim$actions, cost = 1) |>
+  add_spatial_boundary(name = "boundary", include_self = TRUE) |>
+  add_constraint_budget(
+    8, "equal", actions = "protect", include_pu_cost = FALSE
+  ) |>
+  add_constraint_budget(
+    8, "equal", actions = "restore", include_pu_cost = FALSE
+  ) |>
+  add_objective_min_fragmentation_action(relation_name = "boundary", alias = "action_fragmentation")
 
-p <- add_spatial_boundary(
-  x = p,
-  name = "boundary",
-  include_self = TRUE,
-  edge_factor = 1
-)
-
-p <- add_objective_min_fragmentation_action(
-  p,
-  relation_name = "boundary",
-  actions = "restore",
-  weight_multiplier = 1
-)
-
-p$data$model_args
+# Unlike planning-unit fragmentation, this objective measures
+# the cohesion of each action's selected units separately.
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  get_objectives(solutions, format = "wide")
+  print(plot_spatial_actions(solutions, layout = "single"))
+}
 
 }
 \seealso{
-\code{\link{add_objective_min_fragmentation_pu}},
+\code{\link{add_objective_min_fragmentation_planning_units}},
 \code{\link{add_spatial_boundary}},
 \code{\link{add_spatial_relations}}
 }

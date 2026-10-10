@@ -5,9 +5,11 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Make actions mutually exclusive within each planning unit — add_constraint_action_excludes"><meta name="description" content="Allow at most one selected action from the specified group in each unit.
-All actions in the group may remain unselected."><meta property="og:description" content="Allow at most one selected action from the specified group in each unit.
-All actions in the group may remain unselected."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Make actions mutually exclusive within each planning unit — add_constraint_action_excludes"><meta name="description" content="Prevent two or more incompatible actions from being selected together in
+the same planning unit. At most one action in the specified group may be
+selected; selecting none is also allowed."><meta property="og:description" content="Prevent two or more incompatible actions from being selected together in
+the same planning unit. At most one action in the specified group may be
+selected; selecting none is also allowed."><meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png"><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-6YB8F3838H"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -58,8 +60,9 @@ All actions in the group may remain unselected."><meta property="og:image" conte
     </div>
 
     <div class="ref-description section level2">
-    <p>Allow at most one selected action from the specified group in each unit.
-All actions in the group may remain unselected.</p>
+    <p>Prevent two or more incompatible actions from being selected together in
+the same planning unit. At most one action in the specified group may be
+selected; selecting none is also allowed.</p>
     </div>
 
     <div class="section level2">
@@ -72,68 +75,67 @@ All actions in the group may remain unselected.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>Problem</code> with registered actions.</p></dd>
+<dd><p>A <code>Problem</code> with actions registered by <code><a href="add_actions.html">add_actions()</a></code>.</p></dd>
 
 
 <dt id="arg-actions">actions<a class="anchor" aria-label="anchor" href="#arg-actions"></a></dt>
-<dd><p>Non-empty vector of triggering action IDs or legacy
-<code>actions$action_set</code> classification labels. For excludes/together, this is
-the group of mutually exclusive or jointly selected actions and must resolve
-to at least two distinct actions. Display names and IDs registered with
-<code><a href="add_action_sets.html">add_action_sets()</a></code> are not accepted; supply their individual members.</p></dd>
+<dd><p>At least two action IDs or existing classification labels
+that must be mutually exclusive in each scoped planning unit.</p></dd>
 
 
 <dt id="arg-pu">pu<a class="anchor" aria-label="anchor" href="#arg-pu"></a></dt>
-<dd><p>Optional vector of external planning-unit IDs. <code>NULL</code> applies
-the relation to all currently registered units.</p></dd>
+<dd><p>Optional external planning-unit IDs. <code>NULL</code> applies the rule to
+all planning units.</p></dd>
 
 
 <dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>Optional non-empty, unique constraint label. A name is generated
-if omitted.</p></dd>
+<dd><p>Optional unique, non-empty constraint label. If omitted, a
+label is generated automatically.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A new <code>Problem</code> with the relation appended and compiled caches
-invalidated. The input problem is preserved.</p>
+    <p>A new <code>Problem</code> with the relation appended. The input problem is
+unchanged.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>For each scoped unit, the relation is \(\sum_{a \in A} x_{i,a} \le 1\).
-For three or more actions this excludes every pair, not just selection of the
-complete group. Actions outside the group are unrestricted by this relation.</p>
+    <p><strong>How the relation works</strong></p>
+<p>Suppose restoration and harvesting are incompatible uses of a site. This
+relation prevents their simultaneous selection without prohibiting either
+action individually. With three or more actions, <strong>every pair in the group</strong>
+is mutually exclusive, not just the complete combination.</p>
+<p>For every scoped unit, the constraint is
+\(\sum_{a \in A} x_{ia} \le 1\). Actions outside the group are not
+restricted by this relation. The rule is most informative when the
+cardinality settings otherwise permit more than one action per unit.</p>
     </div>
     <div class="section level2">
     <h2 id="scope-and-feasibility">Scope and feasibility<a class="anchor" aria-label="anchor" href="#scope-and-feasibility"></a></h2>
 
 
-<p>Relations are applied separately within every unit in <code>pu</code>. <code>NULL</code> resolves
-to all currently registered units. Relations do not force any action to be
-selected and do not change the registered feasible pairs or the implicit
-one-action maximum.
-Use <code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code> to permit simultaneous actions.
-An action that has no feasible pair, is locked out, or is removed because its
-cost is non-finite is treated as zero. A missing required action can therefore
-prohibit its trigger; a missing together member prohibits the other members.
-Cycles and combinations of valid relations can make the model infeasible;
-the solver determines joint feasibility, including conflicts with locks,
-budgets, and cardinality. No cross-unit dependency or temporal order is implied.
-Registered joint effects support concurrent economic and ecological
-workflows. Benefit maximizes signed joint change; loss minimizes final
-deterioration within each unit and feature. Ecological targets count the
-reference once per selected unit within their action scope.</p>
+<p>Each relation applies separately within each unit specified by <code>pu</code>;
+<code>pu = NULL</code> applies it to all registered planning units. Relations do not
+select actions by themselves or make unavailable actions feasible.
+<strong>By default, at most one action can be selected per planning unit.</strong>
+Use <code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code> when a requires or together rule
+needs simultaneous selections. Unavailable or locked-out actions are treated
+as unselected: missing companions may prohibit a trigger, and a missing
+together member may prohibit the other members. Combined rules, budgets,
+and locks can also make a model infeasible.</p>
+<p>Relations do not imply a temporal sequence or dependencies between different
+planning units. They can be combined with joint effects registered through
+<code><a href="add_action_sets.html">add_action_sets()</a></code>, but defining a joint effect does not itself require
+actions to be selected together.</p>
     </div>
     <div class="section level2">
     <h2 id="repeated-calls">Repeated calls<a class="anchor" aria-label="anchor" href="#repeated-calls"></a></h2>
 
 
-<p>Distinct relations accumulate in <code>x$data$constraints$action_relations</code> and
-apply simultaneously. Duplicate combinations of type, action groups, sense,
-and PU scope raise an error, regardless of the name. Names must be unique
-across requires, excludes, and together relations. Ordering and repeated IDs
-in input vectors do not change identity. Names label constraints independently
-of objective aliases. To change a relation, rebuild from the preceding problem.</p>
+<p>Distinct rules accumulate and are enforced simultaneously. Duplicate rules
+with the same type, action groups, sense, and PU scope are rejected; names
+must be unique across requires, excludes, and together relations. To revise
+a rule, start from the problem before that rule was added.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -143,19 +145,45 @@ of objective aliases. To change a relation, rebuild from the preceding problem.<
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># EXAMPLE 1: Allow multiple actions, but exclude an incompatible pair</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Up to three actions may be selected per unit. Restoration and harvesting</span></span></span>
+<span class="r-in"><span><span class="co"># are incompatible, while threat control can accompany either one.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_problem.html">create_problem</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  pu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, cost <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1L</span>, name <span class="op">=</span> <span class="st">"habitat"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  dist_features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pu <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, feature <span class="op">=</span> <span class="fl">1L</span>, amount <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"harvest"</span>, <span class="st">"control"</span><span class="op">)</span><span class="op">)</span>, cost <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"max"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_actions.html">add_actions</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"harvest"</span>, <span class="st">"control"</span>, <span class="st">"monitor"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    cost <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality</a></span><span class="op">(</span><span class="fl">3</span>, <span class="st">"max"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">exclusive</span> <span class="op">&lt;-</span> <span class="va">base</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu">add_constraint_action_excludes</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"harvest"</span><span class="op">)</span>, name <span class="op">=</span> <span class="st">"incompatible_uses"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">exclusive</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">constraints</span><span class="op">$</span><span class="va">action_relations</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       type sense              name          actions requires   pu</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 excludes  &lt;NA&gt; incompatible_uses harvest, restore     NULL 1, 2</span>
+<span class="r-in"><span><span class="va">exclusive</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_action_excludes</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">base</span>,</span></span>
+<span class="r-in"><span>  actions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"harvest"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  name <span class="op">=</span> <span class="st">"incompatible_uses"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># EXAMPLE 2: Restrict the rule to selected planning units</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># In unit 1, choosing any one of restoration, harvesting, or control</span></span></span>
+<span class="r-in"><span><span class="co"># precludes the other two. The same rule is not imposed in unit 2.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">local</span> <span class="op">&lt;-</span> <span class="fu">add_constraint_action_excludes</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">base</span>,</span></span>
+<span class="r-in"><span>  actions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"restore"</span>, <span class="st">"harvest"</span>, <span class="st">"control"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  pu <span class="op">=</span> <span class="fl">1L</span>,</span></span>
+<span class="r-in"><span>  name <span class="op">=</span> <span class="st">"local_exclusion"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Inspect the stored relation, not a selected management plan.</span></span></span>
+<span class="r-in"><span><span class="va">local</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">constraints</span><span class="op">$</span><span class="va">action_relations</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"type"</span>, <span class="st">"name"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       type            name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 excludes local_exclusion</span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

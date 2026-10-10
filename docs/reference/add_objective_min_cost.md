@@ -104,84 +104,35 @@ objective was added.
 ## Examples
 
 ``` r
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Minimum-cost management with a woodland target
+#
+# Use the 64 planning-unit landscape. The hypothetical outcome of 1
+# credits one unit of woodland for either action in each selected unit.
+# A target of 12 therefore requires at least 12 interventions.
+sim <- load_sim_multiaction()
 
 p <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
-  )
+  add_actions(sim$actions, cost = sim$action_costs) |>
+  add_effects(data.frame(
+    action = c("protect", "restore"),
+    feature = "woodland", outcome = 1
+  )) |>
+  add_constraint_targets_absolute(12, features = "woodland") |>
+  add_objective_min_cost(include_pu_cost = FALSE, alias = "cost")
 
-p1 <- add_objective_min_cost(p)
-p1$data$model_args
-#> $model_type
-#> [1] "minimizeCosts"
-#> 
-#> $objective_id
-#> [1] "min_cost"
-#> 
-#> $objective_args
-#> $objective_args$include_pu_cost
-#> [1] TRUE
-#> 
-#> $objective_args$include_action_cost
-#> [1] TRUE
-#> 
-#> $objective_args$actions
-#> NULL
-#> 
-#> 
+# The solver selects the least costly set of actions that meets the target.
+# This is a single-objective model: no set_method_*() call is needed.
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  get_objectives(solutions, format = "wide")
+  print(plot_spatial_actions(solutions, layout = "single"))
+}
 
-p2 <- add_objective_min_cost(
-  p,
-  include_pu_cost = FALSE,
-  include_action_cost = TRUE
-)
-p2$data$model_args
-#> $model_type
-#> [1] "minimizeCosts"
-#> 
-#> $objective_id
-#> [1] "min_cost"
-#> 
-#> $objective_args
-#> $objective_args$include_pu_cost
-#> [1] FALSE
-#> 
-#> $objective_args$include_action_cost
-#> [1] TRUE
-#> 
-#> $objective_args$actions
-#> NULL
-#> 
-#> 
 
-p3 <- add_objective_min_cost(
-  p,
-  actions = "restore"
-)
-p3$data$model_args
-#> $model_type
-#> [1] "minimizeCosts"
-#> 
-#> $objective_id
-#> [1] "min_cost"
-#> 
-#> $objective_args
-#> $objective_args$include_pu_cost
-#> [1] TRUE
-#> 
-#> $objective_args$include_action_cost
-#> [1] TRUE
-#> 
-#> $objective_args$actions
-#> [1] "restore"
-#> 
-#> 
 ```
