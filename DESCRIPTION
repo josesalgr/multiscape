@@ -1,7 +1,7 @@
 Package: multiscape
 Type: Package
-Version: 1.4.1
-Title: Multi-Objective Spatial Planning
+Version: 1.4.2
+Title: Multi-Action, Multi-Objective Spatial Planning
 Description: Provides a modular framework for exact multi-objective spatial
     planning using mixed-integer programming. The package supports the
     definition of planning problems through planning units, features,
