@@ -97,9 +97,19 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
 
+}
+\references{
+Tallis, H., et al. (2021). Prioritizing actions: spatial action maps for
+conservation. \emph{Annals of the New York Academy of Sciences}, 1505, 118--141.
+\doi{10.1111/nyas.14651}
+
+Salgado-Rojas, J., Álvarez-Miranda, E., Hermoso, V., Garcia-Gonzalo, J.,
+and Weintraub, A. (2020). A mixed integer programming approach for
+multi-action planning for threat management. \emph{Ecological Modelling},
+418, 108901. \doi{10.1016/j.ecolmodel.2019.108901}
 }
 \seealso{
 \code{\link{add_objective_min_effect}},

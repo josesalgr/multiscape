@@ -54,7 +54,18 @@ reference:
       - add_effects
       - add_profit
 
-  - title: "Targets and constraints"
+  - title: "Action selection and compatibility"
+    desc: >
+        Control how many management actions can be selected
+        within each planning unit and which combinations
+        are permitted or required.
+    contents:
+      - add_constraint_action_cardinality
+      - add_constraint_action_requires
+      - add_constraint_action_excludes
+      - add_constraint_action_together
+
+  - title: "Targets and resource constraints"
     desc: >
       Specify representation targets, resource limits, and fixed planning-unit
       or action decisions.
@@ -63,10 +74,6 @@ reference:
       - add_constraint_targets_relative
       - add_constraint_area
       - add_constraint_budget
-      - add_constraint_action_cardinality
-      - add_constraint_action_requires
-      - add_constraint_action_excludes
-      - add_constraint_action_together
       - add_constraint_locked_actions
       - add_constraint_locked_planning_units
 
@@ -243,3 +250,29 @@ reference:
       - run_grid
       - run_manual
       - mo_control
+
+articles:
+  - title: Usage guides
+    navbar: Usage guides
+    desc: >
+      Learn how to choose optimisation methods and model management actions.
+    contents:
+      - choosing_multi_objective_method
+      - Planning_with_concurrent_actions
+      - Joint_effects
+
+  - title: Case studies
+    navbar: Case studies
+    desc: >
+      Explore complete spatial planning applications, from formulation
+      to interpretation of alternative plans.
+    contents:
+      - reserve-design-rwanda
+      - Integrated_planning
+
+  - title: Advanced usage
+    navbar: Advanced usage
+    desc: >
+      Reuse a common planning problem and compare alternative configurations.
+    contents:
+      - Repeated_calls

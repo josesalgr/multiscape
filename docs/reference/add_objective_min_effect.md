@@ -52,6 +52,22 @@ This differs from the deprecated
 [`add_objective_min_loss()`](https://josesalgr.github.io/multiscape/reference/add_objective_min_loss.md),
 which penalises only the negative part of aggregated changes.
 
+## References
+
+Related spatial fuel-management applications (not necessarily using the
+identical signed-effect objective) include:
+
+Minas, J. P., Hearne, J. W., and Martell, D. L. (2014). A spatial
+optimisation model for multi-period landscape level fuel management to
+mitigate wildfire impacts. *European Journal of Operational Research*,
+232, 412–422.
+[doi:10.1016/j.ejor.2013.07.026](https://doi.org/10.1016/j.ejor.2013.07.026)
+
+Williams, B. A., Shoo, L. P., Wilson, K. A., and Beyer, H. L. (2017).
+Optimising the spatial planning of prescribed burns to achieve multiple
+objectives in a fire-dependent ecosystem. *Journal of Applied Ecology*.
+[doi:10.1111/1365-2664.12920](https://doi.org/10.1111/1365-2664.12920)
+
 ## See also
 
 [`add_objective_max_effect()`](https://josesalgr.github.io/multiscape/reference/add_objective_max_effect.md),
@@ -91,8 +107,7 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
-
 
 ```

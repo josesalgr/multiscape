@@ -21,7 +21,7 @@ optional planning-unit and action-cost penalties."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,14 +32,18 @@ optional planning-unit and action-cost penalties."><meta property="og:image" con
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
-    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
-    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Usage guides</h6></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Planning_with_concurrent_actions.html">Planning with concurrent management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
-    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Case studies</h6></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced usage</h6></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -154,6 +158,15 @@ Aliased definitions preserve an explicitly configured single objective.
 To compare alternatives, start from the problem before its objective was added.</p>
     </div>
     <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Polasky, S., et al. (2008). Where to put things? Spatial land management
+to sustain biodiversity and economic returns. <em>Biological Conservation</em>,
+141, 1505–1524. <a href="https://doi.org/10.1016/j.biocon.2008.03.022" class="external-link">doi:10.1016/j.biocon.2008.03.022</a></p>
+<p>Chan, K. M. A., Hoshizaki, L., and Klinkenberg, B. (2011). Ecosystem
+services in conservation planning: targeted benefits vs. co-benefits or
+costs? <em>PLOS ONE</em>, 6, e24378. <a href="https://doi.org/10.1371/journal.pone.0024378" class="external-link">doi:10.1371/journal.pone.0024378</a></p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="add_objective_max_profit.html">add_objective_max_profit</a></code>,
 <code><a href="add_objective_min_cost.html">add_objective_min_cost</a></code></p></div>
@@ -191,10 +204,9 @@ To compare alternatives, start from the problem before its objective was added.<
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">solutions</span> <span class="op">&lt;-</span> <span class="fu"><a href="solve.html">solve</a></span><span class="op">(</span><span class="fu"><a href="set_solver_cbc.html">set_solver_cbc</a></span><span class="op">(</span><span class="va">p</span>, time_limit <span class="op">=</span> <span class="fl">30</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="print.html">print</a></span><span class="op">(</span><span class="fu"><a href="plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span><span class="va">solutions</span>, layout <span class="op">=</span> <span class="st">"single"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span><span class="va">solutions</span>, layout <span class="op">=</span> <span class="st">"single"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="add_objective_max_net_profit-1.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="add_objective_max_net_profit-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -96,9 +96,20 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
 
+}
+\references{
+Salgado-Rojas, J., Álvarez-Miranda, E., Hermoso, V., Garcia-Gonzalo, J.,
+and Weintraub, A. (2020). A mixed integer programming approach for
+multi-action planning for threat management. \emph{Ecological Modelling},
+418, 108901. \doi{10.1016/j.ecolmodel.2019.108901}
+
+Álvarez-Miranda, E., Salgado-Rojas, J., Hermoso, V., Garcia-Gonzalo, J.,
+and Weintraub, A. (2020). An integer programming method for the design of
+multi-criteria multi-action conservation plans. \emph{Omega}, 92, 102147.
+\doi{10.1016/j.omega.2019.102147}
 }
 \seealso{
 \code{\link{add_objective_min_fragmentation_planning_units}},

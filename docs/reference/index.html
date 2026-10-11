@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,14 +30,18 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Action_cardinality.html">Controlling action counts per planning unit</a></li>
-    <li><a class="dropdown-item" href="../articles/Action_relations.html">Logical relations between management actions</a></li>
-    <li><a class="dropdown-item" href="../articles/Action_sets.html">Defining sets of management actions</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Usage guides</h6></li>
     <li><a class="dropdown-item" href="../articles/choosing_multi_objective_method.html">Choosing a multi-objective optimisation method</a></li>
-    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><a class="dropdown-item" href="../articles/Planning_with_concurrent_actions.html">Planning with concurrent management actions</a></li>
     <li><a class="dropdown-item" href="../articles/Joint_effects.html">Joint effects and interactions between management actions</a></li>
-    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Case studies</h6></li>
     <li><a class="dropdown-item" href="../articles/reserve-design-rwanda.html">From reserve selection to multi-objective conservation planning</a></li>
+    <li><a class="dropdown-item" href="../articles/Integrated_planning.html">Multi-objective forest restoration planning in a highly productive landscape</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced usage</h6></li>
+    <li><a class="dropdown-item" href="../articles/Repeated_calls.html">Repeated calls and alternative problem configurations</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -107,7 +111,44 @@
         </dt>
         <dd>Add profit to a planning problem</dd>
       </dl></div><div class="section level2">
-      <h2 id="targets-and-constraints">Targets and constraints<a class="anchor" aria-label="anchor" href="#targets-and-constraints"></a></h2>
+      <h2 id="action-selection-and-compatibility">Action selection and compatibility<a class="anchor" aria-label="anchor" href="#action-selection-and-compatibility"></a></h2>
+
+      <div class="section-desc"><p>Control how many management actions can be selected within each planning unit and which combinations are permitted or required.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code>
+
+        </dt>
+        <dd>Constrain the number of actions selected per planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_requires.html">add_constraint_action_requires()</a></code>
+
+        </dt>
+        <dd>Require companion actions in each planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_excludes.html">add_constraint_action_excludes()</a></code>
+
+        </dt>
+        <dd>Make actions mutually exclusive within each planning unit</dd>
+
+        <dt>
+
+          <code><a href="add_constraint_action_together.html">add_constraint_action_together()</a></code>
+
+        </dt>
+        <dd>Select actions together within each planning unit</dd>
+      </dl></div><div class="section level2">
+      <h2 id="targets-and-resource-constraints">Targets and resource constraints<a class="anchor" aria-label="anchor" href="#targets-and-resource-constraints"></a></h2>
 
       <div class="section-desc"><p>Specify representation targets, resource limits, and fixed planning-unit or action decisions.</p></div>
 
@@ -143,34 +184,6 @@
 
         </dt>
         <dd>Add budget constraint</dd>
-
-        <dt>
-
-          <code><a href="add_constraint_action_cardinality.html">add_constraint_action_cardinality()</a></code>
-
-        </dt>
-        <dd>Constrain the number of actions selected per planning unit</dd>
-
-        <dt>
-
-          <code><a href="add_constraint_action_requires.html">add_constraint_action_requires()</a></code>
-
-        </dt>
-        <dd>Require companion actions in each planning unit</dd>
-
-        <dt>
-
-          <code><a href="add_constraint_action_excludes.html">add_constraint_action_excludes()</a></code>
-
-        </dt>
-        <dd>Make actions mutually exclusive within each planning unit</dd>
-
-        <dt>
-
-          <code><a href="add_constraint_action_together.html">add_constraint_action_together()</a></code>
-
-        </dt>
-        <dd>Select actions together within each planning unit</dd>
 
         <dt>
 
@@ -309,21 +322,21 @@
           <code><a href="set_method_weighted_sum.html">set_method_weighted_sum()</a></code>
 
         </dt>
-        <dd>Set the weighted-sum multi-objective method</dd>
+        <dd>Configure the weighted-sum multi-objective method</dd>
 
         <dt>
 
           <code><a href="set_method_epsilon_constraint.html">set_method_epsilon_constraint()</a></code>
 
         </dt>
-        <dd>Set the epsilon-constraint multi-objective method</dd>
+        <dd>Configure the epsilon-constraint multi-objective method</dd>
 
         <dt>
 
           <code><a href="set_method_augmecon.html">set_method_augmecon()</a></code>
 
         </dt>
-        <dd>Set the AUGMECON multi-objective method</dd>
+        <dd>Configure the augmented epsilon-constraint method (AUGMECON)</dd>
 
         <dt>
 

@@ -1,19 +1,9 @@
-# Set the AUGMECON multi-objective method
+# Configure the augmented epsilon-constraint method (AUGMECON)
 
-Configure a `Problem` object to be solved with the augmented
-epsilon-constraint method (AUGMECON).
-
-AUGMECON is an exact multi-objective optimization method in which one
-objective is treated as the primary objective and the remaining
-objectives are converted into \\\varepsilon\\-constraints. In the
-augmented formulation, each secondary objective is associated with a
-non-negative slack variable, and the primary objective is augmented with
-a small reward term based on the normalized slacks. This augmentation is
-used to avoid weakly efficient solutions, following Mavrotas (2009).
-
-This function does not solve the problem directly. It stores the
-AUGMECON configuration in `x$data$method`, to be used later by
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
+Explore trade-offs among registered objectives using AUGMECON. One
+objective is optimised directly, while the others are constrained by
+epsilon levels and contribute small, normalised improvement terms to
+discourage weakly efficient solutions.
 
 ## Usage
 
@@ -38,849 +28,215 @@ set_method_augmecon(
 
 - x:
 
-  A `Problem` object.
+  A `Problem` with at least two registered objective aliases.
 
 - primary:
 
-  Character string giving the alias of the primary objective, that is,
-  the objective optimized directly in the AUGMECON formulation.
+  Character scalar naming the objective optimised directly.
 
 - aliases:
 
-  Optional character vector of objective aliases to include in the
-  method. If `NULL`, all registered objective aliases are used. The
-  value of `primary` must be included in `aliases`.
+  Optional character vector of registered objective aliases. By default,
+  all registered objectives are included; `primary` must be one of them.
 
 - runs:
 
-  A run design created with
-  [`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
-  or
-  [`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
-  For AUGMECON,
+  A run design from
   [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
-  requests automatic epsilon-level generation for secondary objectives,
-  while
-  [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
-  requires columns named `eps_<alias>` for each secondary objective.
+  or
+  [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
+  Manual designs contain `eps_<alias>` columns for all secondary
+  objectives.
 
-- grid:
+- grid, n_points, include_extremes:
 
-  Deprecated. Previous manual-grid argument. It must be a named list
-  with one numeric vector per secondary objective. New code should use
-  `runs = set_runs_manual(...)` instead.
-
-- n_points:
-
-  Deprecated. Previous automatic-grid argument. New code should use
-  `runs = set_runs_grid(n = ...)` instead.
-
-- include_extremes:
-
-  Deprecated and ignored. Automatic run grids now always include
-  boundary levels. New code should use `runs = set_runs_grid(n = ...)`.
+  Deprecated run-design arguments; use `runs` instead.
+  `include_extremes` is ignored because automatic grids always include
+  their endpoints.
 
 - lexicographic:
 
-  Logical. If `TRUE`, use lexicographic anchoring when computing extreme
-  points for automatic grid construction.
+  Logical. Whether to use lexicographic anchoring when computing
+  automatic-grid extreme points. Defaults to `TRUE`.
 
 - lexicographic_tol:
 
-  Non-negative numeric tolerance used in lexicographic anchoring.
+  Non-negative tolerance for the lexicographic extreme-point
+  calculation, in the objective's original units.
 
 - augmentation:
 
-  Positive numeric augmentation coefficient \\\rho\\. The effective
-  coefficient of each secondary slack is computed internally as \\\rho /
-  R_k\\, where \\R_k\\ is the payoff-table range of the corresponding
-  secondary objective.
+  Positive coefficient for the normalised slack reward. Defaults to
+  `1e-3`.
 
 - slack_upper_bound:
 
-  A single positive finite numeric value defining the upper bound of
-  AUGMECON slack variables. Defaults to `1e6`.
+  Positive upper bound for AUGMECON slack variables. Defaults to `1e6`;
+  it must not exclude feasible values.
 
 - control:
 
-  A control object created with
-  [`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
-  It controls how infeasible runs, runs without a solution, and
-  unexpected errors are handled.
+  Optional run-failure settings from
+  [`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
 
 ## Value
 
-The updated `Problem` object with the AUGMECON method configuration
-stored in `x$data$method`.
+An updated `Problem` with the method stored in `x$data$method`.
+Payoff-table calculations and optimisation runs take place in
+[`solve()`](https://josesalgr.github.io/multiscape/reference/solve.md).
 
 ## Details
 
-**Numerical precision**
-
-MO solves may multiply the complete scalar objective by a bounded
-positive factor to make small augmentation terms visible to the solver.
-This preserves the criterion and reported values remain in the original
-units. CBC and Gurobi use precise feasibility, integrality, and
-optimality defaults; explicit `solver_params` supplied to
-[`set_solver`](https://josesalgr.github.io/multiscape/reference/set_solver.md)
-override these defaults. Secondary bounds are checked by reevaluating
-the selected decisions. Effective parameters, objective scaling, and
-epsilon checks are stored in solution diagnostics. After an optimal
-augmented solve, a second pass fixes the attained primary value and
-maximizes normalized slack. This refines numerically unresolved
-secondary improvements without replacing the original augmented
-criterion. It starts from the first solution, uses the remaining per-run
-time limit, and preserves the first pass's global status/gap; refinement
-details are recorded in diagnostics. Exact MILP methods still operate
-with floating-point arithmetic. Algebraically equivalent formulations
-can return different plans at numerical boundaries or among tied
-alternatives; bit-for-bit reproduction is not guaranteed.
-
-A problem can have only one explicitly configured multi-objective
-method. A second call to any `set_method_*()` function raises an error.
-To compare methods or run designs, derive alternatives from the same
-problem before configuring its method.
-
-Use this method when one objective should be optimized directly, the
-remaining objectives should be controlled through epsilon levels, and
-weakly efficient solutions should be reduced through the augmented
-formulation.
-
-**General idea**
-
-Suppose that \\m \ge 2\\ objective functions have already been
-registered in the problem: \$\$ f_1(x), f_2(x), \dots, f_m(x). \$\$
-
-AUGMECON selects one of them as the primary objective, say \\f_p(x)\\,
-and treats the remaining \\m - 1\\ objectives as secondary objectives.
-
-For a fixed combination of epsilon levels, the method solves a
-single-objective subproblem of the form:
-
-\$\$ \max \\ f_p(x) + \rho \sum\_{k \in \mathcal{S}} \frac{s_k}{R_k}
-\$\$
-
-subject to
-
-\$\$ f_k(x) - s_k = \varepsilon_k, \qquad k \in \mathcal{S}, \$\$
-
-\$\$ s_k \ge 0, \qquad k \in \mathcal{S}, \$\$
-
-together with all original feasibility constraints of the planning
-problem.
-
-Here:
-
-- \\f_p(x)\\ is the primary objective,
-
-- \\\mathcal{S}\\ is the set of secondary objectives,
-
-- \\\varepsilon_k\\ is the imposed level for secondary objective \\k\\,
-
-- \\s_k\\ is a non-negative slack variable,
-
-- \\R_k\\ is the payoff-table range used to normalize objective \\k\\,
-
-- \\\rho \> 0\\ is a small augmentation coefficient.
-
-In the original AUGMECON formulation of Mavrotas (2009), the
-augmentation term ensures that, among solutions with the same primary
-objective value, the solver prefers those with larger normalized slack,
-thereby avoiding weakly efficient points and improving Pareto-front
-generation.
-
-**Secondary-objective equalities and slacks**
-
-The key difference between standard epsilon-constraint and AUGMECON is
-that the secondary objectives are written as equalities with slacks
-rather than as simple inequalities. For a maximization-type secondary
-objective, this takes the form:
-
-\$\$ f_k(x) - s_k = \varepsilon_k, \qquad s_k \ge 0. \$\$
-
-This implies: \$\$ f_k(x) \ge \varepsilon_k, \$\$
-
-while explicitly measuring the excess above the imposed epsilon level
-through \\s_k\\. The augmentation term then rewards such excess in
-normalized form.
-
-In implementation terms, the exact sign convention for each objective
-depends on whether it is internally treated as a minimization or
-maximization objective, but the method always preserves the same
-AUGMECON principle:
-
-- one objective is optimized directly,
-
-- all others are turned into constrained objectives,
-
-- non-negative slacks measure controlled deviation from the imposed
-  epsilon levels,
-
-- the primary objective is augmented with a small slack-based reward.
-
-**Run designs**
-
-AUGMECON runs are specified through the `runs` argument. This argument
-must be created with either
-[`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
-or
-[`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
-
-`set_runs_grid(n = ...)` requests automatic generation of epsilon levels
-for the secondary objectives during
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md). In
-that case, the method first computes extreme points and payoff-table
-ranges for the secondary objectives, and then generates `n` levels for
-each one.
-
-Boundary epsilon levels are always included in automatic grids.
-Therefore, the lower and upper bounds of the automatically derived
-epsilon ranges are part of the generated run design.
-
-[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
-allows users to provide explicit epsilon combinations. In manual
-AUGMECON runs, each row is one optimization run and columns must be
-named `eps_<alias>`, where `<alias>` is the alias of a secondary
-objective. For example, if `primary = "benefit"` and
-`aliases = c("benefit", "cost", "loss")`, the manual run table must
-contain columns `eps_cost` and `eps_loss`.
-
-In
-[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md),
-each row is used exactly as supplied. The function does not
-automatically create a Cartesian product of epsilon values. If a
-Cartesian product is desired, it should be created explicitly by the
-user, for example with
-[`expand.grid`](https://rdrr.io/r/base/expand.grid.html), and then
-passed to
-[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
-
-The older arguments `grid`, `n_points`, and `include_extremes` are
-deprecated. They are still accepted for backwards compatibility and are
-internally converted to
-[`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
-or
-[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
-designs. The deprecated `include_extremes` argument is ignored because
-automatic run grids now always include boundary levels.
-
-**Automatic epsilon grids**
-
-When `runs = set_runs_grid(n = ...)` is used, the epsilon design is not
-built immediately. Instead, it is constructed later during
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
-using extreme-point or payoff-table information.
-
-For each secondary objective,
-[`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
-generates a sequence of epsilon levels. With multiple secondary
-objectives, the final AUGMECON design is the Cartesian product of these
-sequences. Therefore, the number of runs can grow quickly as the number
-of secondary objectives increases.
-
-If `lexicographic = TRUE`, extreme points are computed using
-lexicographic anchoring, which can improve payoff-table quality when
-objectives are tightly competing. The tolerance used for lexicographic
-anchoring is controlled by `lexicographic_tol`.
-
-**Manual epsilon runs**
-
-Manual run designs are the most explicit way to use AUGMECON, especially
-when more than two objectives are involved or when only selected epsilon
-combinations should be explored.
-
-For example, with one primary objective and two secondary objectives, a
-manual run design may contain:
-
-
-    data.frame(
-      eps_cost = c(4, 6, 8),
-      eps_loss = c(0, 1, 1)
-    )
-
-This creates three runs, not a full Cartesian grid. To create all
-combinations, use
-[`expand.grid()`](https://rdrr.io/r/base/expand.grid.html) before
-calling
-[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md).
-
-**Normalization and augmentation**
-
-The augmentation term is scaled using the payoff-table ranges of the
-secondary objectives. If \\R_k\\ denotes the range of secondary
-objective \\k\\, then the effective coefficient applied to the slack is:
-
-\$\$ \frac{\rho}{R_k}, \$\$
-
-where \\\rho = \code{augmentation}\\.
-
-This normalization is important because different objectives may be
-measured on very different numerical scales. Without normalization, a
-slack belonging to a large-scale objective could dominate the
-augmentation term simply due to units.
-
-In this implementation, the user supplies `augmentation` as the base
-coefficient \\\rho\\, while the normalized slack coefficients are
-computed internally at solve time using the corresponding payoff-table
-ranges.
-
-**Failure handling**
-
-The `control` argument controls how failed runs are handled. It must be
-created with
-[`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md).
-
-Some epsilon combinations may define infeasible subproblems. By default,
-failed runs can be retained in the returned `SolutionSet` with missing
-objective values, while feasible runs are preserved. Alternatively,
-users can request that the solve stops when an infeasible run, a run
-without a solution, or an unexpected error is encountered.
-
-**AUGMECON slack upper bound**
-
-`slack_upper_bound` defines an explicit upper bound for slack variables
-introduced by the AUGMECON formulation. The value should be sufficiently
-large to avoid excluding valid solutions, but unnecessarily large bounds
-can weaken the mixed-integer formulation and reduce numerical
-performance.
-
-When possible, a problem-specific bound based on the ranges of the
-constrained objectives should be used.
-
-**Stored configuration**
-
-This function stores the method definition in `x$data$method` with:
-
-- `name = "augmecon"`,
-
-- `type = "augmecon"`,
-
-- the primary objective alias,
-
-- the full set of participating aliases,
-
-- the set of secondary aliases,
-
-- `runs`,
-
-- lexicographic configuration,
-
-- `augmentation`,
-
-- `slack_upper_bound`,
-
-- `control`.
-
-The actual payoff table, grid construction, and subproblem solution loop
-are performed later by
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md).
+Register at least two objectives with distinct `alias` values. The
+`primary` objective is optimised directly; the remaining objectives
+selected by `aliases` become epsilon-constrained objectives. For
+example, with woodland improvement as the primary objective and cost as
+secondary, each run seeks the greatest improvement while keeping cost
+below a ceiling: \$\$\max\\ f\_{\mathrm{woodland}}(x), \qquad
+f\_{\mathrm{cost}}(x) \le \varepsilon\_{\mathrm{cost}}.\$\$
+
+**What augmentation changes.** Ordinary epsilon-constraint may return a
+weakly efficient plan when another objective could improve without
+changing the primary objective. AUGMECON introduces a non-negative slack
+for every secondary constraint and rewards normalised slack through a
+small positive coefficient `augmentation` (Mavrotas, 2009). For a
+minimised cost objective, the slack measures how far actual cost lies
+*below* its epsilon ceiling. Schematically, with a maximised primary
+objective, AUGMECON uses \$\$\max\\ f_p(x) + \rho\sum_k
+\frac{s_k}{R_k},\$\$ where \\\rho\\ is `augmentation`, \\s_k\\ is the
+non-negative slack, and \\R_k\\ is the payoff-table range of the
+corresponding secondary objective. The implementation handles the signs
+of minimisation and maximisation objectives internally. Choose a small
+augmentation so that secondary improvements do not unintentionally
+outweigh primary performance.
+
+**Automatic epsilon grids.** Use `runs = set_runs_grid(n = 5)` to obtain
+five epsilon levels, including the endpoints, for each secondary
+objective. Levels and payoff-table ranges are calculated during
+[`solve()`](https://josesalgr.github.io/multiscape/reference/solve.md).
+With three objectives, for example, two secondary grids of five levels
+yield up to 25 combinations. When `lexicographic = TRUE`, extreme-point
+calculations use lexicographic anchoring, with `lexicographic_tol`
+specifying the tolerance.
+
+**Manual thresholds.** Use `runs = set_runs_manual()` to supply explicit
+epsilon values, one row per run and one column named `eps_<alias>` for
+each secondary objective. For a minimised cost objective,
+`eps_cost = 20` means *cost at most 20*, not exactly 20. Unlike
+automatic grids, manual rows are not expanded into all possible
+combinations; use
+[`expand.grid()`](https://rdrr.io/r/base/expand.grid.html) if needed.
+
+**Interpreting solutions.** The augmentation reduces weak-efficiency
+problems, but a finite epsilon grid does not enumerate every
+Pareto-optimal plan, and different runs can produce identical spatial
+decisions. Numerical tolerances and finite solver time limits also
+matter. A numerical refinement pass may improve secondary slacks after
+an optimal augmented solve; solver settings and epsilon-bound checks are
+available in the solution diagnostics. `slack_upper_bound` must be large
+enough for valid slacks, without being unnecessarily loose. Use
+[`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md)
+to manage infeasible or unsuccessful runs.
+
+Only one multi-objective method can be configured on a `Problem`;
+compare methods by starting from the same problem before calling
+`set_method_*()`. The older `grid`, `n_points`, and `include_extremes`
+arguments are deprecated in favour of `runs`.
 
 ## References
 
 Mavrotas, G. (2009). Effective implementation of the
 \\\varepsilon\\-constraint method in multi-objective mathematical
 programming problems. *Applied Mathematics and Computation*, 213(2),
-455–465.
+455-465.
+[doi:10.1016/j.amc.2009.03.037](https://doi.org/10.1016/j.amc.2009.03.037)
+.
+
+Mavrotas, G., and Florios, K. (2013). An improved version of the
+augmented \\\varepsilon\\-constraint method (AUGMECON2) for finding the
+exact Pareto set in multi-objective integer programming problems.
+*Applied Mathematics and Computation*, 219(18), 9652-9669.
+[doi:10.1016/j.amc.2013.03.002](https://doi.org/10.1016/j.amc.2013.03.002)
+. (Related extension; not the same method.)
 
 ## See also
 
-[`set_runs_grid`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md),
-[`set_runs_manual`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md),
-[`set_runs_control`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md),
-[`set_method_epsilon_constraint`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md),
-[`set_method_weighted_sum`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md),
-[`solve`](https://josesalgr.github.io/multiscape/reference/solve.md)
+[`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md),
+[`set_method_weighted_sum()`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md),
+[`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md),
+[`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md),
+[`set_runs_control()`](https://josesalgr.github.io/multiscape/reference/set_runs_control.md),
+[`get_objectives()`](https://josesalgr.github.io/multiscape/reference/get_objectives.md),
+[`plot_tradeoff()`](https://josesalgr.github.io/multiscape/reference/plot_tradeoff.md),
+[`plot_spatial_actions()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.md),
+[`solve()`](https://josesalgr.github.io/multiscape/reference/solve.md)
 
 ## Examples
 
 ``` r
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Maximise woodland improvement under alternative cost limits.
+# Use the same 64-unit landscape and objectives as in the other MO methods.
+sim <- load_sim_multiaction()
 
-x <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+base <- create_problem(
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
+  add_actions(sim$actions, cost = sim$action_costs) |>
+  add_effects(sim$effect_assumptions) |>
+  # Require some improvement to avoid an empty low-cost solution.
+  add_constraint_targets_relative(0.05, features = "woodland") |>
+  add_objective_max_effect(
+    features = "woodland", alias = "woodland"
   ) |>
-  add_effects(
-    example_data$effect_assumptions
-  ) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_effect(alias = "benefit") |>
-  add_objective_min_loss(alias = "loss")
+  add_objective_min_cost(
+    include_pu_cost = FALSE, alias = "cost"
+  )
 
-# Automatic epsilon grids generated later during solve()
-x1 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
+# Explore five cost ceilings. Small slack rewards help distinguish
+# plans with similar woodland improvements but different costs.
+augmecon <- set_method_augmecon(
+  base,
+  primary = "woodland",
+  aliases = c("woodland", "cost"),
   runs = set_runs_grid(n = 5),
   lexicographic = TRUE,
   augmentation = 1e-3
 )
 
-x1$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"   
-#> 
-#> $secondary
-#> [1] "cost"
-#> 
-#> $runs
-#> $type
-#> [1] "grid"
-#> 
-#> $n
-#> [1] 5
-#> 
-#> $include_extremes
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunGrid"   "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
-
-# Manual runs for one secondary objective
-aug_runs <- data.frame(
-  eps_cost = c(4, 6, 8)
-)
-
-x2 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  runs = set_runs_manual(aug_runs),
-  augmentation = 1e-3
-)
-
-x2$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"   
-#> 
-#> $secondary
-#> [1] "cost"
-#> 
-#> $runs
-#> $type
-#> [1] "manual"
-#> 
-#> $values
-#>   eps_cost
-#> 1        4
-#> 2        6
-#> 3        8
-#> 
-#> attr(,"class")
-#> [1] "RunManual" "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
-
-# Manual runs for two secondary objectives
-aug_runs_3obj <- data.frame(
-  eps_cost = c(4, 6, 8),
-  eps_loss = c(0, 1, 1)
-)
-
-x3 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost", "loss"),
-  runs = set_runs_manual(aug_runs_3obj),
-  augmentation = 1e-3
-)
-
-x3$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"    "loss"   
-#> 
-#> $secondary
-#> [1] "cost" "loss"
-#> 
-#> $runs
-#> $type
-#> [1] "manual"
-#> 
-#> $values
-#>   eps_cost eps_loss
-#> 1        4        0
-#> 2        6        1
-#> 3        8        1
-#> 
-#> attr(,"class")
-#> [1] "RunManual" "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
-
-# Cartesian epsilon design created explicitly by the user
-aug_cartesian <- expand.grid(
-  eps_cost = c(4, 6, 8),
-  eps_loss = c(0, 1),
-  KEEP.OUT.ATTRS = FALSE
-)
-
-x4 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost", "loss"),
-  runs = set_runs_manual(aug_cartesian),
-  augmentation = 1e-3
-)
-
-x4$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"    "loss"   
-#> 
-#> $secondary
-#> [1] "cost" "loss"
-#> 
-#> $runs
-#> $type
-#> [1] "manual"
-#> 
-#> $values
-#>   eps_cost eps_loss
-#> 1        4        0
-#> 2        6        0
-#> 3        8        0
-#> 4        4        1
-#> 5        6        1
-#> 6        8        1
-#> 
-#> attr(,"class")
-#> [1] "RunManual" "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
-
-# Backwards-compatible deprecated usage
-x5 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost", "loss"),
-  grid = list(
-    cost = c(4, 6, 8),
-    loss = c(0, 1)
-  ),
-  augmentation = 1e-3
-)
-#> Warning: `grid/n_points/include_extremes` is deprecated. Use `runs = set_runs_grid(...) or runs = set_runs_manual(...)` instead.
-
-x5$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"    "loss"   
-#> 
-#> $secondary
-#> [1] "cost" "loss"
-#> 
-#> $runs
-#> $type
-#> [1] "manual"
-#> 
-#> $values
-#>   eps_cost eps_loss
-#> 1        4        0
-#> 2        6        0
-#> 3        8        0
-#> 4        4        1
-#> 5        6        1
-#> 6        8        1
-#> 
-#> attr(,"class")
-#> [1] "RunManual" "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
-
-# Control failure handling and the AUGMECON slack upper bound
-x6 <- set_method_augmecon(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  runs = set_runs_manual(data.frame(eps_cost = c(4, 6, 8))),
-  augmentation = 1e-3,
-  slack_upper_bound = 1e6,
-  control = set_runs_control(
-    stop_on_infeasible = FALSE,
-    stop_on_no_solution = FALSE,
-    stop_on_error = TRUE
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(
+    set_solver_cbc(augmecon, time_limit = 30, verbose = FALSE)
   )
-)
 
-x6$data$method
-#> $name
-#> [1] "augmecon"
-#> 
-#> $type
-#> [1] "augmecon"
-#> 
-#> $primary
-#> [1] "benefit"
-#> 
-#> $aliases
-#> [1] "benefit" "cost"   
-#> 
-#> $secondary
-#> [1] "cost"
-#> 
-#> $runs
-#> $type
-#> [1] "manual"
-#> 
-#> $values
-#>   eps_cost
-#> 1        4
-#> 2        6
-#> 3        8
-#> 
-#> attr(,"class")
-#> [1] "RunManual" "RunDesign"
-#> 
-#> $lexicographic
-#> [1] TRUE
-#> 
-#> $lexicographic_tol
-#> [1] 1e-09
-#> 
-#> $augmentation
-#> [1] 0.001
-#> 
-#> $slack_upper_bound
-#> [1] 1e+06
-#> 
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> $control
-#> $stop_on_infeasible
-#> [1] FALSE
-#> 
-#> $stop_on_no_solution
-#> [1] FALSE
-#> 
-#> $stop_on_error
-#> [1] TRUE
-#> 
-#> attr(,"class")
-#> [1] "RunsControl" "MOControl"   "list"       
-#> 
+  # Actual cost may be lower than the epsilon ceiling.
+  get_objectives(solutions, format = "wide")
+
+  # Inspect the trade-off frontier generated by AUGMECON.
+  plot_tradeoff(
+    solutions, objectives = c("cost", "woodland"),
+    label_runs = TRUE
+  )
+
+  # Compare selected management actions for three epsilon levels.
+  # The three runs need not produce three different spatial plans.
+  plot_spatial_actions(
+    solutions, solutions = c(1, 3, 5), layout = "single", ncol = 3
+  )
+}
+
+
+
+# ALTERNATIVE: use three manually specified cost ceilings.
+# Start again from 'base', before configuring a multi-objective method.
+manual <- set_method_augmecon(
+  base,
+  primary = "woodland",
+  aliases = c("woodland", "cost"),
+  runs = set_runs_manual(data.frame(eps_cost = c(10, 20, 40))),
+  augmentation = 1e-3
+)
 ```

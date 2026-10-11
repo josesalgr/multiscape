@@ -73,9 +73,23 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
 
+}
+\references{
+Related spatial fuel-management applications (not necessarily using the
+identical signed-effect objective) include:
+
+Minas, J. P., Hearne, J. W., and Martell, D. L. (2014).
+A spatial optimisation model for multi-period landscape level fuel management
+to mitigate wildfire impacts. \emph{European Journal of Operational Research},
+232, 412--422. \doi{10.1016/j.ejor.2013.07.026}
+
+Williams, B. A., Shoo, L. P., Wilson, K. A., and Beyer, H. L. (2017).
+Optimising the spatial planning of prescribed burns to achieve multiple
+objectives in a fire-dependent ecosystem. \emph{Journal of Applied Ecology}.
+\doi{10.1111/1365-2664.12920}
 }
 \seealso{
 \code{\link[=add_objective_max_effect]{add_objective_max_effect()}}, \code{\link[=add_objective_min_loss]{add_objective_min_loss()}}

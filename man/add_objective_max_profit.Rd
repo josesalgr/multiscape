@@ -101,9 +101,14 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
 
+}
+\references{
+Polasky, S., et al. (2008). Where to put things? Spatial land management
+to sustain biodiversity and economic returns. \emph{Biological Conservation},
+141, 1505--1524. \doi{10.1016/j.biocon.2008.03.022}
 }
 \seealso{
 \code{\link{add_objective_min_cost}},

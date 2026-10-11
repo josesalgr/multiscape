@@ -1078,7 +1078,21 @@ consequences.
 - [`add_profit()`](https://josesalgr.github.io/multiscape/reference/add_profit.md)
   : Add profit to a planning problem
 
-## Targets and constraints
+## Action selection and compatibility
+
+Control how many management actions can be selected within each planning
+unit and which combinations are permitted or required.
+
+- [`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md)
+  : Constrain the number of actions selected per planning unit
+- [`add_constraint_action_requires()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.md)
+  : Require companion actions in each planning unit
+- [`add_constraint_action_excludes()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.md)
+  : Make actions mutually exclusive within each planning unit
+- [`add_constraint_action_together()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.md)
+  : Select actions together within each planning unit
+
+## Targets and resource constraints
 
 Specify representation targets, resource limits, and fixed planning-unit
 or action decisions.
@@ -1091,14 +1105,6 @@ or action decisions.
   : Add area constraint
 - [`add_constraint_budget()`](https://josesalgr.github.io/multiscape/reference/add_constraint_budget.md)
   : Add budget constraint
-- [`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md)
-  : Constrain the number of actions selected per planning unit
-- [`add_constraint_action_requires()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.md)
-  : Require companion actions in each planning unit
-- [`add_constraint_action_excludes()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.md)
-  : Make actions mutually exclusive within each planning unit
-- [`add_constraint_action_together()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.md)
-  : Select actions together within each planning unit
 - [`add_constraint_locked_actions()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_actions.md)
   : Add locked action decisions to a planning problem
 - [`add_constraint_locked_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_planning_units.md)
@@ -1148,11 +1154,11 @@ Choose how multiple objectives are explored and define the combinations
 of weights or constraints to evaluate.
 
 - [`set_method_weighted_sum()`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md)
-  : Set the weighted-sum multi-objective method
+  : Configure the weighted-sum multi-objective method
 - [`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md)
-  : Set the epsilon-constraint multi-objective method
+  : Configure the epsilon-constraint multi-objective method
 - [`set_method_augmecon()`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md)
-  : Set the AUGMECON multi-objective method
+  : Configure the augmented epsilon-constraint method (AUGMECON)
 - [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
   : Define an automatic multi-objective run grid
 - [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
@@ -1346,21 +1352,30 @@ Functions retained temporarily for backward compatibility.
 
 # Articles
 
-### All vignettes
+### Usage guides
 
-- [Controlling action counts per planning
-  unit](https://josesalgr.github.io/multiscape/articles/Action_cardinality.md):
-- [Logical relations between management
-  actions](https://josesalgr.github.io/multiscape/articles/Action_relations.md):
-- [Defining sets of management
-  actions](https://josesalgr.github.io/multiscape/articles/Action_sets.md):
+Learn how to choose optimisation methods and model management actions.
+
 - [Choosing a multi-objective optimisation
   method](https://josesalgr.github.io/multiscape/articles/choosing_multi_objective_method.md):
-- [Multi-objective forest restoration planning in a highly productive
-  landscape](https://josesalgr.github.io/multiscape/articles/Integrated_planning.md):
+- [Planning with concurrent management
+  actions](https://josesalgr.github.io/multiscape/articles/Planning_with_concurrent_actions.md):
 - [Joint effects and interactions between management
   actions](https://josesalgr.github.io/multiscape/articles/Joint_effects.md):
-- [Repeated calls and alternative problem
-  configurations](https://josesalgr.github.io/multiscape/articles/Repeated_calls.md):
+
+### Case studies
+
+Explore complete spatial planning applications, from formulation to
+interpretation of alternative plans.
+
 - [From reserve selection to multi-objective conservation
   planning](https://josesalgr.github.io/multiscape/articles/reserve-design-rwanda.md):
+- [Multi-objective forest restoration planning in a highly productive
+  landscape](https://josesalgr.github.io/multiscape/articles/Integrated_planning.md):
+
+### Advanced usage
+
+Reuse a common planning problem and compare alternative configurations.
+
+- [Repeated calls and alternative problem
+  configurations](https://josesalgr.github.io/multiscape/articles/Repeated_calls.md):

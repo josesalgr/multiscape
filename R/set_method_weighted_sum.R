@@ -1,317 +1,146 @@
 #' @include internalMO.R
 #'
-#' @title Set the weighted-sum multi-objective method
+#' @title Configure the weighted-sum multi-objective method
 #'
 #' @description
-#' Configure a \code{Problem} object to be solved with a weighted-sum
-#' multi-objective method.
-#'
-#' In the weighted-sum method, several registered atomic objectives are combined
-#' into a single scalar objective using a weighted linear combination. This
-#' function stores that configuration in \code{x$data$method} so that it can be
-#' used later by \code{\link{solve}}.
+#' Combine two or more registered objectives using alternative non-negative
+#' weights. Each weight combination defines one optimisation run, allowing
+#' users to explore trade-offs between objectives such as implementation cost
+#' and ecological improvement.
 #'
 #' @details
-#' MO solves may multiply the complete scalar criterion by a bounded positive
-#' factor to improve its numerical visibility. This does not change the weights
-#' or preference ordering, and returned objective values retain their original
-#' units. CBC and Gurobi use precise numerical defaults; explicit
-#' \code{solver_params} supplied to \code{\link{set_solver}} override them.
-#' Effective settings and the scalar factor
-#' are recorded in each solution's \code{diagnostics$solver_args}.
+#' First, register at least two objectives with distinct \code{alias} values.
+#' The \code{aliases} argument selects which objectives to combine. For each
+#' run, \pkg{multiscape} constructs a weighted scalar criterion and solves the
+#' resulting mixed-integer optimisation problem.
 #'
-#' A problem can have only one explicitly configured multi-objective method.
-#' A second call to any \code{set_method_*()} function raises an error. To
-#' compare methods or run designs, derive alternatives from the same problem
-#' before configuring its method.
+#' If \eqn{f_k(x)} is a registered objective and \eqn{w_k \ge 0} is its weight,
+#' the scalarisation combines terms of the form \eqn{w_k f_k(x)}. Minimisation
+#' and maximisation directions are reconciled internally: larger values remain
+#' preferable for maximisation objectives, smaller values for minimisation
+#' objectives. Weights express preferences, not objective values or targets.
 #'
-#' Use this method when several registered objectives should be combined into a
-#' single scalar optimization problem through explicit preference weights.
+#' \strong{Selecting weights.} Use \code{runs = set_runs_grid(n = 5)} to
+#' generate five combinations for two objectives, including the two single-
+#' objective extremes. Use \code{set_runs_manual()} to provide exact weights
+#' in columns named \code{weight_<alias>}; each row is a separate run.
 #'
-#' \strong{General idea}
+#' \strong{Normalisation versus objective scaling.} \code{normalize_weights}
+#' rescales the weights within each run to sum to one. By default, grid weights
+#' are normalised, whereas manual weights are retained as supplied. This does
+#' not make objectives with different units numerically comparable.
+#' \code{objective_scaling = TRUE} instead requests scaling of the objective
+#' values before aggregation, so the preferences are less sensitive to their
+#' numerical ranges. The scaling is performed when solving; reported objective
+#' values retain their original units.
 #'
-#' Suppose that a set of atomic objectives has already been registered in the
-#' problem under aliases \eqn{k \in \mathcal{K}}. Let \eqn{f_k(x)} denote the
-#' scalar value of objective \eqn{k}, and let \eqn{w_k} denote its weight.
+#' \strong{Interpreting solutions.} Different weights can produce the same
+#' spatial plan, particularly in discrete optimisation problems. Weighted sums
+#' generally recover supported efficient solutions; they need not find all
+#' non-dominated solutions of a non-convex frontier. For a more systematic
+#' exploration, consider \code{set_method_epsilon_constraint()} or
+#' \code{set_method_augmecon()}. Zero-weight runs may also have ties that are
+#' not resolved with respect to the omitted objective.
 #'
-#' The weighted-sum method combines them into a single scalar objective of the
-#' form:
+#' The \code{control} argument specifies how to handle unsuccessful runs. A
+#' problem can have only one configured multi-objective method; to compare
+#' methods or weight designs, begin from the same problem before calling a
+#' \code{set_method_*()} function. The deprecated \code{weights} argument is
+#' still accepted for compatibility, but \code{runs} is recommended.
 #'
-#' \deqn{
-#' \sum_{k \in \mathcal{K}} w_k \, f_k(x).
-#' }
+#' @param x A \code{Problem} with at least two registered objective aliases.
+#' @param aliases Character vector of at least two distinct objective aliases.
+#' @param runs A run design from \code{set_runs_grid()} or
+#'   \code{set_runs_manual()}. Manual designs contain columns named
+#'   \code{weight_<alias>} for each selected objective.
+#' @param weights Deprecated numeric weight vector, in \code{aliases} order.
+#'   Use \code{runs = set_runs_manual(...)} instead.
+#' @param normalize_weights Logical or \code{NULL}. With \code{NULL}, use
+#'   \code{TRUE} for a grid and \code{FALSE} for manual weights.
+#' @param objective_scaling Logical. Request scaling of objective values before
+#'   weighted aggregation. The default is \code{FALSE}.
+#' @param control Optional run-failure settings from \code{set_runs_control()}.
 #'
-#' In practice, the exact sign convention used internally depends on the sense
-#' of each registered atomic objective, for example whether it is a
-#' minimization-type or maximization-type objective. The solving layer is
-#' responsible for constructing a solver-ready scalar objective from the stored
-#' objective specifications and the requested weights.
-#'
-#' \strong{Run designs}
-#'
-#' Weighted-sum runs are specified through the \code{runs} argument. This
-#' argument must be created with either \code{\link{set_runs_grid}} or
-#' \code{\link{set_runs_manual}}.
-#'
-#' \code{set_runs_grid(n = ...)} automatically generates a grid of weight
-#' combinations. For two objectives, this is a regular sequence of weights along
-#' the line between the two pure-objective extremes. For three or more
-#' objectives, the grid is generated over the weight simplex, where all weights
-#' are non-negative and sum to one.
-#'
-#' Boundary weight combinations are always included in automatic grids. This
-#' means that pure-objective weight vectors are included, where all weight is
-#' assigned to one objective.
-#'
-#' \code{set_runs_manual()} allows users to provide explicit weight
-#' combinations. In manual weighted-sum runs, each row is one optimization run
-#' and columns must be named \code{weight_<alias>}. For example, if
-#' \code{aliases = c("cost", "benefit")}, the manual run table must contain
-#' columns \code{weight_cost} and \code{weight_benefit}.
-#'
-#' The older \code{weights} argument is deprecated. It is still accepted for
-#' backwards compatibility and is internally converted to a one-row
-#' \code{set_runs_manual()} design.
-#'
-#' \strong{Atomic objectives requirement}
-#'
-#' The weighted-sum method can only be used with atomic objectives that have
-#' already been registered under aliases. These aliases are typically created by
-#' calling objective setters with an \code{alias} argument, for example:
-#' \preformatted{
-#' x <- x |>
-#'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_min_fragmentation(alias = "frag")
-#' }
-#'
-#' Internally, each atomic objective is stored in
-#' \code{x$data$objectives[[alias]]} together with its metadata, such as:
-#' \itemize{
-#'   \item \code{objective_id},
-#'   \item \code{model_type},
-#'   \item \code{sense},
-#'   \item \code{objective_args}.
-#' }
-#'
-#' The \code{aliases} argument passed to this function selects which of those
-#' registered atomic objectives are included in the weighted combination.
-#'
-#' \strong{Weight normalization}
-#'
-#' The default value of \code{normalize_weights} is \code{NULL}. In this case,
-#' the default behaviour depends on the run design:
-#' \itemize{
-#'   \item automatic grids created with \code{set_runs_grid()} use
-#'   \code{normalize_weights = TRUE};
-#'   \item manual designs created with \code{set_runs_manual()} use
-#'   \code{normalize_weights = FALSE}.
-#' }
-#'
-#' If \code{normalize_weights = TRUE}, the weights in each run are rescaled to
-#' sum to one:
-#'
-#' \deqn{
-#' \tilde{w}_k = \frac{w_k}{\sum_{j \in \mathcal{K}} w_j}.
-#' }
-#'
-#' This normalization does not change the optimizer's solution in a pure
-#' weighted-sum formulation as long as all weights are multiplied by the same
-#' positive constant, but it can improve interpretability and numerical
-#' conditioning.
-#'
-#' If \code{normalize_weights = FALSE}, manual weights are used exactly as
-#' supplied. Automatic grids generated by \code{set_runs_grid()} are already
-#' constructed on a normalized simplex.
-#'
-#' \strong{Objective scaling}
-#'
-#' If \code{objective_scaling = TRUE}, the solving layer scales the
-#' participating objectives before combining them. The purpose of scaling is to
-#' reduce distortions caused by objectives being measured on very different
-#' numerical ranges.
-#'
-#' Conceptually, if \eqn{R_k} denotes a scale or range associated with objective
-#' \eqn{k}, then a scaled weighted sum may be interpreted as:
-#'
-#' \deqn{
-#' \sum_{k \in \mathcal{K}} w_k \, \frac{f_k(x)}{R_k}.
-#' }
-#'
-#' The exact scaling rule is implemented in the solving layer.
-#'
-#' \strong{Mixed objective senses}
-#'
-#' Weighted sums are straightforward when all participating objectives have the
-#' same optimization sense. When minimization and maximization objectives are
-#' mixed, the solving layer standardizes them internally before building the
-#' scalar objective.
-#'
-#' Users should provide non-negative weights according to the original meaning
-#' of each objective. For example, a positive weight on a maximization objective
-#' means that higher values of that objective are preferred.
-#'
-#' \strong{Failure handling}
-#'
-#' The \code{control} argument controls how failed runs are handled. It must be
-#' created with \code{\link{set_runs_control}}.
-#'
-#' Weighted-sum runs do not normally introduce additional constraints, so they
-#' should not usually create infeasible subproblems by themselves. However, runs
-#' may still fail if the underlying model is infeasible, the solver stops before
-#' finding a feasible solution, or a numerical/modeling issue occurs. The
-#' \code{control} argument determines whether such failures stop the whole solve
-#' or are retained in the returned \code{SolutionSet} with missing objective
-#' values.
-#'
-#' \strong{Theoretical limitation}
-#'
-#' The weighted-sum method typically recovers only \emph{supported} efficient
-#' solutions, that is, solutions lying on the convex hull of the Pareto front in
-#' objective space. In non-convex multi-objective problems, especially mixed
-#' integer problems, some efficient solutions cannot be obtained by any weighted
-#' combination. In such cases, methods such as
-#' \code{\link{set_method_epsilon_constraint}} or
-#' \code{\link{set_method_augmecon}} may be preferable.
-#'
-#' \strong{Stored configuration}
-#'
-#' This function stores the method definition in \code{x$data$method} with:
-#' \itemize{
-#'   \item \code{name = "weighted"},
-#'   \item \code{type = "weighted"},
-#'   \item \code{aliases},
-#'   \item \code{runs},
-#'   \item \code{normalize_weights},
-#'   \item \code{objective_scaling},
-#'   \item \code{control}.
-#' }
-#'
-#' The actual scalarization is performed later by \code{\link{solve}}.
-#'
-#' @param x A \code{Problem} object.
-#'
-#' @param aliases Character vector of objective aliases to combine. Each alias
-#'   must correspond to a previously registered atomic objective.
-#'
-#' @param runs A run design created with \code{\link{set_runs_grid}} or
-#'   \code{\link{set_runs_manual}}. For weighted-sum methods, automatic grids
-#'   define weight combinations, while manual runs must contain columns named
-#'   \code{weight_<alias>}.
-#'
-#' @param weights Deprecated. Numeric vector of weights, with the same length
-#'   and order as \code{aliases}. This argument is kept for backwards
-#'   compatibility and is internally converted to
-#'   \code{runs = set_runs_manual(...)}. New code should use \code{runs}
-#'   instead.
-#'
-#' @param normalize_weights Logical or \code{NULL}. If \code{TRUE}, normalize
-#'   the weights in each run to sum to one before solving. If \code{FALSE},
-#'   manual weights are used exactly as supplied. If \code{NULL}, the default is
-#'   resolved from the run design: automatic grids are normalized and manual
-#'   designs are not normalized.
-#'
-#' @param objective_scaling Logical. If \code{TRUE}, request scaling of the
-#'   participating objectives before weighted aggregation in the solving layer.
-#'
-#' @param control A control object created with
-#'   \code{\link{set_runs_control}}. It controls how infeasible runs, runs
-#'   without a solution, and unexpected errors are handled.
-#'
-#' @return The updated \code{Problem} object with the weighted-sum method
-#'   configuration stored in \code{x$data$method}.
+#' @return An updated \code{Problem} with the method stored in
+#'   \code{x$data$method}. The optimisation runs are executed by \code{solve()}.
 #'
 #' @examples
-#' # Load a complete simulated planning problem.
-#' example_data <- load_sim_multiaction()
+#' # EXAMPLE: Trade off management costs against woodland improvement.
+#' # The simulated landscape has 64 planning units and two possible actions.
+#' sim <- load_sim_multiaction()
 #'
-#' x <- create_problem(
-#'   pu = example_data$planning_units,
-#'   features = example_data$features,
-#'   dist_features = example_data$dist_features,
+#' base <- create_problem(
+#'   pu = sim$planning_units,
+#'   features = sim$features,
+#'   dist_features = sim$dist_features,
 #'   cost = "cost"
 #' ) |>
-#'   add_actions(
-#'     example_data$actions,
-#'     cost = example_data$action_costs
+#'   add_actions(sim$actions, cost = sim$action_costs) |>
+#'   add_effects(sim$effect_assumptions) |>
+#'   # Require some improvement, so the cheapest plan is not empty.
+#'   add_constraint_targets_relative(0.05, features = "woodland") |>
+#'   add_objective_min_cost(
+#'     include_pu_cost = FALSE, alias = "cost"
 #'   ) |>
-#'   add_effects(
-#'     example_data$effect_assumptions
-#'   ) |>
-#'   add_objective_min_cost(alias = "cost") |>
-#'   add_objective_max_effect(alias = "benefit")
-#'
-#' # Automatic weight grid
-#' x1 <- set_method_weighted_sum(
-#'   x,
-#'   aliases = c("cost", "benefit"),
-#'   runs = set_runs_grid(n = 5),
-#'   objective_scaling = TRUE
-#' )
-#'
-#' x1$data$method
-#'
-#' # Manual weighted runs
-#' manual_weights <- data.frame(
-#'   weight_cost = c(1.0, 0.75, 0.50, 0.25, 0.0),
-#'   weight_benefit = c(0.0, 0.25, 0.50, 0.75, 1.0)
-#' )
-#'
-#' x2 <- set_method_weighted_sum(
-#'   x,
-#'   aliases = c("cost", "benefit"),
-#'   runs = set_runs_manual(manual_weights),
-#'   objective_scaling = TRUE
-#' )
-#'
-#' x2$data$method
-#'
-#' # Manual runs with automatic weight normalization
-#' manual_weights2 <- data.frame(
-#'   weight_cost = c(2, 1, 1),
-#'   weight_benefit = c(1, 1, 3)
-#' )
-#'
-#' x3 <- set_method_weighted_sum(
-#'   x,
-#'   aliases = c("cost", "benefit"),
-#'   runs = set_runs_manual(manual_weights2),
-#'   normalize_weights = TRUE
-#' )
-#'
-#' x3$data$method
-#'
-#' # Backwards-compatible deprecated usage
-#' x4 <- set_method_weighted_sum(
-#'   x,
-#'   aliases = c("cost", "benefit"),
-#'   weights = c(0.4, 0.6),
-#'   normalize_weights = FALSE
-#' )
-#'
-#' x4$data$method
-#'
-#' # Control failure handling
-#' x5 <- set_method_weighted_sum(
-#'   x,
-#'   aliases = c("cost", "benefit"),
-#'   runs = set_runs_grid(n = 5),
-#'   control = set_runs_control(
-#'     stop_on_infeasible = TRUE,
-#'     stop_on_no_solution = TRUE,
-#'     stop_on_error = TRUE
+#'   add_objective_max_effect(
+#'     features = "woodland", alias = "woodland"
 #'   )
+#'
+#' # Five different preferences, from cost-only to woodland-only.
+#' weighted <- set_method_weighted_sum(
+#'   base,
+#'   aliases = c("cost", "woodland"),
+#'   runs = set_runs_grid(n = 5),
+#'   objective_scaling = TRUE
 #' )
 #'
-#' x5$data$method
+#' if (requireNamespace("rcbc", quietly = TRUE) &&
+#'     requireNamespace("ggplot2", quietly = TRUE)) {
+#'   solutions <- solve(
+#'     set_solver_cbc(weighted, time_limit = 30, verbose = FALSE)
+#'   )
+#'
+#'   # Inspect the original objective values across runs.
+#'   get_objectives(solutions, format = "wide")
+#'
+#'   # Explore the observed cost-improvement trade-off.
+#'   plot_tradeoff(
+#'     solutions, objectives = c("cost", "woodland"),
+#'     label_runs = TRUE
+#'   )
+#'
+#'   # Compare three spatial prescriptions in the same figure.
+#'   # These are preferences, not necessarily three distinct plans.
+#'   plot_spatial_actions(
+#'     solutions, solutions = c(1, 3, 5), layout = "single", ncol = 3
+#'   )
+#' }
+#'
+#' # ALTERNATIVE: supply three explicit weight combinations.
+#' # Reuse 'base', because a Problem can have only one method.
+#' manual <- set_method_weighted_sum(
+#'   base,
+#'   aliases = c("cost", "woodland"),
+#'   runs = set_runs_manual(data.frame(
+#'     weight_cost = c(1, 0.5, 0),
+#'     weight_woodland = c(0, 0.5, 1)
+#'   )),
+#'   objective_scaling = TRUE
+#' )
+#'
+#' @references
+#' Ehrgott, M. (2005). \emph{Multicriteria Optimization}, 2nd ed.
+#' Springer. \doi{10.1007/3-540-27659-9}.
+#'
+#' Miettinen, K. (1998). \emph{Nonlinear Multiobjective Optimization}.
+#' Kluwer Academic Publishers. \doi{10.1007/978-1-4615-5563-6}.
 #'
 #' @seealso
-#' \code{\link{set_runs_grid}},
-#' \code{\link{set_runs_manual}},
-#' \code{\link{set_runs_control}},
-#' \code{\link{set_method_epsilon_constraint}},
-#' \code{\link{set_method_augmecon}},
-#' \code{\link{solve}}
-#'
+#' \code{\link{set_runs_grid}}, \code{\link{set_runs_manual}},
+#' \code{\link{set_runs_control}}, \code{\link{set_method_epsilon_constraint}},
+#' \code{\link{set_method_augmecon}}, \code{\link{plot_tradeoff}},
+#' \code{\link{plot_spatial_actions}}, \code{\link{solve}}
+
 #' @export
 set_method_weighted_sum <- function(x,
                                     aliases,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/set_method_epsilon_constraint.R
 \name{set_method_epsilon_constraint}
 \alias{set_method_epsilon_constraint}
-\title{Set the epsilon-constraint multi-objective method}
+\title{Configure the epsilon-constraint multi-objective method}
 \usage{
 set_method_epsilon_constraint(
   x,
@@ -19,357 +19,157 @@ set_method_epsilon_constraint(
 )
 }
 \arguments{
-\item{x}{A \code{Problem} object.}
+\item{x}{A \code{Problem} with at least two registered objective aliases.}
 
-\item{primary}{Character string giving the alias of the primary objective to
-optimize directly.}
+\item{primary}{Character scalar naming the objective to optimise directly.}
 
-\item{aliases}{Optional character vector of objective aliases to include.
-By default, all registered objective aliases are used. The value of
-\code{primary} must be included in \code{aliases}.}
+\item{aliases}{Optional character vector of registered objective aliases.
+By default, all registered objectives are used; \code{primary} must be included.}
 
-\item{runs}{A run design created with \code{\link{set_runs_grid}} or
-\code{\link{set_runs_manual}}. For epsilon-constraint methods,
-\code{set_runs_grid()} requests automatic epsilon-level generation, while
-\code{set_runs_manual()} requires columns named \code{eps_<alias>} for each
-constrained objective.}
+\item{runs}{A run design from \code{set_runs_grid()} or \code{set_runs_manual()}.
+Automatic grids require exactly two objectives. Manual designs require
+\verb{eps_<alias>} columns for all constrained objectives.}
 
-\item{eps}{Deprecated. Epsilon specification used by the previous
-\code{mode = "manual"} interface. It may be a named numeric vector or a
-named list of numeric vectors. New code should use
-\code{runs = set_runs_manual(...)} instead.}
+\item{eps, mode, n_points, include_extremes}{Deprecated arguments from the
+previous interface. Use \code{runs} instead. \code{include_extremes} is ignored;
+automatic grids always include their endpoints.}
 
-\item{mode}{Deprecated. Previous interface selector, either \code{"manual"}
-or \code{"auto"}. New code should use
-\code{runs = set_runs_manual(...)} or
-\code{runs = set_runs_grid(...)} instead.}
+\item{lexicographic}{Logical. Whether to refine automatic-grid anchor
+solutions lexicographically; the default is \code{TRUE}.}
 
-\item{n_points}{Deprecated. Previous automatic-grid argument. New code should
-use \code{runs = set_runs_grid(n = ...)} instead.}
+\item{lexicographic_tol}{Non-negative tolerance for lexicographic anchor
+refinement, expressed in the first objective's original units.}
 
-\item{include_extremes}{Deprecated and ignored. Automatic run grids now
-always include boundary levels. New code should use
-\code{runs = set_runs_grid(n = ...)}.}
-
-\item{lexicographic}{Logical scalar. If \code{TRUE}, compute automatic-grid
-extreme points lexicographically when \code{runs = set_runs_grid(...)} is
-used.}
-
-\item{lexicographic_tol}{Numeric scalar \eqn{\ge 0}. Tolerance used in
-lexicographic extreme-point computation.}
-
-\item{control}{A control object created with
-\code{\link{set_runs_control}}. It controls how infeasible runs, runs
-without a solution, and unexpected errors are handled.}
+\item{control}{Optional run-failure settings from \code{set_runs_control()}.}
 }
 \value{
-An updated \code{Problem} object with the epsilon-constraint method
-configuration stored in \code{x$data$method}.
+An updated \code{Problem} with the method stored in \code{x$data$method}.
+Run-specific epsilon bounds are constructed or read during \code{solve()}.
 }
 \description{
-Configure a \code{Problem} object to be solved with the
-epsilon-constraint multi-objective method.
-
-In this method, one objective is designated as the \emph{primary} objective
-and is optimized directly, while the remaining objectives are transformed
-into \eqn{\varepsilon}-constraints. Multiple subproblems are generated using
-a run design supplied through \code{runs}.
-
-This function does not solve the problem. It stores the method configuration
-in \code{x$data$method}, to be used later by \code{\link{solve}}.
+Optimise one registered objective while imposing performance thresholds on
+the others. By varying these thresholds, the epsilon-constraint method
+produces alternative spatial plans along an observed trade-off frontier.
 }
 \details{
-CBC and Gurobi use precise numerical defaults for MO solves. Explicit
-\code{solver_params} supplied to \code{\link{set_solver}} take precedence.
-Secondary bounds are checked against
-reevaluated selected decisions, with violations and numerical tolerances
-recorded in each solution's \code{diagnostics$epsilon_checks}. Floating-point
-roundoff and tied plans still preclude guaranteed bit-for-bit reproduction.
-
-A problem can have only one explicitly configured multi-objective method.
-A second call to any \code{set_method_*()} function raises an error. To
-compare methods or run designs, derive alternatives from the same problem
-before configuring its method.
-
-Use this method when one objective should be optimized directly while the
-remaining objectives are controlled through explicit performance thresholds.
-
-\strong{General idea}
-
-Suppose that \eqn{m \ge 2} objective functions have already been registered
-in the problem:
-\deqn{
-f_1(x), f_2(x), \dots, f_m(x).
-}
-
-The epsilon-constraint method selects one of them as the primary objective,
-say \eqn{f_p(x)}, and treats the remaining objectives as constrained
-objectives.
-
-For a fixed vector of epsilon levels, the method solves subproblems in which
-the primary objective is optimized directly and the remaining objectives are
-imposed through epsilon constraints.
-
-A representative formulation is:
-
-\deqn{
-\max \; f_p(x)
-}
-
+First, register at least two objectives with distinct \code{alias} values.
+\code{primary} identifies the objective to optimise directly; every other alias
+included in \code{aliases} becomes an epsilon-constrained objective. For example,
+maximising woodland improvement while restricting expenditure gives
+\deqn{\max f_{\mathrm{woodland}}(x)}
 subject to
+\deqn{f_{\mathrm{cost}}(x) \le \varepsilon.}
+For a constrained maximisation objective, the corresponding requirement is
+a lower bound, \eqn{f_k(x) \ge \varepsilon_k}. Epsilon values are objective
+values in their original units, not weights or relative preferences.
 
-\deqn{
-f_k(x) \ge \varepsilon_k, \qquad k \in \mathcal{C},
-}
+\strong{Automatic grids.} \code{runs = set_runs_grid(n = 5)} generates five epsilon
+levels, including the two endpoints, from objective extreme-point or payoff
+information computed during \code{solve()}. Automatic grids currently support
+exactly \strong{two objectives}: one primary and one constrained objective.
+With \code{lexicographic = TRUE}, the anchor solutions are refined using the
+other objective to break near-ties. \code{lexicographic_tol} controls the allowed
+deterioration of the first objective during that refinement; it is expressed
+in that objective's units. This option concerns automatic-grid anchors, not
+every subsequent epsilon-constrained run.
 
-together with all original feasibility constraints of the planning problem,
-where \eqn{\mathcal{C}} is the set of constrained objectives.
+\strong{Manual thresholds.} Use \code{runs = set_runs_manual()} to supply explicit
+bounds. Each row defines one run, with a column named \verb{eps_<alias>} for
+every constrained objective. For example, \code{eps_cost = 10} means \emph{cost at
+most 10}, even if the optimal plan spends less. Manual designs support
+\strong{two or more objectives}; they do not automatically expand combinations
+of epsilon levels. Use \code{expand.grid()} to create such a design explicitly.
 
-Depending on the sense of each objective, the internal implementation may
-transform minimization and maximization objectives into equivalent
-solver-ready constrained forms. The method always follows the same principle:
-\itemize{
-\item one objective is optimized directly,
-\item all remaining objectives are imposed through
-\eqn{\varepsilon}-constraints.
-}
+\strong{Interpreting results.} The method does not guarantee a different plan
+for each epsilon level, nor does a finite grid enumerate the full Pareto
+frontier. A basic epsilon-constraint formulation can also produce weakly
+efficient solutions when an unconstrained secondary objective could improve
+without worsening the primary objective. For augmented tie-breaking, see
+\code{set_method_augmecon()}. Some requested thresholds may be infeasible; use
+\code{set_runs_control()} to specify how unsuccessful runs are handled. The
+returned solution diagnostics include checks of the epsilon bounds.
 
-By solving the problem repeatedly for different epsilon levels, the method
-generates a set of trade-off solutions.
-
-\strong{Run designs}
-
-Epsilon-constraint runs are specified through the \code{runs} argument. This
-argument must be created with either \code{\link{set_runs_grid}} or
-\code{\link{set_runs_manual}}.
-
-\code{set_runs_grid(n = ...)} requests automatic generation of epsilon levels
-during \code{\link{solve}}. The epsilon levels are computed from
-extreme-point or payoff information. In the current implementation,
-\code{set_runs_grid()} for epsilon-constraint supports exactly two
-objectives: one primary objective and one constrained objective.
-
-Boundary epsilon levels are always included in automatic grids. Therefore,
-the lower and upper bounds of the automatically derived epsilon range are
-part of the generated run design.
-
-\code{set_runs_manual()} allows users to provide explicit epsilon
-combinations. In manual epsilon-constraint runs, each row is one optimization
-run and columns must be named \code{eps_<alias>}, where \code{<alias>} is the
-alias of a constrained objective. For example, if \code{primary = "benefit"}
-and \code{aliases = c("benefit", "cost", "loss")}, the manual run table
-must contain columns \code{eps_cost} and \code{eps_loss}.
-
-In \code{set_runs_manual()}, each row is used exactly as supplied. The
-function does not automatically create a Cartesian product of epsilon values.
-If a Cartesian product is desired, it should be created explicitly by the
-user, for example with \code{\link{expand.grid}}, and then passed to
-\code{set_runs_manual()}.
-
-The older arguments \code{eps}, \code{mode}, \code{n_points}, and
-\code{include_extremes} are deprecated. They are still accepted for backwards
-compatibility and are internally converted to \code{set_runs_grid()} or
-\code{set_runs_manual()} designs. The deprecated \code{include_extremes}
-argument is ignored because automatic run grids now always include boundary
-levels.
-
-\strong{Atomic objectives requirement}
-
-The epsilon-constraint method can only be used with atomic objectives that
-have already been registered under aliases. These aliases are typically
-created by calling objective setters with an \code{alias} argument, for
-example:
-\preformatted{
-x <- x |>
-  add_objective_max_effect(alias = "benefit") |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_min_fragmentation(alias = "frag")
-}
-
-The \code{primary} argument selects which registered objective is optimized
-directly. The remaining aliases are treated as constrained objectives.
-
-\strong{Automatic epsilon grids}
-
-When \code{runs = set_runs_grid(n = ...)} is used, the epsilon grid is not
-built immediately. Instead, it is constructed later during \code{\link{solve}}
-using extreme-point or payoff information.
-
-In the current implementation, automatic epsilon-grid generation supports
-exactly two objectives:
-\itemize{
-\item one primary objective,
-\item one constrained objective.
-}
-
-Therefore, if \code{runs = set_runs_grid(...)}, then \code{aliases} must
-contain exactly two objective aliases. Problems with three or more objectives
-must use \code{runs = set_runs_manual(...)}.
-
-If \code{lexicographic = TRUE}, the extreme points used to generate the grid
-are computed lexicographically. In that case, one objective is optimized
-first, and then the second objective is optimized while constraining the
-first to remain within \code{lexicographic_tol} of its optimum.
-
-\strong{Manual epsilon runs}
-
-Manual run designs support two or more objectives. They are the general way
-to use the epsilon-constraint method when more than two objectives are
-involved.
-
-For example, with one primary objective and two constrained objectives,
-a manual run design may contain:
-\preformatted{
-data.frame(
-  eps_cost = c(4, 6, 8),
-  eps_loss = c(0, 1, 1)
-)
-}
-
-This creates three runs, not a full Cartesian grid. To create all
-combinations, use \code{expand.grid()} before calling
-\code{set_runs_manual()}.
-
-\strong{Failure handling}
-
-The \code{control} argument controls how failed runs are handled. It must be
-created with \code{\link{set_runs_control}}.
-
-Some epsilon levels may define infeasible subproblems. By default, failed
-runs can be retained in the returned \code{SolutionSet} with missing
-objective values, while feasible runs are preserved. Alternatively, users can
-request that the solve stops when an infeasible run, a run without a solution,
-or an unexpected error is encountered.
-
-\strong{Stored configuration}
-
-The configured method stores:
-\itemize{
-\item \code{name = "epsilon_constraint"},
-\item \code{type = "epsilon_constraint"},
-\item \code{primary},
-\item \code{aliases},
-\item \code{constrained},
-\item \code{runs},
-\item lexicographic configuration,
-\item \code{control}.
-}
-
-With \code{runs = set_runs_grid(...)}, the actual epsilon design is generated
-later during \code{\link{solve}}. With
-\code{runs = set_runs_manual(...)}, the explicit user-supplied run design is
-stored and then used by \code{\link{solve}}.
+Only one multi-objective method can be configured on a \code{Problem}. To compare
+methods or threshold designs, start again from the problem before its
+method was configured. The older \code{eps}, \code{mode}, \code{n_points}, and
+\code{include_extremes} arguments are deprecated; use \code{runs} instead.
 }
 \examples{
-# Load a complete simulated planning problem.
-example_data <- load_sim_multiaction()
+# EXAMPLE: Maximise woodland improvement under alternative cost limits.
+# The landscape has 64 planning units and two candidate actions per unit.
+sim <- load_sim_multiaction()
 
-x <- create_problem(
-  pu = example_data$planning_units,
-  features = example_data$features,
-  dist_features = example_data$dist_features,
+base <- create_problem(
+  pu = sim$planning_units,
+  features = sim$features,
+  dist_features = sim$dist_features,
   cost = "cost"
 ) |>
-  add_actions(
-    example_data$actions,
-    cost = example_data$action_costs
+  add_actions(sim$actions, cost = sim$action_costs) |>
+  add_effects(sim$effect_assumptions) |>
+  # Require some woodland improvement, so the low-cost plan is not empty.
+  add_constraint_targets_relative(0.05, features = "woodland") |>
+  add_objective_max_effect(
+    features = "woodland", alias = "woodland"
   ) |>
-  add_effects(
-    example_data$effect_assumptions
-  ) |>
-  add_objective_min_cost(alias = "cost") |>
-  add_objective_max_effect(alias = "benefit") |>
-  add_objective_min_loss(alias = "loss")
-
-# Automatic epsilon grid for two objectives
-x1 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  runs = set_runs_grid(n = 5),
-  lexicographic = TRUE,
-  lexicographic_tol = 1e-8
-)
-
-x1$data$method
-
-# Manual runs with one constrained objective
-eps_runs <- data.frame(
-  eps_cost = c(4, 6, 8)
-)
-
-x2 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  runs = set_runs_manual(eps_runs)
-)
-
-x2$data$method
-
-# Manual runs with more than two objectives
-eps_runs_3obj <- data.frame(
-  eps_cost = c(4, 6, 8),
-  eps_loss = c(0, 1, 1)
-)
-
-x3 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost", "loss"),
-  runs = set_runs_manual(eps_runs_3obj)
-)
-
-x3$data$method
-
-# Cartesian epsilon design created explicitly by the user
-eps_cartesian <- expand.grid(
-  eps_cost = c(4, 6, 8),
-  eps_loss = c(0, 1),
-  KEEP.OUT.ATTRS = FALSE
-)
-
-x4 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost", "loss"),
-  runs = set_runs_manual(eps_cartesian)
-)
-
-x4$data$method
-
-# Backwards-compatible deprecated usage
-x5 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  mode = "manual",
-  eps = list(cost = c(4, 6, 8))
-)
-
-x5$data$method
-
-# Control failure handling
-x6 <- set_method_epsilon_constraint(
-  x,
-  primary = "benefit",
-  aliases = c("benefit", "cost"),
-  runs = set_runs_manual(data.frame(eps_cost = c(4, 6, 8))),
-  control = set_runs_control(
-    stop_on_infeasible = FALSE,
-    stop_on_no_solution = FALSE,
-    stop_on_error = TRUE
+  add_objective_min_cost(
+    include_pu_cost = FALSE, alias = "cost"
   )
+
+# Generate five cost limits automatically from the objective extremes.
+epsilon <- set_method_epsilon_constraint(
+  base,
+  primary = "woodland",
+  aliases = c("woodland", "cost"),
+  runs = set_runs_grid(n = 5),
+  lexicographic = TRUE
 )
 
-x6$data$method
+if (requireNamespace("rcbc", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+  solutions <- solve(
+    set_solver_cbc(epsilon, time_limit = 30, verbose = FALSE)
+  )
+
+  # Each run maximises woodland gain subject to its own cost ceiling.
+  get_objectives(solutions, format = "wide")
+
+  # The horizontal axis shows actual cost, not the epsilon ceiling.
+  plot_tradeoff(
+    solutions, objectives = c("cost", "woodland"),
+    label_runs = TRUE
+  )
+
+  # Compare low-, intermediate- and high-cost spatial prescriptions.
+  # Epsilon levels can sometimes produce the same selected actions.
+  plot_spatial_actions(
+    solutions, solutions = c(1, 3, 5), layout = "single", ncol = 3
+  )
+}
+
+# ALTERNATIVE: specify explicit cost ceilings rather than a grid.
+# Start from 'base', since each Problem can have only one method.
+manual <- set_method_epsilon_constraint(
+  base,
+  primary = "woodland",
+  aliases = c("woodland", "cost"),
+  runs = set_runs_manual(data.frame(eps_cost = c(10, 20, 40)))
+)
 
 }
+\references{
+Haimes, Y. Y., Lasdon, L. S., and Wismer, D. A. (1971). On a
+bicriterion formulation of the problems of integrated system identification
+and system optimization. \emph{IEEE Transactions on Systems, Man, and
+Cybernetics}, SMC-1(3), 296-297. \doi{10.1109/TSMC.1971.4308298}.
+
+Mavrotas, G. (2009). Effective implementation of the epsilon-constraint
+method in multi-objective mathematical programming problems. \emph{Applied
+Mathematics and Computation}, 213(2), 455-465.
+\doi{10.1016/j.amc.2009.03.037}.
+}
 \seealso{
-\code{\link{set_runs_grid}},
-\code{\link{set_runs_manual}},
-\code{\link{set_runs_control}},
-\code{\link{set_method_augmecon}},
-\code{\link{set_method_weighted_sum}},
-\code{\link{solve}}
+\code{set_method_weighted_sum()}, \code{set_method_augmecon()}, \code{set_runs_grid()},
+\code{set_runs_manual()}, \code{set_runs_control()}, \code{get_objectives()},
+\code{plot_tradeoff()}, \code{plot_spatial_actions()}, \code{solve()}
 }

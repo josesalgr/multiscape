@@ -69,6 +69,19 @@ error. Aliased definitions preserve an explicitly configured single
 objective. To compare alternatives, start from the problem before its
 objective was added.
 
+## References
+
+Ball, I. R., Possingham, H. P., and Watts, M. E. (2009). Marxan and
+relatives: software for spatial conservation prioritisation. In *Spatial
+Conservation Prioritization: Quantitative Methods and Computational
+Tools*, pp. 185–195.
+[doi:10.1093/oso/9780199547760.003.0014](https://doi.org/10.1093/oso/9780199547760.003.0014)
+
+Önal, H., and Briers, R. A. (2002). Incorporating spatial criteria in
+optimum reserve network selection. *Proceedings of the Royal Society B*,
+269, 2437–2441.
+[doi:10.1098/rspb.2002.2183](https://doi.org/10.1098/rspb.2002.2183)
+
 ## See also
 
 [`add_spatial_boundary`](https://josesalgr.github.io/multiscape/reference/add_spatial_boundary.md),
@@ -105,8 +118,7 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_planning_units(solutions))
+  plot_spatial_planning_units(solutions)
 }
-
 
 ```

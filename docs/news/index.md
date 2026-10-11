@@ -1,5 +1,33 @@
 # Changelog
 
+## multiscape 1.4.1
+
+- Added
+  [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md)
+  and
+  [`load_ecosystem_services()`](https://josesalgr.github.io/multiscape/reference/load_ecosystem_services.md)
+  alongside
+  [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md)
+  as the three complete example-data entry points. Updated the README
+  and integrated-planning vignette; historical
+  [`data()`](https://rdrr.io/r/utils/data.html) and raster-only access
+  remain unchanged for compatibility.
+- Clarified historical dataset identities and separated their reference
+  index from the complete example loaders. Removed an obsolete internal
+  example that referenced unavailable datasets.
+- Improved documentation and examples for management actions, ecological
+  effects, economic returns, action constraints, and atomic objectives.
+- Added reproducible spatial examples illustrating single-objective
+  optimisation and multi-objective methods (weighted sum, ε-constraint,
+  and AUGMECON).
+- Expanded methodological references and clarified the interpretation of
+  objectives and action relationships.
+- Consolidated the action sets, cardinality, and logical relations
+  tutorials into a new vignette, Planning with concurrent management
+  actions.
+- Improved the organisation and consistency of the package reference
+  documentation.
+
 ## multiscape 1.4.0
 
 - Added

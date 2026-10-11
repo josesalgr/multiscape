@@ -2,15 +2,13 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
-  Action_cardinality: Action_cardinality.html
-  Action_relations: Action_relations.html
-  Action_sets: Action_sets.html
   choosing_multi_objective_method: choosing_multi_objective_method.html
   Integrated_planning: Integrated_planning.html
   Joint_effects: Joint_effects.html
+  Planning_with_concurrent_actions: Planning_with_concurrent_actions.html
   Repeated_calls: Repeated_calls.html
   reserve-design-rwanda: reserve-design-rwanda.html
-last_built: 2026-10-10T19:10Z
+last_built: 2026-10-11T14:12Z
 urls:
   reference: https://josesalgr.github.io/multiscape/reference
   article: https://josesalgr.github.io/multiscape/articles

@@ -160,8 +160,19 @@ NULL
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
+#'
+#' @references
+#' Ball, I. R., Possingham, H. P., and Watts, M. E. (2009).
+#' Marxan and relatives: software for spatial conservation prioritisation.
+#' In *Spatial Conservation Prioritization: Quantitative Methods and Computational
+#' Tools*, pp. 185--195. \doi{10.1093/oso/9780199547760.003.0014}
+#'
+#' Salgado-Rojas, J., Hermoso, V., and Álvarez-Miranda, E. (2025).
+#' prioriactions: multi-action management planning in R.
+#' *Methods in Ecology and Evolution*, 16, 1028--1039.
+#' \doi{10.1111/2041-210X.14220}
 #'
 #' @seealso
 #' \code{\link{add_objective_max_profit}},
@@ -238,6 +249,20 @@ add_objective_max_benefit <- function(x, actions = NULL, features = NULL, alias 
 #'
 #' @inheritParams add_objective_max_effect
 #' @return An updated Problem object.
+#' @references
+#' Related spatial fuel-management applications (not necessarily using the
+#' identical signed-effect objective) include:
+#'
+#' Minas, J. P., Hearne, J. W., and Martell, D. L. (2014).
+#' A spatial optimisation model for multi-period landscape level fuel management
+#' to mitigate wildfire impacts. *European Journal of Operational Research*,
+#' 232, 412--422. \doi{10.1016/j.ejor.2013.07.026}
+#'
+#' Williams, B. A., Shoo, L. P., Wilson, K. A., and Beyer, H. L. (2017).
+#' Optimising the spatial planning of prescribed burns to achieve multiple
+#' objectives in a fire-dependent ecosystem. *Journal of Applied Ecology*.
+#' \doi{10.1111/1365-2664.12920}
+#'
 #' @seealso [add_objective_max_effect()], [add_objective_min_loss()]
 #' @examples
 #' # EXAMPLE: Minimise the signed change in fuel load
@@ -271,7 +296,7 @@ add_objective_max_benefit <- function(x, actions = NULL, features = NULL, alias 
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
 #'
 #' @export
@@ -362,8 +387,18 @@ add_objective_min_effect <- function(x, actions = NULL, features = NULL, alias =
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
+#'
+#' @references
+#' Tallis, H., et al. (2021). Prioritizing actions: spatial action maps for
+#' conservation. *Annals of the New York Academy of Sciences*, 1505, 118--141.
+#' \doi{10.1111/nyas.14651}
+#'
+#' Salgado-Rojas, J., Álvarez-Miranda, E., Hermoso, V., Garcia-Gonzalo, J.,
+#' and Weintraub, A. (2020). A mixed integer programming approach for
+#' multi-action planning for threat management. *Ecological Modelling*,
+#' 418, 108901. \doi{10.1016/j.ecolmodel.2019.108901}
 #'
 #' @seealso
 #' \code{\link{add_objective_min_effect}},
@@ -616,8 +651,13 @@ add_objective_min_loss <- function(
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
+#'
+#' @references
+#' Polasky, S., et al. (2008). Where to put things? Spatial land management
+#' to sustain biodiversity and economic returns. *Biological Conservation*,
+#' 141, 1505--1524. \doi{10.1016/j.biocon.2008.03.022}
 #'
 #' @seealso
 #' \code{\link{add_objective_min_cost}},
@@ -752,8 +792,17 @@ add_objective_max_profit <- function(
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
+#'
+#' @references
+#' Polasky, S., et al. (2008). Where to put things? Spatial land management
+#' to sustain biodiversity and economic returns. *Biological Conservation*,
+#' 141, 1505--1524. \doi{10.1016/j.biocon.2008.03.022}
+#'
+#' Chan, K. M. A., Hoshizaki, L., and Klinkenberg, B. (2011). Ecosystem
+#' services in conservation planning: targeted benefits vs. co-benefits or
+#' costs? *PLOS ONE*, 6, e24378. \doi{10.1371/journal.pone.0024378}
 #'
 #' @seealso
 #' \code{\link{add_objective_max_profit}},
@@ -861,8 +910,18 @@ add_objective_max_net_profit <- function(
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_planning_units(solutions))
+#'   plot_spatial_planning_units(solutions)
 #' }
+#'
+#' @references
+#' Ball, I. R., Possingham, H. P., and Watts, M. E. (2009).
+#' Marxan and relatives: software for spatial conservation prioritisation.
+#' In *Spatial Conservation Prioritization: Quantitative Methods and Computational
+#' Tools*, pp. 185--195. \doi{10.1093/oso/9780199547760.003.0014}
+#'
+#' Önal, H., and Briers, R. A. (2002). Incorporating spatial criteria in
+#' optimum reserve network selection. *Proceedings of the Royal Society B*,
+#' 269, 2437--2441. \doi{10.1098/rspb.2002.2183}
 #'
 #' @seealso
 #' \code{\link{add_spatial_boundary}},
@@ -1030,8 +1089,19 @@ add_objective_min_fragmentation_pu <- function(
 #'     requireNamespace("ggplot2", quietly = TRUE)) {
 #'   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
 #'   get_objectives(solutions, format = "wide")
-#'   print(plot_spatial_actions(solutions, layout = "single"))
+#'   plot_spatial_actions(solutions, layout = "single")
 #' }
+#'
+#' @references
+#' Salgado-Rojas, J., Álvarez-Miranda, E., Hermoso, V., Garcia-Gonzalo, J.,
+#' and Weintraub, A. (2020). A mixed integer programming approach for
+#' multi-action planning for threat management. *Ecological Modelling*,
+#' 418, 108901. \doi{10.1016/j.ecolmodel.2019.108901}
+#'
+#' Álvarez-Miranda, E., Salgado-Rojas, J., Hermoso, V., Garcia-Gonzalo, J.,
+#' and Weintraub, A. (2020). An integer programming method for the design of
+#' multi-criteria multi-action conservation plans. *Omega*, 92, 102147.
+#' \doi{10.1016/j.omega.2019.102147}
 #'
 #' @seealso
 #' \code{\link{add_objective_min_fragmentation_planning_units}},

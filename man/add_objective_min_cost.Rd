@@ -118,9 +118,20 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_actions(solutions, layout = "single"))
+  plot_spatial_actions(solutions, layout = "single")
 }
 
+}
+\references{
+Ball, I. R., Possingham, H. P., and Watts, M. E. (2009).
+Marxan and relatives: software for spatial conservation prioritisation.
+In \emph{Spatial Conservation Prioritization: Quantitative Methods and Computational
+Tools}, pp. 185--195. \doi{10.1093/oso/9780199547760.003.0014}
+
+Salgado-Rojas, J., Hermoso, V., and Álvarez-Miranda, E. (2025).
+prioriactions: multi-action management planning in R.
+\emph{Methods in Ecology and Evolution}, 16, 1028--1039.
+\doi{10.1111/2041-210X.14220}
 }
 \seealso{
 \code{\link{add_objective_max_profit}},

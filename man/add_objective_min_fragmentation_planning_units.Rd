@@ -85,9 +85,19 @@ if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
   solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
   get_objectives(solutions, format = "wide")
-  print(plot_spatial_planning_units(solutions))
+  plot_spatial_planning_units(solutions)
 }
 
+}
+\references{
+Ball, I. R., Possingham, H. P., and Watts, M. E. (2009).
+Marxan and relatives: software for spatial conservation prioritisation.
+In \emph{Spatial Conservation Prioritization: Quantitative Methods and Computational
+Tools}, pp. 185--195. \doi{10.1093/oso/9780199547760.003.0014}
+
+Önal, H., and Briers, R. A. (2002). Incorporating spatial criteria in
+optimum reserve network selection. \emph{Proceedings of the Royal Society B},
+269, 2437--2441. \doi{10.1098/rspb.2002.2183}
 }
 \seealso{
 \code{\link{add_spatial_boundary}},

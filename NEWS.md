@@ -1,4 +1,4 @@
-# Development version
+# multiscape 1.4.1
 
 * Added `load_meseta()` and `load_ecosystem_services()` alongside
   `load_sim_multiaction()` as the three complete example-data entry points.
@@ -7,6 +7,16 @@
 * Clarified historical dataset identities and separated their reference index
   from the complete example loaders. Removed an obsolete internal example
   that referenced unavailable datasets.
+* Improved documentation and examples for management actions, ecological effects, 
+  economic returns, action constraints, and atomic objectives.
+* Added reproducible spatial examples illustrating single-objective optimisation 
+  and multi-objective methods (weighted sum, ε-constraint, and AUGMECON).
+* Expanded methodological references and clarified the interpretation of 
+  objectives and action relationships.
+* Consolidated the action sets, cardinality, and logical relations tutorials 
+  into a new vignette, Planning with concurrent management actions.
+* Improved the organisation and consistency of the package reference 
+  documentation.
 
 # multiscape 1.4.0
 

@@ -22,7 +22,21 @@ consequences.
 - [`add_profit()`](https://josesalgr.github.io/multiscape/reference/add_profit.md)
   : Add profit to a planning problem
 
-## Targets and constraints
+## Action selection and compatibility
+
+Control how many management actions can be selected within each planning
+unit and which combinations are permitted or required.
+
+- [`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md)
+  : Constrain the number of actions selected per planning unit
+- [`add_constraint_action_requires()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.md)
+  : Require companion actions in each planning unit
+- [`add_constraint_action_excludes()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.md)
+  : Make actions mutually exclusive within each planning unit
+- [`add_constraint_action_together()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.md)
+  : Select actions together within each planning unit
+
+## Targets and resource constraints
 
 Specify representation targets, resource limits, and fixed planning-unit
 or action decisions.
@@ -35,14 +49,6 @@ or action decisions.
   : Add area constraint
 - [`add_constraint_budget()`](https://josesalgr.github.io/multiscape/reference/add_constraint_budget.md)
   : Add budget constraint
-- [`add_constraint_action_cardinality()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_cardinality.md)
-  : Constrain the number of actions selected per planning unit
-- [`add_constraint_action_requires()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_requires.md)
-  : Require companion actions in each planning unit
-- [`add_constraint_action_excludes()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_excludes.md)
-  : Make actions mutually exclusive within each planning unit
-- [`add_constraint_action_together()`](https://josesalgr.github.io/multiscape/reference/add_constraint_action_together.md)
-  : Select actions together within each planning unit
 - [`add_constraint_locked_actions()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_actions.md)
   : Add locked action decisions to a planning problem
 - [`add_constraint_locked_planning_units()`](https://josesalgr.github.io/multiscape/reference/add_constraint_locked_planning_units.md)
@@ -92,11 +98,11 @@ Choose how multiple objectives are explored and define the combinations
 of weights or constraints to evaluate.
 
 - [`set_method_weighted_sum()`](https://josesalgr.github.io/multiscape/reference/set_method_weighted_sum.md)
-  : Set the weighted-sum multi-objective method
+  : Configure the weighted-sum multi-objective method
 - [`set_method_epsilon_constraint()`](https://josesalgr.github.io/multiscape/reference/set_method_epsilon_constraint.md)
-  : Set the epsilon-constraint multi-objective method
+  : Configure the epsilon-constraint multi-objective method
 - [`set_method_augmecon()`](https://josesalgr.github.io/multiscape/reference/set_method_augmecon.md)
-  : Set the AUGMECON multi-objective method
+  : Configure the augmented epsilon-constraint method (AUGMECON)
 - [`set_runs_grid()`](https://josesalgr.github.io/multiscape/reference/set_runs_grid.md)
   : Define an automatic multi-objective run grid
 - [`set_runs_manual()`](https://josesalgr.github.io/multiscape/reference/set_runs_manual.md)
