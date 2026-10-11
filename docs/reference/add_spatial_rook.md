@@ -62,7 +62,6 @@ The resulting relation is stored as an undirected spatial relation.
 ## Examples
 
 ``` r
-# \donttest{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
 
@@ -88,5 +87,4 @@ head(p$data$spatial_relations$rook)
 #> 4            2           10      1   2  10 rook_sf          rook    FALSE
 #> 5            3            4      1   3   4 rook_sf          rook    FALSE
 #> 6            3           11      1   3  11 rook_sf          rook    FALSE
-# }
 ```

@@ -462,9 +462,12 @@ against reevaluated decisions. Inspect each stored solution's
 `diagnostics$epsilon_checks` and `diagnostics$solver_args` when regenerating
 the analysis. The historical cached plans retain their original diagnostics.
 
-This object preserves
-the action assignments, objective values, solver status, and run metadata
-needed for the remaining analysis.
+The bundled cache preserves the action assignments, objective values, feature
+summaries, solver diagnostics, and run metadata needed for the remaining
+analysis. It stores one shared planning-data snapshot and omits compiled model
+matrices and repeated per-run problem snapshots. These omissions reduce the
+package size without changing the plans, trade-offs, or maps. To optimize again,
+use the `problem` constructed above rather than the analysis cache.
 
 ```{r load-solutions}
 solutions <- readRDS(file.path(
@@ -483,6 +486,19 @@ solutions <- solve(problem)
 
 saveRDS(
   solutions,
+  file.path("..", "data-raw", "restoration-full-solutions.rds"),
+  compress = "xz"
+)
+```
+
+The complete result is saved outside the bundled analysis cache. When preparing
+a package release from a repository checkout, use
+`data-raw/compact-restoration-cache.R` to create the smaller cache used above:
+
+```{r compact-regenerated-solutions, eval=FALSE}
+source(file.path("..", "data-raw", "compact-restoration-cache.R"))
+saveRDS(
+  compact_restoration_solution_set(solutions),
   file.path("data", "integrated-ecosystem-services-solutions.rds"),
   compress = "xz"
 )

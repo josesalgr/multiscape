@@ -308,7 +308,7 @@ solve_round3_multiobjective <- function(n = 4L) {
   x <- make_round3_action_problem(with_effects = TRUE) |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "benefit"),
       runs = multiscape::set_runs_grid(
@@ -403,5 +403,5 @@ make_round4_mo_problem <- function() {
     ) |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_max_benefit(alias = "benefit")
+    multiscape::add_objective_max_effect(alias = "benefit")
 }

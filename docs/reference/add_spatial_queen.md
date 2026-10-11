@@ -66,7 +66,6 @@ The resulting relation is stored as an undirected spatial relation.
 ## Examples
 
 ``` r
-# \donttest{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
 
@@ -92,5 +91,4 @@ head(p$data$spatial_relations$queen)
 #> 4            2            3      1   2   3 queen_sf         queen    FALSE
 #> 5            2            9      1   2   9 queen_sf         queen    FALSE
 #> 6            2           10      1   2  10 queen_sf         queen    FALSE
-# }
 ```

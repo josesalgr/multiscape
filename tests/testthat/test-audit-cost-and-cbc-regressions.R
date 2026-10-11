@@ -15,7 +15,7 @@ test_that("single scoped costs agree with independent costs and MO", {
       objective <- add_objective_min_cost(p, actions = scope,
         include_pu_cost = include_pu, alias = "cost")
       single <- objective |> set_solver_cbc(gap_limit = 0) |> solve()
-      multi <- objective |> add_objective_max_benefit(alias = "benefit") |>
+      multi <- objective |> add_objective_max_effect(alias = "benefit") |>
         set_method_weighted_sum(aliases = c("cost", "benefit"), normalize_weights = FALSE,
           runs = set_runs_manual(data.frame(weight_cost = 1, weight_benefit = 0))) |>
         set_solver_cbc(gap_limit = 0) |> solve()
@@ -68,7 +68,7 @@ test_that("numeric external action ids are not confused with internal cost indic
     add_effects(data.frame(action = c("2", "1"), feature = "habitat", effect = c(1, 2))) |>
     add_constraint_area(2, "equal", tolerance = 0) |>
     add_objective_min_cost(actions = "2", include_pu_cost = FALSE, alias = "cost")
-  multi <- p |> add_objective_max_benefit(alias = "benefit") |>
+  multi <- p |> add_objective_max_effect(alias = "benefit") |>
     set_method_weighted_sum(aliases = c("cost", "benefit"), normalize_weights = FALSE,
       runs = set_runs_manual(data.frame(weight_cost = 1, weight_benefit = 0))) |>
     set_solver_cbc(gap_limit = 0) |> solve()

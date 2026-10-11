@@ -79,7 +79,7 @@ test_that("deprecated AUGMECON grid is converted to a manual run design", {
   ) |>
     add_actions(toy$actions) |>
     add_effects(toy$effects) |>
-    add_objective_max_benefit(alias = "benefit") |>
+    add_objective_max_effect(alias = "benefit") |>
     add_objective_min_cost(alias = "cost")
 
   expect_warning(

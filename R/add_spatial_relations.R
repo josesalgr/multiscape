@@ -746,7 +746,6 @@ add_spatial_boundary <- function(x,
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' \donttest{
 #' # Load a complete simulated planning problem.
 #' example_data <- load_sim_multiaction()
 #'
@@ -765,7 +764,6 @@ add_spatial_boundary <- function(x,
 #' )
 #'
 #' head(p$data$spatial_relations$rook)
-#' }
 #'
 #' @seealso
 #' \code{\link{add_spatial_queen}},
@@ -854,7 +852,6 @@ add_spatial_rook <- function(x,
 #' @return An updated \code{Problem} object.
 #'
 #' @examples
-#' \donttest{
 #' # Load a complete simulated planning problem.
 #' example_data <- load_sim_multiaction()
 #'
@@ -873,7 +870,6 @@ add_spatial_rook <- function(x,
 #' )
 #'
 #' head(p$data$spatial_relations$queen)
-#' }
 #'
 #' @seealso
 #' \code{\link{add_spatial_rook}},

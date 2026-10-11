@@ -63,6 +63,9 @@ A named list containing:
 
 ## Details
 
+The bundled inputs are redistributed under GPL-3.0. Their source and
+preparation notes are recorded in `provenance`.
+
 The action identifiers in `actions$id`, `action_costs$action` and
 `outcomes$action` consistently use `Afforestation`, `BAU`, `FarmReturn`
 and `Firesmart`. The tables can be passed directly to

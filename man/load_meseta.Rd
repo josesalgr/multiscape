@@ -33,6 +33,9 @@ earlier available data support an adaptation of the Meseta case study, not
 an exact reproduction of the final 2025 article.
 }
 \details{
+The bundled inputs are redistributed under GPL-3.0. Their source and
+preparation notes are recorded in \code{provenance}.
+
 The action identifiers in \code{actions$id}, \code{action_costs$action} and
 \code{outcomes$action} consistently use \code{Afforestation}, \code{BAU}, \code{FarmReturn}
 and \code{Firesmart}. The tables can be passed directly to \code{\link[=add_actions]{add_actions()}} and

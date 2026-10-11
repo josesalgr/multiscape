@@ -7,7 +7,7 @@ numerical_mo_problem <- function(cost = rep(100, 3), include_pu_cost = TRUE) {
       effect = c(1, 1 + 2e-7, 100))) |>
     add_constraint_area(1, "equal", tolerance = 0) |>
     add_objective_min_cost(alias = "cost", include_pu_cost = include_pu_cost) |>
-    add_objective_max_benefit(alias = "benefit")
+    add_objective_max_effect(alias = "benefit")
 }
 
 test_that("MO epsilon bounds distinguish genuine differences below the old solver tolerance", {

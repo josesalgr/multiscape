@@ -136,7 +136,7 @@ test_that("loss and intervention impact objectives compile", {
   # Historical objective coverage during the deprecation transition.
   withr::local_options(lifecycle_verbosity = "quiet")
   p_loss <- make_round2_action_problem(with_effects = TRUE) |>
-    multiscape::add_objective_min_loss(alias = "loss")
+    expect_legacy_min_loss(alias = "loss")
 
   expect_s3_class(multiscape::compile_model(p_loss), "Problem")
 

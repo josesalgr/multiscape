@@ -348,7 +348,7 @@ test_that("compiled rows match independently enumerated cardinality feasibility"
 test_that("concurrent ecological effects and targets compile with final aggregation", {
   p <- make_cardinality_problem() |>
     add_effects(data.frame(action = c("a", "b", "c", "d"), feature = 1L, effect = 10)) |>
-    add_objective_max_benefit()
+    add_objective_max_effect()
   expect_s3_class(compile_model(add_constraint_action_cardinality(p, 1, "max")), "Problem")
   expect_no_error(compile_model(add_constraint_action_cardinality(p, 2, "max", pu = 10L)))
   expect_no_error(compile_model(p |> add_constraint_action_cardinality(2, "equal", pu = 10L) |>
@@ -363,7 +363,7 @@ test_that("concurrent ecological effects and targets compile with final aggregat
   )) |>
     add_effects(data.frame(action = "a", feature = 1L, effect = 10)) |>
     add_constraint_action_cardinality(4, "max") |>
-    add_objective_max_benefit()
+    add_objective_max_effect()
   expect_s3_class(compile_model(one_available), "Problem")
   zero_subset <- p |> add_constraint_action_cardinality(4, "max") |>
     add_constraint_action_cardinality(0, "max", actions = c("b", "c", "d"))

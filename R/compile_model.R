@@ -36,7 +36,6 @@
 #' A \code{Problem} object with compiled model structures stored internally.
 #'
 #' @examples
-#' \dontrun{
 #' # Load a complete simulated planning problem.
 #' example_data <- load_sim_multiaction()
 #'
@@ -60,7 +59,6 @@
 #'
 #' # Force recompilation
 #' x <- compile_model(x, force = TRUE)
-#' }
 #'
 #' @seealso
 #' \code{\link{solve}}

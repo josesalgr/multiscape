@@ -439,7 +439,7 @@ test_that("ecological effects, targets and relations support one or concurrent a
                           effect = c(20, 10, 5, 0))) |>
     add_constraint_targets_absolute(50) |>
     add_constraint_action_requires("a", "b") |>
-    add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
   s <- solve(p)
   expect_identical(relation_selected(s), "b")
   expect_equal(get_objectives(s)$benefit, 10)

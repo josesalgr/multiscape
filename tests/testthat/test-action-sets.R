@@ -216,7 +216,7 @@ test_that("registration is independent of spatial feasibility and action selecti
   expect_identical(out$data$dist_actions, p$data$dist_actions)
   expect_identical(out$data$constraints, p$data$constraints)
   expect_identical(out$data$dist_actions$status, rep(0L, 3))
-  expect_error(add_objective_max_benefit(out, actions = "pair"), "did not match")
+  expect_error(add_objective_max_effect(out, actions = "pair"), "did not match")
   expect_error(
     add_effects(out, data.frame(pu = 10L, action = "pair", feature = "woodland", effect = 30)),
     "available pairs"
@@ -265,7 +265,7 @@ test_that("registering sets invalidates only the copied model cache and preserve
       action = c("restore", "control", "fence"), feature = "woodland", effect = c(20, 10, 0)
     )) |>
     add_constraint_budget(budget = 2, sense = "max", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "benefit") |>
+    add_objective_max_effect(alias = "benefit") |>
     compile_model()
   original_model <- p$data$model_list
   original_pointer <- p$data$model_ptr
@@ -292,7 +292,7 @@ test_that("action-set definitions do not change optimized decisions or values", 
   p <- make_action_sets_problem() |>
     add_effects(effects) |>
     add_constraint_budget(budget = 2, sense = "max", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "benefit") |>
+    add_objective_max_effect(alias = "benefit") |>
     set_solver_cbc(gap_limit = 0, verbose = FALSE)
   without_sets <- solve(p)
   with_sets <- solve(add_action_sets(p, list(pair = c("restore", "control"))))
@@ -308,7 +308,7 @@ test_that("set definitions preserve compiled models for all existing MO methods"
     add_constraint_budget(budget = 2, sense = "max", include_pu_cost = FALSE) |>
     add_constraint_locked_planning_units(locked_in = 10L) |>
     add_objective_min_cost(include_pu_cost = FALSE, alias = "cost") |>
-    add_objective_max_benefit(alias = "benefit")
+    add_objective_max_effect(alias = "benefit")
   methods <- list(
     weighted = function(x) set_method_weighted_sum(x,
       aliases = c("cost", "benefit"),

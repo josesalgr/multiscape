@@ -48,7 +48,6 @@ All edges receive the same user-supplied weight.
 The resulting relation is stored as an undirected spatial relation.
 }
 \examples{
-\donttest{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
 
@@ -67,7 +66,6 @@ p <- add_spatial_rook(
 )
 
 head(p$data$spatial_relations$rook)
-}
 
 }
 \seealso{

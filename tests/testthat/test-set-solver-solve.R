@@ -18,7 +18,7 @@ test_that("set_solver covers single assignment, wrappers, warnings, and validati
   )
   expect_identical(p_log$data$solve_args$name_output_file, "solver.log")
 
-  p1 <- multiscape::set_solver(
+  expect_warning(p1 <- multiscape::set_solver(
     p,
     solver = "cbc",
     gap_limit = 0.12345,
@@ -28,7 +28,7 @@ test_that("set_solver covers single assignment, wrappers, warnings, and validati
     verbose = TRUE,
     solver_params = list(a = 1),
     b = 2
-  )
+  ), "thread control is not available through rcbc")
 
   expect_identical(p1$data$solve_args$solver, "cbc")
   expect_equal(p1$data$solve_args$gap_limit, 0.12345)

@@ -19,7 +19,7 @@ test_that("Problem class summaries cover configured methods and constraints", {
     multiscape::add_constraint_budget(budget = 2, sense = "max") |>
     multiscape::add_constraint_locked_planning_units(locked_in = 1, locked_out = 4) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "benefit"),
       runs = multiscape::set_runs_grid(2)

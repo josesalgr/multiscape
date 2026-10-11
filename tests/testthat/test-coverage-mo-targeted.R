@@ -68,8 +68,8 @@ test_that("weighted MO composes all supported atomic objective families", {
       include_action_cost = TRUE,
       alias = "cost"
     ) |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
-    multiscape::add_objective_min_loss(alias = "loss") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
+    expect_legacy_min_loss(alias = "loss") |>
     multiscape::add_objective_max_profit(alias = "profit") |>
     multiscape::add_objective_max_net_profit(alias = "net_profit") |>
     multiscape::add_objective_min_fragmentation_planning_units(
@@ -165,7 +165,7 @@ test_that("manual AUGMECON handles multiple heterogeneous secondary objectives",
       include_action_cost = TRUE,
       alias = "cost"
     ) |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
     multiscape::add_objective_min_fragmentation_action(
       relation_name = "boundary",
       alias = "action_frag"

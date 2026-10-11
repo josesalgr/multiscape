@@ -48,7 +48,6 @@ compile successfully and still later be infeasible, numerically difficult, or
 otherwise fail during solver execution.
 }
 \examples{
-\dontrun{
 # Load a complete simulated planning problem.
 example_data <- load_sim_multiaction()
 
@@ -72,7 +71,6 @@ x <- compile_model(x)
 
 # Force recompilation
 x <- compile_model(x, force = TRUE)
-}
 
 }
 \seealso{

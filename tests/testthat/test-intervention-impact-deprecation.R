@@ -50,7 +50,7 @@ test_that("fixed-effort deficits match legacy values for every allocation", {
       set_solver_cbc(gap_limit = 0) |> solve()
     new <- modern |>
       add_constraint_locked_actions(locked_in = locks) |>
-      add_objective_max_benefit(features = "carbon", alias = "benefit") |>
+      add_objective_max_effect(features = "carbon", alias = "benefit") |>
       set_solver_cbc(gap_limit = 0) |> solve()
     expect_equal(get_objectives(new)$benefit, 2 - get_objectives(old)$impact)
     expect_equal(get_features(new)$selected_net[get_features(new)$feature == 1],
@@ -69,7 +69,7 @@ test_that("fixed-effort migration preserves trade-offs in all three MO methods",
     set_solver_cbc(gap_limit = 0)
   new <- base |>
     add_effects(data.frame(action = "restore", feature = "carbon", outcome = 1)) |>
-    add_objective_max_benefit(features = "carbon", actions = "restore", alias = "benefit") |>
+    add_objective_max_effect(features = "carbon", actions = "restore", alias = "benefit") |>
     set_solver_cbc(gap_limit = 0)
   methods_old <- list(
     set_method_weighted_sum(old, aliases = c("cost", "impact"), normalize_weights = FALSE,
@@ -101,7 +101,7 @@ test_that("variable effort is not treated as an automatic equivalent replacement
   old <- base |> add_objective_min_intervention_impact(features = "carbon", alias = "impact") |>
     set_solver_cbc(gap_limit = 0) |> solve()
   new <- base |> add_effects(data.frame(action = "restore", feature = "carbon", outcome = 1)) |>
-    add_objective_max_benefit(features = "carbon", alias = "benefit") |>
+    add_objective_max_effect(features = "carbon", alias = "benefit") |>
     set_solver_cbc(gap_limit = 0) |> solve()
   expect_equal(sum(get_actions(old)$selected), 0)
   expect_equal(sum(get_actions(new)$selected), 4)
@@ -118,6 +118,10 @@ test_that("the restoration vignette cache contains coherent modern benefit resul
   expect_true(all(vapply(specs, function(sp) sp$objective_id == "max_benefit" && sp$sense == "max", logical(1))))
   expect_false(migration$reoptimized)
   expect_equal(length(s$solution$solutions), migration$verified_decisions)
+  expect_null(s$problem$data$model_list)
+  expect_false(s$problem$data$has_model)
+  vector_length <- s$meta$analysis_cache$decision_vector_length
+  expect_gt(vector_length, 0)
   for (one in s$solution$solutions) {
     selected <- one$summary$actions
     ids <- selected$pu[selected$action == "restoration" & selected$selected > .5]
@@ -129,7 +133,7 @@ test_that("the restoration vignette cache contains coherent modern benefit resul
       as.numeric(amounts[as.character(feature_ids)])
     expect_equal(one$solution$alias_values[services], expected, tolerance = 1e-8)
     expect_true(all(one$solution$alias_values[services] >= one$method$eps[services] - 1e-6))
-    expect_equal(length(one$solution$vector), length(s$problem$data$model_list$obj))
+    expect_equal(length(one$solution$vector), vector_length)
     f <- one$summary$features
     expect_equal(f$selected_net[match(feature_ids, f$feature)], unname(expected), tolerance = 1e-8)
   }

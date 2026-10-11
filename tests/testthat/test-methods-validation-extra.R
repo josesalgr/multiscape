@@ -227,7 +227,7 @@ test_that("epsilon-constraint validates aliases, deprecated interface, and lexic
 
 test_that("epsilon grid rejects three-objective automatic designs", {
   p <- make_round4_mo_problem() |>
-    multiscape::add_objective_min_loss(alias = "loss")
+    expect_legacy_min_loss(alias = "loss")
 
   expect_error(
     multiscape::set_method_epsilon_constraint(

@@ -29,6 +29,9 @@ test_that("hand-made Solution and SolutionSet print, show, and repr work", {
   expect_output(out_sol <- sol$print(), NA)
   expect_true(isTRUE(out_sol))
   expect_match(sol$repr(), "<Solution>")
+  printed <- paste(capture.output(sol$print(), type = "message"), collapse = "\n")
+  expect_match(printed, "status: +optimal")
+  expect_false(grepl("pa_solution_status_inline", printed, fixed = TRUE))
 
   expect_output(out_set <- print(s), NA)
   expect_true(isTRUE(out_set))

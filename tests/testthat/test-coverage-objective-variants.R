@@ -17,7 +17,7 @@ test_that("filtered benefit and loss objectives compile and solve", {
   skip_if_no_cbc()
 
   benefit <- make_coverage_objective_problem() |>
-    multiscape::add_objective_max_benefit(
+    multiscape::add_objective_max_effect(
       actions = "restoration", features = "sp1", alias = "benefit"
     )
   benefit_out <- multiscape::solve(benefit)
@@ -25,7 +25,7 @@ test_that("filtered benefit and loss objectives compile and solve", {
   expect_true(is.finite(multiscape::get_objectives(benefit_out)$benefit))
 
   loss <- make_coverage_objective_problem() |>
-    multiscape::add_objective_min_loss(
+    expect_legacy_min_loss(
       actions = "conservation", features = "sp2", alias = "loss"
     )
   loss_out <- multiscape::solve(loss)

@@ -5,7 +5,7 @@ test_that("plot_tradeoff returns ggplot output", {
   p <- make_round2_action_problem(with_effects = TRUE) |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
     multiscape::set_method_weighted_sum(
       aliases = c("cost", "benefit"),
       runs = multiscape::set_runs_grid(n = 3),
@@ -163,7 +163,7 @@ test_that("action and feature plots cover filters and value modes", {
 
   # Maximize positive restoration effects to guarantee selected actions.
   p <- make_round3_spatial_problem(action_based = TRUE) |>
-    multiscape::add_objective_max_benefit(alias = "benefit") |>
+    multiscape::add_objective_max_effect(alias = "benefit") |>
     multiscape::set_solver_cbc(gap_limit = 0, verbose = FALSE)
 
   s <- multiscape::solve(p)

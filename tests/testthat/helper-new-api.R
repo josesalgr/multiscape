@@ -51,7 +51,7 @@ make_explicit_mo_problem <- function(
     ) |>
     multiscape::add_constraint_targets_relative(0.05) |>
     multiscape::add_objective_min_cost(alias = "cost") |>
-    multiscape::add_objective_max_benefit(alias = "benefit")
+    multiscape::add_objective_max_effect(alias = "benefit")
 
   if (identical(method, "weighted")) {
     x <- multiscape::set_method_weighted_sum(

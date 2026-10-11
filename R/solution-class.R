@@ -163,7 +163,7 @@ Solution <- pproto(
     # ---- RESULT
     cli::cli_text("{ch$j}{ch$b}{.h result}", .envir = environment())
     cli::cli_text(
-      "{ch$v}{ch$j}{ch$b}status:          {.eval .pa_solution_status_inline(st)}",
+      paste0("{ch$v}{ch$j}{ch$b}status:          ", .pa_solution_status_inline(st)),
       .envir = environment()
     )
     cli::cli_text(

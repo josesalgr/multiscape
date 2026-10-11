@@ -105,23 +105,26 @@ of multi-criteria multi-action conservation plans. *Omega*, 92, 102147.
 # EXAMPLE: Form separate cohesive patches for two actions
 #
 # Each action costs one unit. Two action-specific budget equalities
-# require exactly eight protection and eight restoration units.
+# require exactly four protection and four restoration units.
 # The default one-action-per-unit rule prevents overlapping actions.
 sim <- load_sim_multiaction()
+# Use a 4 by 4 subset so this example solves quickly.
+planning_units <- subset(sim$planning_units, x < 4 & y < 4)
+dist_features <- subset(sim$dist_features, pu %in% planning_units$id)
 
 p <- create_problem(
-  pu = sim$planning_units,
+  pu = planning_units,
   features = sim$features,
-  dist_features = sim$dist_features,
+  dist_features = dist_features,
   cost = "cost"
 ) |>
   add_actions(sim$actions, cost = 1) |>
   add_spatial_boundary(name = "boundary", include_self = TRUE) |>
   add_constraint_budget(
-    8, "equal", actions = "protect", include_pu_cost = FALSE
+    4, "equal", actions = "protect", include_pu_cost = FALSE
   ) |>
   add_constraint_budget(
-    8, "equal", actions = "restore", include_pu_cost = FALSE
+    4, "equal", actions = "restore", include_pu_cost = FALSE
   ) |>
   add_objective_min_fragmentation_action(relation_name = "boundary", alias = "action_fragmentation")
 
@@ -129,7 +132,7 @@ p <- create_problem(
 # the cohesion of each action's selected units separately.
 if (requireNamespace("rcbc", quietly = TRUE) &&
     requireNamespace("ggplot2", quietly = TRUE)) {
-  solutions <- solve(set_solver_cbc(p, time_limit = 30, verbose = FALSE))
+  solutions <- solve(set_solver_cbc(p, gap_limit = 0, time_limit = 5, verbose = FALSE))
   get_objectives(solutions, format = "wide")
   plot_spatial_actions(solutions, layout = "single")
 }

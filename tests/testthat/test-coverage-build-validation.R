@@ -19,13 +19,13 @@ test_that("model compilation explains missing action data by objective family", 
     "no action effects were provided"
   )
 
-  benefit <- multiscape::add_objective_max_benefit(actions_only, alias = "benefit")
+  benefit <- multiscape::add_objective_max_effect(actions_only, alias = "benefit")
   expect_error(
     multiscape::compile_model(benefit),
     "requires effects"
   )
 
-  loss <- multiscape::add_objective_min_loss(actions_only, alias = "loss")
+  loss <- expect_legacy_min_loss(actions_only, alias = "loss")
   expect_error(
     multiscape::compile_model(loss),
     "requires effects/losses"
@@ -42,11 +42,11 @@ test_that("model compilation explains missing action data by objective family", 
 test_that("model compilation validates objective coefficient columns", {
   p <- make_round3_action_problem(with_effects = TRUE)
 
-  benefit <- multiscape::add_objective_max_benefit(p, alias = "benefit")
+  benefit <- multiscape::add_objective_max_effect(p, alias = "benefit")
   benefit$data$model_args$objective_args$benefit_col <- "missing"
   expect_error(multiscape::compile_model(benefit), "requires column 'missing'")
 
-  loss <- multiscape::add_objective_min_loss(p, alias = "loss")
+  loss <- expect_legacy_min_loss(p, alias = "loss")
   loss$data$model_args$objective_args$loss_col <- "missing"
   expect_error(multiscape::compile_model(loss), "requires column 'missing'")
 

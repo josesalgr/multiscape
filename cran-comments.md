@@ -2,17 +2,14 @@
 
 0 errors | 0 warnings | 3 notes
 
-## Resubmission
+## Update
 
-This is a resubmission to address the additional LTO/gcc-ASAN issue reported by CRAN.
+This update to version 1.4.1 adds signed-effect objectives, complete
+example-data loaders, and revised documentation and examples.
 
-The native routine registration in src/init.c was updated for
-_multiscape_rcpp_prepare_objective_min_intervention_impact. The registered
-number of arguments and the external declaration now match the Rcpp-generated
-wrapper in src/RcppExports.cpp.
-
-The package was previously accepted on CRAN as version 1.0.6. This update
-addresses the additional issues reported for that CRAN version.
+The deprecated `add_objective_max_benefit()` now delegates to the signed
+`add_objective_max_effect()`. The deprecated `add_objective_min_loss()`
+retains its original criterion. These changes are documented in NEWS.md.
 
 ## CRAN check notes
 
@@ -29,7 +26,9 @@ The `Description` field explicitly states how non-mainstream suggested packages 
 
 ### 2. checking installed package size ... NOTE
 
-Installed size is 9.0Mb, mainly due to example data, documentation, and compiled code.
+Installed size is 9.7Mb, mainly due to example data, documentation,
+R code and the compiled library. Unused files have been removed and
+the vignette cache has been reduced without changing its results.
 
 ### 3. checking for future file timestamps ... NOTE
 

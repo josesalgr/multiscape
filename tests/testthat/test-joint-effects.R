@@ -82,7 +82,7 @@ test_that("zero reference and zero corrections have explicit meanings", {
   expect_equal(absolute$data$effect_terms$effect, 7)
   expect_identical(absolute$data$effects_meta$missing_individual_effects, "zero")
   expect_error(add_effects(p, data.frame(action = "ab", feature = "habitat", effect = -1)), "negative")
-  zero <- joint_pair(50) |> add_objective_max_benefit() |> compile_model()
+  zero <- joint_pair(50) |> add_objective_max_effect() |> compile_model()
   expect_equal(zero$data$joint_effects$effect, 50)
   expect_equal(zero$data$effect_terms$effect[zero$data$effect_terms$action == "ab"], 0)
   expect_equal(nrow(zero$data$joint_variables_model), 0)
@@ -123,7 +123,7 @@ test_that("equivalent membership aliases cannot double-count a supplied effect",
   good <- add_effects(joint_base(sets = list(ab = c("a", "b"), ba = c("b", "a")),
     features = c("habitat", "water")), data.frame(action = c("ab", "ba"),
       feature = c("habitat", "water"), effect = c(70, 20))) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(nrow(good$data$joint_variables_model), 1)
   expect_equal(length(unique(good$data$effect_terms_model$column0)), 1)
 })
@@ -175,19 +175,19 @@ test_that("compiled continuous AND variables match every binary allocation exact
 
 test_that("auxiliaries are shared across features and removed for unreachable combinations", {
   p <- joint_pair(70, pu = c(10L, 20L), features = c("habitat", "water")) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(nrow(p$data$joint_variables_model), 2)
   expect_equal(p$data$model_registry$vars$joint_effects$n_constraints, 6)
   locked <- joint_pair(70, pu = c(10L, 20L)) |>
     add_constraint_locked_actions(locked_out = list(b = 10L)) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(locked$data$joint_variables_model$pu, 20)
   excluded <- joint_pair() |> add_constraint_action_excludes(c("a", "b")) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(nrow(excluded$data$joint_variables_model), 0)
   limited <- joint_base() |> add_constraint_action_cardinality(1, "max", actions = c("a", "b")) |>
     add_effects(data.frame(action = c("a", "b", "ab"), feature = "habitat", effect = c(30, 20, 70))) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(nrow(limited$data$joint_variables_model), 0)
 })
 
@@ -217,7 +217,7 @@ test_that("public benefit objectives work for positive joint contributions in al
   skip_if_no_cbc()
   p <- joint_pair() |> add_constraint_action_cardinality(1, "min") |>
     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "change") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(alias = "change") |> set_solver_cbc(gap_limit = 0)
   for (spec in joint_methods(p, 69)) {
     s <- solve(spec)
     expect_equal(get_objectives(s)$change, 70)
@@ -233,7 +233,7 @@ test_that("public joint loss objectives retain their minimization sense in all M
     add_constraint_action_cardinality(1, "min") |>
     add_profit(c(a = 10, b = 9)) |>
     add_objective_max_profit(alias = "profit") |>
-    add_objective_min_loss(alias = "loss") |>
+    expect_legacy_min_loss(alias = "loss") |>
     set_solver_cbc(gap_limit = 0)
   methods <- list(
     set_method_weighted_sum(p, aliases = c("profit", "loss"), normalize_weights = FALSE,
@@ -259,7 +259,7 @@ test_that("joint auxiliaries coexist with spatial auxiliaries and three MO objec
     add_constraint_action_cardinality(1, "min") |>
     add_spatial_relations(data.frame(pu1 = 10L, pu2 = 20L, weight = 7), name = "edge") |>
     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "change") |>
+    add_objective_max_effect(alias = "change") |>
     add_objective_min_fragmentation_action(relation_name = "edge", alias = "frag") |>
     set_solver_cbc(gap_limit = 0)
   methods <- list(
@@ -283,8 +283,8 @@ test_that("joint auxiliaries coexist with spatial auxiliaries and three MO objec
 
 test_that("mixed signed objectives and concurrent targets compile with final aggregation", {
   p <- joint_pair(40)
-  expect_no_error(compile_model(add_objective_max_benefit(p)))
-  expect_no_error(compile_model(add_objective_min_loss(p)))
+  expect_no_error(compile_model(add_objective_max_effect(p)))
+  expect_no_error(compile_model(expect_legacy_min_loss(p)))
   targets <- p |> add_constraint_targets_absolute(10) |> add_objective_min_cost()
   expect_no_error(compile_model(targets))
   expect_error(compile_model(joint_signed_objective(p, features = 99)), "Unknown feature")
@@ -295,7 +295,7 @@ test_that("pure joint losses remain signed and the original problem is unchanged
   base <- joint_base()
   p <- base |> add_effects(data.frame(action = c("a", "b", "ab"), feature = "habitat",
                                      effect = c(-10, -20, -40))) |>
-    add_constraint_action_cardinality(2, "min") |> add_objective_min_loss() |>
+    add_constraint_action_cardinality(2, "min") |> expect_legacy_min_loss() |>
     set_solver_cbc(gap_limit = 0)
   s <- solve(p)
   expect_equal(get_features(s)$selected_loss, 40)
@@ -325,11 +325,11 @@ test_that("physical outcomes of inferred combinations cannot be negative", {
 
 test_that("joint objective scopes include a correction only when all members are in scope", {
   skip_if_no_cbc()
-  p <- joint_pair() |> add_objective_max_benefit(actions = "a", alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+  p <- joint_pair() |> add_objective_max_effect(actions = "a", alias = "benefit") |> set_solver_cbc(gap_limit = 0)
   s <- solve(p)
   expect_equal(get_objectives(s)$benefit, 30)
   p <- joint_pair(features = c("habitat", "water")) |>
-    add_objective_max_benefit(features = "water", alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(features = "water", alias = "benefit") |> set_solver_cbc(gap_limit = 0)
   expect_equal(get_objectives(solve(p))$benefit, 70)
 })
 
@@ -400,7 +400,7 @@ test_that("modern joint raster inputs retain totals and multi-feature alignment"
   }
   outcomes <- add_effects(p, rasters, raster_type = "outcome")
   expect_equal(outcomes$data$effect_terms, effects$data$effect_terms)
-  compiled <- effects |> add_objective_max_benefit() |> compile_model()
+  compiled <- effects |> add_objective_max_effect() |> compile_model()
   expect_equal(nrow(compiled$data$joint_variables_model), 1)
 })
 
@@ -430,7 +430,7 @@ test_that("automatic payoff and grid methods never overstate negative interactio
 })
 
 test_that("compilation caches, clones and later locks preserve original joint totals", {
-  p <- joint_pair() |> add_objective_max_benefit() |> compile_model()
+  p <- joint_pair() |> add_objective_max_effect() |> compile_model()
   expect_identical(compile_model(p)$data$model_list, p$data$model_list)
   original <- serialize(p$data$effects_original, NULL)
   pointer <- p$data$model_ptr
@@ -445,7 +445,7 @@ test_that("compilation caches, clones and later locks preserve original joint to
 })
 
 test_that("corrupt stored joint coefficients are rejected before native construction", {
-  base <- joint_pair() |> add_objective_max_benefit()
+  base <- joint_pair() |> add_objective_max_effect()
   mutations <- list(
     function(d) { d$effect[1] <- Inf; d },
     function(d) { d$members[[1]] <- "unknown"; d },

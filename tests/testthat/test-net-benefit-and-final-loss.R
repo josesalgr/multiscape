@@ -22,7 +22,7 @@ test_that("benefit uses signed coefficients without changing canonical reporting
   effects <- data.frame(action = c("a", "a", "b", "b"),
     feature = c("habitat", "water", "habitat", "water"), effect = c(100, -90, 20, 0))
   base <- net_effect_problem(effects, features = c("habitat", "water"), concurrent = FALSE)
-  p <- base |> add_objective_max_benefit(alias = "benefit") |> compile_model()
+  p <- base |> add_objective_max_effect(alias = "benefit") |> compile_model()
   ml <- p$data$model_list
   expect_equal(ml$obj[ml$x_offset + p$data$dist_actions_model$internal_row], c(10, 20))
   expect_identical(p$data$dist_effects, base$data$dist_effects)
@@ -41,15 +41,15 @@ test_that("all-negative, zero, and cancelling benefit objectives are valid", {
     base <- net_effect_problem(data.frame(action = c("a", "b"), feature = "habitat", effect = values),
       concurrent = FALSE)
     p <- base |> add_constraint_action_cardinality(1, "equal") |>
-      add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+      add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
     expect_equal(get_objectives(solve(p))$benefit, max(values))
-    p <- base |> add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+    p <- base |> add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
     expect_equal(get_objectives(solve(p))$benefit, 0)
   }
   p <- net_effect_problem(data.frame(action = "a", feature = c("habitat", "water"), effect = c(10, -10)),
     actions = "a", features = c("habitat", "water"), concurrent = FALSE) |>
     add_constraint_locked_actions(locked_in = list(a = 10L)) |>
-    add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0)
   expect_equal(get_objectives(solve(p))$benefit, 0)
 })
 
@@ -62,12 +62,12 @@ test_that("effect, outcome, relative-change and legacy inputs preserve signed be
     data.frame(action = c("a", "b"), feature = "habitat", outcome = c(120, 90)),
     data.frame(action = c("a", "b"), feature = "habitat", relative_change = c(.2, -.1)))
   for (table in tables) {
-    p <- add_effects(base, table) |> add_objective_max_benefit() |> compile_model()
+    p <- add_effects(base, table) |> add_objective_max_effect() |> compile_model()
     expect_equal(p$data$model_list$obj[p$data$model_list$x_offset + 1:2], c(20, -10))
   }
   p <- suppressWarnings(add_effects(base,
     data.frame(pu = 10L, action = c("a", "b"), feature = "habitat", delta = c(20, -10)), effect_type = "delta")) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   expect_equal(p$data$model_list$obj[p$data$model_list$x_offset + 1:2], c(20, -10))
 })
 
@@ -82,8 +82,8 @@ test_that("final loss and signed benefit match every allocation of a three-actio
     selected <- names(allocations)[as.logical(allocations[k, ])]
     expected <- if (!length(selected)) 0 else unname(totals[paste(selected, collapse = "")])
     p <- net_lock_allocation(base, selected)
-    benefit <- p |> add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
-    loss <- p |> add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
+    benefit <- p |> add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
+    loss <- p |> expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
     expect_equal(get_objectives(benefit)$benefit, expected, info = paste(selected, collapse = "+"))
     expect_equal(get_objectives(loss)$loss, max(-expected, 0))
     for (s in list(benefit, loss)) {
@@ -102,8 +102,8 @@ test_that("negative interactions are not themselves ecological losses", {
     base <- net_effect_problem(data.frame(action = c("a", "b", "ab"), feature = "habitat",
       effect = c(30, 20, total)), sets = list(ab = c("a", "b"))) |>
       add_constraint_action_cardinality(2, "equal")
-    b <- base |> add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
-    l <- base |> add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
+    b <- base |> add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
+    l <- base |> expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
     expect_equal(get_objectives(b)$benefit, total)
     expect_equal(get_objectives(l)$loss, max(-total, 0))
   }
@@ -113,8 +113,8 @@ test_that("concurrent individual actions are additive and count the reference on
   skip_if_no_cbc()
   base <- net_effect_problem(data.frame(action = c("a", "b"), feature = "habitat", effect = c(30, -20))) |>
     add_constraint_action_cardinality(2, "equal")
-  b <- base |> add_objective_max_benefit(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
-  l <- base |> add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
+  b <- base |> add_objective_max_effect(alias = "benefit") |> set_solver_cbc(gap_limit = 0) |> solve()
+  l <- base |> expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
   expect_equal(get_objectives(b)$benefit, 10)
   expect_equal(get_objectives(l)$loss, 0)
   expect_equal(get_features(l)$selected_baseline, 100)
@@ -127,7 +127,7 @@ test_that("losses are split within PU and feature before summing", {
   effects$effect <- c(30, -20, -10, 10, -20, 30, 10, -10)
   base <- net_effect_problem(effects, features = c("habitat", "water"), pu = c(10L, 20L)) |>
     add_constraint_action_cardinality(2, "equal")
-  s <- base |> add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
+  s <- base |> expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0) |> solve()
   # Net per PU/feature is (20, -10, -10, 20): global net 20, loss 20.
   expect_equal(get_objectives(s)$loss, 20)
   expect_equal(sum(get_features(s)$selected_net), 20)
@@ -142,11 +142,11 @@ test_that("loss subsets and overlapping aliases get distinct exact auxiliary exp
   base <- net_effect_problem(effects, features = c("habitat", "water"), sets = list(ab = c("a", "b"))) |>
     add_constraint_action_cardinality(2, "equal") |> add_profit(c(a = 10, b = 9)) |>
     add_objective_max_profit(alias = "profit") |>
-    add_objective_max_benefit(alias = "benefit") |>
-    add_objective_min_loss(alias = "loss") |>
-    add_objective_min_loss(actions = "a", alias = "a_loss") |>
-    add_objective_min_loss(features = "habitat", alias = "habitat_loss") |>
-    add_objective_min_loss(features = "water", alias = "water_loss") |>
+    add_objective_max_effect(alias = "benefit") |>
+    expect_legacy_min_loss(alias = "loss") |>
+    expect_legacy_min_loss(actions = "a", alias = "a_loss") |>
+    expect_legacy_min_loss(features = "habitat", alias = "habitat_loss") |>
+    expect_legacy_min_loss(features = "water", alias = "water_loss") |>
     set_solver_cbc(gap_limit = 0)
   aliases <- c("profit", "benefit", "loss", "a_loss", "habitat_loss", "water_loss")
   weights <- as.data.frame(as.list(stats::setNames(c(1, 0, 0, 0, 0, 0), paste0("weight_", aliases))))
@@ -184,7 +184,7 @@ test_that("targets use joint outcomes and never repeat the reference", {
     expect_equal(get_features(s)$selected_amount_after, 140)
   }
   p <- base |> add_constraint_action_cardinality(2, "equal") |>
-    add_constraint_targets_relative(1) |> add_objective_max_benefit(alias = "benefit") |>
+    add_constraint_targets_relative(1) |> add_objective_max_effect(alias = "benefit") |>
     set_solver_cbc(gap_limit = 0)
   expect_equal(get_objectives(solve(p))$benefit, 40)
   p <- base |> add_constraint_action_cardinality(2, "equal") |>
@@ -216,8 +216,8 @@ test_that("mixed signed effects, targets and ecological objectives work in all M
     sets = list(ab = c("a", "b"))) |>
     add_constraint_targets_absolute(140) |>
     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "benefit") |>
-    add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(alias = "benefit") |>
+    expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0)
   methods <- list(
     set_method_weighted_sum(base, aliases = c("cost", "benefit", "loss"), normalize_weights = FALSE,
       runs = set_runs_manual(data.frame(weight_cost = 1, weight_benefit = 1, weight_loss = 1))),
@@ -236,7 +236,7 @@ test_that("mixed signed effects, targets and ecological objectives work in all M
 
 test_that("loss primitive validates all inputs before mutation", {
   p <- net_effect_problem(data.frame(action = c("a", "b"), feature = "habitat", effect = c(10, -5))) |>
-    add_objective_max_benefit() |> compile_model()
+    add_objective_max_effect() |> compile_model()
   before <- multiscape:::rcpp_optimization_problem_as_list(p$data$model_ptr)
   valid <- as.integer(p$data$model_list$x_offset + 0:1)
   for (bad in list(as.integer(c(-1, 1)), as.integer(c(NA, 1)), rep(valid[1], 2), as.integer(c(valid[1], 9999)))) {
@@ -255,8 +255,8 @@ test_that("automatic payoff, scaling and grids evaluate signed objectives consis
     effect = c(-10, 20, -5)), sets = list(ab = c("a", "b"))) |>
     add_constraint_action_cardinality(1, "min") |> add_profit(c(a = 2, b = 1)) |>
     add_objective_max_profit(alias = "profit") |>
-    add_objective_max_benefit(alias = "benefit") |>
-    add_objective_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0)
+    add_objective_max_effect(alias = "benefit") |>
+    expect_legacy_min_loss(alias = "loss") |> set_solver_cbc(gap_limit = 0)
   methods <- list(
     set_method_weighted_sum(base, aliases = c("profit", "benefit", "loss"),
       objective_scaling = TRUE, normalize_weights = FALSE,
@@ -292,8 +292,8 @@ test_that("constant net benefit and zero-loss secondary objectives work in all M
     features = c("habitat", "water"), concurrent = FALSE) |>
     add_constraint_action_cardinality(1, "equal") |>
     add_objective_min_cost(alias = "cost", include_pu_cost = FALSE) |>
-    add_objective_max_benefit(alias = "benefit") |>
-    add_objective_min_loss(features = "habitat", alias = "loss") |>
+    add_objective_max_effect(alias = "benefit") |>
+    expect_legacy_min_loss(features = "habitat", alias = "loss") |>
     set_solver_cbc(gap_limit = 0)
   methods <- list(
     set_method_weighted_sum(base, aliases = c("cost", "benefit", "loss"), normalize_weights = FALSE,
