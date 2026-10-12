@@ -1,3 +1,9 @@
+# multiscape 1.4.2
+
+* Speed up `selection_frequency()` without changing recurrence counts, and
+  use pre-rendered maps in the large forest-restoration vignette to reduce
+  package build and check times.
+  
 # multiscape 1.4.1
 
 * Added `load_meseta()` and `load_ecosystem_services()` alongside

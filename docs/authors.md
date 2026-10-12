@@ -22,13 +22,14 @@ Source:
 [`DESCRIPTION`](https://github.com/josesalgr/multiscape/blob/HEAD/DESCRIPTION)
 
 Salgado-Rojas J, Moreno-Faguett M, Madrid-Ayala V, Pineda-Zapata S,
-Aquilué N (2026). *multiscape: Multi-Objective Spatial Planning*. R
-package version 1.4.1, <https://josesalgr.github.io/multiscape/>.
+Aquilué N (2026). *multiscape: Multi-Action, Multi-Objective Spatial
+Planning*. R package version 1.4.2,
+<https://josesalgr.github.io/multiscape/>.
 
     @Manual{,
-      title = {multiscape: Multi-Objective Spatial Planning},
+      title = {multiscape: Multi-Action, Multi-Objective Spatial Planning},
       author = {José Salgado-Rojas and Matías Moreno-Faguett and Victoria Madrid-Ayala and Sara Pineda-Zapata and Núria Aquilué},
       year = {2026},
-      note = {R package version 1.4.1},
+      note = {R package version 1.4.2},
       url = {https://josesalgr.github.io/multiscape/},
     }

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Multi-Objective Spatial Planning • multiscape</title>
+<title>Multi-Action, Multi-Objective Spatial Planning • multiscape</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -22,7 +22,7 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
-<meta property="og:title" content="Multi-Objective Spatial Planning">
+<meta property="og:title" content="Multi-Action, Multi-Objective Spatial Planning">
 <meta name="description" content="Provides a modular framework for exact multi-objective spatial planning using mixed-integer programming. The package supports the definition of planning problems through planning units, features, management actions, action effects, spatial relations, targets, constraints, and objective functions. It enables the optimisation of spatial planning portfolios under considerations such as boundary structure, connectivity, and fragmentation. Supported multi-objective methods include weighted-sum aggregation, epsilon-constraint, and the augmented epsilon-constraint method. Problems can be solved with several commercial and open-source optimisation solvers. Optional solver backends include the gurobi R package, which is distributed with the Gurobi Optimizer installation &lt;https://docs.gurobi.com/projects/optimizer/en/13.0/reference/r/setup.html&gt;, and the rcbc R package, available from GitHub at &lt;https://github.com/dirkschumacher/rcbc&gt;. For background on multi-objective optimisation methods, see Halffmann et al. (2022) &lt;doi:10.1002/mcda.1780&gt;; for the augmented epsilon-constraint method, see Mavrotas (2009) &lt;doi:10.1016/j.amc.2009.03.037&gt;.">
 <meta property="og:description" content="Provides a modular framework for exact multi-objective spatial planning using mixed-integer programming. The package supports the definition of planning problems through planning units, features, management actions, action effects, spatial relations, targets, constraints, and objective functions. It enables the optimisation of spatial planning portfolios under considerations such as boundary structure, connectivity, and fragmentation. Supported multi-objective methods include weighted-sum aggregation, epsilon-constraint, and the augmented epsilon-constraint method. Problems can be solved with several commercial and open-source optimisation solvers. Optional solver backends include the gurobi R package, which is distributed with the Gurobi Optimizer installation &lt;https://docs.gurobi.com/projects/optimizer/en/13.0/reference/r/setup.html&gt;, and the rcbc R package, available from GitHub at &lt;https://github.com/dirkschumacher/rcbc&gt;. For background on multi-objective optimisation methods, see Halffmann et al. (2022) &lt;doi:10.1002/mcda.1780&gt;; for the augmented epsilon-constraint method, see Mavrotas (2009) &lt;doi:10.1016/j.amc.2009.03.037&gt;.">
 <meta property="og:image" content="https://josesalgr.github.io/multiscape/logo.png">
@@ -42,7 +42,7 @@
 
     <a class="navbar-brand me-2" href="index.html">multiscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,9 +109,9 @@
 <h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
 <div class="section level3">
-<h3 id="multi-action-planning-in-the-meseta-ibãrica">Multi-action planning in the Meseta IbÃ©rica<a class="anchor" aria-label="anchor" href="#multi-action-planning-in-the-meseta-ib%C3%A3rica"></a>
+<h3 id="multi-action-planning-in-the-meseta-ibãƒæãârica">Multi-action planning in the Meseta IbÃƒÆ’Ã‚Â©rica<a class="anchor" aria-label="anchor" href="#multi-action-planning-in-the-meseta-ib%C3%A3%C6%92%C3%A6%C3%A3%C3%A2rica"></a>
 </h3>
-<p>We illustrate the <code>multiscape</code> workflow using a spatial planning problem from Spain’s Meseta IbÃ©rica, adapted from <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">CÃ¡nibe Iglesias et al. (2025)</a>. The example comprises <strong>11,109 planning units</strong>, <strong>151 species</strong>, four ecosystem-service features, and four alternative management actions: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong>, and <strong>Firesmart</strong>.</p>
+<p>We illustrate the <code>multiscape</code> workflow using a spatial planning problem from Spain’s Meseta IbÃƒÆ’Ã‚Â©rica, adapted from <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">CÃƒÆ’Ã‚Â¡nibe Iglesias et al. (2025)</a>. The example comprises <strong>11,109 planning units</strong>, <strong>151 species</strong>, four ecosystem-service features, and four alternative management actions: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong>, and <strong>Firesmart</strong>.</p>
 </div>
 <div class="section level3">
 <h3 id="understand-the-planning-inputs">Understand the planning inputs<a class="anchor" aria-label="anchor" href="#understand-the-planning-inputs"></a>
@@ -123,7 +123,7 @@
 <div class="section level4">
 <h4 id="planning-units">Planning units<a class="anchor" aria-label="anchor" href="#planning-units"></a>
 </h4>
-<p>The study area is divided into 11,109 planning units of approximately 1 kmÂ². Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
+<p>The study area is divided into 11,109 planning units of approximately 1 kmÃƒâ€šÃ‚Â². Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">planning_units</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Simple feature collection with 6 features and 2 fields</span></span>
@@ -160,11 +160,11 @@
 <p>Four alternative actions can be implemented throughout the study area: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong>, and <strong>Firesmart</strong>. Their implementation costs vary by planning unit, so a plan’s cost depends on <strong>which actions are chosen and where they are implemented</strong>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">meseta</span><span class="op">$</span><span class="va">actions</span></span>
-<span><span class="co">#&gt;   id          name</span></span>
-<span><span class="co">#&gt; 1  1 Afforestation</span></span>
-<span><span class="co">#&gt; 2  2           BAU</span></span>
-<span><span class="co">#&gt; 3  3    FarmReturn</span></span>
-<span><span class="co">#&gt; 4  4     Firesmart</span></span></code></pre></div>
+<span><span class="co">#&gt;              id          name</span></span>
+<span><span class="co">#&gt; 1 Afforestation Afforestation</span></span>
+<span><span class="co">#&gt; 2           BAU           BAU</span></span>
+<span><span class="co">#&gt; 3    FarmReturn    FarmReturn</span></span>
+<span><span class="co">#&gt; 4     Firesmart     Firesmart</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">meseta</span><span class="op">$</span><span class="va">maps</span><span class="op">$</span><span class="va">costs</span>,</span>
@@ -180,13 +180,13 @@
 <p>The same feature may respond differently to different management actions and locations. The <code>outcomes</code> table supplies its expected representation for each recorded planning-unit, feature, and action combination. In this dataset, outcomes are binary: a value of 1 credits one unit of representation, while unrecorded combinations contribute zero. This coding also applies to the included ecosystem-service features.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">outcomes</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   pu feature outcome action</span></span>
-<span><span class="co">#&gt; 1  1       7       1      1</span></span>
-<span><span class="co">#&gt; 2  1       8       1      1</span></span>
-<span><span class="co">#&gt; 3  1      12       1      1</span></span>
-<span><span class="co">#&gt; 4  1      13       1      1</span></span>
-<span><span class="co">#&gt; 5  1      14       1      1</span></span>
-<span><span class="co">#&gt; 6  1      15       1      1</span></span></code></pre></div>
+<span><span class="co">#&gt;   pu feature outcome        action</span></span>
+<span><span class="co">#&gt; 1  1       7       1 Afforestation</span></span>
+<span><span class="co">#&gt; 2  1       8       1 Afforestation</span></span>
+<span><span class="co">#&gt; 3  1      12       1 Afforestation</span></span>
+<span><span class="co">#&gt; 4  1      13       1 Afforestation</span></span>
+<span><span class="co">#&gt; 5  1      14       1 Afforestation</span></span>
+<span><span class="co">#&gt; 6  1      15       1 Afforestation</span></span></code></pre></div>
 <p>The maps below illustrate the action-specific representation of <code>DENMINO</code>. They show <strong>outcomes</strong>, rather than differences from the reference.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
@@ -393,7 +393,7 @@
 <span><span class="co">#&gt;   Bounds range     [1e+00, 1e+00]</span></span>
 <span><span class="co">#&gt;   RHS range        [8e-01, 9e+03]</span></span>
 <span><span class="co">#&gt; Presolve removed 142334 rows and 11125 columns</span></span>
-<span><span class="co">#&gt; Presolve time: 4.27s</span></span>
+<span><span class="co">#&gt; Presolve time: 4.78s</span></span>
 <span><span class="co">#&gt; Presolved: 184788 rows, 131192 columns, 1681755 nonzeros</span></span>
 <span><span class="co">#&gt; Variable types: 0 continuous, 131192 integer (131192 binary)</span></span>
 <span><span class="co">#&gt; Deterministic concurrent LP optimizer: primal simplex, dual simplex, and barrier</span></span>
@@ -401,7 +401,7 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root barrier log...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Ordering time: 1.76s</span></span>
+<span><span class="co">#&gt; Ordering time: 1.96s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Barrier statistics:</span></span>
 <span><span class="co">#&gt;  AA' NZ     : 5.943e+06</span></span>
@@ -411,79 +411,79 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   Objective                Residual</span></span>
 <span><span class="co">#&gt; Iter       Primal          Dual         Primal    Dual     Compl     Time</span></span>
-<span><span class="co">#&gt;    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03     8s</span></span>
-<span><span class="co">#&gt;    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02     9s</span></span>
-<span><span class="co">#&gt;    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01     9s</span></span>
-<span><span class="co">#&gt;    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01     9s</span></span>
-<span><span class="co">#&gt;    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00     9s</span></span>
-<span><span class="co">#&gt;    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    10s</span></span>
-<span><span class="co">#&gt;    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    10s</span></span>
-<span><span class="co">#&gt;    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    10s</span></span>
-<span><span class="co">#&gt;    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    10s</span></span>
-<span><span class="co">#&gt;    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    11s</span></span>
-<span><span class="co">#&gt;   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    11s</span></span>
-<span><span class="co">#&gt;   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    11s</span></span>
-<span><span class="co">#&gt;   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    11s</span></span>
-<span><span class="co">#&gt;   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    11s</span></span>
-<span><span class="co">#&gt;   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    12s</span></span>
-<span><span class="co">#&gt;   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    12s</span></span>
-<span><span class="co">#&gt;   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    12s</span></span>
-<span><span class="co">#&gt;   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    12s</span></span>
-<span><span class="co">#&gt;   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    13s</span></span>
-<span><span class="co">#&gt;   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    13s</span></span>
-<span><span class="co">#&gt;   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    13s</span></span>
-<span><span class="co">#&gt;   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    14s</span></span>
-<span><span class="co">#&gt;   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    14s</span></span>
-<span><span class="co">#&gt;   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    14s</span></span>
-<span><span class="co">#&gt;   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    14s</span></span>
-<span><span class="co">#&gt;   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    15s</span></span>
-<span><span class="co">#&gt;   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    15s</span></span>
-<span><span class="co">#&gt;   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    15s</span></span>
-<span><span class="co">#&gt;   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    16s</span></span>
-<span><span class="co">#&gt;   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    16s</span></span>
-<span><span class="co">#&gt;   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    16s</span></span>
-<span><span class="co">#&gt;   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    16s</span></span>
-<span><span class="co">#&gt;   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    17s</span></span>
-<span><span class="co">#&gt;   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    17s</span></span>
-<span><span class="co">#&gt;   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    17s</span></span>
-<span><span class="co">#&gt;   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    18s</span></span>
-<span><span class="co">#&gt;   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    18s</span></span>
-<span><span class="co">#&gt;   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    18s</span></span>
+<span><span class="co">#&gt;    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03     9s</span></span>
+<span><span class="co">#&gt;    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02    10s</span></span>
+<span><span class="co">#&gt;    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01    10s</span></span>
+<span><span class="co">#&gt;    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01    10s</span></span>
+<span><span class="co">#&gt;    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00    11s</span></span>
+<span><span class="co">#&gt;    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    11s</span></span>
+<span><span class="co">#&gt;    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    11s</span></span>
+<span><span class="co">#&gt;    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    11s</span></span>
+<span><span class="co">#&gt;    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    12s</span></span>
+<span><span class="co">#&gt;    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    12s</span></span>
+<span><span class="co">#&gt;   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    12s</span></span>
+<span><span class="co">#&gt;   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    13s</span></span>
+<span><span class="co">#&gt;   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    13s</span></span>
+<span><span class="co">#&gt;   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    13s</span></span>
+<span><span class="co">#&gt;   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    14s</span></span>
+<span><span class="co">#&gt;   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    14s</span></span>
+<span><span class="co">#&gt;   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    14s</span></span>
+<span><span class="co">#&gt;   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    14s</span></span>
+<span><span class="co">#&gt;   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    15s</span></span>
+<span><span class="co">#&gt;   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    15s</span></span>
+<span><span class="co">#&gt;   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    15s</span></span>
+<span><span class="co">#&gt;   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    16s</span></span>
+<span><span class="co">#&gt;   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    16s</span></span>
+<span><span class="co">#&gt;   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    16s</span></span>
+<span><span class="co">#&gt;   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    16s</span></span>
+<span><span class="co">#&gt;   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    17s</span></span>
+<span><span class="co">#&gt;   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    17s</span></span>
+<span><span class="co">#&gt;   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    17s</span></span>
+<span><span class="co">#&gt;   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    17s</span></span>
+<span><span class="co">#&gt;   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    18s</span></span>
+<span><span class="co">#&gt;   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    18s</span></span>
+<span><span class="co">#&gt;   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    18s</span></span>
+<span><span class="co">#&gt;   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    18s</span></span>
+<span><span class="co">#&gt;   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    19s</span></span>
+<span><span class="co">#&gt;   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    19s</span></span>
+<span><span class="co">#&gt;   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    19s</span></span>
+<span><span class="co">#&gt;   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    20s</span></span>
+<span><span class="co">#&gt;   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    20s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Barrier solved model in 37 iterations and 17.94 seconds (18.67 work units)</span></span>
+<span><span class="co">#&gt; Barrier solved model in 37 iterations and 19.82 seconds (18.67 work units)</span></span>
 <span><span class="co">#&gt; Optimal objective 2.54650823e+04</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root crossover log...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   165733 DPushes remaining with DInf 0.0000000e+00                18s</span></span>
-<span><span class="co">#&gt;     3288 DPushes remaining with DInf 0.0000000e+00                20s</span></span>
-<span><span class="co">#&gt;        0 DPushes remaining with DInf 0.0000000e+00                21s</span></span>
+<span><span class="co">#&gt;   165733 DPushes remaining with DInf 0.0000000e+00                20s</span></span>
+<span><span class="co">#&gt;        0 DPushes remaining with DInf 0.0000000e+00                23s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    22178 PPushes remaining with PInf 8.2450785e-06                21s</span></span>
-<span><span class="co">#&gt;        0 PPushes remaining with PInf 0.0000000e+00                22s</span></span>
+<span><span class="co">#&gt;    22178 PPushes remaining with PInf 8.2450785e-06                23s</span></span>
+<span><span class="co">#&gt;        0 PPushes remaining with PInf 0.0000000e+00                24s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     22s</span></span>
+<span><span class="co">#&gt;   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     24s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root simplex log...</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Iteration    Objective       Primal Inf.    Dual Inf.      Time</span></span>
-<span><span class="co">#&gt;   174690    2.5465082e+04   0.000000e+00   2.761826e+03     22s</span></span>
-<span><span class="co">#&gt;   175374    2.5465082e+04   0.000000e+00   0.000000e+00     22s</span></span>
+<span><span class="co">#&gt;   174690    2.5465082e+04   0.000000e+00   2.761826e+03     24s</span></span>
+<span><span class="co">#&gt;   175374    2.5465082e+04   0.000000e+00   0.000000e+00     25s</span></span>
 <span><span class="co">#&gt; Concurrent spin time: 0.00s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Solved with barrier</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Root relaxation: objective 2.546508e+04, 175374 iterations, 17.38 seconds (13.70 work units)</span></span>
+<span><span class="co">#&gt; Root relaxation: objective 2.546508e+04, 175374 iterations, 19.20 seconds (13.70 work units)</span></span>
+<span><span class="co">#&gt; Total elapsed time = 25.66s (DegenMoves)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work</span></span>
 <span><span class="co">#&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      0     0 25465.0822    0 2133          - 25465.0822      -     -   24s</span></span>
-<span><span class="co">#&gt; H    0     0                    25633.000000 25465.0822  0.66%     -   24s</span></span>
+<span><span class="co">#&gt;      0     0 25465.0822    0 2133          - 25465.0822      -     -   26s</span></span>
+<span><span class="co">#&gt; H    0     0                    25633.000000 25465.0822  0.66%     -   27s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Explored 1 nodes (182306 simplex iterations) in 25.02 seconds (26.90 work units)</span></span>
+<span><span class="co">#&gt; Explored 1 nodes (182306 simplex iterations) in 27.04 seconds (26.90 work units)</span></span>
 <span><span class="co">#&gt; Thread count was 20 (of 20 available processors)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Solution count 1: 25633 </span></span>
@@ -506,7 +506,7 @@
 <span><span class="co">#&gt; │└─without solution: 0</span></span>
 <span><span class="co">#&gt; └─run summary</span></span>
 <span><span class="co">#&gt; │├─statuses: optimal: 1</span></span>
-<span><span class="co">#&gt; │├─runtime: 25.149</span></span>
+<span><span class="co">#&gt; │├─runtime: 27.217</span></span>
 <span><span class="co">#&gt; │├─gap: 0.0065</span></span>
 <span><span class="co">#&gt; │├─design columns: none</span></span>
 <span><span class="co">#&gt; │└─objective columns: value_cost, value_spatial</span></span>
@@ -530,7 +530,7 @@
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   run_id solution_id  status runtime         gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal  25.149 0.006534545</span></span>
+<span><span class="co">#&gt; 1      1           1 optimal  27.217 0.006534545</span></span>
 <span></span>
 <span><span class="va">performance</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
 <span></span>
@@ -581,27 +581,41 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">selected_actions</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    pu action cost</span></span>
-<span><span class="co">#&gt; 2   1      2    1</span></span>
-<span><span class="co">#&gt; 6   2      2    1</span></span>
-<span><span class="co">#&gt; 10  3      2    1</span></span>
-<span><span class="co">#&gt; 14  4      2    1</span></span>
-<span><span class="co">#&gt; 18  5      2    1</span></span>
-<span><span class="co">#&gt; 22  6      2    1</span></span>
-<span><span class="co">#&gt; 26  7      2    1</span></span>
-<span><span class="co">#&gt; 30  8      2    1</span></span>
-<span><span class="co">#&gt; 34  9      2    1</span></span>
-<span><span class="co">#&gt; 38 10      2    1</span></span>
+<span><span class="co">#&gt; 2   1    BAU    1</span></span>
+<span><span class="co">#&gt; 6   2    BAU    1</span></span>
+<span><span class="co">#&gt; 10  3    BAU    1</span></span>
+<span><span class="co">#&gt; 14  4    BAU    1</span></span>
+<span><span class="co">#&gt; 18  5    BAU    1</span></span>
+<span><span class="co">#&gt; 22  6    BAU    1</span></span>
+<span><span class="co">#&gt; 26  7    BAU    1</span></span>
+<span><span class="co">#&gt; 30  8    BAU    1</span></span>
+<span><span class="co">#&gt; 34  9    BAU    1</span></span>
+<span><span class="co">#&gt; 38 10    BAU    1</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">selected_actions</span><span class="op">$</span><span class="va">action</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    1    2    3    4 </span></span>
-<span><span class="co">#&gt; 2363 2719  423 3185</span></span></code></pre></div>
+<span><span class="co">#&gt; Afforestation           BAU    FarmReturn     Firesmart </span></span>
+<span><span class="co">#&gt;          2363          2719           423          3185</span></span></code></pre></div>
+<p>The selected actions can also be inspected spatially. <code><a href="reference/plot_spatial_actions.html">plot_spatial_actions()</a></code> shows the complete spatial prescription for the first solution. Each colour identifies the selected management action, while grey planning units have no selected action. At most one action can be selected per planning unit.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span></span>
+<span>    <span class="va">solutions</span>,</span>
+<span>    solutions <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    layout <span class="op">=</span> <span class="st">"single"</span>,</span>
+<span>    fill_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      Afforestation <span class="op">=</span> <span class="st">"#E6C34A"</span>,</span>
+<span>      BAU <span class="op">=</span> <span class="st">"#41AB5D"</span>,</span>
+<span>      FarmReturn <span class="op">=</span> <span class="st">"#2B8CBE"</span>,</span>
+<span>      Firesmart <span class="op">=</span> <span class="st">"#9B7653"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-meseta-selected-action-maps-1.png" alt="" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="objective-space-explore-the-cost-fragmentation-trade-off">Objective space: explore the cost-fragmentation trade-off<a class="anchor" aria-label="anchor" href="#objective-space-explore-the-cost-fragmentation-trade-off"></a>
 </h3>
 <p>To examine the compromise between cost and spatial cohesion, we keep the planning data and constraints fixed and vary the weight on fragmentation. We rebuild the same formulation in <code>problemMO</code> to keep this exploration independent of the preceding single-run problem. Each row in <code><a href="reference/set_runs_manual.html">set_runs_manual()</a></code> represents one run.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">problemMO</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_problem.html">create_problem</a></span><span class="op">(</span></span>
 <span>    pu <span class="op">=</span> <span class="va">meseta</span><span class="op">$</span><span class="va">planning_units</span>,</span>
 <span>    features <span class="op">=</span> <span class="va">meseta</span><span class="op">$</span><span class="va">features</span>,</span>
@@ -643,7 +657,7 @@
 <span></span>
 <span><span class="va">alternatives</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/solve.html">solve</a></span><span class="op">(</span><span class="va">spatial_exploration</span><span class="op">)</span></span></code></pre></div>
 <p>The objective values of the six solutions can be inspected directly with <code><a href="reference/get_objectives.html">get_objectives()</a></code> and visualised using <code><a href="reference/plot_tradeoff.html">plot_tradeoff()</a></code>.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">alternatives</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   solution_id  cost spatial</span></span>
 <span><span class="co">#&gt; 1           1 22637   22485</span></span>
@@ -664,10 +678,30 @@
 <p>The returned objective values show the observed compromises directly: a lower fragmentation score may require a higher implementation cost, while a cost-focused run may produce a more fragmented assignment. Because the solver stops at a finite optimality gap, the sample can include dominated solutions. Subsequent frontier diagnostics describe the observed set, not a complete Pareto frontier.</p>
 </div>
 <div class="section level3">
+<h3 id="decision-space-map-alternative-action-allocations">Decision space: map alternative action allocations<a class="anchor" aria-label="anchor" href="#decision-space-map-alternative-action-allocations"></a>
+</h3>
+<p>The trade-off plot summarises how the objectives change, but not which management actions are selected in each location. We therefore map the spatial assignments in the six retained alternatives, using consistent colours across panels. Grey planning units have no selected action.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_spatial_actions.html">plot_spatial_actions</a></span><span class="op">(</span></span>
+<span>    <span class="va">alternatives</span>,</span>
+<span>    solutions <span class="op">=</span> <span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">alternatives</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span><span class="op">$</span><span class="va">solution_id</span>,</span>
+<span>    layout <span class="op">=</span> <span class="st">"single"</span>,</span>
+<span>    ncol <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    fill_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      Afforestation <span class="op">=</span> <span class="st">"#E6C34A"</span>,</span>
+<span>      BAU <span class="op">=</span> <span class="st">"#41AB5D"</span>,</span>
+<span>      FarmReturn <span class="op">=</span> <span class="st">"#2B8CBE"</span>,</span>
+<span>      Firesmart <span class="op">=</span> <span class="st">"#9B7653"</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-meseta-alternative-action-maps-1.png" alt="" width="100%"></p>
+<p>These panels illustrate how increasing the fragmentation weight changes the location and composition of selected actions. They show solutions for the bundled inputs, rather than the ten-replicate scenario analysis in the original study.</p>
+</div>
+<div class="section level3">
 <h3 id="compare-spatial-similarity-and-recurring-assignments">Compare spatial similarity and recurring assignments<a class="anchor" aria-label="anchor" href="#compare-spatial-similarity-and-recurring-assignments"></a>
 </h3>
 <p>Objective values reveal performance, but do not show how similar two spatial prescriptions are. In <strong>decision space</strong>, Jaccard similarity measures overlap in selected planning unit-action pairs. A value of 1 means identical assignments; 0 means no assignments in common.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/selection_similarity.html">selection_similarity</a></span><span class="op">(</span><span class="va">alternatives</span>, metric <span class="op">=</span> <span class="st">"jaccard"</span>, format <span class="op">=</span> <span class="st">"matrix"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           1         2         3         4         5         6</span></span>
 <span><span class="co">#&gt; 1 1.0000000 0.3256152 0.2932796 0.2495680 0.2002491 0.1745742</span></span>
@@ -681,24 +715,24 @@
 <span></span>
 <span><span class="va">action_frequency</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/selection_frequency.html">selection_frequency</a></span><span class="op">(</span><span class="va">alternatives</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">action_frequency</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">action_frequency</span><span class="op">$</span><span class="va">frequency</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        pu action n_selected n_solutions frequency</span></span>
-<span><span class="co">#&gt; 80  10014      4          6           6         1</span></span>
-<span><span class="co">#&gt; 82  10015      2          6           6         1</span></span>
-<span><span class="co">#&gt; 145  1003      1          6           6         1</span></span>
-<span><span class="co">#&gt; 185 10039      1          6           6         1</span></span>
-<span><span class="co">#&gt; 193 10040      1          6           6         1</span></span>
-<span><span class="co">#&gt; 197 10041      1          6           6         1</span></span>
-<span><span class="co">#&gt; 204 10042      4          6           6         1</span></span>
-<span><span class="co">#&gt; 214 10045      2          6           6         1</span></span>
-<span><span class="co">#&gt; 317 10069      1          6           6         1</span></span>
-<span><span class="co">#&gt; 325 10070      1          6           6         1</span></span></code></pre></div>
+<span><span class="co">#&gt;        pu        action n_selected n_solutions frequency</span></span>
+<span><span class="co">#&gt; 80  10014     Firesmart          6           6         1</span></span>
+<span><span class="co">#&gt; 82  10015           BAU          6           6         1</span></span>
+<span><span class="co">#&gt; 145  1003 Afforestation          6           6         1</span></span>
+<span><span class="co">#&gt; 185 10039 Afforestation          6           6         1</span></span>
+<span><span class="co">#&gt; 193 10040 Afforestation          6           6         1</span></span>
+<span><span class="co">#&gt; 197 10041 Afforestation          6           6         1</span></span>
+<span><span class="co">#&gt; 204 10042     Firesmart          6           6         1</span></span>
+<span><span class="co">#&gt; 214 10045           BAU          6           6         1</span></span>
+<span><span class="co">#&gt; 317 10069 Afforestation          6           6         1</span></span>
+<span><span class="co">#&gt; 325 10070 Afforestation          6           6         1</span></span></code></pre></div>
 <p>Assignment frequency measures recurrence <strong>within the six retained plans</strong>, not an ecological selection probability or irreplaceability measure.</p>
 </div>
 <div class="section level3">
 <h3 id="identify-an-empirical-compromise">Identify an empirical compromise<a class="anchor" aria-label="anchor" href="#identify-an-empirical-compromise"></a>
 </h3>
 <p>An observed solution is <strong>dominated</strong> when another observed solution is no worse on either objective and better on at least one. <code><a href="reference/frontier_knee.html">frontier_knee()</a></code> identifies a potential compromise among the observed non-dominated solutions. Its result depends on the sampled objective values and their normalisation, so it should be treated as a decision aid rather than a uniquely best plan. <code><a href="reference/frontier_extremes.html">frontier_extremes()</a></code> and <code><a href="reference/frontier_distances.html">frontier_distances()</a></code> provide additional diagnostics relative to the observed extreme, ideal, and nadir values.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Which observed solution offers an empirical compromise?</span></span>
 <span><span class="va">knee</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_knee.html">frontier_knee</a></span><span class="op">(</span><span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">knee</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"solution_id"</span>, <span class="st">"cost"</span>, <span class="st">"spatial"</span>, <span class="st">"knee_score"</span><span class="op">)</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
@@ -735,7 +769,7 @@
 <h3 id="link-objective-performance-to-spatial-changes">Link objective performance to spatial changes<a class="anchor" aria-label="anchor" href="#link-objective-performance-to-spatial-changes"></a>
 </h3>
 <p><strong>Linkage analysis</strong> asks whether changes in objective performance correspond to small adjustments or substantial reconfigurations of selected actions. <code><a href="reference/frontier_neighbors.html">frontier_neighbors()</a></code> identifies neighbouring solutions in objective space; <code><a href="reference/linkage_distances.html">linkage_distances()</a></code> and <code><a href="reference/linkage_turnover.html">linkage_turnover()</a></code> relate performance differences to distances or changes in their spatial assignments.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">neighbors</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/frontier_neighbors.html">frontier_neighbors</a></span><span class="op">(</span></span>
 <span>  <span class="va">alternatives</span>, objectives <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cost"</span>, <span class="st">"spatial"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -780,7 +814,7 @@
 <span><span class="co">#&gt; 4            2.0868113</span></span>
 <span><span class="co">#&gt; 5            0.9853681</span></span></code></pre></div>
 <p><code><a href="reference/linkage_contrasts.html">linkage_contrasts()</a></code> identifies the pairs with the greatest reconfiguration relative to their objective-space separation. <code><a href="reference/linkage_transition.html">linkage_transition()</a></code> shows which assignments changed between a selected pair of solutions, and <code><a href="reference/selection_consistency.html">selection_consistency()</a></code> summarises recurring planning-unit states. To keep the README compact, we display the contrast table and only a few rows of planning-unit consistency; detailed transition records remain available from the function itself.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/linkage_contrasts.html">linkage_contrasts</a></span><span class="op">(</span><span class="va">turnover</span>, type <span class="op">=</span> <span class="st">"high_reconfiguration"</span>, n <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   contrast_rank        contrast_type from_solution to_solution</span></span>
 <span><span class="co">#&gt; 1             1 high_reconfiguration             3           2</span></span>
@@ -830,10 +864,10 @@
 <span><span class="co">#&gt; 5 10000            all           6                0.0               0.0</span></span>
 <span><span class="co">#&gt; 6 10001            all           6                0.5               0.5</span></span>
 <span><span class="co">#&gt;   unmanaged_frequency dominant_state dominant_frequency dominant_tie n_states</span></span>
-<span><span class="co">#&gt; 1                 0.0              2          0.8333333        FALSE        2</span></span>
-<span><span class="co">#&gt; 2                 0.0              2          0.8333333        FALSE        2</span></span>
-<span><span class="co">#&gt; 3                 0.0              2          0.8333333        FALSE        2</span></span>
-<span><span class="co">#&gt; 4                 0.0              1          0.8333333        FALSE        2</span></span>
+<span><span class="co">#&gt; 1                 0.0            BAU          0.8333333        FALSE        2</span></span>
+<span><span class="co">#&gt; 2                 0.0            BAU          0.8333333        FALSE        2</span></span>
+<span><span class="co">#&gt; 3                 0.0            BAU          0.8333333        FALSE        2</span></span>
+<span><span class="co">#&gt; 4                 0.0  Afforestation          0.8333333        FALSE        2</span></span>
 <span><span class="co">#&gt; 5                 1.0      unmanaged          1.0000000        FALSE        1</span></span>
 <span><span class="co">#&gt; 6                 0.5      unmanaged          0.5000000        FALSE        3</span></span>
 <span><span class="co">#&gt;   variable   entropy normalized_entropy</span></span>
@@ -866,7 +900,7 @@
 </tr>
 <tr>
 <td><code><a href="reference/load_meseta.html">load_meseta()</a></code></td>
-<td>The Meseta IbÃ©rica inputs used in this README</td>
+<td>The Meseta IbÃƒÆ’Ã‚Â©rica inputs used in this README</td>
 </tr>
 <tr>
 <td><code><a href="reference/load_ecosystem_services.html">load_ecosystem_services()</a></code></td>
@@ -880,7 +914,7 @@
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Cánibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C., Salgado-Rojas, J., Sil, A‚., &amp; Regos, A. (2025). Integrating multiple landscape management strategies to optimise conservation under climate and planning scenarios: a case study in the Iberian Peninsula. <em>Ecosystem Services</em>, <strong>74</strong>, 101742. <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">doi:10.1016/j.ecoser.2025.101742</a>.</p>
+<p>CÃ¡nibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C., Salgado-Rojas, J., Sil, AÃ¢â‚¬Å¡., &amp; Regos, A. (2025). Integrating multiple landscape management strategies to optimise conservation under climate and planning scenarios: a case study in the Iberian Peninsula. <em>Ecosystem Services</em>, <strong>74</strong>, 101742. <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">doi:10.1016/j.ecoser.2025.101742</a>.</p>
 <p>Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions: spatial action maps for conservation. <em>Annals of the New York Academy of Sciences</em>, <strong>1505</strong>(1), 118-141. <a href="https://doi.org/10.1111/nyas.14651" class="external-link">doi:10.1111/nyas.14651</a>.</p>
 <p>Salgado-Rojas, J., Hermoso, V., &amp; Alvarez-Miranda, E. (2023). prioriactions: Multi-action management planning in R. <em>Methods in Ecology and Evolution</em>. <a href="https://doi.org/10.1111/2041-210X.14220" class="external-link">doi:10.1111/2041-210X.14220</a>.</p>
 <p>Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use spatial planning for sustainable development and conservation. <em>Trends in Ecology &amp; Evolution</em>, <strong>40</strong>(11), 1126-1142. <a href="https://doi.org/10.1016/j.tree.2025.09.007" class="external-link">doi:10.1016/j.tree.2025.09.007</a>.</p>

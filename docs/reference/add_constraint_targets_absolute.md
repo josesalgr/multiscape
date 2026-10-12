@@ -154,9 +154,9 @@ p1$data$targets
 #>   feature    type sense target_unit target_raw basis_total target_value actions
 #> 1       1 actions    ge    absolute          3          NA            3    <NA>
 #> 2       2 actions    ge    absolute          3          NA            3    <NA>
-#>   label                 created_at feature_name
-#> 1  <NA> 2026-10-11 17:58:24.729915     woodland
-#> 2  <NA> 2026-10-11 17:58:24.729915     riparian
+#>   label                created_at feature_name
+#> 1  <NA> 2026-10-12 11:31:26.60145     woodland
+#> 2  <NA> 2026-10-12 11:31:26.60145     riparian
 
 # Different targets by feature
 p2 <- add_constraint_targets_absolute(
@@ -167,9 +167,9 @@ p2$data$targets
 #>   feature    type sense target_unit target_raw basis_total target_value actions
 #> 1       1 actions    ge    absolute          4          NA            4    <NA>
 #> 2       2 actions    ge    absolute          2          NA            2    <NA>
-#>   label                created_at feature_name
-#> 1  <NA> 2026-10-11 17:58:24.73646     woodland
-#> 2  <NA> 2026-10-11 17:58:24.73646     riparian
+#>   label                 created_at feature_name
+#> 1  <NA> 2026-10-12 11:31:26.605584     woodland
+#> 2  <NA> 2026-10-12 11:31:26.605584     riparian
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_absolute(
@@ -182,6 +182,6 @@ p3$data$targets
 #> 1       1 actions    ge    absolute          2          NA            2 protect
 #> 2       2 actions    ge    absolute          2          NA            2 protect
 #>   label                 created_at feature_name
-#> 1  <NA> 2026-10-11 17:58:24.741965     woodland
-#> 2  <NA> 2026-10-11 17:58:24.741965     riparian
+#> 1  <NA> 2026-10-12 11:31:26.609356     woodland
+#> 2  <NA> 2026-10-12 11:31:26.609356     riparian
 ```

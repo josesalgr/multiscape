@@ -48,12 +48,12 @@ remotes::install_github("josesalgr/multiscape")
 
 ## Getting started
 
-### Multi-action planning in the Meseta IbÃ©rica
+### Multi-action planning in the Meseta IbÃƒÆ’Ã‚Â©rica
 
 We illustrate the `multiscape` workflow using a spatial planning problem
-from Spain’s Meseta IbÃ©rica, adapted from [CÃ¡nibe Iglesias et
-al. (2025)](https://doi.org/10.1016/j.ecoser.2025.101742). The example
-comprises **11,109 planning units**, **151 species**, four
+from Spain’s Meseta IbÃƒÆ’Ã‚Â©rica, adapted from [CÃƒÆ’Ã‚Â¡nibe Iglesias
+et al. (2025)](https://doi.org/10.1016/j.ecoser.2025.101742). The
+example comprises **11,109 planning units**, **151 species**, four
 ecosystem-service features, and four alternative management actions:
 **Afforestation**, **BAU**, **FarmReturn**, and **Firesmart**.
 
@@ -73,9 +73,9 @@ meseta <- load_meseta()
 #### Planning units
 
 The study area is divided into 11,109 planning units of approximately 1
-kmÂ². Each unit represents a location where a management action may be
-implemented. The supplied spatial polygons and identifiers are stored in
-`planning_units`.
+kmÃƒâ€šÃ‚Â². Each unit represents a location where a management action
+may be implemented. The supplied spatial polygons and identifiers are
+stored in `planning_units`.
 
 ``` r
 
@@ -130,11 +130,11 @@ implementation costs vary by planning unit, so a plan’s cost depends on
 ``` r
 
 meseta$actions
-#>   id          name
-#> 1  1 Afforestation
-#> 2  2           BAU
-#> 3  3    FarmReturn
-#> 4  4     Firesmart
+#>              id          name
+#> 1 Afforestation Afforestation
+#> 2           BAU           BAU
+#> 3    FarmReturn    FarmReturn
+#> 4     Firesmart     Firesmart
 ```
 
 ``` r
@@ -161,13 +161,13 @@ coding also applies to the included ecosystem-service features.
 ``` r
 
 head(meseta$outcomes)
-#>   pu feature outcome action
-#> 1  1       7       1      1
-#> 2  1       8       1      1
-#> 3  1      12       1      1
-#> 4  1      13       1      1
-#> 5  1      14       1      1
-#> 6  1      15       1      1
+#>   pu feature outcome        action
+#> 1  1       7       1 Afforestation
+#> 2  1       8       1 Afforestation
+#> 3  1      12       1 Afforestation
+#> 4  1      13       1 Afforestation
+#> 5  1      14       1 Afforestation
+#> 6  1      15       1 Afforestation
 ```
 
 The maps below illustrate the action-specific representation of
@@ -437,7 +437,7 @@ solutions <- solve(problem)
 #>   Bounds range     [1e+00, 1e+00]
 #>   RHS range        [8e-01, 9e+03]
 #> Presolve removed 142334 rows and 11125 columns
-#> Presolve time: 4.27s
+#> Presolve time: 4.78s
 #> Presolved: 184788 rows, 131192 columns, 1681755 nonzeros
 #> Variable types: 0 continuous, 131192 integer (131192 binary)
 #> Deterministic concurrent LP optimizer: primal simplex, dual simplex, and barrier
@@ -445,7 +445,7 @@ solutions <- solve(problem)
 #> 
 #> Root barrier log...
 #> 
-#> Ordering time: 1.76s
+#> Ordering time: 1.96s
 #> 
 #> Barrier statistics:
 #>  AA' NZ     : 5.943e+06
@@ -455,79 +455,79 @@ solutions <- solve(problem)
 #> 
 #>                   Objective                Residual
 #> Iter       Primal          Dual         Primal    Dual     Compl     Time
-#>    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03     8s
-#>    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02     9s
-#>    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01     9s
-#>    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01     9s
-#>    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00     9s
-#>    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    10s
-#>    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    10s
-#>    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    10s
-#>    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    10s
-#>    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    11s
-#>   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    11s
-#>   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    11s
-#>   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    11s
-#>   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    11s
-#>   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    12s
-#>   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    12s
-#>   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    12s
-#>   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    12s
-#>   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    13s
-#>   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    13s
-#>   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    13s
-#>   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    14s
-#>   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    14s
-#>   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    14s
-#>   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    14s
-#>   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    15s
-#>   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    15s
-#>   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    15s
-#>   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    16s
-#>   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    16s
-#>   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    16s
-#>   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    16s
-#>   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    17s
-#>   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    17s
-#>   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    17s
-#>   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    18s
-#>   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    18s
-#>   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    18s
+#>    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03     9s
+#>    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02    10s
+#>    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01    10s
+#>    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01    10s
+#>    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00    11s
+#>    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    11s
+#>    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    11s
+#>    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    11s
+#>    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    12s
+#>    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    12s
+#>   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    12s
+#>   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    13s
+#>   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    13s
+#>   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    13s
+#>   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    14s
+#>   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    14s
+#>   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    14s
+#>   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    14s
+#>   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    15s
+#>   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    15s
+#>   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    15s
+#>   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    16s
+#>   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    16s
+#>   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    16s
+#>   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    16s
+#>   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    17s
+#>   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    17s
+#>   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    17s
+#>   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    17s
+#>   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    18s
+#>   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    18s
+#>   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    18s
+#>   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    18s
+#>   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    19s
+#>   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    19s
+#>   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    19s
+#>   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    20s
+#>   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    20s
 #> 
-#> Barrier solved model in 37 iterations and 17.94 seconds (18.67 work units)
+#> Barrier solved model in 37 iterations and 19.82 seconds (18.67 work units)
 #> Optimal objective 2.54650823e+04
 #> 
 #> 
 #> Root crossover log...
 #> 
-#>   165733 DPushes remaining with DInf 0.0000000e+00                18s
-#>     3288 DPushes remaining with DInf 0.0000000e+00                20s
-#>        0 DPushes remaining with DInf 0.0000000e+00                21s
+#>   165733 DPushes remaining with DInf 0.0000000e+00                20s
+#>        0 DPushes remaining with DInf 0.0000000e+00                23s
 #> 
-#>    22178 PPushes remaining with PInf 8.2450785e-06                21s
-#>        0 PPushes remaining with PInf 0.0000000e+00                22s
+#>    22178 PPushes remaining with PInf 8.2450785e-06                23s
+#>        0 PPushes remaining with PInf 0.0000000e+00                24s
 #> 
-#>   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     22s
+#>   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     24s
 #> 
 #> 
 #> Root simplex log...
 #> 
 #> Iteration    Objective       Primal Inf.    Dual Inf.      Time
-#>   174690    2.5465082e+04   0.000000e+00   2.761826e+03     22s
-#>   175374    2.5465082e+04   0.000000e+00   0.000000e+00     22s
+#>   174690    2.5465082e+04   0.000000e+00   2.761826e+03     24s
+#>   175374    2.5465082e+04   0.000000e+00   0.000000e+00     25s
 #> Concurrent spin time: 0.00s
 #> 
 #> Solved with barrier
 #> 
-#> Root relaxation: objective 2.546508e+04, 175374 iterations, 17.38 seconds (13.70 work units)
+#> Root relaxation: objective 2.546508e+04, 175374 iterations, 19.20 seconds (13.70 work units)
+#> Total elapsed time = 25.66s (DegenMoves)
 #> 
 #>     Nodes    |    Current Node    |     Objective Bounds      |     Work
 #>  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
 #> 
-#>      0     0 25465.0822    0 2133          - 25465.0822      -     -   24s
-#> H    0     0                    25633.000000 25465.0822  0.66%     -   24s
+#>      0     0 25465.0822    0 2133          - 25465.0822      -     -   26s
+#> H    0     0                    25633.000000 25465.0822  0.66%     -   27s
 #> 
-#> Explored 1 nodes (182306 simplex iterations) in 25.02 seconds (26.90 work units)
+#> Explored 1 nodes (182306 simplex iterations) in 27.04 seconds (26.90 work units)
 #> Thread count was 20 (of 20 available processors)
 #> 
 #> Solution count 1: 25633 
@@ -556,7 +556,7 @@ print(solutions)
 #> │└─without solution: 0
 #> └─run summary
 #> │├─statuses: optimal: 1
-#> │├─runtime: 25.149
+#> │├─runtime: 27.217
 #> │├─gap: 0.0065
 #> │├─design columns: none
 #> │└─objective columns: value_cost, value_spatial
@@ -591,7 +591,7 @@ coefficients as above.
 
 get_runs(solutions)
 #>   run_id solution_id  status runtime         gap
-#> 1      1           1 optimal  25.149 0.006534545
+#> 1      1           1 optimal  27.217 0.006534545
 
 performance <- get_objectives(solutions, format = "wide")
 
@@ -661,22 +661,46 @@ selected_actions <- selected_actions[
 
 head(selected_actions, 10)
 #>    pu action cost
-#> 2   1      2    1
-#> 6   2      2    1
-#> 10  3      2    1
-#> 14  4      2    1
-#> 18  5      2    1
-#> 22  6      2    1
-#> 26  7      2    1
-#> 30  8      2    1
-#> 34  9      2    1
-#> 38 10      2    1
+#> 2   1    BAU    1
+#> 6   2    BAU    1
+#> 10  3    BAU    1
+#> 14  4    BAU    1
+#> 18  5    BAU    1
+#> 22  6    BAU    1
+#> 26  7    BAU    1
+#> 30  8    BAU    1
+#> 34  9    BAU    1
+#> 38 10    BAU    1
 
 table(selected_actions$action)
 #> 
-#>    1    2    3    4 
-#> 2363 2719  423 3185
+#> Afforestation           BAU    FarmReturn     Firesmart 
+#>          2363          2719           423          3185
 ```
+
+The selected actions can also be inspected spatially.
+[`plot_spatial_actions()`](https://josesalgr.github.io/multiscape/reference/plot_spatial_actions.md)
+shows the complete spatial prescription for the first solution. Each
+colour identifies the selected management action, while grey planning
+units have no selected action. At most one action can be selected per
+planning unit.
+
+``` r
+
+plot_spatial_actions(
+    solutions,
+    solutions = 1,
+    layout = "single",
+    fill_values = c(
+      Afforestation = "#E6C34A",
+      BAU = "#41AB5D",
+      FarmReturn = "#2B8CBE",
+      Firesmart = "#9B7653"
+  )
+)
+```
+
+![](reference/figures/README-meseta-selected-action-maps-1.png)
 
 ### Objective space: explore the cost-fragmentation trade-off
 
@@ -771,6 +795,36 @@ Because the solver stops at a finite optimality gap, the sample can
 include dominated solutions. Subsequent frontier diagnostics describe
 the observed set, not a complete Pareto frontier.
 
+### Decision space: map alternative action allocations
+
+The trade-off plot summarises how the objectives change, but not which
+management actions are selected in each location. We therefore map the
+spatial assignments in the six retained alternatives, using consistent
+colours across panels. Grey planning units have no selected action.
+
+``` r
+
+plot_spatial_actions(
+    alternatives,
+    solutions = get_objectives(alternatives, format = "wide")$solution_id,
+    layout = "single",
+    ncol = 2,
+    fill_values = c(
+      Afforestation = "#E6C34A",
+      BAU = "#41AB5D",
+      FarmReturn = "#2B8CBE",
+      Firesmart = "#9B7653"
+    )
+)
+```
+
+![](reference/figures/README-meseta-alternative-action-maps-1.png)
+
+These panels illustrate how increasing the fragmentation weight changes
+the location and composition of selected actions. They show solutions
+for the bundled inputs, rather than the ten-replicate scenario analysis
+in the original study.
+
 ### Compare spatial similarity and recurring assignments
 
 Objective values reveal performance, but do not show how similar two
@@ -793,17 +847,17 @@ selection_similarity(alternatives, metric = "jaccard", format = "matrix")
 
 action_frequency <- selection_frequency(alternatives)
 head(action_frequency[order(-action_frequency$frequency), ], 10)
-#>        pu action n_selected n_solutions frequency
-#> 80  10014      4          6           6         1
-#> 82  10015      2          6           6         1
-#> 145  1003      1          6           6         1
-#> 185 10039      1          6           6         1
-#> 193 10040      1          6           6         1
-#> 197 10041      1          6           6         1
-#> 204 10042      4          6           6         1
-#> 214 10045      2          6           6         1
-#> 317 10069      1          6           6         1
-#> 325 10070      1          6           6         1
+#>        pu        action n_selected n_solutions frequency
+#> 80  10014     Firesmart          6           6         1
+#> 82  10015           BAU          6           6         1
+#> 145  1003 Afforestation          6           6         1
+#> 185 10039 Afforestation          6           6         1
+#> 193 10040 Afforestation          6           6         1
+#> 197 10041 Afforestation          6           6         1
+#> 204 10042     Firesmart          6           6         1
+#> 214 10045           BAU          6           6         1
+#> 317 10069 Afforestation          6           6         1
+#> 325 10070 Afforestation          6           6         1
 ```
 
 Assignment frequency measures recurrence **within the six retained
@@ -983,10 +1037,10 @@ head(selection_consistency(alternatives))
 #> 5 10000            all           6                0.0               0.0
 #> 6 10001            all           6                0.5               0.5
 #>   unmanaged_frequency dominant_state dominant_frequency dominant_tie n_states
-#> 1                 0.0              2          0.8333333        FALSE        2
-#> 2                 0.0              2          0.8333333        FALSE        2
-#> 3                 0.0              2          0.8333333        FALSE        2
-#> 4                 0.0              1          0.8333333        FALSE        2
+#> 1                 0.0            BAU          0.8333333        FALSE        2
+#> 2                 0.0            BAU          0.8333333        FALSE        2
+#> 3                 0.0            BAU          0.8333333        FALSE        2
+#> 4                 0.0  Afforestation          0.8333333        FALSE        2
 #> 5                 1.0      unmanaged          1.0000000        FALSE        1
 #> 6                 0.5      unmanaged          0.5000000        FALSE        3
 #>   variable   entropy normalized_entropy
@@ -1012,7 +1066,7 @@ The package provides several prepared examples:
 | Loader | Example |
 |----|----|
 | [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md) | 64 spatial cells, two features and two actions for quick examples |
-| [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md) | The Meseta IbÃ©rica inputs used in this README |
+| [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md) | The Meseta IbÃƒÆ’Ã‚Â©rica inputs used in this README |
 | [`load_ecosystem_services()`](https://josesalgr.github.io/multiscape/reference/load_ecosystem_services.md) | Planning units and four raster layers for the integrated-planning vignette |
 
 Browse the [function
@@ -1032,10 +1086,10 @@ an [issue](https://github.com/josesalgr/multiscape/issues).
 
 ## References
 
-Cánibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C.,
-Salgado-Rojas, J., Sil, A‚., & Regos, A. (2025). Integrating multiple
-landscape management strategies to optimise conservation under climate
-and planning scenarios: a case study in the Iberian Peninsula.
+CÃ¡nibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C.,
+Salgado-Rojas, J., Sil, AÃ¢â‚¬Å¡., & Regos, A. (2025). Integrating
+multiple landscape management strategies to optimise conservation under
+climate and planning scenarios: a case study in the Iberian Peninsula.
 *Ecosystem Services*, **74**, 101742.
 [doi:10.1016/j.ecoser.2025.101742](https://doi.org/10.1016/j.ecoser.2025.101742).
 

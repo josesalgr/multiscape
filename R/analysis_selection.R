@@ -150,13 +150,10 @@ selection_frequency <- function(x) {
 
   pair_levels <- unique(pair_key)
 
-  n_selected <- vapply(
-    pair_levels,
-    function(key) {
-      rows <- pair_key == key
-      sum(selection$selected[rows] > 0)
-    },
-    numeric(1)
+  # Count selected assignments in one pass, retaining zero-count pairs.
+  n_selected <- tabulate(
+    match(pair_key[selection$selected > 0], pair_levels),
+    nbins = length(pair_levels)
   )
 
   first_row <- match(pair_levels, pair_key)
