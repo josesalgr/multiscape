@@ -858,7 +858,7 @@ The maps are bundled as a pre-rendered image to keep package and website
 builds fast. The map-generation code is retained in the vignette source
 and is not evaluated during ordinary builds.
 
-![](figures/ecosystem-services/integrated-ecosystem-services-map-selected-solutions-1.png)
+![](figures/ecosystem-services/integrated-ecosystem-services-map-1.png)
 
 The maps reveal the spatial mechanism behind the objective trade-offs.
 They show whether improved targeting of a service deficit is achieved

@@ -2,9 +2,11 @@
 
 ## multiscape 1.4.2
 
-- Speed up selection_frequency() without changing recurrence counts, and
-  use pre-rendered maps in the large forest-restoration vignette to
-  reduce package build and check times.
+- Speed up
+  [`selection_frequency()`](https://josesalgr.github.io/multiscape/reference/selection_frequency.md)
+  without changing recurrence counts, and use pre-rendered maps in the
+  large forest-restoration vignette to reduce package build and check
+  times.
 
 ## multiscape 1.4.1
 

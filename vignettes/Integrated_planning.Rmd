@@ -1149,7 +1149,7 @@ evaluated during ordinary builds.
 
 ```{r map-selected-solutions-static, echo=FALSE, fig.width=11, fig.height=8}
 knitr::include_graphics(
-  "figures/ecosystem-services/integrated-ecosystem-services-map-selected-solutions-1.png"
+  "figures/ecosystem-services/integrated-ecosystem-services-map-1.png"
 )
 ```
 
