@@ -4,7 +4,7 @@
 
 ## Update
 
-This update to version 1.4.1 adds signed-effect objectives, complete
+This update to version 1.4.2 adds signed-effect objectives, complete
 example-data loaders, and revised documentation and examples.
 
 The deprecated `add_objective_max_benefit()` now delegates to the signed
