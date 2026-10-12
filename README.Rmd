@@ -72,7 +72,7 @@ remotes::install_github("josesalgr/multiscape")
 
 ## Getting started
 
-### Multi-action planning in the Meseta IbÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rica
+### Multi-action planning in the Meseta Ibérica
 
 We illustrate the `multiscape` workflow using a spatial planning problem from
 Spain's Meseta Ibérica, adapted from
