@@ -109,9 +109,9 @@
 <h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
 <div class="section level3">
-<h3 id="multi-action-planning-in-the-meseta-ibãƒæãârica">Multi-action planning in the Meseta IbÃƒÆ’Ã‚Â©rica<a class="anchor" aria-label="anchor" href="#multi-action-planning-in-the-meseta-ib%C3%A3%C6%92%C3%A6%C3%A3%C3%A2rica"></a>
+<h3 id="multi-action-planning-in-the-meseta-ibérica">Multi-action planning in the Meseta Ibérica<a class="anchor" aria-label="anchor" href="#multi-action-planning-in-the-meseta-ib%C3%A9rica"></a>
 </h3>
-<p>We illustrate the <code>multiscape</code> workflow using a spatial planning problem from Spain’s Meseta IbÃƒÆ’Ã‚Â©rica, adapted from <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">CÃƒÆ’Ã‚Â¡nibe Iglesias et al. (2025)</a>. The example comprises <strong>11,109 planning units</strong>, <strong>151 species</strong>, four ecosystem-service features, and four alternative management actions: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong>, and <strong>Firesmart</strong>.</p>
+<p>We illustrate the <code>multiscape</code> workflow using a spatial planning problem from Spain’s Meseta Ibérica, adapted from <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">Cánibe Iglesias et al. (2025)</a>. The example comprises <strong>11,109 planning units</strong>, <strong>151 species</strong>, four ecosystem-service features, and four alternative management actions: <strong>Afforestation</strong>, <strong>BAU</strong>, <strong>FarmReturn</strong>, and <strong>Firesmart</strong>.</p>
 </div>
 <div class="section level3">
 <h3 id="understand-the-planning-inputs">Understand the planning inputs<a class="anchor" aria-label="anchor" href="#understand-the-planning-inputs"></a>
@@ -123,7 +123,7 @@
 <div class="section level4">
 <h4 id="planning-units">Planning units<a class="anchor" aria-label="anchor" href="#planning-units"></a>
 </h4>
-<p>The study area is divided into 11,109 planning units of approximately 1 kmÃƒâ€šÃ‚Â². Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
+<p>The study area is divided into 11,109 planning units of approximately 1 kmÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â². Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">planning_units</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Simple feature collection with 6 features and 2 fields</span></span>
@@ -877,7 +877,7 @@
 <span><span class="co">#&gt; 4     TRUE 0.4505612          0.6500224</span></span>
 <span><span class="co">#&gt; 5    FALSE 0.0000000          0.0000000</span></span>
 <span><span class="co">#&gt; 6     TRUE 1.0114043          0.9206198</span></span></code></pre></div>
-<p>A complete executable example is provided in <a href="examples/meseta_iberica.R"><code>examples/meseta_iberica.R</code></a>. The <a href="examples/simulated_workflow.Rmd">simulated workflow</a> introduces additional optimisation methods and diagnostics on a smaller dataset.</p>
+<p>A complete executable example is provided in <a href="https://github.com/josesalgr/multiscape/blob/main/examples/meseta_iberica.R" class="external-link"><code>examples/meseta_iberica.R</code></a>. The <a href="https://github.com/josesalgr/multiscape/blob/main/examples/simulated_workflow.Rmd" class="external-link">simulated workflow</a> introduces additional optimisation methods and diagnostics on a smaller dataset.</p>
 </div>
 </div>
 <div class="section level2">
@@ -900,7 +900,7 @@
 </tr>
 <tr>
 <td><code><a href="reference/load_meseta.html">load_meseta()</a></code></td>
-<td>The Meseta IbÃƒÆ’Ã‚Â©rica inputs used in this README</td>
+<td>The Meseta Ibérica inputs used in this README</td>
 </tr>
 <tr>
 <td><code><a href="reference/load_ecosystem_services.html">load_ecosystem_services()</a></code></td>
@@ -914,7 +914,7 @@
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>CÃ¡nibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C., Salgado-Rojas, J., Sil, AÃ¢â‚¬Å¡., &amp; Regos, A. (2025). Integrating multiple landscape management strategies to optimise conservation under climate and planning scenarios: a case study in the Iberian Peninsula. <em>Ecosystem Services</em>, <strong>74</strong>, 101742. <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">doi:10.1016/j.ecoser.2025.101742</a>.</p>
+<p>Cánibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C., Salgado-Rojas, J., Sil, A., &amp; Regos, A. (2025). Integrating multiple landscape management strategies to optimise conservation under climate and planning scenarios: a case study in the Iberian Peninsula. <em>Ecosystem Services</em>, <strong>74</strong>, 101742. <a href="https://doi.org/10.1016/j.ecoser.2025.101742" class="external-link">doi:10.1016/j.ecoser.2025.101742</a>.</p>
 <p>Tallis, H., Fargione, J., Game, E., et al. (2021). Prioritizing actions: spatial action maps for conservation. <em>Annals of the New York Academy of Sciences</em>, <strong>1505</strong>(1), 118-141. <a href="https://doi.org/10.1111/nyas.14651" class="external-link">doi:10.1111/nyas.14651</a>.</p>
 <p>Salgado-Rojas, J., Hermoso, V., &amp; Alvarez-Miranda, E. (2023). prioriactions: Multi-action management planning in R. <em>Methods in Ecology and Evolution</em>. <a href="https://doi.org/10.1111/2041-210X.14220" class="external-link">doi:10.1111/2041-210X.14220</a>.</p>
 <p>Neubert, S., McGowan, J., Metcalfe, K., et al. (2025). Multiple-use spatial planning for sustainable development and conservation. <em>Trends in Ecology &amp; Evolution</em>, <strong>40</strong>(11), 1126-1142. <a href="https://doi.org/10.1016/j.tree.2025.09.007" class="external-link">doi:10.1016/j.tree.2025.09.007</a>.</p>

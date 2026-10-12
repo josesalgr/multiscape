@@ -48,12 +48,12 @@ remotes::install_github("josesalgr/multiscape")
 
 ## Getting started
 
-### Multi-action planning in the Meseta IbÃƒÆ’Ã‚Â©rica
+### Multi-action planning in the Meseta Ibérica
 
 We illustrate the `multiscape` workflow using a spatial planning problem
-from Spain’s Meseta IbÃƒÆ’Ã‚Â©rica, adapted from [CÃƒÆ’Ã‚Â¡nibe Iglesias
-et al. (2025)](https://doi.org/10.1016/j.ecoser.2025.101742). The
-example comprises **11,109 planning units**, **151 species**, four
+from Spain’s Meseta Ibérica, adapted from [Cánibe Iglesias et
+al. (2025)](https://doi.org/10.1016/j.ecoser.2025.101742). The example
+comprises **11,109 planning units**, **151 species**, four
 ecosystem-service features, and four alternative management actions:
 **Afforestation**, **BAU**, **FarmReturn**, and **Firesmart**.
 
@@ -73,9 +73,9 @@ meseta <- load_meseta()
 #### Planning units
 
 The study area is divided into 11,109 planning units of approximately 1
-kmÃƒâ€šÃ‚Â². Each unit represents a location where a management action
-may be implemented. The supplied spatial polygons and identifiers are
-stored in `planning_units`.
+kmÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â². Each unit represents a location where a
+management action may be implemented. The supplied spatial polygons and
+identifiers are stored in `planning_units`.
 
 ``` r
 
@@ -1053,9 +1053,9 @@ head(selection_consistency(alternatives))
 ```
 
 A complete executable example is provided in
-[`examples/meseta_iberica.R`](https://josesalgr.github.io/multiscape/examples/meseta_iberica.R).
+[`examples/meseta_iberica.R`](https://github.com/josesalgr/multiscape/blob/main/examples/meseta_iberica.R).
 The [simulated
-workflow](https://josesalgr.github.io/multiscape/examples/simulated_workflow.Rmd)
+workflow](https://github.com/josesalgr/multiscape/blob/main/examples/simulated_workflow.Rmd)
 introduces additional optimisation methods and diagnostics on a smaller
 dataset.
 
@@ -1066,7 +1066,7 @@ The package provides several prepared examples:
 | Loader | Example |
 |----|----|
 | [`load_sim_multiaction()`](https://josesalgr.github.io/multiscape/reference/load_sim_multiaction.md) | 64 spatial cells, two features and two actions for quick examples |
-| [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md) | The Meseta IbÃƒÆ’Ã‚Â©rica inputs used in this README |
+| [`load_meseta()`](https://josesalgr.github.io/multiscape/reference/load_meseta.md) | The Meseta Ibérica inputs used in this README |
 | [`load_ecosystem_services()`](https://josesalgr.github.io/multiscape/reference/load_ecosystem_services.md) | Planning units and four raster layers for the integrated-planning vignette |
 
 Browse the [function
@@ -1086,10 +1086,10 @@ an [issue](https://github.com/josesalgr/multiscape/issues).
 
 ## References
 
-CÃ¡nibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C.,
-Salgado-Rojas, J., Sil, AÃ¢â‚¬Å¡., & Regos, A. (2025). Integrating
-multiple landscape management strategies to optimise conservation under
-climate and planning scenarios: a case study in the Iberian Peninsula.
+Cánibe Iglesias, M., Hermoso, V., Azevedo, J. C., Campos, J. C.,
+Salgado-Rojas, J., Sil, A., & Regos, A. (2025). Integrating multiple
+landscape management strategies to optimise conservation under climate
+and planning scenarios: a case study in the Iberian Peninsula.
 *Ecosystem Services*, **74**, 101742.
 [doi:10.1016/j.ecoser.2025.101742](https://doi.org/10.1016/j.ecoser.2025.101742).
 
