@@ -123,7 +123,7 @@
 <div class="section level4">
 <h4 id="planning-units">Planning units<a class="anchor" aria-label="anchor" href="#planning-units"></a>
 </h4>
-<p>The study area is divided into 11,109 planning units of approximately 1 kmÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â². Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
+<p>The study area is divided into 11,109 planning units of approximately 1 km2. Each unit represents a location where a management action may be implemented. The supplied spatial polygons and identifiers are stored in <code>planning_units</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meseta</span><span class="op">$</span><span class="va">planning_units</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Simple feature collection with 6 features and 2 fields</span></span>
@@ -392,8 +392,9 @@
 <span><span class="co">#&gt;   Objective range  [1e+00, 7e+00]</span></span>
 <span><span class="co">#&gt;   Bounds range     [1e+00, 1e+00]</span></span>
 <span><span class="co">#&gt;   RHS range        [8e-01, 9e+03]</span></span>
+<span><span class="co">#&gt; Presolve removed 55548 rows and 11116 columns (presolve time = 5s)...</span></span>
 <span><span class="co">#&gt; Presolve removed 142334 rows and 11125 columns</span></span>
-<span><span class="co">#&gt; Presolve time: 4.78s</span></span>
+<span><span class="co">#&gt; Presolve time: 6.69s</span></span>
 <span><span class="co">#&gt; Presolved: 184788 rows, 131192 columns, 1681755 nonzeros</span></span>
 <span><span class="co">#&gt; Variable types: 0 continuous, 131192 integer (131192 binary)</span></span>
 <span><span class="co">#&gt; Deterministic concurrent LP optimizer: primal simplex, dual simplex, and barrier</span></span>
@@ -401,7 +402,7 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root barrier log...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Ordering time: 1.96s</span></span>
+<span><span class="co">#&gt; Ordering time: 2.74s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Barrier statistics:</span></span>
 <span><span class="co">#&gt;  AA' NZ     : 5.943e+06</span></span>
@@ -411,79 +412,80 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   Objective                Residual</span></span>
 <span><span class="co">#&gt; Iter       Primal          Dual         Primal    Dual     Compl     Time</span></span>
-<span><span class="co">#&gt;    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03     9s</span></span>
-<span><span class="co">#&gt;    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02    10s</span></span>
-<span><span class="co">#&gt;    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01    10s</span></span>
-<span><span class="co">#&gt;    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01    10s</span></span>
-<span><span class="co">#&gt;    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00    11s</span></span>
-<span><span class="co">#&gt;    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    11s</span></span>
-<span><span class="co">#&gt;    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    11s</span></span>
-<span><span class="co">#&gt;    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    11s</span></span>
-<span><span class="co">#&gt;    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    12s</span></span>
-<span><span class="co">#&gt;    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    12s</span></span>
-<span><span class="co">#&gt;   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    12s</span></span>
-<span><span class="co">#&gt;   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    13s</span></span>
-<span><span class="co">#&gt;   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    13s</span></span>
-<span><span class="co">#&gt;   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    13s</span></span>
-<span><span class="co">#&gt;   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    14s</span></span>
-<span><span class="co">#&gt;   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    14s</span></span>
-<span><span class="co">#&gt;   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    14s</span></span>
-<span><span class="co">#&gt;   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    14s</span></span>
-<span><span class="co">#&gt;   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    15s</span></span>
-<span><span class="co">#&gt;   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    15s</span></span>
-<span><span class="co">#&gt;   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    15s</span></span>
-<span><span class="co">#&gt;   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    16s</span></span>
-<span><span class="co">#&gt;   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    16s</span></span>
-<span><span class="co">#&gt;   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    16s</span></span>
-<span><span class="co">#&gt;   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    16s</span></span>
-<span><span class="co">#&gt;   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    17s</span></span>
-<span><span class="co">#&gt;   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    17s</span></span>
-<span><span class="co">#&gt;   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    17s</span></span>
-<span><span class="co">#&gt;   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    17s</span></span>
-<span><span class="co">#&gt;   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    18s</span></span>
-<span><span class="co">#&gt;   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    18s</span></span>
-<span><span class="co">#&gt;   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    18s</span></span>
-<span><span class="co">#&gt;   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    18s</span></span>
-<span><span class="co">#&gt;   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    19s</span></span>
-<span><span class="co">#&gt;   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    19s</span></span>
-<span><span class="co">#&gt;   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    19s</span></span>
-<span><span class="co">#&gt;   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    20s</span></span>
-<span><span class="co">#&gt;   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    20s</span></span>
+<span><span class="co">#&gt;    0   9.08549505e+07 -4.09748130e+05  2.40e+03 0.00e+00  2.36e+03    13s</span></span>
+<span><span class="co">#&gt;    1   3.47762789e+07 -3.33400318e+05  8.66e+02 1.58e+00  7.33e+02    13s</span></span>
+<span><span class="co">#&gt;    2   2.81132534e+06 -3.21967467e+05  8.05e+01 8.14e-01  6.08e+01    14s</span></span>
+<span><span class="co">#&gt;    3   9.02184971e+05 -3.10629553e+05  2.45e+01 4.03e-01  1.91e+01    14s</span></span>
+<span><span class="co">#&gt;    4   3.87322807e+05 -3.01982316e+05  9.29e+00 2.60e-01  7.71e+00    14s</span></span>
+<span><span class="co">#&gt;    5   2.24942854e+05 -2.87930717e+05  4.49e+00 1.95e-01  4.08e+00    15s</span></span>
+<span><span class="co">#&gt;    6   1.21722132e+05 -1.57332447e+05  1.92e+00 7.83e-05  1.43e+00    15s</span></span>
+<span><span class="co">#&gt;    7   6.70445867e+04 -6.98603867e+04  5.85e-01 5.77e-15  4.66e-01    15s</span></span>
+<span><span class="co">#&gt;    8   5.56541059e+04 -4.10644675e+04  3.67e-01 6.00e-15  2.90e-01    16s</span></span>
+<span><span class="co">#&gt;    9   4.25341831e+04 -1.91292600e+04  1.67e-01 4.00e-15  1.60e-01    16s</span></span>
+<span><span class="co">#&gt;   10   4.16902051e+04 -4.30829840e+03  1.59e-01 6.88e-15  1.17e-01    17s</span></span>
+<span><span class="co">#&gt;   11   3.81011615e+04  9.81693227e+03  1.10e-01 3.66e-15  6.78e-02    17s</span></span>
+<span><span class="co">#&gt;   12   3.33141639e+04  1.82504425e+04  5.66e-02 5.66e-15  3.44e-02    17s</span></span>
+<span><span class="co">#&gt;   13   2.98016261e+04  2.19762987e+04  2.47e-02 7.69e-15  1.75e-02    18s</span></span>
+<span><span class="co">#&gt;   14   2.88989373e+04  2.25255123e+04  1.84e-02 5.19e-15  1.42e-02    18s</span></span>
+<span><span class="co">#&gt;   15   2.87336352e+04  2.36594964e+04  1.73e-02 4.00e-15  1.12e-02    18s</span></span>
+<span><span class="co">#&gt;   16   2.76331951e+04  2.42516480e+04  1.04e-02 4.88e-15  7.48e-03    19s</span></span>
+<span><span class="co">#&gt;   17   2.70453799e+04  2.45937589e+04  7.05e-03 5.50e-15  5.42e-03    19s</span></span>
+<span><span class="co">#&gt;   18   2.65020957e+04  2.48596222e+04  4.22e-03 6.95e-15  3.63e-03    20s</span></span>
+<span><span class="co">#&gt;   19   2.60274969e+04  2.52286068e+04  2.04e-03 4.52e-15  1.76e-03    20s</span></span>
+<span><span class="co">#&gt;   20   2.58833211e+04  2.53155146e+04  1.48e-03 2.53e-15  1.25e-03    20s</span></span>
+<span><span class="co">#&gt;   21   2.58179479e+04  2.53643921e+04  1.23e-03 4.88e-15  9.99e-04    21s</span></span>
+<span><span class="co">#&gt;   22   2.57076401e+04  2.53843108e+04  8.25e-04 5.25e-15  7.13e-04    21s</span></span>
+<span><span class="co">#&gt;   23   2.56171574e+04  2.54040800e+04  5.03e-04 8.76e-15  4.70e-04    22s</span></span>
+<span><span class="co">#&gt;   24   2.55623126e+04  2.54257984e+04  3.11e-04 3.61e-15  3.01e-04    22s</span></span>
+<span><span class="co">#&gt;   25   2.55186149e+04  2.54374382e+04  1.62e-04 3.58e-15  1.80e-04    22s</span></span>
+<span><span class="co">#&gt;   26   2.54990910e+04  2.54513899e+04  9.99e-05 5.54e-15  1.05e-04    23s</span></span>
+<span><span class="co">#&gt;   27   2.54875587e+04  2.54560979e+04  6.55e-05 4.63e-15  6.95e-05    23s</span></span>
+<span><span class="co">#&gt;   28   2.54839890e+04  2.54580283e+04  5.50e-05 2.09e-15  5.74e-05    24s</span></span>
+<span><span class="co">#&gt;   29   2.54810141e+04  2.54597586e+04  4.59e-05 5.38e-15  4.70e-05    24s</span></span>
+<span><span class="co">#&gt;   30   2.54729208e+04  2.54612117e+04  2.15e-05 2.33e-15  2.59e-05    24s</span></span>
+<span><span class="co">#&gt;   31   2.54703240e+04  2.54632141e+04  1.42e-05 3.87e-15  1.57e-05    25s</span></span>
+<span><span class="co">#&gt;   32   2.54691539e+04  2.54640654e+04  1.09e-05 3.95e-15  1.12e-05    25s</span></span>
+<span><span class="co">#&gt;   33   2.54659252e+04  2.54641982e+04  1.95e-06 6.77e-15  3.84e-06    26s</span></span>
+<span><span class="co">#&gt;   34   2.54651950e+04  2.54648110e+04  1.66e-07 5.91e-15  8.56e-07    26s</span></span>
+<span><span class="co">#&gt;   35   2.54651237e+04  2.54650654e+04  5.57e-08 4.41e-15  1.30e-07    26s</span></span>
+<span><span class="co">#&gt;   36   2.54650851e+04  2.54650770e+04  3.69e-09 5.87e-15  1.79e-08    27s</span></span>
+<span><span class="co">#&gt;   37   2.54650823e+04  2.54650821e+04  1.51e-10 1.23e-12  4.88e-10    27s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Barrier solved model in 37 iterations and 19.82 seconds (18.67 work units)</span></span>
+<span><span class="co">#&gt; Barrier solved model in 37 iterations and 27.14 seconds (18.67 work units)</span></span>
 <span><span class="co">#&gt; Optimal objective 2.54650823e+04</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root crossover log...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   165733 DPushes remaining with DInf 0.0000000e+00                20s</span></span>
-<span><span class="co">#&gt;        0 DPushes remaining with DInf 0.0000000e+00                23s</span></span>
+<span><span class="co">#&gt;   165733 DPushes remaining with DInf 0.0000000e+00                27s</span></span>
+<span><span class="co">#&gt;     4794 DPushes remaining with DInf 0.0000000e+00                30s</span></span>
+<span><span class="co">#&gt;        0 DPushes remaining with DInf 0.0000000e+00                31s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    22178 PPushes remaining with PInf 8.2450785e-06                23s</span></span>
-<span><span class="co">#&gt;        0 PPushes remaining with PInf 0.0000000e+00                24s</span></span>
+<span><span class="co">#&gt;    22178 PPushes remaining with PInf 8.2450785e-06                31s</span></span>
+<span><span class="co">#&gt;        0 PPushes remaining with PInf 0.0000000e+00                33s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     24s</span></span>
+<span><span class="co">#&gt;   Push phase complete: Pinf 0.0000000e+00, Dinf 2.7618265e+03     33s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root simplex log...</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Iteration    Objective       Primal Inf.    Dual Inf.      Time</span></span>
-<span><span class="co">#&gt;   174690    2.5465082e+04   0.000000e+00   2.761826e+03     24s</span></span>
-<span><span class="co">#&gt;   175374    2.5465082e+04   0.000000e+00   0.000000e+00     25s</span></span>
+<span><span class="co">#&gt;   174690    2.5465082e+04   0.000000e+00   2.761826e+03     33s</span></span>
+<span><span class="co">#&gt;   175374    2.5465082e+04   0.000000e+00   0.000000e+00     33s</span></span>
 <span><span class="co">#&gt; Concurrent spin time: 0.00s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Solved with barrier</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Root relaxation: objective 2.546508e+04, 175374 iterations, 19.20 seconds (13.70 work units)</span></span>
-<span><span class="co">#&gt; Total elapsed time = 25.66s (DegenMoves)</span></span>
+<span><span class="co">#&gt; Root relaxation: objective 2.546508e+04, 175374 iterations, 25.96 seconds (13.70 work units)</span></span>
+<span><span class="co">#&gt; Total elapsed time = 35.25s (DegenMoves)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work</span></span>
 <span><span class="co">#&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      0     0 25465.0822    0 2133          - 25465.0822      -     -   26s</span></span>
-<span><span class="co">#&gt; H    0     0                    25633.000000 25465.0822  0.66%     -   27s</span></span>
+<span><span class="co">#&gt;      0     0 25465.0822    0 2133          - 25465.0822      -     -   36s</span></span>
+<span><span class="co">#&gt; H    0     0                    25633.000000 25465.0822  0.66%     -   37s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Explored 1 nodes (182306 simplex iterations) in 27.04 seconds (26.90 work units)</span></span>
+<span><span class="co">#&gt; Explored 1 nodes (182306 simplex iterations) in 37.59 seconds (26.90 work units)</span></span>
 <span><span class="co">#&gt; Thread count was 20 (of 20 available processors)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Solution count 1: 25633 </span></span>
@@ -506,7 +508,7 @@
 <span><span class="co">#&gt; │└─without solution: 0</span></span>
 <span><span class="co">#&gt; └─run summary</span></span>
 <span><span class="co">#&gt; │├─statuses: optimal: 1</span></span>
-<span><span class="co">#&gt; │├─runtime: 27.217</span></span>
+<span><span class="co">#&gt; │├─runtime: 37.732</span></span>
 <span><span class="co">#&gt; │├─gap: 0.0065</span></span>
 <span><span class="co">#&gt; │├─design columns: none</span></span>
 <span><span class="co">#&gt; │└─objective columns: value_cost, value_spatial</span></span>
@@ -530,7 +532,7 @@
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/get_runs.html">get_runs</a></span><span class="op">(</span><span class="va">solutions</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   run_id solution_id  status runtime         gap</span></span>
-<span><span class="co">#&gt; 1      1           1 optimal  27.217 0.006534545</span></span>
+<span><span class="co">#&gt; 1      1           1 optimal  37.732 0.006534545</span></span>
 <span></span>
 <span><span class="va">performance</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_objectives.html">get_objectives</a></span><span class="op">(</span><span class="va">solutions</span>, format <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span></span>
 <span></span>

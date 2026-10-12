@@ -94,7 +94,7 @@ meseta <- load_meseta()
 
 #### Planning units
 
-The study area is divided into 11,109 planning units of approximately 1 kmÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â².
+The study area is divided into 11,109 planning units of approximately 1 km2.
 Each unit represents a location where a management action may be implemented.
 The supplied spatial polygons and identifiers are stored in `planning_units`.
 
