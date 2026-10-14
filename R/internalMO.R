@@ -2798,36 +2798,62 @@
 
   # Standard selection costs need no new MILP or auxiliary-variable snapshot.
   # Use the solved model's exact variable layout and canonical cost tables.
+  # Costs must use the decoded tables from this solve. The original problem
+  # can contain locked-out action rows that were removed before x variables
+  # were indexed. Reading its row numbers into the solved vector shifts costs
+  # onto different actions (or even auxiliary variables).
   cost_terms <- length(terms) > 0L && all(vapply(terms, function(t) {
     t$type %in% c("pu_cost", "action_cost") && is.null(t$features)
   }, logical(1)))
+
   if (cost_terms) {
     problem <- solution$problem %||% x
-    ml <- problem$data$model_list
-    da <- problem$data$dist_actions_model %||% problem$data$dist_actions
-    pu <- problem$data$pu
-    values <- .pamo_get_solution_vector(solution)
+    pu <- solution$summary$pu
+    da <- solution$summary$actions
     val <- 0
+
     for (t in terms) {
       if (identical(t$type, "pu_cost")) {
-        w <- values[seq_len(nrow(pu))]
-        selected <- which(w > 0.5)
+        if (!is.data.frame(pu) ||
+            !all(c("cost", "selected") %in% names(pu)) ||
+            anyNA(pu$selected)) {
+          stop(
+            "Decoded planning-unit costs are missing while evaluating cost.",
+            call. = FALSE
+          )
+        }
+
+        selected <- which(pu$selected > 0.5)
         val <- val + sum(pu$cost[selected])
+
       } else {
+        if (!is.data.frame(da) ||
+            !all(c("cost", "selected", "internal_action") %in% names(da)) ||
+            anyNA(da$selected)) {
+          stop(
+            "Decoded action costs are missing while evaluating cost.",
+            call. = FALSE
+          )
+        }
+
         ids <- suppressWarnings(as.integer(t$actions))
-        action_ids <- if (length(ids) && all(!is.na(ids)) && all(ids %in% problem$data$actions$internal_id)) {
+        action_ids <- if (
+          length(ids) &&
+          all(!is.na(ids)) &&
+          all(ids %in% problem$data$actions$internal_id)
+        ) {
           ids
         } else {
           .pa_resolve_action_subset(problem, t$actions)$internal_id
         }
-        rows <- which(da$internal_action %in% action_ids)
-        x_offset <- as.integer(ml$x_offset %||% nrow(pu))
-        internal_row <- da$internal_row %||% seq_len(nrow(da))
-        xv <- values[x_offset + internal_row[rows]]
-        selected <- which(xv > 0.5)
-        val <- val + sum(da$cost[rows[selected]])
+
+        selected <- which(
+          da$internal_action %in% action_ids & da$selected > 0.5
+        )
+        val <- val + sum(da$cost[selected])
       }
     }
+
     return(as.numeric(val))
   }
 

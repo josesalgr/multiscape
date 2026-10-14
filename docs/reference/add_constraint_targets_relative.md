@@ -167,8 +167,8 @@ p1$data$targets
 #> 1       1 actions    ge relative_baseline        0.3    14.08761     4.226283
 #> 2       2 actions    ge relative_baseline        0.3    13.44903     4.034709
 #>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-10-12 15:06:14.668628     woodland
-#> 2    <NA>  <NA> 2026-10-12 15:06:14.668628     riparian
+#> 1    <NA>  <NA> 2026-10-14 16:43:43.951763     woodland
+#> 2    <NA>  <NA> 2026-10-14 16:43:43.951763     riparian
 
 # Require 20% for one selected feature
 p2 <- add_constraint_targets_relative(
@@ -180,7 +180,7 @@ p2$data$targets
 #>   feature    type sense       target_unit target_raw basis_total target_value
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
 #>   actions label                 created_at feature_name
-#> 1    <NA>  <NA> 2026-10-12 15:06:14.675572     woodland
+#> 1    <NA>  <NA> 2026-10-14 16:43:43.956141     woodland
 
 # Restrict which actions count toward target achievement
 p3 <- add_constraint_targets_relative(
@@ -193,6 +193,6 @@ p3$data$targets
 #> 1       1 actions    ge relative_baseline        0.2    14.08761     2.817522
 #> 2       2 actions    ge relative_baseline        0.2    13.44903     2.689806
 #>   actions label                 created_at feature_name
-#> 1 protect  <NA> 2026-10-12 15:06:14.687296     woodland
-#> 2 protect  <NA> 2026-10-12 15:06:14.687296     riparian
+#> 1 protect  <NA> 2026-10-14 16:43:43.960383     woodland
+#> 2 protect  <NA> 2026-10-14 16:43:43.960383     riparian
 ```

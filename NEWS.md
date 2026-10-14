@@ -1,3 +1,9 @@
+# multiscape 1.4.3
+
+* Fixed multi-objective cost evaluation after locked-out actions are
+  removed from the model. Reported costs and automatic epsilon bounds
+  now use the decoded selections from the solved model.
+
 # multiscape 1.4.2
 
 * Speed up `selection_frequency()` without changing recurrence counts, and
