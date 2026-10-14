@@ -3745,7 +3745,8 @@ available_to_solve <- function(package = ""){
     y_pu = FALSE,             # PU fragmentation auxiliaries
     y_action = FALSE,         # action fragmentation auxiliaries
     y_intervention = FALSE,   # intervention fragmentation auxiliaries
-    u_intervention = FALSE    # intervention extra vars (if applicable)
+    u_intervention = FALSE,   # intervention extra vars (if applicable)
+    group_gini = FALSE        # pairwise group absolute differences
   )
 }
 
@@ -3785,6 +3786,7 @@ available_to_solve <- function(package = ""){
   if (!is.null(raw_needs$y_action))       needs$y_action <- isTRUE(raw_needs$y_action)
   if (!is.null(raw_needs$y_intervention)) needs$y_intervention <- isTRUE(raw_needs$y_intervention)
   if (!is.null(raw_needs$u_intervention)) needs$u_intervention <- isTRUE(raw_needs$u_intervention)
+  if (!is.null(raw_needs$group_gini))      needs$group_gini <- isTRUE(raw_needs$group_gini)
 
   # luego inferimos solo lo que no vino explícito
   if (is.null(raw_needs$y_pu)) {
@@ -3801,6 +3803,12 @@ available_to_solve <- function(package = ""){
 
   if (is.null(raw_needs$u_intervention)) {
     needs$u_intervention <- identical(mtype, "minimizeInterventionImpact")
+  }
+
+  if (is.null(raw_needs$group_gini)) {
+    gini_spec <- x$data$constraints$group_gini_numerator %||% NULL
+    needs$group_gini <- identical(mtype, "minimizeGroupGiniNumerator") ||
+      (is.data.frame(gini_spec) && nrow(gini_spec) > 0L)
   }
 
   # propagación explícita de metadatos estructurales necesarios
@@ -3835,6 +3843,7 @@ available_to_solve <- function(package = ""){
   needs$y_action       <- isTRUE(needs$y_action)
   needs$y_intervention <- isTRUE(needs$y_intervention)
   needs$u_intervention <- isTRUE(needs$u_intervention)
+  needs$group_gini      <- isTRUE(needs$group_gini)
 
   x$data$model_args$needs <- needs
   x

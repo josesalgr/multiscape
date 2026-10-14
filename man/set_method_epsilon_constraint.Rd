@@ -15,6 +15,7 @@ set_method_epsilon_constraint(
   include_extremes = NULL,
   lexicographic = TRUE,
   lexicographic_tol = 1e-08,
+  warm_start = TRUE,
   control = NULL
 )
 }
@@ -39,6 +40,9 @@ solutions lexicographically; the default is \code{TRUE}.}
 
 \item{lexicographic_tol}{Non-negative tolerance for lexicographic anchor
 refinement, expressed in the first objective's original units.}
+
+\item{warm_start}{Logical scalar. If \code{TRUE}, reuse each successful incumbent
+as a MIP start for the next epsilon run when the solver supports it.}
 
 \item{control}{Optional run-failure settings from \code{set_runs_control()}.}
 }

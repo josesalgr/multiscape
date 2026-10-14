@@ -179,6 +179,7 @@
   x <- .pa_build_model_prepare_needs_cpp(x)
   x <- .pa_build_joint_effects(x)
   x <- .pa_build_effect_losses(x)
+  x <- .pa_prepare_group_equity_model(x)
 
   # ------------------------------------------------------------
   # objective (C++ side)
@@ -565,7 +566,9 @@
     "maximizeNetProfit",
     "minimizeActionFragmentation",
     "minimizeInterventionFragmentation",
-    "minimizeInterventionImpact"
+    "minimizeInterventionImpact",
+    "minimizeGroupMean",
+    "minimizeGroupGiniNumerator"
   )
 
   if (needs_actions && !isTRUE(has_actions_model)) {
@@ -573,6 +576,11 @@
       "Objective '", mtype, "' requires actions, but no actions are available.\n",
       "Run add_actions() (and ensure feasible dist_actions rows exist) before solve()."
     )
+  }
+
+  if (mtype %in% c("minimizeGroupMean", "minimizeGroupGiniNumerator") &&
+      (is.null(x$data$group_equity) || !is.list(x$data$group_equity))) {
+    .pa_abort("Objective '", mtype, "' requires `add_group_equity()` first.")
   }
 
   # ------------------------------------------------------------
@@ -948,7 +956,9 @@
                                  "minimizeFragmentation",
                                  "minimizeActionFragmentation",
                                  "minimizeInterventionFragmentation",
-                                 "minimizeInterventionImpact")) "min" else "max"
+                                 "minimizeInterventionImpact",
+                                 "minimizeGroupMean",
+                                 "minimizeGroupGiniNumerator")) "min" else "max"
 
   if (!exists("rcpp_reset_objective", mode = "function")) {
     .pa_abort("Missing rcpp_reset_objective() in the package.")
@@ -1339,6 +1349,18 @@
 
     x$data$model_registry$vars$u_intervention_impact <- prep
     objective_id <- "min_intervention_impact"
+  } else if (identical(mtype, "minimizeGroupMean")) {
+    v <- .pa_group_equity_objective_vector(x, type = "mean")
+    rcpp_model_set_objective_vector(op, obj = v, model_sense = "min")
+    res <- list(type = "group_mean", nonzero = which(v != 0) - 1L)
+    objective_id <- "min_group_mean"
+  } else if (identical(mtype, "minimizeGroupGiniNumerator")) {
+    v <- .pa_group_equity_objective_vector(
+      x, type = "gini_numerator", normalize = isTRUE(oargs$normalize)
+    )
+    rcpp_model_set_objective_vector(op, obj = v, model_sense = "min")
+    res <- list(type = "group_gini_numerator", nonzero = which(v != 0) - 1L)
+    objective_id <- "min_group_gini_numerator"
   } else {
     .pa_abort("Unknown model_type: ", mtype)
   }
@@ -1380,6 +1402,8 @@
   if (exists(".pa_apply_group_area_constraints_if_present", mode = "function")) {
     x <- .pa_apply_group_area_constraints_if_present(x)
   }
+
+  x <- .pa_apply_group_mad_constraint_if_present(x)
 
   x
 }

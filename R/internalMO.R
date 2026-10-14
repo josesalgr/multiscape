@@ -539,6 +539,19 @@
     ))
   }
 
+  if (identical(id, "min_group_mean")) {
+    return(list(sense = "min", terms = list(list(type = "group_mean")),
+                objective_id = id, objective_args = a))
+  }
+
+  if (identical(id, "min_group_gini_numerator")) {
+    normalize <- isTRUE(a$normalize %||% FALSE)
+    a$normalize <- normalize
+    return(list(sense = "min",
+                terms = list(list(type = "group_gini_numerator", normalize = normalize)),
+                objective_id = id, objective_args = a))
+  }
+
 
   stop("Unknown objective_id in .pamo_objective_to_ir(): ", id, call. = FALSE)
 }
@@ -596,6 +609,8 @@
     min_fragmentation = "minimizeFragmentation",
     min_action_fragmentation = "minimizeActionFragmentation",
     min_intervention_impact = "minimizeInterventionImpact",
+    min_group_mean = "minimizeGroupMean",
+    min_group_gini_numerator = "minimizeGroupGiniNumerator",
     custom = "custom"
   )
 
@@ -1059,6 +1074,11 @@
   gap     <- numeric(n_runs)
 
   messages <- character(n_runs)
+  use_warm_start <- isTRUE(method$warm_start %||% TRUE)
+  previous_mip_start <- if (use_warm_start) {
+    attr(design_df, "initial_mip_start", exact = TRUE)
+  } else NULL
+  attr(design_df, "initial_mip_start") <- NULL
 
   control <- method$control %||% list()
 
@@ -1105,7 +1125,8 @@
         primary = primary,
         eps = eps_r,
         gap_limit = gap_limit,
-        time_limit = time_limit
+        time_limit = time_limit,
+        mip_start = previous_mip_start
       ),
       stop_on_infeasible = stop_on_infeasible,
       stop_on_no_solution = stop_on_no_solution,
@@ -1138,6 +1159,9 @@
         as.numeric(design_df[r, eps_cols, drop = TRUE]),
         constrained
       )
+
+      next_start <- .pamo_solution_vector(one)
+      if (use_warm_start && !is.null(next_start)) previous_mip_start <- next_start
 
     } else {
 
@@ -1307,6 +1331,18 @@
 }
 
 
+.pamo_solution_vector <- function(result) {
+  vector <- tryCatch({
+    if (inherits(result, "Solution")) result$solution$vector
+    else if (inherits(result$solution, "Solution")) result$solution$solution$vector
+    else result$solution$solution$vector %||% result$solution$vector
+  }, error = function(e) NULL)
+  if (is.null(vector)) return(NULL)
+  vector <- as.numeric(vector)
+  if (!length(vector) || any(!is.finite(vector))) return(NULL)
+  vector
+}
+
 .pamo_build_auto_epsilon_runs <- function(x,
                                           gap_limit = NULL,
                                           time_limit = NULL,
@@ -1393,6 +1429,11 @@
 
   eps_vals <- seq(from = sec_min, to = sec_max, length.out = n_points)
 
+  secondary_sense <- as.character(
+    .pamo_get_objective_spec(x, secondary)$sense %||% "min"
+  )[1]
+  if (identical(secondary_sense, "max")) eps_vals <- rev(eps_vals)
+
   if (!isTRUE(include_extremes)) {
     if (length(eps_vals) <= 2L) {
       stop(
@@ -1416,6 +1457,8 @@
   design_df[[eps_col]] <- as.numeric(eps_vals)
 
   attr(design_df, "extremes") <- ext
+  attr(design_df, "secondary_sense") <- secondary_sense
+  attr(design_df, "warm_start_direction") <- "restrictive_to_permissive"
   attr(design_df, "primary_alias") <- primary
   attr(design_df, "secondary_alias") <- secondary
   attr(design_df, "include_extremes") <- include_extremes
@@ -1930,6 +1973,20 @@
         tag = "from=.pamo_objvec_from_ir"
       )
 
+    } else if (type %in% c("group_mean", "group_gini_numerator")) {
+      v_term <- .pa_group_equity_objective_vector(
+        base_superset,
+        type = if (identical(type, "group_mean")) "mean" else "gini_numerator",
+        normalize = isTRUE(t$normalize)
+      )
+      m0 <- .pa_model_from_ptr(op, args = base_superset$data$model_args %||% list(),
+                               drop_triplets = TRUE)
+      obj0 <- as.numeric(m0$obj)
+      if (length(obj0) != length(v_term)) {
+        stop("Current model objective length does not match group-equity term vector.", call. = FALSE)
+      }
+      rcpp_model_set_objective_vector(x = op, obj = obj0 + v_term, model_sense = "min")
+
     } else if (identical(type, "custom")) {
       stop("custom objectives are not supported in weighted yet.", call. = FALSE)
 
@@ -2211,6 +2268,7 @@
 
   gap_limit  <- spec$gap_limit %||% NULL
   time_limit <- spec$time_limit %||% NULL
+  mip_start  <- spec$mip_start %||% NULL
 
   # base$data$method <- NULL
   # base$data$results <- NULL
@@ -2221,6 +2279,7 @@
   # the user's explicit solver parameters authoritative.
   base$data$runtime_updates <- base$data$runtime_updates %||% list()
   base$data$runtime_updates$mo_numeric <- TRUE
+  if (!is.null(mip_start)) base$data$runtime_updates$start <- as.numeric(mip_start)
 
   out <- .pa_solve_single_problem(
     base,
@@ -3142,6 +3201,7 @@
   need_y_act <- "action_boundary_cut" %in% all_types
   need_y_int <- "intervention_boundary_cut" %in% all_types
   need_u_int <- "intervention_impact" %in% all_types
+  need_group_gini <- "group_gini_numerator" %in% all_types
 
   if (isTRUE(need_y_int)) {
     stop(
@@ -3234,7 +3294,8 @@
       y_intervention = FALSE,
       u_intervention = isTRUE(need_u_int),
       u_intervention_actions = u_int_actions,
-      effect_loss_scopes = Filter(function(t) identical(t$type, "loss"), all_terms)
+      effect_loss_scopes = Filter(function(t) identical(t$type, "loss"), all_terms),
+      group_gini = isTRUE(need_group_gini)
     ),
     relation_name = if (length(rel_names) == 1L) rel_names[1] else NULL
   )

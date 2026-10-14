@@ -147,6 +147,9 @@
 #' `set_runs_manual()`, `set_runs_control()`, `get_objectives()`,
 #' `plot_tradeoff()`, `plot_spatial_actions()`, `solve()`
 #'
+#' @param warm_start Logical scalar. If `TRUE`, reuse each successful incumbent
+#'   as a MIP start for the next epsilon run when the solver supports it.
+#'
 #' @export
 set_method_epsilon_constraint <- function(x,
                                           primary,
@@ -158,6 +161,7 @@ set_method_epsilon_constraint <- function(x,
                                           include_extremes = NULL,
                                           lexicographic = TRUE,
                                           lexicographic_tol = 1e-8,
+                                          warm_start = TRUE,
                                           control = NULL) {
   stopifnot(inherits(x, "Problem"))
   .pa_assert_unconfigured(x, "method", "Multi-objective method", "set_method_*()")
@@ -336,6 +340,10 @@ set_method_epsilon_constraint <- function(x,
     )
   }
 
+  if (!is.logical(warm_start) || length(warm_start) != 1L || is.na(warm_start)) {
+    stop("`warm_start` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   # ---- control
   control <- .pamo_check_mo_control(control)
 
@@ -348,6 +356,7 @@ set_method_epsilon_constraint <- function(x,
     runs = runs,
     lexicographic = isTRUE(lexicographic),
     lexicographic_tol = lexicographic_tol,
+    warm_start = isTRUE(warm_start),
     control = control,
     stop_on_infeasible = control$stop_on_infeasible,
     stop_on_no_solution = control$stop_on_no_solution,

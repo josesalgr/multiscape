@@ -95,7 +95,8 @@ test_that("model needs are initialized, inferred and explicitly overridden", {
     initialized$data$model_args$needs,
     list(
       z = FALSE, y_pu = FALSE, y_action = FALSE,
-      y_intervention = FALSE, u_intervention = FALSE
+      y_intervention = FALSE, u_intervention = FALSE,
+      group_gini = FALSE
     )
   )
 
