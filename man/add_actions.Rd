@@ -10,7 +10,9 @@ add_actions(
   include_pairs = NULL,
   exclude_pairs = NULL,
   cost = NULL,
-  action_area = NULL
+  action_area = NULL,
+  progress = TRUE,
+  chunk_size = 5000L
 )
 }
 \arguments{
@@ -41,6 +43,13 @@ with columns \code{pu}, \code{action}, and \code{action_area}. If
 \code{NULL}, action areas are derived from spatial \code{include_pairs}
 when available, otherwise they default to full planning-unit areas when
 these can be derived from the problem.}
+
+\item{progress}{Logical. If \code{TRUE}, report progress while computing
+spatial planning-unit--action intersections.}
+
+\item{chunk_size}{Positive integer. Maximum number of candidate planning
+units intersected in each spatial-processing block. Smaller values reduce
+peak memory use.}
 }
 \value{
 An updated \code{Problem} object with:
@@ -50,6 +59,9 @@ An updated \code{Problem} object with:
 \item{\code{dist_actions}}{The feasible planning unit--action table with
 columns \code{pu}, \code{action}, \code{cost}, \code{action_area},
 \code{status}, \code{internal_pu}, and \code{internal_action}.}
+\item{\code{dist_actions_sf}}{For spatial \code{include_pairs}, an
+\code{sf} table containing the exact intersection geometry and the same
+identifiers and action-area coefficients used by \code{dist_actions}.}
 \item{\code{pu index}}{A mapping from user-supplied planning-unit ids to
 internal integer ids.}
 \item{\code{action index}}{A mapping from action ids to internal integer

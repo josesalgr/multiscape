@@ -205,6 +205,13 @@
 #'   when available, otherwise they default to full planning-unit areas when
 #'   these can be derived from the problem.
 #'
+#' @param progress Logical. If \code{TRUE}, report progress while computing
+#'   spatial planning-unit--action intersections.
+#'
+#' @param chunk_size Positive integer. Maximum number of candidate planning
+#'   units intersected in each spatial-processing block. Smaller values reduce
+#'   peak memory use.
+#'
 #' @return An updated \code{Problem} object with:
 #' \describe{
 #'   \item{\code{actions}}{The action catalogue, including a unique integer
@@ -212,6 +219,9 @@
 #'   \item{\code{dist_actions}}{The feasible planning unit--action table with
 #'   columns \code{pu}, \code{action}, \code{cost}, \code{action_area},
 #'   \code{status}, \code{internal_pu}, and \code{internal_action}.}
+#'   \item{\code{dist_actions_sf}}{For spatial \code{include_pairs}, an
+#'   \code{sf} table containing the exact intersection geometry and the same
+#'   identifiers and action-area coefficients used by \code{dist_actions}.}
 #'   \item{\code{pu index}}{A mapping from user-supplied planning-unit ids to
 #'   internal integer ids.}
 #'   \item{\code{action index}}{A mapping from action ids to internal integer
@@ -303,7 +313,9 @@ add_actions <- function(
     include_pairs = NULL,
     exclude_pairs = NULL,
     cost = NULL,
-    action_area = NULL
+    action_area = NULL,
+    progress = TRUE,
+    chunk_size = 5000L
 ) {
   .pa_assert_unconfigured(x, c("actions", "dist_actions"),
                          "Action catalog", "add_actions()")
@@ -349,7 +361,15 @@ add_actions <- function(
     df
   }
 
-  .empty_pairs <- function(with_area = FALSE) {
+  spatial_geometry_parts <- list()
+
+  .empty_pairs <- function(with_area = FALSE, with_geometry = FALSE, crs = NA) {
+    if (isTRUE(with_geometry)) {
+      return(sf::st_sf(
+        pu = integer(0), action = character(0), action_area = numeric(0),
+        geometry = sf::st_sfc(crs = crs)
+      ))
+    }
     if (isTRUE(with_area)) {
       data.frame(
         pu = integer(0),
@@ -410,7 +430,8 @@ add_actions <- function(
     action,
     what,
     as_int_id_fun,
-    compute_area = FALSE
+    compute_area = FALSE,
+    capture_geometry = FALSE
   ) {
     if (!inherits(zone, "sf")) {
       stop(what, "[[", action, "]] must be an sf object.", call. = FALSE)
@@ -422,7 +443,11 @@ add_actions <- function(
     idx <- which(lengths(hits) > 0L)
 
     if (length(idx) == 0L) {
-      return(.empty_pairs(with_area = compute_area))
+      return(.empty_pairs(
+        with_area = compute_area,
+        with_geometry = capture_geometry,
+        crs = sf::st_crs(pu_sf)
+      ))
     }
 
     feasible_ids <- as_int_id_fun(
@@ -451,15 +476,33 @@ add_actions <- function(
       crs = sf::st_crs(pu_sub)
     )
 
-    inter <- suppressWarnings(
-      sf::st_intersection(
-        pu_sub[, "id", drop = FALSE],
-        zone_sf
+    idx_chunks <- split(seq_len(nrow(pu_sub)),
+                        ceiling(seq_len(nrow(pu_sub)) / chunk_size))
+    use_cli <- isTRUE(progress) && requireNamespace("cli", quietly = TRUE)
+    if (use_cli) {
+      cli::cli_progress_bar(
+        name = paste0("Intersecting PUs for action `", action, "`"),
+        total = length(idx_chunks), type = "iterator", clear = FALSE
       )
-    )
+    }
+    inter_parts <- vector("list", length(idx_chunks))
+    for (k in seq_along(idx_chunks)) {
+      inter_k <- suppressWarnings(sf::st_intersection(
+        pu_sub[idx_chunks[[k]], "id", drop = FALSE], zone_sf
+      ))
+      if (nrow(inter_k) > 0L) inter_parts[[k]] <- inter_k
+      if (use_cli) cli::cli_progress_update()
+    }
+    if (use_cli) cli::cli_progress_done()
+    inter_parts <- inter_parts[!vapply(inter_parts, is.null, logical(1))]
+    inter <- if (length(inter_parts)) do.call(rbind, inter_parts) else NULL
 
-    if (nrow(inter) == 0L) {
-      return(.empty_pairs(with_area = TRUE))
+    if (is.null(inter) || nrow(inter) == 0L) {
+      return(.empty_pairs(
+        with_area = TRUE,
+        with_geometry = capture_geometry,
+        crs = sf::st_crs(pu_sf)
+      ))
     }
 
     inter$id <- as_int_id_fun(
@@ -467,24 +510,25 @@ add_actions <- function(
       paste0(what, "$pu")
     )
 
-    out <- data.frame(
-      pu = inter$id,
-      action = action,
-      action_area = as.numeric(sf::st_area(inter)),
-      stringsAsFactors = FALSE
-    )
-
-    out <- dplyr::group_by(
-      out,
-      .data$pu,
-      .data$action
-    )
-    out <- dplyr::summarise(
-      out,
-      action_area = sum(.data$action_area, na.rm = TRUE),
-      .groups = "drop"
-    )
-    out <- as.data.frame(out)
+    inter$pu <- inter$id
+    inter$action <- action
+    inter$action_area <- as.numeric(sf::st_area(inter))
+    inter <- inter[is.finite(inter$action_area) & inter$action_area > 0, ]
+    out_sf <- dplyr::select(inter, "pu", "action", "action_area", "geometry")
+    key <- paste(out_sf$pu, out_sf$action, sep = "||")
+    if (anyDuplicated(key)) {
+      out_sf <- dplyr::group_by(out_sf, .data$pu, .data$action)
+      out_sf <- dplyr::summarise(
+        out_sf,
+        action_area = sum(.data$action_area, na.rm = TRUE),
+        geometry = sf::st_union(geometry), .groups = "drop"
+      )
+      out_sf <- sf::st_as_sf(out_sf)
+    }
+    out <- sf::st_drop_geometry(out_sf)
+    if (isTRUE(capture_geometry)) {
+      spatial_geometry_parts[[length(spatial_geometry_parts) + 1L]] <<- out_sf
+    }
 
     out
   }
@@ -594,7 +638,8 @@ add_actions <- function(
             action = a,
             what = what,
             as_int_id_fun = as_int_id_fun,
-            compute_area = compute_area
+            compute_area = compute_area,
+            capture_geometry = identical(what, "include_pairs") && compute_area
           )
 
         } else {
@@ -800,6 +845,16 @@ add_actions <- function(
   )
 
   x <- .pa_clone_data(x)
+
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    stop("`progress` must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!is.numeric(chunk_size) || length(chunk_size) != 1L ||
+      is.na(chunk_size) || !is.finite(chunk_size) || chunk_size < 1 ||
+      chunk_size != as.integer(chunk_size)) {
+    stop("`chunk_size` must be a positive integer.", call. = FALSE)
+  }
+  chunk_size <- as.integer(chunk_size)
 
   if (is.null(x$data$pu$internal_id)) {
     x$data$pu$internal_id <- seq_len(nrow(x$data$pu))
@@ -1421,6 +1476,35 @@ add_actions <- function(
     drop = FALSE
   ]
 
+  # Keep exact action-zone intersections aligned with the final feasible table.
+  # This is deliberately derived from the same intersection operation that
+  # supplied action_area, avoiding a second overlay with potentially different
+  # topology or row ordering.
+  dist_actions_sf <- NULL
+  if (length(spatial_geometry_parts) > 0L) {
+    dist_actions_sf <- do.call(rbind, spatial_geometry_parts)
+    key_da <- paste(dist_actions$pu, dist_actions$action, sep = "||")
+    key_sf <- paste(dist_actions_sf$pu, dist_actions_sf$action, sep = "||")
+    keep_sf <- key_sf %in% key_da
+    dist_actions_sf <- dist_actions_sf[keep_sf, , drop = FALSE]
+    key_sf <- key_sf[keep_sf]
+
+    if (nrow(dist_actions_sf) > 0L) {
+      m <- match(key_sf, key_da)
+      dist_actions_sf$action_area <- dist_actions$action_area[m]
+      dist_actions_sf$internal_pu <- dist_actions$internal_pu[m]
+      dist_actions_sf$internal_action <- dist_actions$internal_action[m]
+      ord <- order(match(key_sf, key_da))
+      dist_actions_sf <- dist_actions_sf[ord, c(
+        "pu", "action", "internal_pu", "internal_action",
+        "action_area", attr(dist_actions_sf, "sf_column")
+      ), drop = FALSE]
+      dist_actions_sf <- sf::st_as_sf(dist_actions_sf)
+    } else {
+      dist_actions_sf <- NULL
+    }
+  }
+
   if (anyNA(dist_actions$internal_pu)) {
     stop("Internal error: could not map pu -> internal_pu.", call. = FALSE)
   }
@@ -1455,6 +1539,7 @@ add_actions <- function(
 
   x$data$actions <- actions
   x$data$dist_actions <- dist_actions
+  x$data$dist_actions_sf <- dist_actions_sf
 
   x
 }
