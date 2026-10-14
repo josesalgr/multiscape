@@ -67,9 +67,9 @@ test_that("Gurobi reproduces the same lock-out Pareto and decoded costs", {
     runs = set_runs_manual(data.frame(weight_cost = c(1, 0), weight_impact = c(0, 1)))) |> solve()
   expect_equal(get_objectives(weighted)$cost, c(1, 3))
   expect_equal(get_objectives(weighted)$impact, c(3, 1))
-  for (warm in c(FALSE, TRUE)) {
+  for (lexicographic in c(FALSE, TRUE)) {
     s <- p |> set_method_epsilon_constraint(primary = "impact", aliases = c("impact", "cost"),
-      runs = set_runs_grid(n = 3), lexicographic = TRUE, warm_start = warm) |> solve()
+      runs = set_runs_grid(n = 3), lexicographic = lexicographic) |> solve()
     expect_equal(get_objectives(s)$cost, c(1, 2, 3))
     expect_equal(get_objectives(s)$impact, c(3, 2, 1))
     expect_equal(s$getDesign()$eps_cost, c(1, 2, 3))
@@ -80,18 +80,16 @@ test_that("epsilon bounds and all three known Pareto points survive lock-out", {
   skip_if_no_cbc()
   withr::local_options(lifecycle_verbosity = "quiet")
   for (lexicographic in c(FALSE, TRUE)) {
-    for (warm_start in c(FALSE, TRUE)) {
-      p <- mo_locked_cost_problem() |>
-        set_method_epsilon_constraint(primary = "impact", aliases = c("impact", "cost"),
-          runs = set_runs_grid(n = 3), lexicographic = lexicographic, warm_start = warm_start)
-      s <- solve(p)
-      obj <- get_objectives(s)
-      expect_equal(obj$cost, c(1, 2, 3))
-      expect_equal(obj$impact, c(3, 2, 1))
-      expect_equal(s$getDesign()$eps_cost, c(1, 2, 3))
-      a <- get_actions(s)
-      expect_equal(a$pu[a$selected > .5], c(2L, 3L, 4L))
-    }
+    p <- mo_locked_cost_problem() |>
+      set_method_epsilon_constraint(primary = "impact", aliases = c("impact", "cost"),
+        runs = set_runs_grid(n = 3), lexicographic = lexicographic)
+    s <- solve(p)
+    obj <- get_objectives(s)
+    expect_equal(obj$cost, c(1, 2, 3))
+    expect_equal(obj$impact, c(3, 2, 1))
+    expect_equal(s$getDesign()$eps_cost, c(1, 2, 3))
+    a <- get_actions(s)
+    expect_equal(a$pu[a$selected > .5], c(2L, 3L, 4L))
   }
 })
 

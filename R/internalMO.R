@@ -1059,6 +1059,8 @@
   gap     <- numeric(n_runs)
 
   messages <- character(n_runs)
+  previous_mip_start <- attr(design_df, "initial_mip_start", exact = TRUE)
+  attr(design_df, "initial_mip_start") <- NULL
 
   control <- method$control %||% list()
 
@@ -1105,7 +1107,8 @@
         primary = primary,
         eps = eps_r,
         gap_limit = gap_limit,
-        time_limit = time_limit
+        time_limit = time_limit,
+        mip_start = previous_mip_start
       ),
       stop_on_infeasible = stop_on_infeasible,
       stop_on_no_solution = stop_on_no_solution,
@@ -1138,6 +1141,9 @@
         as.numeric(design_df[r, eps_cols, drop = TRUE]),
         constrained
       )
+
+      next_start <- .pamo_solution_vector(one)
+      if (!is.null(next_start)) previous_mip_start <- next_start
 
     } else {
 
@@ -1307,6 +1313,18 @@
 }
 
 
+.pamo_solution_vector <- function(result) {
+  vector <- tryCatch({
+    if (inherits(result, "Solution")) result$solution$vector
+    else if (inherits(result$solution, "Solution")) result$solution$solution$vector
+    else result$solution$solution$vector %||% result$solution$vector
+  }, error = function(e) NULL)
+  if (is.null(vector)) return(NULL)
+  vector <- as.numeric(vector)
+  if (!length(vector) || any(!is.finite(vector))) return(NULL)
+  vector
+}
+
 .pamo_build_auto_epsilon_runs <- function(x,
                                           gap_limit = NULL,
                                           time_limit = NULL,
@@ -1393,6 +1411,11 @@
 
   eps_vals <- seq(from = sec_min, to = sec_max, length.out = n_points)
 
+  secondary_sense <- as.character(
+    .pamo_get_objective_spec(x, secondary)$sense %||% "min"
+  )[1]
+  if (identical(secondary_sense, "max")) eps_vals <- rev(eps_vals)
+
   if (!isTRUE(include_extremes)) {
     if (length(eps_vals) <= 2L) {
       stop(
@@ -1416,6 +1439,9 @@
   design_df[[eps_col]] <- as.numeric(eps_vals)
 
   attr(design_df, "extremes") <- ext
+  attr(design_df, "initial_mip_start") <- ext$warm_start_first
+  attr(design_df, "secondary_sense") <- secondary_sense
+  attr(design_df, "warm_start_direction") <- "restrictive_to_permissive"
   attr(design_df, "primary_alias") <- primary
   attr(design_df, "secondary_alias") <- secondary
   attr(design_df, "include_extremes") <- include_extremes
@@ -2211,6 +2237,7 @@
 
   gap_limit  <- spec$gap_limit %||% NULL
   time_limit <- spec$time_limit %||% NULL
+  mip_start  <- spec$mip_start %||% NULL
 
   # base$data$method <- NULL
   # base$data$results <- NULL
@@ -2221,6 +2248,7 @@
   # the user's explicit solver parameters authoritative.
   base$data$runtime_updates <- base$data$runtime_updates %||% list()
   base$data$runtime_updates$mo_numeric <- TRUE
+  base$data$runtime_updates$start <- if (is.null(mip_start)) NULL else as.numeric(mip_start)
 
   out <- .pa_solve_single_problem(
     base,
@@ -2995,10 +3023,12 @@
       x = x,
       spec = list(
         type = "weighted",
-        aliases = primary,
-        weights = 1,
+        aliases = c(primary, secondary),
+        weights = c(1, 0),
         objective_scaling = FALSE,
-        scales = NULL
+        scales = NULL,
+        gap_limit = gap_limit,
+        time_limit = time_limit
       )
     )
 
@@ -3010,11 +3040,12 @@
       x = x,
       spec = list(
         type = "weighted",
-        aliases = secondary,
-        weights = 1,
+        aliases = c(primary, secondary),
+        weights = c(0, 1),
         normalize = FALSE,
         gap_limit = gap_limit,
-        time_limit = time_limit
+        time_limit = time_limit,
+        mip_start = .pamo_solution_vector(sol_primary)
       )
     )
 
@@ -3045,6 +3076,7 @@
       secondary_min = min(vals_secondary),
       secondary_max = max(vals_secondary),
       vals_secondary = vals_secondary,
+      warm_start_first = .pamo_solution_vector(sol_secondary),
 
       meta = list(
         lexicographic = FALSE,
@@ -3062,8 +3094,8 @@
     x = x,
     spec = list(
       type = "weighted",
-      aliases = primary,
-      weights = 1,
+      aliases = c(primary, secondary),
+      weights = c(1, 0),
       normalize = FALSE,
       gap_limit = gap_limit,
       time_limit = time_limit
@@ -3081,7 +3113,8 @@
       eps = stats::setNames(list(primary_star), primary),
       gap_limit = gap_limit,
       time_limit = time_limit,
-      eps_tol = stats::setNames(list(lexi_tol), primary)
+      eps_tol = stats::setNames(list(lexi_tol), primary),
+      mip_start = .pamo_solution_vector(sol_primary_stage1)
     )
   )
 
@@ -3093,11 +3126,12 @@
     x = x,
     spec = list(
       type = "weighted",
-      aliases = secondary,
-      weights = 1,
+      aliases = c(primary, secondary),
+      weights = c(0, 1),
       normalize = FALSE,
       gap_limit = gap_limit,
-      time_limit = time_limit
+      time_limit = time_limit,
+      mip_start = .pamo_solution_vector(sol_primary_lexi)
     )
   )
 
@@ -3112,7 +3146,8 @@
       eps = stats::setNames(list(secondary_star), secondary),
       gap_limit = gap_limit,
       time_limit = time_limit,
-      eps_tol = stats::setNames(list(lexi_tol), secondary)
+      eps_tol = stats::setNames(list(lexi_tol), secondary),
+      mip_start = .pamo_solution_vector(sol_secondary_stage1)
     )
   )
 
@@ -3143,6 +3178,7 @@
     secondary_min = min(vals_secondary),
     secondary_max = max(vals_secondary),
     vals_secondary = vals_secondary,
+    warm_start_first = .pamo_solution_vector(sol_secondary_lexi),
 
     meta = list(
       lexicographic = TRUE,

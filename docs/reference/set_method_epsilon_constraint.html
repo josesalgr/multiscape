@@ -155,6 +155,12 @@ other objective to break near-ties. <code>lexicographic_tol</code> controls the 
 deterioration of the first objective during that refinement; it is expressed
 in that objective's units. This option concerns automatic-grid anchors, not
 every subsequent epsilon-constrained run.</p>
+<p><strong>Automatic warm starts.</strong> Successful solutions are reused as initial
+candidates for subsequent anchor stages and epsilon runs when supported by
+the solver (CBC and Gurobi). Automatic grids proceed from the most restrictive
+secondary bound to the most permissive; manual designs keep their supplied
+order. A run without a usable solution retains the last successful candidate.
+This behaviour is internal and requires no additional argument.</p>
 <p><strong>Manual thresholds.</strong> Use <code>runs = set_runs_manual()</code> to supply explicit
 bounds. Each row defines one run, with a column named <code>eps_&lt;alias&gt;</code> for
 every constrained objective. For example, <code>eps_cost = 10</code> means <em>cost at

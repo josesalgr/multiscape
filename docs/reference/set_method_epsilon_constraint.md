@@ -98,6 +98,14 @@ first objective during that refinement; it is expressed in that
 objective's units. This option concerns automatic-grid anchors, not
 every subsequent epsilon-constrained run.
 
+**Automatic warm starts.** Successful solutions are reused as initial
+candidates for subsequent anchor stages and epsilon runs when supported
+by the solver (CBC and Gurobi). Automatic grids proceed from the most
+restrictive secondary bound to the most permissive; manual designs keep
+their supplied order. A run without a usable solution retains the last
+successful candidate. This behaviour is internal and requires no
+additional argument.
+
 **Manual thresholds.** Use `runs = set_runs_manual()` to supply explicit
 bounds. Each row defines one run, with a column named `eps_<alias>` for
 every constrained objective. For example, `eps_cost = 10` means *cost at

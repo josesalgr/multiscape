@@ -3,6 +3,12 @@
 * Fixed multi-objective cost evaluation after locked-out actions are
   removed from the model. Reported costs and automatic epsilon bounds
   now use the decoded selections from the solved model.
+  
+* Epsilon-constraint now automatically reuses successful solutions as warm
+  starts during anchor calculations and subsequent runs with CBC and Gurobi.
+  No new public argument is required. Automatic grids visit secondary bounds
+  from most restrictive to most permissive; manual run order is preserved.
+
 
 # multiscape 1.4.2
 

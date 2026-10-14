@@ -35,7 +35,7 @@ test_that("unsupported common settings are reported with public names", {
   expect_warning(
     configured <- multiscape::set_solver_cplex(
       p,
-      cores = 8,
+      cores = 1,
       solution_limit = TRUE,
       write_log = TRUE,
       log_file = "cplex.log"
