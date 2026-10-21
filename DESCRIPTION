@@ -22,7 +22,7 @@ Description: Provides a modular framework for exact multi-objective spatial
 Authors@R: c(
     person('José', 'Salgado-Rojas',
         email='jose.salgroj@gmail.com', 
-        role = c('aut','cre', 'cph'),
+        role = c('aut','cre'),
         comment = c(ORCID = "0000-0001-9817-2625")
     ),
     person('Matías', 'Moreno-Faguett',
